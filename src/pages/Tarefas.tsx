@@ -442,14 +442,17 @@ export default function Tarefas() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
+  const [projectFilter, setProjectFilter] = useState("all");
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return tasks.filter((t) => {
       const matchesQ = !q || t.title.toLowerCase().includes(q) || t.project_name?.toLowerCase().includes(q);
       const matchesP = priorityFilter === "all" || t.priority === priorityFilter;
-      return matchesQ && matchesP;
+      const matchesProject = projectFilter === "all" || t.project_id === projectFilter;
+      return matchesQ && matchesP && matchesProject;
     });
-  }, [tasks, query, priorityFilter]);
+  }, [tasks, query, priorityFilter, projectFilter]);
 
   const tasksByColumn = useMemo(() => {
     const map: Record<string, Task[]> = {};
@@ -531,10 +534,24 @@ export default function Tarefas() {
         </div>
 
         <div className="flex gap-3">
-          <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as any)}>
+          <Select value={projectFilter} onValueChange={setProjectFilter}>
             <SelectTrigger className="w-[190px] glass-light border-border/50">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Projeto" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="glass border-border/50 z-50">
+              <SelectItem value="all">Todos os Projetos</SelectItem>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as any)}>
+            <SelectTrigger className="w-[140px] glass-light border-border/50">
+              <div className="flex items-center gap-2">
                 <SelectValue placeholder="Prioridade" />
               </div>
             </SelectTrigger>
