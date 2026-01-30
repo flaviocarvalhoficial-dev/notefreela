@@ -26,6 +26,13 @@ type TimelineActivity = {
   avatars: string[];
   extraCount?: number;
   lane?: number;
+  color?: string; // Custom color override
+};
+
+const COLUMN_COLORS: Record<string, string> = {
+  todo: "hsl(215, 20%, 65%)",
+  inprogress: "hsl(158, 64%, 52%)",
+  done: "hsl(221, 83%, 62%)"
 };
 
 const RANGE_START = 7;
@@ -157,6 +164,8 @@ export function TimelineSection({
         const diffTime = taskDate.getTime() - today.getTime();
         const dayOffset = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
+        const colColor = COLUMN_COLORS[t.column_id as string] || COLUMN_COLORS["todo"];
+
         return {
           id: t.id,
           title: t.title,
@@ -166,7 +175,8 @@ export function TimelineSection({
           startHour: 9, // Default start for tasks without time
           endHour: 10,  // Default duration 1h
           avatars: ["ME"], // Default assignee/user
-          extraCount: 0
+          extraCount: 0,
+          color: colColor
         } as TimelineActivity;
       });
 
@@ -430,7 +440,12 @@ export function TimelineSection({
                         <TooltipTrigger asChild>
                           <div
                             className={typeClass(a.type)}
-                            style={{ left: leftPx, width: widthPx, top }}
+                            style={{
+                              left: leftPx,
+                              width: widthPx,
+                              top,
+                              ...(a.color ? { boxShadow: `0 6px 24px -14px rgba(0,0,0,0.12), 0 0 24px ${a.color}30`, borderLeft: `4px solid ${a.color}` } : {})
+                            }}
                             role="button"
                             tabIndex={0}
                             onClick={() => onActivityClick(a)}
