@@ -120,10 +120,20 @@ export function TimelineSection({
   const { data: timelineActivities = [], isLoading } = useQuery({
     queryKey: ["timeline-activities"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("events").select("*");
-      if (error) throw error;
+      // 1. Fetch Events
+      const { data: events, error: eventsError } = await supabase.from("events").select("*");
+      if (eventsError) throw eventsError;
 
-      return data.map((e: any) => {
+      // 2. Fetch Tasks with Due Date
+      const { data: tasks, error: tasksError } = await supabase
+        .from("tasks")
+        .select("*")
+        .not("due_date", "is", null);
+
+      if (tasksError) throw tasksError;
+
+      // 3. Map Events
+      const mappedEvents = events.map((e: any) => {
         const eventDate = startOfDay(new Date(e.date + "T12:00:00"));
         const diffTime = eventDate.getTime() - today.getTime();
         const dayOffset = Math.round(diffTime / (1000 * 60 * 60 * 24));
@@ -140,6 +150,27 @@ export function TimelineSection({
           extraCount: e.participants ? e.participants.length - 1 : 0
         } as TimelineActivity;
       });
+
+      // 4. Map Tasks
+      const mappedTasks = tasks.map((t: any) => {
+        const taskDate = startOfDay(new Date(t.due_date + "T12:00:00"));
+        const diffTime = taskDate.getTime() - today.getTime();
+        const dayOffset = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        return {
+          id: t.id,
+          title: t.title,
+          meta: "Tarefa",
+          type: "task",
+          dayOffset,
+          startHour: 9, // Default start for tasks without time
+          endHour: 10,  // Default duration 1h
+          avatars: ["ME"], // Default assignee/user
+          extraCount: 0
+        } as TimelineActivity;
+      });
+
+      return [...mappedEvents, ...mappedTasks];
     }
   });
 

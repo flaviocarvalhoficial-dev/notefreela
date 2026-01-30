@@ -51,13 +51,11 @@ const Index = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
-      const targetProject = projects.find(p => p.name === values.project);
-
       const { data, error } = await supabase
         .from("tasks")
         .insert({
           title: values.title,
-          project_id: targetProject?.id,
+          project_id: values.project, // Now receives ID directly
           priority: values.priority,
           due_date: values.due?.toISOString(),
           assignee: values.assignee,
@@ -277,7 +275,7 @@ const Index = () => {
       />
 
       <NewTaskDialog
-        projects={projects.map(p => p.name)}
+        projects={projects}
         open={isTaskModalOpen}
         onOpenChange={setIsTaskModalOpen}
         onCreate={(values) => createTaskMutation.mutate(values)}
