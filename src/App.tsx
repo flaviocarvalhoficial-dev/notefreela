@@ -113,24 +113,28 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SidebarProvider defaultOpen={true}>
-          <BrowserRouter>
-            <Routes>
-              <Route
-                path="/auth"
-                element={!session ? <Auth /> : <Navigate to="/" replace />}
-              />
-              <Route
-                path="/*"
-                element={
-                  session ? <AppLayout /> : <Navigate to="/auth" replace />
-                }
-              />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </BrowserRouter>
-        </SidebarProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/auth"
+              element={!session ? <Auth /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/*"
+              element={
+                session ? (
+                  <SidebarProvider defaultOpen={true}>
+                    <AppLayout />
+                  </SidebarProvider>
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              }
+            />
+          </Routes>
+          <Toaster />
+          <Sonner />
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
