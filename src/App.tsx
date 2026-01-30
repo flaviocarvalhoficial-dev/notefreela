@@ -20,6 +20,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase";
 import { Session } from "@supabase/supabase-js";
+import { ReloadPrompt } from "@/components/ReloadPrompt";
 
 const queryClient = new QueryClient();
 
@@ -134,6 +135,7 @@ const App = () => {
           </Routes>
           <Toaster />
           <Sonner />
+          <ReloadPrompt />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
