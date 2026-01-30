@@ -329,7 +329,7 @@
 
   .timeline-track {
     position: relative;
-    height: calc(72px + (var(--timeline-lanes, 3) * 64px));
+    height: calc(72px + (var(--timeline-lanes, 3) * 88px));
     border-radius: 0.75rem;
     background:
       linear-gradient(180deg, hsl(var(--card) / 0.10), hsl(var(--card) / 0.06)),
@@ -373,13 +373,13 @@
 
   .timeline-pill {
     position: absolute;
-    height: 56px;
+    height: 80px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 12px;
-    border-radius: 999px;
+    padding: 12px;
+    border-radius: 12px;
     background: hsl(var(--card) / 0.96);
     backdrop-filter: blur(6px) saturate(110%);
     -webkit-backdrop-filter: blur(6px) saturate(110%);

@@ -422,7 +422,7 @@ export function TimelineSection({
 
                   {positionedActivities.map((a) => {
                     const lane = (a.lane ?? 0) as number;
-                    const top = 16 + lane * 64;
+                    const top = 16 + lane * 88;
                     const leftPx = (a.startHour - RANGE_START) * slotPx;
                     const widthPx = (a.endHour - a.startHour) * slotPx;
                     return (
@@ -436,8 +436,8 @@ export function TimelineSection({
                             onClick={() => onActivityClick(a)}
                           >
                             <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">{a.title}</p>
-                              <p className="text-xs text-muted-foreground truncate uppercase">{a.meta}</p>
+                              <p className="text-sm font-medium whitespace-normal leading-tight line-clamp-3">{a.title}</p>
+                              <p className="text-xs text-muted-foreground uppercase mt-1">{a.meta}</p>
                             </div>
                             <AvatarStack initials={a.avatars} extraCount={a.extraCount} />
                           </div>
