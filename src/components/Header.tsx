@@ -16,6 +16,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import packageJson from "../../package.json";
 
 export function Header() {
     const { theme, setTheme } = useTheme();
@@ -146,7 +147,7 @@ export function Header() {
                 {/* Right Area: Version, Mode Toggle, Notifications */}
                 <div className="flex items-center gap-2">
                     <Badge variant="outline" className="glass-light border-border/50 text-[11px] font-bold uppercase tracking-widest px-2 py-1 hidden sm:inline-flex text-muted-foreground">
-                        v1.0 Beta
+                        v{packageJson.version}
                     </Badge>
 
                     <div className="h-8 w-[1px] bg-border/50 mx-1 hidden sm:block" />

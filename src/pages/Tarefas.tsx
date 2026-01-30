@@ -430,6 +430,7 @@ export default function Tarefas() {
         due_date: values.due ? format(values.due, "yyyy-MM-dd") : null,
         user_id: user.id,
         column_id: "todo" as any,
+        project_id: project?.id,
         progress: 0
       });
       if (error) throw error;
