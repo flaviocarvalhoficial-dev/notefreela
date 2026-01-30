@@ -70,7 +70,7 @@ export function NewTaskDialog({
   onOpenChange: setExternalOpen,
   trigger
 }: {
-  projects: string[];
+  projects: { id: string, name: string }[];
   onCreate: (values: NewTaskValues) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -85,7 +85,7 @@ export function NewTaskDialog({
     resolver: zodResolver(NewTaskSchema),
     defaultValues: {
       title: "",
-      project: projects[0] ?? "",
+      project: projects[0]?.id ?? "",
       priority: "medium",
       due: undefined,
       assignee: "",
@@ -94,7 +94,7 @@ export function NewTaskDialog({
 
   React.useEffect(() => {
     const current = form.getValues("project");
-    if (!current && projects[0]) form.setValue("project", projects[0], { shouldValidate: true });
+    if (!current && projects[0]) form.setValue("project", projects[0].id, { shouldValidate: true });
   }, [projects, form]);
 
   function handleSubmit(values: NewTaskValues) {
@@ -102,7 +102,7 @@ export function NewTaskDialog({
     setOpen(false);
     form.reset({
       title: "",
-      project: projects[0] ?? "",
+      project: projects[0]?.id ?? "",
       priority: "medium",
       due: undefined,
       assignee: "",
@@ -154,8 +154,8 @@ export function NewTaskDialog({
                       </FormControl>
                       <SelectContent className="glass border-border/50 z-50">
                         {projects.map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p}
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

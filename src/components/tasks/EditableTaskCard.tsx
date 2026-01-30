@@ -23,6 +23,7 @@ export type EditableTask = {
   id: string;
   title: string;
   project: string;
+  projectId?: string;
   priority: Priority;
   due?: string;
   progress: number;
@@ -83,6 +84,7 @@ const EditTaskSchema = z.object({
     .optional()
     .or(z.literal("")),
   tags: z.array(z.string()).optional(),
+  projectId: z.string().optional(),
 });
 
 export type EditTaskValues = z.infer<typeof EditTaskSchema>;
@@ -95,6 +97,7 @@ export function EditableTaskCard({
   onCancelEdit,
   onSave,
   accentColor,
+  projects = [], // List of projects for selection
 }: {
   task: EditableTask;
   isOverlay?: boolean;
@@ -103,6 +106,7 @@ export function EditableTaskCard({
   onCancelEdit?: () => void;
   onSave?: (values: EditTaskValues) => void;
   accentColor?: string;
+  projects?: { id: string, name: string }[];
 }) {
   const form = useForm<EditTaskValues>({
     resolver: zodResolver(EditTaskSchema),
@@ -112,6 +116,7 @@ export function EditableTaskCard({
       due: task.due ? new Date(task.due + "T00:00:00") : undefined,
       assignee: task.assignee ?? "",
       tags: task.tags?.map(t => t.id) ?? [],
+      projectId: task.projectId ?? "",
     },
   });
 
@@ -278,6 +283,24 @@ export function EditableTaskCard({
                   <SelectItem value="high">Alta</SelectItem>
                   <SelectItem value="medium">Média</SelectItem>
                   <SelectItem value="low">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Projeto</p>
+              <Select
+                value={form.watch("projectId") || "unassigned"}
+                onValueChange={(v) => form.setValue("projectId", v === "unassigned" ? "" : v, { shouldDirty: true })}
+              >
+                <SelectTrigger className="h-9 glass-light border-border/50">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent className="glass border-border/50 z-50">
+                  <SelectItem value="unassigned" className="text-muted-foreground"><em>Sem Projeto</em></SelectItem>
+                  {projects.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

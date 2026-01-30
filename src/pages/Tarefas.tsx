@@ -295,6 +295,7 @@ function SortableTaskInline({
   onStartEdit,
   onCancelEdit,
   onSave,
+  projects,
 }: {
   task: Task;
   color?: string;
@@ -302,6 +303,7 @@ function SortableTaskInline({
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSave: (values: EditTaskValues) => void;
+  projects?: { id: string, name: string }[];
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -319,7 +321,8 @@ function SortableTaskInline({
     ...task,
     project: task.project_name || "Geral",
     columnId: task.column_id,
-    due: task.due_date || undefined
+    due: task.due_date || undefined,
+    projectId: task.project_id || undefined
   };
 
   return (
@@ -337,6 +340,7 @@ function SortableTaskInline({
         onCancelEdit={onCancelEdit}
         onSave={onSave}
         accentColor={color}
+        projects={projects}
       />
     </div>
   );
@@ -359,7 +363,7 @@ export default function Tarefas() {
     }
   });
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [] } = useQuery<{ id: string, name: string }[]>({
     queryKey: ["projects"],
     queryFn: async () => {
       const { data, error } = await supabase.from("projects").select("id, name");
@@ -422,15 +426,12 @@ export default function Tarefas() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
-      // Find project id from name
-      const project = projects.find(p => p.name === values.project);
-
       const { error } = await supabase.from("tasks").insert({
         title: values.title,
         due_date: values.due ? format(values.due, "yyyy-MM-dd") : null,
         user_id: user.id,
         column_id: "todo" as any,
-        project_id: project?.id,
+        project_id: values.project, // Now receives ID directly
         progress: 0
       });
       if (error) throw error;
@@ -450,7 +451,7 @@ export default function Tarefas() {
     return tasks.filter((t) => {
       const matchesQ = !q || t.title.toLowerCase().includes(q) || t.project_name?.toLowerCase().includes(q);
       const matchesP = priorityFilter === "all" || t.priority === priorityFilter;
-      const matchesProject = projectFilter === "all" || t.project_id === projectFilter;
+      const matchesProject = projectFilter === "all" || String(t.project_id) === String(projectFilter);
       return matchesQ && matchesP && matchesProject;
     });
   }, [tasks, query, priorityFilter, projectFilter]);
@@ -495,7 +496,7 @@ export default function Tarefas() {
     }
   }
 
-  const projectNames = useMemo(() => projects.map(p => p.name), [projects]);
+
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">
@@ -511,7 +512,7 @@ export default function Tarefas() {
             Tags
           </Button>
           <NewTaskDialog
-            projects={projectNames}
+            projects={projects}
             onCreate={(v) => createTaskMutation.mutate(v)}
             trigger={
               <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-glow rounded-xl">
@@ -534,7 +535,12 @@ export default function Tarefas() {
           />
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          {projectFilter !== "all" && (
+            <span className="text-xs text-muted-foreground hidden md:inline-block animate-in fade-in">
+              Exibindo: <span className="font-medium text-foreground">{projects.find(p => p.id === projectFilter)?.name}</span>
+            </span>
+          )}
           <Select value={projectFilter} onValueChange={setProjectFilter}>
             <SelectTrigger className="w-[190px] glass-light border-border/50">
               <div className="flex items-center gap-2">
@@ -631,9 +637,12 @@ export default function Tarefas() {
                                   title: values.title.trim(),
                                   priority: values.priority,
                                   due_date: values.due ? format(values.due, "yyyy-MM-dd") : null,
+                                  assignee: values.assignee,
+                                  project_id: values.projectId || null,
                                 });
                                 setEditingId(null);
                               }}
+                              projects={projects}
                             />
                           ))}
                           {colTasks.length === 0 && (
