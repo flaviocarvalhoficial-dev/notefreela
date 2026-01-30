@@ -114,8 +114,8 @@ export function TimelineSection({
 }) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const [zoom, setZoom] = useState(1);
-  const [tab, setTab] = useState<"today" | "tomorrow" | "week">("today");
-  const [weekDayOffset, setWeekDayOffset] = useState(0);
+  // Defaulting to "Week" view, effectively showing multiple days.
+  const [viewRange, setViewRange] = useState(7);
   const [selected, setSelected] = useState<TimelineActivity | null>(null);
   const lastDragEndedAtRef = useRef(0);
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -201,32 +201,39 @@ export function TimelineSection({
     return arr;
   }, []);
 
-  const activeDayOffset = tab === "today" ? 0 : tab === "tomorrow" ? 1 : weekDayOffset;
-  const activeDate = useMemo(() => addDays(today, activeDayOffset), [today, activeDayOffset]);
-
-  const weekDays = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => addDays(today, i));
-  }, [today]);
-
-  const positionedActivities = useMemo(() => {
-    const filtered = timelineActivities.filter((a) => a.dayOffset === activeDayOffset);
-    const sorted = [...filtered].sort((a, b) => a.startHour - b.startHour);
-    const laneEnds: number[] = [];
-    return sorted.map((a) => {
-      let lane = laneEnds.findIndex((end) => end <= a.startHour);
-      if (lane === -1) lane = laneEnds.length;
-      laneEnds[lane] = a.endHour;
-      return { ...a, lane: lane as number };
+  // Calculate active days based on range
+  const activeDays = useMemo(() => {
+    return Array.from({ length: viewRange }, (_, i) => {
+      const date = addDays(today, i);
+      const dayOffset = i;
+      return { date, dayOffset, label: dayLabel(date) };
     });
-  }, [timelineActivities, activeDayOffset]);
+  }, [today, viewRange]);
 
-  const laneCount = useMemo(() => {
-    let maxLane = 0;
-    for (const a of positionedActivities) {
-      maxLane = Math.max(maxLane, (a.lane ?? 0) as number);
-    }
-    return maxLane + 1;
-  }, [positionedActivities]);
+  // Group activities by day and position them
+  const activitiesByDay = useMemo(() => {
+    const grouped: Record<number, { height: number; items: TimelineActivity[] }> = {};
+
+    activeDays.forEach(day => {
+      const activities = timelineActivities.filter(a => a.dayOffset === day.dayOffset);
+      const sorted = [...activities].sort((a, b) => a.startHour - b.startHour);
+
+      const laneEnds: number[] = [];
+      const positioned = sorted.map(a => {
+        let lane = laneEnds.findIndex(end => end <= a.startHour);
+        if (lane === -1) lane = laneEnds.length;
+        laneEnds[lane] = a.endHour;
+        return { ...a, lane: lane as number };
+      });
+
+      const laneCount = laneEnds.length > 0 ? Math.max(...positioned.map(p => p.lane || 0)) + 1 : 1;
+      const height = Math.max(100, 20 + laneCount * 90); // Min height 100px, 90px per lane
+
+      grouped[day.dayOffset] = { height, items: positioned };
+    });
+
+    return grouped;
+  }, [timelineActivities, activeDays]);
 
   const nowLeftPx = (now - RANGE_START) * slotPx;
 
@@ -315,45 +322,12 @@ export function TimelineSection({
     >
       <header className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h2 className="text-lg font-semibold">Minha Atividade</h2>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <h2 className="text-lg font-semibold">Timeline Geral</h2>
+          <p className="text-sm text-muted-foreground">Visão geral dos próximos 7 dias</p>
         </div>
 
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center justify-end gap-2 flex-wrap">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full glass-light border border-border/50"
-                  onClick={onToggleProjects}
-                  aria-label={projectsCollapsed ? "Mostrar Projetos Recentes" : "Expandir Timeline"}
-                  title={projectsCollapsed ? "Mostrar Projetos Recentes" : "Expandir Timeline"}
-                >
-                  {projectsCollapsed ? (
-                    <Minimize2 className="h-3.5 w-3.5" />
-                  ) : (
-                    <Maximize2 className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="glass border-border/50">
-                <p className="text-xs">
-                  {projectsCollapsed ? "Mostrar Projetos Recentes" : "Expandir Timeline"}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-              <TabsList className="glass-light border border-border/50">
-                <TabsTrigger value="today">Hoje</TabsTrigger>
-                <TabsTrigger value="tomorrow">Amanhã</TabsTrigger>
-                <TabsTrigger value="week">Semana</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
             <div className="flex items-center gap-2 text-xs text-muted-foreground glass-light rounded-full px-3 py-1 border border-border/50">
               <Clock className="h-3.5 w-3.5" />
               07:00 → 02:00
@@ -375,26 +349,6 @@ export function TimelineSection({
               </Button>
             </div>
           </div>
-
-          {tab === "week" ? (
-            <div className="flex items-center gap-1 overflow-auto max-w-[480px]">
-              {weekDays.map((d, idx) => {
-                const active = idx === weekDayOffset;
-                return (
-                  <Button
-                    key={d.toISOString()}
-                    type="button"
-                    variant={active ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-8 rounded-full glass-light border border-border/50 text-xs whitespace-nowrap"
-                    onClick={() => setWeekDayOffset(idx)}
-                  >
-                    {dayLabel(d)}
-                  </Button>
-                );
-              })}
-            </div>
-          ) : null}
         </div>
       </header>
 
@@ -420,57 +374,81 @@ export function TimelineSection({
               ))}
             </div>
 
-            <div className="timeline-track" style={{ ["--timeline-lanes" as any]: laneCount }}>
-              {isLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary/30" />
-                </div>
-              ) : (
-                <>
-                  <div className="timeline-now" style={{ left: nowLeftPx }} aria-hidden="true" />
-                  <div className="timeline-now-dot" style={{ left: nowLeftPx }} aria-hidden="true" />
+            <div className="flex flex-col gap-6">
+              {activeDays.map(day => {
+                const dayData = activitiesByDay[day.dayOffset];
+                const items = dayData?.items || [];
+                const rowHeight = dayData?.height || 100;
 
-                  {positionedActivities.map((a) => {
-                    const lane = (a.lane ?? 0) as number;
-                    const top = 16 + lane * 88;
-                    const leftPx = (a.startHour - RANGE_START) * slotPx;
-                    const widthPx = (a.endHour - a.startHour) * slotPx;
-                    return (
-                      <Tooltip key={a.id}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={typeClass(a.type)}
-                            style={{
-                              left: leftPx,
-                              width: widthPx,
-                              top,
-                              ...(a.color ? { boxShadow: `0 6px 24px -14px rgba(0,0,0,0.12), 0 0 24px ${a.color}30`, borderLeft: `4px solid ${a.color}` } : {})
-                            }}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => onActivityClick(a)}
-                          >
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium whitespace-normal leading-tight line-clamp-3">{a.title}</p>
-                              <p className="text-xs text-muted-foreground uppercase mt-1">{a.meta}</p>
-                            </div>
-                            <AvatarStack initials={a.avatars} extraCount={a.extraCount} />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="glass border-border/50">
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium">{a.title}</p>
-                            <p className="text-xs text-muted-foreground uppercase">{a.meta}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatHourLabel(a.startHour)} → {formatHourLabel(a.endHour)}
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </>
-              )}
+                return (
+                  <div key={day.date.toISOString()} className="relative">
+                    {/* Day Header/Label inside the scrollable area so it aligns with content */}
+                    <div className="sticky left-0 w-24 z-10 -mt-7 mb-1 font-semibold text-sm bg-background/80 backdrop-blur rounded px-2">
+                      {day.label}
+                    </div>
+
+                    <div className="timeline-track relative bg-muted/20 rounded-xl" style={{ height: rowHeight }}>
+                      {/* Background Grid Lines */}
+                      <div className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: `repeating-linear-gradient(90deg, hsl(var(--border) / 0.1) 0, hsl(var(--border) / 0.1) 1px, transparent 1px, transparent ${slotPx}px)`
+                        }}
+                      />
+
+                      {/* Current Time Indicator (Only for Today) */}
+                      {day.dayOffset === 0 && (
+                        <>
+                          <div className="timeline-now" style={{ left: nowLeftPx, height: '100%', zIndex: 5 }} aria-hidden="true" />
+                          <div className="timeline-now-dot" style={{ left: nowLeftPx, zIndex: 6 }} aria-hidden="true" />
+                        </>
+                      )}
+
+                      {items.map((a) => {
+                        const lane = (a.lane ?? 0) as number;
+                        const top = 10 + lane * 90; // Spacing logic
+                        const leftPx = (a.startHour - RANGE_START) * slotPx;
+                        const widthPx = (a.endHour - a.startHour) * slotPx;
+
+                        return (
+                          <Tooltip key={a.id}>
+                            <TooltipTrigger asChild>
+                              <div
+                                className="absolute rounded-xl transition-all hover:scale-[1.01] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-3"
+                                style={{
+                                  left: leftPx,
+                                  width: widthPx,
+                                  top,
+                                  height: 80,
+                                  backgroundColor: a.color || "hsl(var(--card))",
+                                  color: a.color ? "#fff" : "hsl(var(--foreground))",
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => onActivityClick(a)}
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold whitespace-nowrap overflow-hidden text-ellipsis leading-tight drop-shadow-sm">{a.title}</p>
+                                  <p className="text-[10px] font-medium opacity-90 uppercase mt-0.5 tracking-wider drop-shadow-sm">{a.meta}</p>
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="glass border-border/50">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">{a.title}</p>
+                                <p className="text-xs text-muted-foreground uppercase">{a.meta}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatHourLabel(a.startHour)} → {formatHourLabel(a.endHour)}
+                                </p>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -483,7 +461,7 @@ export function TimelineSection({
           ...selected,
           startLabel: formatHourLabel(selected.startHour),
           endLabel: formatHourLabel(selected.endHour),
-          dateLabel: dayLabel(activeDate),
+          dateLabel: dayLabel(addDays(today, selected.dayOffset)),
         } as any : null}
       />
     </motion.section>
