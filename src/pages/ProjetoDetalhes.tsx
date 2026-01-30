@@ -326,26 +326,26 @@ const ProjetoDetalhes = () => {
                             </div>
 
                             <div className="space-y-3">
-                                {tasks.length === 0 ? (
-                                    <div className="text-center py-8 glass-light rounded-xl border border-dashed border-border/50">
-                                        <p className="text-xs text-muted-foreground">Nenhuma tarefa vinculada.</p>
-                                    </div>
-                                ) : (
-                                    tasks.slice(0, 5).map(task => (
-                                        <div key={task.id} className="p-3 glass-light rounded-lg border border-border/20 flex items-center justify-between group hover:border-primary/30 transition-all">
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-medium truncate">{task.title}</p>
-                                                <p className="text-[10px] text-muted-foreground uppercase">{task.priority}</p>
-                                            </div>
-                                            <Badge variant="outline" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 glass-light border-none">
-                                                <ArrowLeft className="h-3 w-3 rotate-180" />
-                                            </Badge>
+                                {(tasks.length === 0 ? [
+                                    { id: "mock-1", title: "Definir Escopo e Requisitos", priority: "high" },
+                                    { id: "mock-2", title: "Criar Roadmap do Projeto", priority: "medium" }
+                                ] : tasks.slice(0, 5)).map(task => (
+                                    <div key={task.id} className="p-3 glass-light rounded-lg border border-border/20 flex items-center justify-between group hover:border-primary/30 transition-all">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium truncate">{task.title}</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase">{task.priority === "high" ? "Alta" : task.priority === "medium" ? "Média" : "Baixa"}</p>
                                         </div>
-                                    ))
+                                        <Badge variant="outline" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 glass-light border-none">
+                                            <ArrowLeft className="h-3 w-3 rotate-180" />
+                                        </Badge>
+                                    </div>
+                                ))}
+
+                                {tasks.length > 0 && (
+                                    <Button variant="outline" className="w-full glass-light border-border/50 h-10 rounded-lg text-xs" onClick={() => navigate("/tarefas")}>
+                                        Ver todas as tarefas
+                                    </Button>
                                 )}
-                                <Button variant="outline" className="w-full glass-light border-border/50 h-10 rounded-lg text-xs" onClick={() => navigate("/tarefas")}>
-                                    Ver todas as tarefas
-                                </Button>
                             </div>
                         </section>
 

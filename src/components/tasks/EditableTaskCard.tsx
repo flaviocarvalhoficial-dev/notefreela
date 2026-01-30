@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Priority = "low" | "medium" | "high";
 
@@ -109,6 +112,17 @@ export function EditableTaskCard({
       due: task.due ? new Date(task.due + "T00:00:00") : undefined,
       assignee: task.assignee ?? "",
       tags: task.tags?.map(t => t.id) ?? [],
+    },
+  });
+
+  const { data: profiles } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -307,15 +321,33 @@ export function EditableTaskCard({
             </div>
 
             <div className="space-y-1 sm:col-span-2">
-              <p className="text-xs text-muted-foreground">Assignee</p>
-              <Input
-                {...form.register("assignee")}
-                className="h-9 glass-light border-border/50"
-                placeholder="Ex: Ana"
-              />
-              {form.formState.errors.assignee ? (
-                <p className="text-xs text-destructive">{form.formState.errors.assignee.message}</p>
-              ) : null}
+              <p className="text-xs text-muted-foreground">Responsável</p>
+              <Select
+                value={form.watch("assignee")}
+                onValueChange={(v) => form.setValue("assignee", v, { shouldDirty: true })}
+              >
+                <SelectTrigger className="h-9 glass-light border-border/50">
+                  <SelectValue placeholder="Selecione um responsável" />
+                </SelectTrigger>
+                <SelectContent className="glass border-border/50 z-50 max-h-[200px]">
+                  <SelectItem value="unassigned" className="text-muted-foreground">
+                    <em>Ninguém</em>
+                  </SelectItem>
+                  {profiles?.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.full_name || "Sem nome"}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={profile.avatar_url} />
+                          <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+                            {profile.full_name?.charAt(0).toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{profile.full_name || "Usuário sem nome"}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1 sm:col-span-2">

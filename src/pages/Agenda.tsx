@@ -45,15 +45,37 @@ const Agenda = () => {
   const [newStartTime, setNewStartTime] = useState("09:00");
   const [newEndTime, setNewEndTime] = useState("10:00");
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data: allEvents = [], isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Buscar eventos manuais
+      const { data: manualEvents, error: eventsError } = await supabase
         .from("events")
         .select("*")
         .order("start_time", { ascending: true });
-      if (error) throw error;
-      return data as AgendaEvent[];
+
+      if (eventsError) throw eventsError;
+
+      // Buscar tarefas com data de vencimento
+      const { data: tasks, error: tasksError } = await supabase
+        .from("tasks")
+        .select("*")
+        .not("due_date", "is", null);
+
+      if (tasksError) throw tasksError;
+
+      // Unificar
+      const taskEvents = tasks.map((task: any) => ({
+        id: task.id,
+        title: task.title,
+        type: "task" as EventType,
+        date: task.due_date,
+        start_time: "09:00", // Horário padrão para tarefas
+        end_time: "18:00",
+        participants: []
+      }));
+
+      return [...(manualEvents as AgendaEvent[]), ...taskEvents];
     },
   });
 
@@ -91,9 +113,9 @@ const Agenda = () => {
     }
   });
 
-  const selectedEvents = events.filter((event) => isSameDay(new Date(event.date + "T12:00:00"), selectedDate));
+  const selectedEvents = allEvents.filter((event) => isSameDay(new Date(event.date + "T12:00:00"), selectedDate));
 
-  const hasEvents = (date: Date) => events.some((event) => isSameDay(new Date(event.date + "T12:00:00"), date));
+  const hasEvents = (date: Date) => allEvents.some((event) => isSameDay(new Date(event.date + "T12:00:00"), date));
 
   return (
     <div className="h-full flex flex-col gap-6">
