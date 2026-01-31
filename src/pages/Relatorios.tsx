@@ -50,7 +50,7 @@ export default function Relatorios() {
 
             // Task distribution by column
             const taskDist = [
-                { name: "To-do", value: tasks.filter(t => t.column_id === "todo").length },
+                { name: "Início", value: tasks.filter(t => t.column_id === "todo").length },
                 { name: "In Progress", value: tasks.filter(t => t.column_id === "inprogress").length },
                 { name: "Done", value: tasks.filter(t => t.column_id === "done").length }
             ];

@@ -89,7 +89,7 @@ interface Column {
 }
 
 const defaultColumns: Column[] = [
-  { id: "todo", title: "To-do", hint: "Planeje e quebre em passos", color: "hsl(215, 20%, 65%)" },
+  { id: "todo", title: "Início", hint: "Planeje e quebre em passos", color: "hsl(215, 20%, 65%)" },
   { id: "inprogress", title: "Em Progresso", hint: "Foco no que está em execução", color: "hsl(158, 64%, 52%)" },
   { id: "done", title: "Concluído", hint: "Entrega e validação", color: "hsl(221, 83%, 62%)" },
 ];
@@ -392,7 +392,12 @@ export default function Tarefas() {
       const { data, error } = await query;
       if (error) throw error;
 
-      return data;
+      if (data && data.length > 0) {
+        return data;
+      }
+
+      // If project is selected but has no columns, show defaults
+      return defaultColumns;
     }
   });
 

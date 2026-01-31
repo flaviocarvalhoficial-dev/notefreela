@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Loader2, ChevronRight, ChevronLeft, Check, ListTodo, User, Calendar, Briefcase, Building2 } from "lucide-react";
+import { Plus, Loader2, ChevronRight, ChevronLeft, Check, ListTodo, User, Calendar, Briefcase, Building2, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -40,6 +40,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [newDeadline, setNewDeadline] = useState("");
     const [newManager, setNewManager] = useState("");
     const [newPriority, setNewPriority] = useState<"high" | "medium" | "low">("medium");
+    const [newValue, setNewValue] = useState<number | "">("");
 
     // Step 3: Tarefas
     const [tasks, setTasks] = useState<{ id: string, title: string }[]>([]);
@@ -53,6 +54,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setNewDeadline("");
         setNewManager("");
         setNewPriority("medium");
+        setNewValue("");
         setTasks([]);
         setTaskInput("");
     };
@@ -85,19 +87,32 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     deadline: newDeadline || null,
                     user_id: user.id,
                     progress: 0,
+                    value: newValue || 0,
                 })
                 .select()
                 .single();
 
             if (pError) throw pError;
 
-            // 2. Create Tasks if any
+            // 2. Create Default Columns for this project
+            const defaultColsToInsert = [
+                { project_id: project.id, title: "Início", hint: "Planeje e quebre em passos", position: 0, color: "hsl(215, 20%, 65%)", user_id: user.id },
+                { project_id: project.id, title: "Em Progresso", hint: "Foco no que está em execução", position: 1, color: "hsl(158, 64%, 52%)", user_id: user.id },
+                { project_id: project.id, title: "Concluído", hint: "Entrega e validação", position: 2, color: "hsl(221, 83%, 62%)", user_id: user.id }
+            ];
+
+            const { data: createdCols, error: cError } = await (supabase as any).from("kanban_columns").insert(defaultColsToInsert).select();
+            if (cError) throw cError;
+
+            const todoColId = createdCols.find((c: any) => c.position === 0)?.id || "todo";
+
+            // 3. Create Tasks if any
             if (tasks.length > 0) {
                 const tasksToInsert = tasks.map(t => ({
                     title: t.title,
                     project_id: project.id,
                     user_id: user.id,
-                    column_id: "todo",
+                    column_id: todoColId,
                     progress: 0,
                     priority: "medium"
                 }));
@@ -247,21 +262,37 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs uppercase tracking-wider opacity-60">Prioridade Inicial</Label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {(['low', 'medium', 'high'] as const).map((p) => (
-                                                <Button
-                                                    key={p}
-                                                    type="button"
-                                                    variant={newPriority === p ? "default" : "outline"}
-                                                    size="sm"
-                                                    onClick={() => setNewPriority(p)}
-                                                    className={newPriority === p ? "bg-primary/20 text-primary border-primary/50" : "glass-light border-border/50"}
-                                                >
-                                                    {p === 'low' ? 'Baixa' : p === 'medium' ? 'Média' : 'Alta'}
-                                                </Button>
-                                            ))}
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="project-value" className="text-xs uppercase tracking-wider opacity-60 flex items-center gap-2">
+                                                <DollarSign className="h-3 w-3" /> Valor Estimado (R$)
+                                            </Label>
+                                            <Input
+                                                id="project-value"
+                                                type="number"
+                                                placeholder="0,00"
+                                                className="glass-light border-border/50 h-11"
+                                                value={newValue}
+                                                onChange={(e) => setNewValue(Number(e.target.value))}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-xs uppercase tracking-wider opacity-60">Prioridade Inicial</Label>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {(['low', 'medium', 'high'] as const).map((p) => (
+                                                    <Button
+                                                        key={p}
+                                                        type="button"
+                                                        variant={newPriority === p ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setNewPriority(p)}
+                                                        className={newPriority === p ? "bg-primary/20 text-primary border-primary/50" : "glass-light border-border/50"}
+                                                    >
+                                                        {p === 'low' ? 'Baixa' : p === 'medium' ? 'Média' : 'Alta'}
+                                                    </Button>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </>
