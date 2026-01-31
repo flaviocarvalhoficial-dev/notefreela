@@ -19,7 +19,10 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'robots.txt'],
+      devOptions: {
+        enabled: true,
+      },
       manifest: {
         name: 'NoteFreela',
         short_name: 'NoteFreela',
