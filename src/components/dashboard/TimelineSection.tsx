@@ -442,6 +442,23 @@ export function TimelineSection({
             </div>
 
             <div className="relative flex">
+              {/* Global Needle - Spans across all days */}
+              {now >= RANGE_START && now <= RANGE_END && (
+                <div
+                  className="absolute left-0 right-0 h-[1.5px] bg-primary z-40 pointer-events-none transition-all duration-1000 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                  style={{ top: `${needleTopPx + 60}px` }} // +60 to account for header height
+                >
+                  <div className="sticky left-0">
+                    <div className="absolute left-0 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary shadow-glow flex items-center justify-center z-50">
+                      <div className="w-1 h-1 rounded-full bg-white" />
+                    </div>
+                    <div className="absolute left-3 -translate-y-1/2 top-0 px-1.5 py-0.5 rounded-sm bg-primary text-[8px] font-bold text-white uppercase tracking-tighter shadow-lg whitespace-nowrap z-50">
+                      Agora
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeDays.map((day) => {
                 const dayData = activitiesByDay[day.dayOffset];
                 const items = dayData?.items || [];
@@ -454,21 +471,6 @@ export function TimelineSection({
                     </div>
 
                     <div className="relative flex-1 bg-muted/5" style={{ height: (RANGE + 1) * 60 }}>
-                      {/* Local Needle - Only for Today */}
-                      {day.dayOffset === 0 && now >= RANGE_START && now <= RANGE_END && (
-                        <div
-                          className="absolute left-0 right-0 h-[1.5px] bg-primary z-40 pointer-events-none transition-all duration-1000 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
-                          style={{ top: `${needleTopPx}px` }}
-                        >
-                          <div className="absolute left-0 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary shadow-glow flex items-center justify-center">
-                            <div className="w-1 h-1 rounded-full bg-white" />
-                          </div>
-                          <div className="absolute left-3 -translate-y-1/2 top-0 px-1.5 py-0.5 rounded-sm bg-primary text-[8px] font-bold text-white uppercase tracking-tighter shadow-lg">
-                            Agora
-                          </div>
-                        </div>
-                      )}
-
                       {/* Row Grid Lines */}
                       <div className="absolute inset-0 pointer-events-none"
                         style={{
