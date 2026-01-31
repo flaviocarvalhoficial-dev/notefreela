@@ -38,7 +38,7 @@ const COLUMN_COLORS: Record<string, string> = {
 const RANGE_START = 7;
 const RANGE_END = 26;
 const RANGE = RANGE_END - RANGE_START;
-const BASE_SLOT_PX = 86;
+const BASE_SLOT_PX = 200;
 
 function formatHourLabel(h: number) {
   const hh = Math.floor(h);
@@ -227,7 +227,7 @@ export function TimelineSection({
       });
 
       const laneCount = laneEnds.length > 0 ? Math.max(...positioned.map(p => p.lane || 0)) + 1 : 1;
-      const height = Math.max(100, 20 + laneCount * 90); // Min height 100px, 90px per lane
+      const height = Math.max(80, 20 + laneCount * 50); // Lane height 50px for task cards of 40px
 
       grouped[day.dayOffset] = { height, items: positioned };
     });
@@ -401,7 +401,7 @@ export function TimelineSection({
 
                       {items.map((a) => {
                         const lane = (a.lane ?? 0) as number;
-                        const top = 10 + lane * 90; // Spacing logic
+                        const top = 10 + lane * 50; // Spacing logic
                         const leftPx = (a.startHour - RANGE_START) * slotPx;
                         const widthPx = (a.endHour - a.startHour) * slotPx;
 
@@ -409,23 +409,25 @@ export function TimelineSection({
                           <Tooltip key={a.id}>
                             <TooltipTrigger asChild>
                               <div
-                                className="absolute rounded-xl transition-all hover:scale-[1.01] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-3"
+                                className="absolute rounded-lg transition-all hover:scale-[1.01] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-4"
                                 style={{
                                   left: leftPx,
                                   width: widthPx,
                                   top,
-                                  height: 80,
+                                  height: 40,
                                   backgroundColor: a.color || "hsl(var(--card))",
                                   color: a.color ? "#fff" : "hsl(var(--foreground))",
-                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                                 }}
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => onActivityClick(a)}
                               >
-                                <div className="min-w-0">
-                                  <p className="text-sm font-bold whitespace-nowrap overflow-hidden text-ellipsis leading-tight drop-shadow-sm">{a.title}</p>
-                                  <p className="text-[10px] font-medium opacity-90 uppercase mt-0.5 tracking-wider drop-shadow-sm">{a.meta}</p>
+                                <div className="min-w-0 flex items-center gap-3">
+                                  <p className="text-sm font-bold whitespace-nowrap leading-none drop-shadow-sm">{a.title}</p>
+                                  <span className="text-[9px] font-medium opacity-70 uppercase tracking-widest whitespace-nowrap drop-shadow-sm border-l border-white/20 pl-2">
+                                    {a.meta}
+                                  </span>
                                 </div>
                               </div>
                             </TooltipTrigger>
