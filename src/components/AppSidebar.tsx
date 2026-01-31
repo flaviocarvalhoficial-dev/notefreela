@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -21,7 +22,6 @@ const navItems = [
   { title: "Atividades", url: "/atividades", icon: Activity },
   { title: "Documentos", url: "/documentos", icon: FileText },
   { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
-  { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -81,6 +81,27 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip={!open ? "Configurações" : undefined}
+              className="h-10 rounded-md transition-colors"
+            >
+              <NavLink
+                to="/configuracoes"
+                className={`flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors w-full h-full ${!open ? "justify-center" : ""}`}
+                activeClassName="bg-zinc-100 dark:bg-zinc-800 text-primary font-medium border-l-2 border-primary"
+              >
+                <Settings className={`${open ? "h-4 w-4" : "h-5 w-5"} shrink-0`} />
+                {open && <span className="text-sm">Configurações</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

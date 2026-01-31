@@ -313,7 +313,7 @@ function SortableTaskInline({
   });
 
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
   };
 
@@ -860,7 +860,7 @@ export default function Tarefas() {
             </div>
           </motion.div>
 
-          <DragOverlay dropAnimation={{ duration: 180, easing: "ease-out" }}>
+          <DragOverlay dropAnimation={null}>
             {activeTask ? (
               <EditableTaskCard
                 task={{ ...activeTask, project: activeTask.project_name || "Geral", columnId: activeTask.column_id } as any}
