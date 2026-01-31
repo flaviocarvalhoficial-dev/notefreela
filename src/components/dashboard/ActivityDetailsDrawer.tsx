@@ -1,5 +1,8 @@
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 
 type ActivityDetails = {
   id: string;
@@ -23,10 +26,12 @@ export function ActivityDetailsDrawer({
   open,
   onOpenChange,
   activity,
+  onDelete
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activity: ActivityDetails | null;
+  onDelete?: (id: string, type: string) => void;
 }) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -40,9 +45,24 @@ export function ActivityDetailsDrawer({
               </DrawerDescription>
             </div>
             {activity ? (
-              <Badge variant="secondary" className="glass-light border-border/50">
-                {typeLabel(activity.type)}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <DeleteConfirmDialog
+                  title={`Excluir ${typeLabel(activity.type)}`}
+                  description={`Deseja excluir permanentemente "${activity.title}"?`}
+                  onConfirm={() => {
+                    if (onDelete) onDelete(activity.id, activity.type);
+                    onOpenChange(false);
+                  }}
+                  trigger={
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+                <Badge variant="secondary" className="glass-light border-border/50">
+                  {typeLabel(activity.type)}
+                </Badge>
+              </div>
             ) : null}
           </div>
         </DrawerHeader>

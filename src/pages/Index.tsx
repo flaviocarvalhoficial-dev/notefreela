@@ -15,9 +15,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { NewProjectDialog } from "@/components/projects/NewProjectDialog";
 import { NewTaskDialog, NewTaskValues } from "@/components/tasks/NewTaskDialog";
-import { useToast } from "@/hooks/use-toast";
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
+import { Trash2 } from "lucide-react";
 
 const Index = () => {
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
@@ -77,27 +79,41 @@ const Index = () => {
     }
   });
 
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const { error } = await supabase.from("projects").delete().eq("id", projectId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects-index"] });
+      toast({ title: "Projeto excluído", description: "O projeto foi removido com sucesso." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+    }
+  });
+
   const stats = [
     {
       title: "Projetos Ativos",
       value: projects.filter(p => p.status === "active").length.toString(),
       change: "Gestão em tempo real",
       icon: TrendingUp,
-      color: "hsl(158, 64%, 52%)"
+      color: "hsl(var(--peach))"
     },
     {
       title: "Tarefas Concluídas",
       value: tasksStats?.completed.toString() || "0",
       change: `${tasksStats?.total || 0} no total`,
       icon: CheckCircle2,
-      color: "hsl(262, 52%, 65%)"
+      color: "hsl(var(--peach))"
     },
     {
       title: "Clientes",
       value: "0",
       change: "Clientes ativos",
       icon: Users,
-      color: "hsl(212, 52%, 52%)"
+      color: "hsl(var(--peach))"
     },
   ];
 
@@ -249,9 +265,23 @@ const Index = () => {
                                   <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                                   <h3 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{project.name}</h3>
                                 </div>
-                                <span className="text-[10px] font-bold text-muted-foreground tabular-nums whitespace-nowrap">
-                                  {project.progress || 0}%
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-bold text-muted-foreground tabular-nums whitespace-nowrap group-hover:hidden">
+                                    {project.progress || 0}%
+                                  </span>
+                                  <div className="hidden group-hover:block" onClick={(e) => e.stopPropagation()}>
+                                    <DeleteConfirmDialog
+                                      title="Excluir Projeto"
+                                      description={`Excluir permanentemente o projeto "${project.name}"?`}
+                                      onConfirm={() => deleteProjectMutation.mutate(project.id)}
+                                      trigger={
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10 rounded-md">
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                      }
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </motion.div>
                           </CarouselItem>

@@ -37,10 +37,10 @@ const mockTemplates: DocumentTemplate[] = [
 ];
 
 const categories = [
-    { name: "Todos", icon: FileText, count: 12, color: "text-blue-500" },
-    { name: "Contratos", icon: FileSignature, count: 4, color: "text-emerald-500" },
-    { name: "Briefings", icon: ClipboardCheck, count: 3, color: "text-amber-500" },
-    { name: "Recibos", icon: Receipt, count: 5, color: "text-rose-500" },
+    { name: "Todos", icon: FileText, count: 12 },
+    { name: "Contratos", icon: FileSignature, count: 4 },
+    { name: "Briefings", icon: ClipboardCheck, count: 3 },
+    { name: "Recibos", icon: Receipt, count: 5 },
 ];
 
 const Documentos = () => {
@@ -49,24 +49,35 @@ const Documentos = () => {
 
     const filtered = mockTemplates.filter(doc => {
         const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = activeCategory === "Todos" || doc.category === activeCategory.replace(/s$/, ''); // Basic plural to singular
+        const matchesCategory = activeCategory === "Todos" || doc.category === activeCategory.replace(/s$/, '');
         return matchesSearch && matchesCategory;
     });
 
     return (
-        <div className="space-y-6 max-w-full overflow-x-hidden">
-            <div className="flex items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-semibold tracking-tight mb-1">Meus Documentos</h1>
-                    <p className="text-muted-foreground text-sm">Gerencie seus modelos de contratos, briefings e recibos</p>
+        <div className="pb-10 min-h-screen">
+            {/* Header Area */}
+            <div className="pt-12 pb-8">
+                <div className="flex items-center gap-4 mb-8">
+                    <span className="text-muted-foreground text-sm">Workspaces / Documentos</span>
                 </div>
-                <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 rounded-xl gap-2 shadow-glow">
-                    <Plus className="h-4 w-4" />
-                    Novo Modelo
-                </Button>
+
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="space-y-4">
+                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Documentos</h1>
+                        <p className="text-muted-foreground text-sm max-w-md">Gerencie seus modelos de contratos, briefings e recibos.</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button className="bg-primary text-primary-foreground font-bold rounded-md px-6 shadow-sm">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Novo Modelo
+                        </Button>
+                    </div>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
                 {categories.map((cat, idx) => (
                     <motion.div
                         key={cat.name}
@@ -75,100 +86,90 @@ const Documentos = () => {
                         transition={{ delay: idx * 0.1 }}
                         onClick={() => setActiveCategory(cat.name)}
                         className={cn(
-                            "bento-card p-4 cursor-pointer group transition-all duration-300",
-                            activeCategory === cat.name ? "ring-2 ring-primary/30 bg-primary/5" : "hover:bg-muted/10"
+                            "notion-card cursor-pointer group p-5",
+                            activeCategory === cat.name ? "bg-muted shadow-sm" : "hover:bg-muted/30"
                         )}
                     >
                         <div className="flex items-start justify-between">
-                            <div className={cn("p-2 rounded-xl bg-background/50", cat.color)}>
+                            <div className="p-2 rounded-lg bg-muted/60 text-foreground">
                                 <cat.icon className="h-5 w-5" />
                             </div>
-                            <Badge variant="outline" className="glass-light opacity-60">{cat.count}</Badge>
+                            <span className="text-xs font-bold tabular-nums text-muted-foreground">{cat.count}</span>
                         </div>
                         <div className="mt-4">
-                            <h3 className="text-sm font-semibold">{cat.name}</h3>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Modelos disponíveis</p>
-                        </div>
-                        <div className="mt-4 flex justify-end">
-                            <ArrowRight className={cn(
-                                "h-4 w-4 transition-all duration-300",
-                                activeCategory === cat.name ? "text-primary translate-x-0" : "text-muted-foreground/30 -translate-x-2 group-hover:translate-x-0"
-                            )} />
+                            <h3 className="text-sm font-bold">{cat.name}</h3>
+                            <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1 opacity-60">Modelos</p>
                         </div>
                     </motion.div>
                 ))}
             </div>
 
-            <div className="bento-card p-0 overflow-hidden">
-                <div className="p-4 border-b border-border/50 flex flex-col md:flex-row gap-4 items-center justify-between bg-muted/5">
+            {/* List Area */}
+            <div className="notion-card mt-12 overflow-hidden">
+                <div className="p-4 border-b border-border/40 flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="relative w-full md:w-96">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                         <Input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Buscar modelos..."
-                            className="pl-10 glass-light border-border/50 rounded-xl"
+                            className="pl-10 bg-transparent border-0 focus-visible:ring-0 h-9 text-sm placeholder:text-muted-foreground/40"
                         />
                     </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="glass-light gap-2">
-                            <Filter className="h-3.5 w-3.5" />
-                            Filtros
-                        </Button>
-                    </div>
+                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 hover:text-foreground">
+                        <Filter className="h-3.5 w-3.5 mr-2" />
+                        Filtros
+                    </Button>
                 </div>
 
                 <ScrollArea className="h-[calc(100vh-25rem)]">
-                    <div className="p-2">
+                    <div className="p-0">
                         {filtered.length === 0 ? (
-                            <div className="py-20 text-center">
-                                <FileText className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
-                                <p className="text-muted-foreground">Nenhum documento encontrado.</p>
+                            <div className="py-24 text-center">
+                                <FileText className="h-10 w-10 text-muted-foreground/10 mx-auto mb-4" />
+                                <p className="text-sm text-muted-foreground">Nenhum documento encontrado.</p>
                             </div>
                         ) : (
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="text-[10px] uppercase tracking-widest text-muted-foreground/70 font-bold border-b border-border/10">
-                                        <th className="px-4 py-3">Nome do Modelo</th>
-                                        <th className="px-4 py-3">Categoria</th>
-                                        <th className="px-4 py-3">Última Modif.</th>
-                                        <th className="px-4 py-3">Tamanho</th>
-                                        <th className="px-4 py-3 text-right">Ações</th>
+                                    <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 border-b border-border/20">
+                                        <th className="px-6 py-4">Nome do Modelo</th>
+                                        <th className="px-6 py-4">Categoria</th>
+                                        <th className="px-6 py-4">Modificado</th>
+                                        <th className="px-6 py-4">Tamanho</th>
+                                        <th className="px-6 py-4 text-right">Ações</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border/10">
-                                    {filtered.map((doc, idx) => (
+                                <tbody className="divide-y divide-border/20">
+                                    {filtered.map((doc) => (
                                         <motion.tr
                                             key={doc.id}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            className="group hover:bg-muted/5 transition-colors"
+                                            className="group hover:bg-muted/50 transition-colors cursor-pointer"
                                         >
-                                            <td className="px-4 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-9 w-9 rounded-lg bg-muted/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                                        <FileText className="h-5 w-5" />
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-8 w-8 rounded-md bg-muted/60 flex items-center justify-center text-muted-foreground">
+                                                        <FileText className="h-4 w-4" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-medium">{doc.title}</p>
-                                                        <p className="text-[10px] text-muted-foreground">{doc.type}</p>
+                                                        <p className="text-sm font-bold group-hover:text-primary transition-colors">{doc.title}</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{doc.type}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-4">
-                                                <Badge variant="secondary" className="glass-light text-[10px] font-normal">
+                                            <td className="px-6 py-4">
+                                                <Badge variant="secondary" className="bg-muted/60 text-foreground border-none text-[10px] font-bold uppercase tracking-widest h-5">
                                                     {doc.category}
                                                 </Badge>
                                             </td>
-                                            <td className="px-4 py-4 text-xs text-muted-foreground">{doc.lastModified}</td>
-                                            <td className="px-4 py-4 text-xs text-muted-foreground">{doc.size}</td>
-                                            <td className="px-4 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors">
+                                            <td className="px-6 py-4 text-[11px] font-medium text-muted-foreground">{doc.lastModified}</td>
+                                            <td className="px-6 py-4 text-[11px] font-medium text-muted-foreground">{doc.size}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
                                                         <Download className="h-4 w-4" />
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/20">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </div>

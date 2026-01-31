@@ -1,92 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer base {
   :root {
-    /* Soft Light Mode - Inspirado no Notion/Minimalist */
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    /* Soft Light Mode - Monochromatic Notion Style */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 221 83% 53%;
-    /* Um azul NoteFreela mais sóbrio */
-    --primary-foreground: 210 20% 98%;
+    --primary: 0 0% 10%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 210 20% 95%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 199 89% 48%;
-    --accent-foreground: 210 20% 98%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 0 0% 20%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 10%;
+    --peach: 25 100% 88%;
+    /* Mais claro e suave */
 
     --radius: 0.5rem;
-    /* 8px - Mais profissional */
+    /* 8px - Padrão Notion */
 
-    --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-hover: 0 2px 5px -1px rgb(0 0 0 / 0.08), 0 1px 3px -1px rgb(0 0 0 / 0.03);
+    --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 16% 47%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 210 20% 98%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 45%;
+    --sidebar-primary: 0 0% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 10%;
+    --white: 0 0% 100%;
   }
 
   .dark {
-    --background: 222 47% 4%;
-    --foreground: 210 20% 98%;
+    /* Deep Charcoal Monochromatic Mode - Zero Blue */
+    --background: 220 10% 6%;
+    --foreground: 0 0% 98%;
 
-    --card: 222 47% 6%;
-    --card-foreground: 210 20% 98%;
+    --card: 220 10% 8%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222 47% 6%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 220 10% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 4%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 220 10% 6%;
 
-    --secondary: 222 47% 10%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 220 10% 14%;
+    /* Destaque e Hover (Charcoal Grey) */
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 222 47% 10%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 10% 14%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 217 91% 60%;
-    --accent-foreground: 210 20% 98%;
+    --accent: 220 10% 20%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 0 0% 90%;
+    --destructive-foreground: 220 10% 6%;
 
-    --border: 222 47% 12%;
-    --input: 222 47% 12%;
-    --ring: 217 91% 60%;
+    --border: 220 10% 16%;
+    --input: 220 10% 16%;
+    --ring: 0 0% 98%;
+    --peach: 25 100% 88%;
+    /* Mantém consistência no dark mode */
 
-    --sidebar-background: 222 47% 4%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 47% 4%;
-    --sidebar-accent: 222 47% 10%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 222 47% 12%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-background: 220 10% 5%;
+    --sidebar-foreground: 0 0% 65%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 220 10% 5%;
+    --sidebar-accent: 220 10% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 220 10% 14%;
+    --sidebar-ring: 0 0% 98%;
+    --white: 0 0% 100%;
   }
 }
 
@@ -100,16 +115,41 @@
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     font-optical-sizing: auto;
     position: relative;
-    /* Remover gradientes e efeitos complexos de fundo */
   }
 
   .glass {
-    /* Transformar em flat solid card com bordas nítidas */
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border) / 0.8);
     box-shadow: var(--shadow-soft);
     position: relative;
     overflow: hidden;
+  }
+
+  /* Notion-style Page Header Card */
+  .notion-header {
+    background: hsl(var(--card));
+    border-bottom: 1px solid hsl(var(--border) / 0.6);
+    padding: 2.5rem 2rem;
+  }
+
+  /* Notion-style Flat Card */
+  .linear-card,
+  .notion-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.8);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .linear-card:hover,
+  .notion-card:hover {
+    background: hsl(var(--muted) / 0.2);
+    border-color: hsl(var(--border));
+    transform: none;
+    box-shadow: var(--shadow-hover);
   }
 
   .glass-light {
@@ -122,14 +162,6 @@
   .bento-card {
     @apply glass rounded-lg p-6 transition-all;
     transition-duration: 200ms;
-  }
-
-  .bento-card--compact {
-    @apply p-4;
-  }
-
-  .bento-card--compact:hover {
-    transform: translateY(-2px);
   }
 
   .bento-card:hover {
