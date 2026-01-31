@@ -223,8 +223,8 @@ export function TimelineSection({
           meta: "Tarefa",
           type: "task",
           dayOffset,
-          startHour: 9, // Default start for tasks without time
-          endHour: 10,  // Default duration 1h
+          startHour: t.start_time ? parseTimeToHour(t.start_time) : 9,
+          endHour: t.end_time ? parseTimeToHour(t.end_time) : 10,
           avatars: ["ME"], // Default assignee/user
           extraCount: 0,
           color: colColor,

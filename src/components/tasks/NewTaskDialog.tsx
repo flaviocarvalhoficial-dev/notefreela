@@ -59,6 +59,8 @@ const NewTaskSchema = z.object({
     .max(80, { message: "Máximo de 80 caracteres" })
     .optional()
     .or(z.literal("")),
+  startTime: z.string().optional().or(z.literal("")),
+  endTime: z.string().optional().or(z.literal("")),
 });
 
 export type NewTaskValues = z.infer<typeof NewTaskSchema>;
@@ -89,6 +91,8 @@ export function NewTaskDialog({
       priority: "medium",
       due: undefined,
       assignee: "",
+      startTime: "09:00",
+      endTime: "10:00",
     },
   });
 
@@ -106,6 +110,8 @@ export function NewTaskDialog({
       priority: "medium",
       due: undefined,
       assignee: "",
+      startTime: "09:00",
+      endTime: "10:00",
     });
   }
 
@@ -245,11 +251,52 @@ export function NewTaskDialog({
                 name="assignee"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assignee</FormLabel>
+                    <FormLabel>Responsável</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Ex: Ana" className="glass-light border-border/50" />
                     </FormControl>
-                    <FormDescription>Texto livre (pode deixar vazio).</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hora de Início</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="time"
+                        className="glass-light border-border/50 block w-full"
+                        step="600"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-[10px]">Opcional para a Timeline.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hora de Fim</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="time"
+                        className="glass-light border-border/50 block w-full"
+                        step="600"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-[10px]">Sugestão: 1h de duração.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

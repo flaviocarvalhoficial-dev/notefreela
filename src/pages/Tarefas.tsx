@@ -465,7 +465,9 @@ export default function Tarefas() {
         user_id: user.id,
         column_id: defaultColId as any,
         project_id: values.project,
-        progress: 0
+        progress: 0,
+        start_time: values.startTime || "09:00",
+        end_time: values.endTime || "10:00"
       });
       if (error) throw error;
     },
