@@ -10,6 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityDetailsDrawer } from "@/components/dashboard/ActivityDetailsDrawer";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 
@@ -27,6 +34,7 @@ type TimelineActivity = {
   extraCount?: number;
   lane?: number;
   color?: string; // Custom color override
+  project_id?: string;
 };
 
 const COLUMN_COLORS: Record<string, string> = {
@@ -128,10 +136,20 @@ export function TimelineSection({
   const [selected, setSelected] = useState<TimelineActivity | null>(null);
   const lastDragEndedAtRef = useRef(0);
   const today = useMemo(() => startOfDay(new Date()), []);
+  const [selectedProject, setSelectedProject] = useState<string>("all");
 
   const d = new Date();
   const currentHour = d.getHours() + d.getMinutes() / 60;
   const now = currentHour < 7 ? currentHour + 24 : currentHour;
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects-timeline-filter"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("projects").select("id, name");
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const { data: timelineActivities = [], isLoading } = useQuery({
     queryKey: ["timeline-activities"],
@@ -185,7 +203,8 @@ export function TimelineSection({
           endHour: 10,  // Default duration 1h
           avatars: ["ME"], // Default assignee/user
           extraCount: 0,
-          color: colColor
+          color: colColor,
+          project_id: t.project_id
         } as TimelineActivity;
       });
 
@@ -223,8 +242,15 @@ export function TimelineSection({
   const activitiesByDay = useMemo(() => {
     const grouped: Record<number, { height: number; items: TimelineActivity[] }> = {};
 
+    // Filter activities by project if one is selected
+    const filteredActivities = timelineActivities.filter(a => {
+      if (selectedProject === "all") return true;
+      if (a.type !== "task") return true; // Keep events/personal visible or handle separately
+      return a.project_id === selectedProject;
+    });
+
     activeDays.forEach(day => {
-      const activities = timelineActivities.filter(a => a.dayOffset === day.dayOffset);
+      const activities = filteredActivities.filter(a => a.dayOffset === day.dayOffset);
       const sorted = [...activities].sort((a, b) => a.startHour - b.startHour);
 
       const laneEnds: number[] = [];
@@ -337,6 +363,18 @@ export function TimelineSection({
 
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center justify-end gap-2 flex-wrap">
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger className="h-8 w-[180px] glass-light border-border/50 text-xs rounded-full">
+                <SelectValue placeholder="Filtrar por Projeto" />
+              </SelectTrigger>
+              <SelectContent className="glass border-border/50">
+                <SelectItem value="all">Todos os Projetos</SelectItem>
+                {projects.map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <div className="flex items-center gap-2 text-xs text-muted-foreground glass-light rounded-full px-3 py-1 border border-border/50">
               <Clock className="h-3.5 w-3.5" />
               07:00 → 02:00
