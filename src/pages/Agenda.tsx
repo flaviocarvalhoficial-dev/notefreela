@@ -24,12 +24,19 @@ interface AgendaEvent {
   start_time: string;
   end_time: string;
   participants?: string[] | null;
+  column_id?: string;
 }
 
 const typeColors: Record<EventType, string> = {
   project: "hsl(158, 64%, 52%)",
-  task: "hsl(262, 52%, 65%)",
+  task: "hsl(262, 52%, 65%)", // Fallback
   personal: "hsl(212, 52%, 52%)",
+};
+
+const columnColors: Record<string, string> = {
+  todo: "hsl(220, 15%, 75%)",
+  inprogress: "hsl(200, 85%, 82%)",
+  done: "hsl(150, 65%, 82%)",
 };
 
 const Agenda = () => {
@@ -70,14 +77,24 @@ const Agenda = () => {
         title: task.title,
         type: "task" as EventType,
         date: task.due_date,
-        start_time: "09:00", // Horário padrão para tarefas
-        end_time: "18:00",
-        participants: []
+        start_time: task.start_time || "09:00",
+        end_time: task.end_time || "18:00",
+        participants: [],
+        column_id: task.column_id,
       }));
 
       return [...(manualEvents as AgendaEvent[]), ...taskEvents];
     },
   });
+
+  // ... (rest of the component)
+
+  const getEventColor = (event: AgendaEvent) => {
+    if (event.type === "task" && event.column_id) {
+      return columnColors[event.column_id] || typeColors.task;
+    }
+    return typeColors[event.type];
+  };
 
   const createEventMutation = useMutation({
     mutationFn: async () => {
@@ -223,11 +240,37 @@ const Agenda = () => {
               month={currentMonth}
               onMonthChange={setCurrentMonth}
               className="w-full"
+              components={{
+                DayContent: ({ date }) => {
+                  const dayEvents = allEvents.filter((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
+                  return (
+                    <div className="flex flex-col items-center justify-start h-full w-full pt-1 relative z-10">
+                      <span className="text-sm font-normal mb-1">{date.getDate()}</span>
+                      <div className="flex flex-col gap-0.5 w-full px-0.5">
+                        {dayEvents.slice(0, 3).map((ev) => (
+                          <div
+                            key={ev.id}
+                            className="h-1.5 w-full rounded-sm opacity-90"
+                            style={{ backgroundColor: getEventColor(ev) }}
+                            title={ev.title}
+                          />
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <div className="h-1.5 w-full flex items-center justify-center">
+                            <div className="h-1 w-1 rounded-full bg-muted-foreground" />
+                            <div className="h-1 w-1 rounded-full bg-muted-foreground ml-0.5" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                },
+              }}
               modifiers={{
                 hasEvents: (date) => hasEvents(date),
               }}
               modifiersClassNames={{
-                hasEvents: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary",
+                hasEvents: "", // Remove default modifier style since we handle it in DayContent
               }}
             />
           </div>
@@ -269,7 +312,7 @@ const Agenda = () => {
                       <div className="flex items-start gap-3">
                         <div
                           className="w-1 h-10 rounded-full mt-1"
-                          style={{ backgroundColor: typeColors[event.type] }}
+                          style={{ backgroundColor: getEventColor(event) }}
                         />
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-medium truncate">{event.title}</h3>

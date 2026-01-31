@@ -43,9 +43,9 @@ type TimelineActivity = {
 };
 
 const COLUMN_COLORS: Record<string, string> = {
-  todo: "hsl(0, 0%, 45%)",
-  inprogress: "hsl(0, 0%, 30%)",
-  done: "hsl(0, 0%, 10%)"
+  todo: "hsl(220, 15%, 75%)",
+  inprogress: "hsl(200, 85%, 82%)",
+  done: "hsl(150, 65%, 82%)"
 };
 
 const DAY_WIDTH = 45; // Compact like the image
@@ -171,10 +171,33 @@ export function TimelineSection({
 
     const lanes: number[][] = [];
     return sorted.map(a => {
-      const start = a.startDate.getTime();
-      const end = start + (a.durationDays * 24 * 60 * 60 * 1000);
+      // Force Day Boundaries to ensure items on the same day collide
+      const startOfDay = new Date(a.startDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const start = startOfDay.getTime();
 
-      let lane = lanes.findIndex(l => Math.max(...l) <= start);
+      const endOfDay = new Date(a.startDate);
+      endOfDay.setDate(endOfDay.getDate() + a.durationDays);
+      endOfDay.setHours(0, 0, 0, 0); // Effectively the start of the next day
+      const end = endOfDay.getTime(); // Use strict boundary
+
+      // Find a lane where the last item ends BEFORE this item starts
+      // Using < instead of <= ensures that if an item ends at 00:00 of Day X,
+      // and new item starts at 00:00 of Day X, they COLLIDE (because Max(Lane) is End, not Start)
+      // Actually, if Max(Lane) is EndTime.
+      // If Prev ends at T. Curr starts at T.
+      // If T <= T, it fits.
+      // But we want to treat "Same Day" as overlap.
+      // If I force "End" to be "Start + 24h", and Start to be "Start 00:00".
+      // Then strict < means buffers needed.
+
+      let lane = lanes.findIndex(l => Math.max(...l) < start + 1000); // Add slight buffer to force separation
+
+      // Simpler logic: Just check if any existing item in lane overlaps
+      // But we are storing only 'max' end time for performance? 
+      // The current logic stores `l` as array of ends? No, `lanes` is `number[][]` (array of lanes, each having a list of end times?). Use a single max per lane is closer to standard logic.
+      // Actually, logic was: `Math.max(...l)` -> finds the latest end time in that lane.
+
       if (lane === -1) {
         lane = lanes.length;
         lanes[lane] = [end];
@@ -378,14 +401,14 @@ export function TimelineSection({
                                 className="absolute inset-0 pointer-events-none"
                                 style={{
                                   backgroundColor: a.color || "hsl(var(--secondary))",
-                                  opacity: 0.4
+                                  opacity: 1
                                 }}
                               />
 
                               {/* Gradient Overlay */}
                               <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
 
-                              <p className="text-[10px] font-medium leading-none relative z-10 text-white group-hover:text-white whitespace-nowrap drop-shadow-sm">
+                              <p className="text-[10px] font-bold leading-none relative z-10 text-zinc-900 group-hover:text-black whitespace-nowrap drop-shadow-sm">
                                 {a.title}
                               </p>
                             </div>

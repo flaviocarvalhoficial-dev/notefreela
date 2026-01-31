@@ -69,10 +69,10 @@ export function AppSidebar() {
                       to={item.url}
                       end={item.url === "/"}
                       className={`flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors w-full h-full ${!open ? "justify-center" : ""}`}
-                      activeClassName="bg-zinc-100 dark:bg-zinc-800 text-primary font-medium border-l-2 border-primary"
+                      activeClassName="bg-primary/5 dark:bg-primary/10 text-primary font-medium"
                     >
                       <item.icon className={`${open ? "h-4 w-4" : "h-5 w-5"} shrink-0`} />
-                      {open && <span className="text-sm">{item.title}</span>}
+                      {open && <span className="text-[12px]">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -93,10 +93,10 @@ export function AppSidebar() {
               <NavLink
                 to="/configuracoes"
                 className={`flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors w-full h-full ${!open ? "justify-center" : ""}`}
-                activeClassName="bg-zinc-100 dark:bg-zinc-800 text-primary font-medium border-l-2 border-primary"
+                activeClassName="bg-primary/5 dark:bg-primary/10 text-primary font-medium"
               >
                 <Settings className={`${open ? "h-4 w-4" : "h-5 w-5"} shrink-0`} />
-                {open && <span className="text-sm">Configurações</span>}
+                {open && <span className="text-[12px]">Configurações</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

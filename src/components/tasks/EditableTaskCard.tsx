@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
@@ -233,17 +234,20 @@ export function EditableTaskCard({
                 </div>
 
                 {/* Progress Slider Compact */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[9px] font-bold opacity-60" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between text-[10px] font-bold opacity-60" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
                     <span>Progresso</span>
                     <span>{(form.watch("progress") as number) || 0}%</span>
                   </div>
-                  <Progress
-                    value={(form.watch("progress") as number) || 0}
-                    className="h-1"
-                    style={{ backgroundColor: accentColor ? `${getContrastColor(accentColor)}20` : 'rgba(0,0,0,0.05)' }}
-                    indicatorClassName={accentColor ? undefined : "bg-primary/50"}
-                    indicatorStyle={accentColor ? { backgroundColor: getContrastColor(accentColor) } : undefined}
+                  <Slider
+                    value={[(form.watch("progress") as number) || 0]}
+                    onValueChange={(vals) => form.setValue("progress", vals[0], { shouldDirty: true })}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                    thumbClassName={accentColor ? "border-current" : undefined}
+                    trackClassName="bg-black/5"
+                    rangeClassName={accentColor ? "bg-current opacity-50" : "bg-primary/50"}
                   />
                 </div>
 

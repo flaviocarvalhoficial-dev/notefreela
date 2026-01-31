@@ -89,20 +89,19 @@ interface Column {
 }
 
 const defaultColumns: Column[] = [
-  { id: "todo", title: "Início", hint: "Planeje e quebre em passos", color: "hsl(215, 20%, 65%)" },
-  { id: "inprogress", title: "Em Progresso", hint: "Foco no que está em execução", color: "hsl(158, 64%, 52%)" },
-  { id: "done", title: "Concluído", hint: "Entrega e validação", color: "hsl(221, 83%, 62%)" },
+  { id: "todo", title: "Início", hint: "Planeje e quebre em passos", color: "hsl(220, 15%, 75%)" },
+  { id: "inprogress", title: "Em Progresso", hint: "Foco no que está em execução", color: "hsl(200, 85%, 82%)" },
+  { id: "done", title: "Concluído", hint: "Entrega e validação", color: "hsl(150, 65%, 82%)" },
 ];
 
 const PASTEL_COLORS = [
-  { name: "Padrão", value: "hsl(215, 20%, 65%)" },
-  { name: "Céu", value: "hsl(200, 80%, 80%)" },
-  { name: "Grama", value: "hsl(150, 80%, 80%)" },
-  { name: "Amarelo Sol", value: "hsl(48, 96%, 76%)" },
-  { name: "Laranja Pêssego", value: "hsl(25, 95%, 75%)" },
-  { name: "Vermelho Coral", value: "hsl(0, 90%, 82%)" },
-  { name: "Lavanda", value: "hsl(260, 80%, 85%)" },
-  { name: "Esmeralda", value: "hsl(158, 64%, 52%)" },
+  { name: "Cinza Suave", value: "hsl(220, 15%, 75%)" },
+  { name: "Azul Céu", value: "hsl(200, 85%, 82%)" },
+  { name: "Menta", value: "hsl(150, 65%, 82%)" },
+  { name: "Creme", value: "hsl(45, 90%, 82%)" },
+  { name: "Pêssego", value: "hsl(25, 95%, 82%)" },
+  { name: "Rose", value: "hsl(0, 85%, 85%)" },
+  { name: "Lavanda", value: "hsl(265, 70%, 85%)" },
 ];
 
 function DroppableColumn({
@@ -184,7 +183,6 @@ function DroppableColumn({
                 <h2
                   className="text-sm font-semibold tracking-tight cursor-pointer hover:text-primary transition-colors"
                   onClick={() => setIsEditing(true)}
-                  style={{ color: isOver ? activeColor : undefined }}
                 >
                   {title}
                 </h2>
@@ -640,10 +638,7 @@ export default function Tarefas() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="glass-light border-border/50 text-muted-foreground hover:text-foreground">
-            <Tag className="h-4 w-4 mr-2" />
-            Tags
-          </Button>
+
           <NewTaskDialog
             projects={projects}
             onCreate={(v) => createTaskMutation.mutate(v)}
@@ -795,6 +790,7 @@ export default function Tarefas() {
                                   due_date: values.due ? format(values.due, "yyyy-MM-dd") : null,
                                   assignee: values.assignee,
                                   project_id: values.projectId || null,
+                                  progress: values.progress,
                                 });
                                 setEditingId(null);
                               }}
