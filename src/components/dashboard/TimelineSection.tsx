@@ -389,10 +389,10 @@ export function TimelineSection({
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center justify-end gap-2 flex-wrap">
             <Select value={selectedProject} onValueChange={setSelectedProject}>
-              <SelectTrigger className="h-8 w-[180px] glass-light border-border/50 text-xs rounded-full">
+              <SelectTrigger className="h-8 w-[180px] bg-background border-border/80 text-xs rounded-md shadow-sm">
                 <SelectValue placeholder="Filtrar por Projeto" />
               </SelectTrigger>
-              <SelectContent className="glass border-border/50">
+              <SelectContent className="bg-popover border-border/80">
                 <SelectItem value="all">Todos os Projetos</SelectItem>
                 {projects.map(p => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -400,18 +400,18 @@ export function TimelineSection({
               </SelectContent>
             </Select>
 
-            <div className="flex items-center gap-2 text-xs text-muted-foreground glass-light rounded-full px-3 py-1 border border-border/50">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 bg-muted/30 rounded-md px-3 py-1.5 border border-border/40">
               <Clock className="h-3.5 w-3.5" />
               07:00 → 02:00
             </div>
 
-            <div className="flex items-center gap-1 text-xs text-muted-foreground glass-light rounded-full pl-3 pr-1 py-1 border border-border/50">
+            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 bg-muted/30 rounded-md pl-3 pr-1 py-1 border border-border/40">
               <span className="tabular-nums">{Math.round(zoom * 100)}%</span>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 rounded-full glass-light"
+                className="h-7 w-7 rounded-md hover:bg-muted"
                 onClick={() => setZoom(1)}
                 disabled={Math.abs(zoom - 1) < 0.001}
                 aria-label="Reset zoom"
@@ -438,10 +438,10 @@ export function TimelineSection({
         >
           <div className="timeline-inner flex flex-col min-w-max pb-4 relative">
             {/* Horizontal Hours Scale at the Top */}
-            <div className="sticky top-0 z-50 flex pl-[80px] bg-background/95 backdrop-blur-sm border-b border-border/40 shadow-sm h-10">
+            <div className="sticky top-0 z-50 flex pl-[80px] bg-background border-b border-border shadow-sm h-10">
               {hours.map((h) => (
-                <div key={h} className="shrink-0 flex items-center justify-center border-r border-border/10" style={{ width: slotPx }}>
-                  <span className="text-[11px] font-semibold text-muted-foreground/60 tabular-nums">
+                <div key={h} className="shrink-0 flex items-center justify-center border-r border-border/5" style={{ width: slotPx }}>
+                  <span className="text-[10px] font-bold text-muted-foreground/40 tabular-nums">
                     {String(h >= 24 ? h - 24 : h).padStart(2, "0")}:00
                   </span>
                 </div>
@@ -452,14 +452,12 @@ export function TimelineSection({
               {/* Global Needle - Vertical Line spanning all rows */}
               {now >= RANGE_START && now <= RANGE_END && (
                 <div
-                  className="absolute bottom-0 top-0 w-px bg-primary/60 z-40 pointer-events-none transition-all duration-1000"
+                  className="absolute bottom-0 top-0 w-[2px] bg-primary/40 z-40 pointer-events-none transition-all duration-1000"
                   style={{ left: `${needleLeftPx + 80}px` }} // +80 for the day sidebar
                 >
                   <div className="sticky top-10">
-                    <div className="absolute top-0 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary shadow-glow flex items-center justify-center z-50">
-                      <div className="w-1 h-1 rounded-full bg-white" />
-                    </div>
-                    <div className="absolute top-4 -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-primary text-[8px] font-bold text-white uppercase tracking-tighter shadow-lg whitespace-nowrap z-50">
+                    <div className="absolute top-0 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary border-2 border-background z-50" />
+                    <div className="absolute top-4 -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-primary text-[8px] font-bold text-white uppercase tracking-tighter shadow-sm whitespace-nowrap z-50">
                       Agora
                     </div>
                   </div>
@@ -472,9 +470,9 @@ export function TimelineSection({
                 const rowHeight = Math.max(100, 20 + (dayData?.height || 60));
 
                 return (
-                  <div key={day.date.toISOString()} className="flex border-b border-border/10 group/row" style={{ height: rowHeight }}>
+                  <div key={day.date.toISOString()} className="flex border-b border-border/40 group/row" style={{ height: rowHeight }}>
                     {/* Day Label Sidebar (Sticky Left) */}
-                    <div className="sticky left-0 z-30 w-[80px] bg-background/95 backdrop-blur-sm border-r border-border/40 flex flex-col items-center justify-center shadow-lg">
+                    <div className="sticky left-0 z-30 w-[80px] bg-background border-r border-border/80 flex flex-col items-center justify-center shadow-[4px_0_12px_rgba(0,0,0,0.02)]">
                       {dayLabelMinimal(day.date)}
                     </div>
 
@@ -483,7 +481,7 @@ export function TimelineSection({
                       {/* Vertical Hour Grid Lines */}
                       <div className="absolute inset-0 pointer-events-none flex">
                         {hours.map((h) => (
-                          <div key={`grid-${h}`} className="h-full border-r border-border/5 shrink-0" style={{ width: slotPx }} />
+                          <div key={`grid-${h}`} className="h-full border-r border-border/10 shrink-0" style={{ width: slotPx }} />
                         ))}
                       </div>
 
@@ -498,39 +496,39 @@ export function TimelineSection({
                           <Tooltip key={a.id}>
                             <TooltipTrigger asChild>
                               <div
-                                className="absolute rounded-lg transition-all hover:scale-[1.01] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-3 border border-white/10 group/item"
+                                className="absolute rounded-md transition-all hover:brightness-105 cursor-pointer overflow-hidden flex flex-col justify-center px-3 border border-black/5 group/item"
                                 style={{
                                   left: `${left + 10}px`, // Slight padding
                                   top: `${top}px`,
                                   width: `${width - 20}px`,
                                   height: 36,
-                                  backgroundColor: a.color || "hsl(var(--card))",
+                                  backgroundColor: a.color || "hsl(var(--secondary))",
                                   color: a.color ? "#fff" : "hsl(var(--foreground))",
-                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                                 }}
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => onActivityClick(a)}
                               >
                                 <div className="min-w-0 flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-white/40 shrink-0" />
+                                  <div className="w-1.5 h-1.5 rounded-full bg-white/60 shrink-0" />
                                   <p className="text-[11px] font-bold whitespace-nowrap overflow-hidden text-ellipsis leading-none tracking-tight">
                                     {a.title}
                                   </p>
-                                  <span className="text-[7px] font-black opacity-40 uppercase tracking-widest whitespace-nowrap ml-auto">
+                                  <span className="text-[7px] font-black opacity-30 uppercase tracking-widest whitespace-nowrap ml-auto">
                                     {formatHourLabel(a.startHour)}
                                   </span>
                                 </div>
                               </div>
                             </TooltipTrigger>
-                            <TooltipContent className="glass border-border/50">
+                            <TooltipContent className="bg-popover border-border shadow-md">
                               <div className="space-y-1">
-                                <p className="text-sm font-medium">{a.title}</p>
-                                <p className="text-xs text-muted-foreground uppercase">{a.meta}</p>
-                                <p className="text-xs text-muted-foreground font-medium">
+                                <p className="text-sm font-bold">{a.title}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{a.meta}</p>
+                                <p className="text-xs text-muted-foreground">
                                   {formatDayLabel(addDays(today, a.dayOffset))}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground font-medium">
                                   {formatHourLabel(a.startHour)} → {formatHourLabel(a.endHour)}
                                 </p>
                               </div>

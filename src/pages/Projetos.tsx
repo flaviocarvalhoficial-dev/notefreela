@@ -85,7 +85,7 @@ const Projetos = () => {
 
         <NewProjectDialog
           trigger={
-            <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-glow">
+            <Button className="bg-primary hover:bg-primary/90 transition-all font-bold">
               <Plus className="h-4 w-4 mr-2" />
               Novo Projeto
             </Button>
@@ -96,12 +96,12 @@ const Projetos = () => {
       {/* Filters */}
       <div className="flex items-center gap-3">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
           <Input
             placeholder="Buscar projetos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 glass-light border-border/50"
+            className="pl-10 bg-background border-border/80 h-10 shadow-sm"
           />
         </div>
 
@@ -115,17 +115,17 @@ const Projetos = () => {
             return (
               <motion.div
                 key={status}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <Button
-                  variant={selectedStatus === status ? "default" : "ghost"}
+                  variant={selectedStatus === status ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedStatus(status as any)}
                   className={
                     selectedStatus === status
-                      ? "bg-primary/20 text-primary border border-primary/30 shadow-glow"
-                      : "glass-light hover:bg-muted/30"
+                      ? "bg-foreground text-background font-bold border-foreground shadow-sm"
+                      : "bg-background border-border/80 text-muted-foreground font-medium hover:bg-muted"
                   }
                 >
                   {status === "all" ? "Todos" : statusLabels[status as ProjectStatus]}

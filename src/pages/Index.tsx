@@ -132,19 +132,18 @@ const Index = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.06 }}
               >
-                <div className="bento-card bento-card--compact h-[132px] group cursor-pointer flex flex-col justify-between">
+                <div className="bento-card bento-card--compact h-[132px] group cursor-pointer flex flex-col justify-between border-border/60 bg-card">
                   <div className="flex items-center justify-between">
                     <div
-                      className="p-2 rounded-lg glass-light transition-all duration-300 group-hover:scale-110"
-                      style={{ boxShadow: `0 0 20px ${stat.color}15` }}
+                      className="p-2 rounded-md bg-muted/50 transition-all duration-300 group-hover:bg-primary/10"
                     >
                       <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
                     </div>
                     <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">{stat.title}</p>
-                    <div className="text-2xl font-semibold leading-none mt-1">{stat.value}</div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">{stat.title}</p>
+                    <div className="text-2xl font-bold leading-none mt-1 tracking-tight">{stat.value}</div>
                     <p className="text-[11px] text-muted-foreground mt-2">{stat.change}</p>
                   </div>
                 </div>
@@ -157,12 +156,12 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.22 }}
             >
-              <div className="bento-card bento-card--compact h-[132px] flex flex-col justify-between">
+              <div className="bento-card bento-card--compact h-[132px] flex flex-col justify-between border-border/60 bg-card">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-base font-semibold">Ações Rápidas</h2>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/80">Ações Rápidas</h2>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                     <Clock className="h-3.5 w-3.5" />
-                    <span>Progresso Geral</span>
+                    <span>Saúde Geral</span>
                   </div>
                 </div>
 
@@ -175,21 +174,21 @@ const Index = () => {
                       transition={{ delay: 0.28 + index * 0.05 }}
                     >
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="w-full justify-center gap-2 glass-light hover:bg-primary/10 hover:text-primary transition-all"
+                        className="w-full justify-center gap-2 border-border/50 bg-background hover:bg-muted transition-colors rounded-md h-9"
                         onClick={action.action}
                       >
-                        <action.icon className="h-4 w-4" />
-                        <span className="hidden sm:inline text-xs">{action.label}</span>
+                        <action.icon className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline text-xs font-medium">{action.label}</span>
                       </Button>
                     </motion.div>
                   ))}
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Progress value={completionRate} className="h-1.5 flex-1" />
-                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">{completionRate}%</span>
+                  <Progress value={completionRate} className="h-1 flex-1 bg-muted" />
+                  <span className="text-[11px] font-bold text-muted-foreground whitespace-nowrap">{completionRate}%</span>
                 </div>
               </div>
             </motion.div>
@@ -215,13 +214,13 @@ const Index = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.38 }}
               >
-                <div className="bento-card bento-card--compact overflow-hidden">
-                  <div className="flex items-center justify-between gap-3 mb-2">
-                    <h2 className="text-base font-semibold">Projetos Recentes</h2>
+                <div className="bento-card bento-card--compact overflow-hidden border-border/60 bg-card">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/80">Projetos Recentes</h2>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
                       onClick={() => navigate("/projetos")}
                     >
                       Ver todos
@@ -230,7 +229,7 @@ const Index = () => {
                   </div>
 
                   {projects.length === 0 ? (
-                    <div className="py-6 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
+                    <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-lg bg-muted/5">
                       Nenhum projeto cadastrado.
                     </div>
                   ) : (
@@ -243,14 +242,14 @@ const Index = () => {
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: 0.42 + index * 0.05 }}
-                              className="group p-2.5 rounded-xl glass-light hover:bg-muted/10 transition-all cursor-pointer border border-border/10 hover:ring-2 hover:ring-primary/20"
+                              className="group p-3 rounded-md bg-background border border-border/60 hover:border-primary/50 transition-all cursor-pointer shadow-sm hover:shadow-md"
                             >
                               <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0 flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-glow shrink-0" />
-                                  <h3 className="text-sm font-medium truncate group-hover:text-primary transition-colors">{project.name}</h3>
+                                  <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                  <h3 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{project.name}</h3>
                                 </div>
-                                <span className="text-[10px] font-medium text-muted-foreground tabular-nums whitespace-nowrap">
+                                <span className="text-[10px] font-bold text-muted-foreground tabular-nums whitespace-nowrap">
                                   {project.progress || 0}%
                                 </span>
                               </div>
@@ -258,8 +257,8 @@ const Index = () => {
                           </CarouselItem>
                         ))}
                       </CarouselContent>
-                      <CarouselPrevious variant="ghost" className="glass-light border border-border/50 -left-2 h-7 w-7" />
-                      <CarouselNext variant="ghost" className="glass-light border border-border/50 -right-2 h-7 w-7" />
+                      <CarouselPrevious variant="outline" className="border-border/50 -left-2 h-7 w-7 bg-background" />
+                      <CarouselNext variant="outline" className="border-border/50 -right-2 h-7 w-7 bg-background" />
                     </Carousel>
                   )}
                 </div>

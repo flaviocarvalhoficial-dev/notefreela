@@ -29,54 +29,50 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`transition-all duration-300 ${open ? "w-64" : "w-[80px]"} glass-light border-r border-border/50`}
+      className={`transition-all duration-300 ${open ? "w-64" : "w-[80px]"} bg-sidebar border-r border-sidebar-border shadow-none`}
       collapsible="icon"
     >
       {/* Header Area */}
-      <div className="h-16 flex flex-col items-center justify-center border-b border-border/50">
+      <div className="h-16 flex flex-col items-center justify-center border-b border-sidebar-border mb-4">
         {open ? (
           <div className="w-full flex items-center justify-between px-4">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0 shadow-soft">
-                <span className="text-sm font-bold text-background">N</span>
+              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center shrink-0">
+                <span className="text-sm font-bold text-primary-foreground">N</span>
               </div>
               <span className="font-bold text-foreground tracking-tight">NoteFreela</span>
             </div>
-            <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors" />
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-8 w-8" />
           </div>
         ) : (
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors h-10 w-10 rounded-xl" />
+          <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-10 w-10 rounded-md" />
         )}
       </div>
 
-      <SidebarContent className="pt-6">
+      <SidebarContent>
         <SidebarGroup>
           {open && (
-            <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 px-6 mb-4">
-              Menu Principal
+            <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 px-6 mb-2">
+              Menu
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
-            <SidebarMenu className="gap-3">
+            <SidebarMenu className="gap-1 px-3">
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="flex justify-center">
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
                     tooltip={!open ? item.title : undefined}
-                    className={`transition-all duration-300 h-12 rounded-2xl ${open
-                      ? "mx-3 px-4 w-auto"
-                      : "w-12 h-12 p-0 flex items-center justify-center m-0"
-                      }`}
+                    className="h-10 rounded-md transition-colors"
                   >
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
-                      className={`flex items-center gap-3 text-muted-foreground hover:text-foreground w-full h-full ${!open ? "justify-center" : ""
-                        }`}
-                      activeClassName="glass-light text-primary font-semibold shadow-soft bg-primary/5"
+                      className={`flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors w-full h-full ${!open ? "justify-center" : ""}`}
+                      activeClassName="bg-zinc-100 dark:bg-zinc-800 text-primary font-medium border-l-2 border-primary"
                     >
-                      <item.icon className={`${open ? "h-4.5 w-4.5" : "h-6 w-6"} shrink-0 transition-transform`} />
-                      {open && <span className="text-sm tracking-tight">{item.title}</span>}
+                      <item.icon className={`${open ? "h-4 w-4" : "h-5 w-5"} shrink-0`} />
+                      {open && <span className="text-sm">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
