@@ -86,10 +86,9 @@ function formatDayLabel(d: Date) {
 
 function dayLabelMinimal(d: Date) {
   return (
-    <div className="flex flex-col items-center leading-none">
-      <span className="text-[10px] uppercase font-medium text-muted-foreground/50">{d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
-      <span className="text-lg font-semibold tracking-tighter">{d.getDate()}</span>
-    </div>
+      <span className="text-[10px] uppercase font-normal text-muted-foreground/40">{d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
+      <span className="text-lg font-medium tracking-tighter text-foreground/80">{d.getDate()}</span>
+    </div >
   );
 }
 
@@ -440,11 +439,15 @@ export function TimelineSection({
                       {/* Local Needle - Only for Today */}
                       {day.dayOffset === 0 && (
                         <div
-                          className="absolute left-0 right-0 h-[1.5px] bg-primary/70 z-40 pointer-events-none transition-all duration-1000"
-                          style={{ top: needleTopPx }}
+                          className="absolute left-0 right-0 h-[1.5px] bg-primary z-40 pointer-events-none transition-all duration-1000 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                          style={{ top: `${needleTopPx}px` }}
                         >
-                          <div className="absolute left-0 -translate-y-1/2 w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
-                          <div className="absolute inset-0 bg-primary/20 blur-[1px]" />
+                          <div className="absolute left-0 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary shadow-glow flex items-center justify-center">
+                            <div className="w-1 h-1 rounded-full bg-white" />
+                          </div>
+                          <div className="absolute left-3 -translate-y-1/2 top-0 px-1.5 py-0.5 rounded-sm bg-primary text-[8px] font-bold text-white uppercase tracking-tighter shadow-lg">
+                            Agora
+                          </div>
                         </div>
                       )}
 
@@ -458,7 +461,7 @@ export function TimelineSection({
                       {items.map((a) => {
                         const lane = (a.lane ?? 0) as number;
                         const baseTop = (a.startHour - RANGE_START) * 60;
-                        const top = baseTop + 10 + (lane * 35); // Stack within the hour slot
+                        const top = baseTop + 12 + (lane * 35); // Adjusted vertical start
 
                         return (
                           <Tooltip key={a.id}>
@@ -466,7 +469,7 @@ export function TimelineSection({
                               <div
                                 className="absolute left-[5%] w-[90%] rounded-[4px] transition-all hover:scale-[1.02] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-4"
                                 style={{
-                                  top,
+                                  top: `${top}px`,
                                   height: 30,
                                   backgroundColor: a.color || "hsl(var(--card))",
                                   color: a.color ? "#fff" : "hsl(var(--foreground))",
