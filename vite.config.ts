@@ -23,6 +23,9 @@ export default defineConfig(({ mode }) => ({
       devOptions: {
         enabled: true,
       },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5000000,
+      },
       manifest: {
         name: 'NoteFreela',
         short_name: 'NoteFreela',
