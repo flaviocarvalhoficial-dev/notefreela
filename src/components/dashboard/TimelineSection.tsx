@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { RotateCcw, Users, Loader2, ChevronLeft, ChevronRight, Plus, Maximize2, Minimize2 } from "lucide-react";
 import { format, isSameDay, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -57,6 +58,7 @@ export function TimelineSection({
   onToggleProjects?: () => void;
   projectsCollapsed?: boolean;
 }) {
+  const navigate = useNavigate();
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const [zoom, setZoom] = useState(1);
   const [selected, setSelected] = useState<TimelineActivity | null>(null);
@@ -350,22 +352,40 @@ export function TimelineSection({
                       <div className="absolute" style={{
                         left: `${left + 3}px`,
                         top: `${top + 10}px`,
-                        width: `${Math.max(30, width - 6)}px`,
+                        width: 'max-content',
+                        maxWidth: '400px', // Prevent infinite width
                         height: 28,
                         zIndex: 10
                       }}>
                         <ContextMenu>
                           <ContextMenuTrigger>
                             <div
-                              className="w-full h-full rounded-md transition-all hover:brightness-105 cursor-pointer flex flex-col justify-center px-2 border border-black/5"
-                              style={{
-                                backgroundColor: a.color || "hsl(var(--secondary))",
-                                color: a.color ? "#fff" : "hsl(var(--foreground))",
-                                boxShadow: '0 1px 2px rgba(0,0,0,0.08)'
+                              className="w-full h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex flex-col justify-center px-4 border border-white/5 relative overflow-hidden group shadow-sm bg-background/5"
+                              onClick={() => {
+                                if (a.project_id) {
+                                  navigate(`/tarefas?project=${a.project_id}`);
+                                } else {
+                                  // Fallback behavior if no project (e.g., personal task or unassigned)
+                                  setSelected(a);
+                                }
                               }}
-                              onClick={() => setSelected(a)}
+                              style={{
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)"
+                              }}
                             >
-                              <p className="text-[10px] font-bold truncate leading-none">
+                              {/* Background Layout with Opacity */}
+                              <div
+                                className="absolute inset-0 pointer-events-none"
+                                style={{
+                                  backgroundColor: a.color || "hsl(var(--secondary))",
+                                  opacity: 0.4
+                                }}
+                              />
+
+                              {/* Gradient Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+
+                              <p className="text-[10px] font-medium leading-none relative z-10 text-white group-hover:text-white whitespace-nowrap drop-shadow-sm">
                                 {a.title}
                               </p>
                             </div>

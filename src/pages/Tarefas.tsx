@@ -596,7 +596,40 @@ export default function Tarefas() {
     }
   }
 
+  // Scroll Drag Logic
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const dragBoardRef = React.useRef({ isDown: false, startX: 0, scrollLeft: 0 });
+  const [isDraggingBoard, setIsDraggingBoard] = React.useState(false);
 
+  const onMouseDownBoard = (e: React.MouseEvent) => {
+    // Prevent interfering with dnd-kit or interactive elements
+    if ((e.target as HTMLElement).closest('button, input, select, [role="button"], .draggable-item')) return;
+
+    dragBoardRef.current.isDown = true;
+    dragBoardRef.current.startX = e.pageX - (scrollContainerRef.current?.offsetLeft || 0);
+    dragBoardRef.current.scrollLeft = scrollContainerRef.current?.scrollLeft || 0;
+  };
+
+  const onMouseLeaveBoard = () => {
+    dragBoardRef.current.isDown = false;
+    setIsDraggingBoard(false);
+  };
+
+  const onMouseUpBoard = () => {
+    dragBoardRef.current.isDown = false;
+    setIsDraggingBoard(false);
+  };
+
+  const onMouseMoveBoard = (e: React.MouseEvent) => {
+    if (!dragBoardRef.current.isDown) return;
+    e.preventDefault();
+    const x = e.pageX - (scrollContainerRef.current?.offsetLeft || 0);
+    const walk = (x - dragBoardRef.current.startX) * 2; // scroll speed multiplier
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = dragBoardRef.current.scrollLeft - walk;
+    }
+    if (!isDraggingBoard) setIsDraggingBoard(true);
+  };
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">
@@ -624,28 +657,30 @@ export default function Tarefas() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar por tarefa ou projeto..."
-            className="pl-10 glass-light border-border/50"
+            className="pl-10 glass-light border-border/50 w-full"
           />
         </div>
 
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           {projectFilter !== "all" && (
-            <span className="text-xs text-muted-foreground hidden md:inline-block animate-in fade-in">
+            <span className="text-xs text-muted-foreground hidden lg:inline-block animate-in fade-in whitespace-nowrap">
               Exibindo: <span className="font-medium text-foreground">{projects.find(p => p.id === projectFilter)?.name}</span>
             </span>
           )}
           <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
-            <SelectTrigger className="w-[190px] glass-light border-border/50">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <SelectValue placeholder="Projeto" />
+            <SelectTrigger className="w-full sm:w-[280px] glass-light border-border/50">
+              <div className="flex items-center gap-2 w-full overflow-hidden">
+                <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="truncate text-left flex-1 block">
+                  <SelectValue placeholder="Projeto" />
+                </span>
               </div>
             </SelectTrigger>
             <SelectContent className="glass border-border/50 z-50">
@@ -657,7 +692,7 @@ export default function Tarefas() {
           </Select>
 
           <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as any)}>
-            <SelectTrigger className="w-[140px] glass-light border-border/50">
+            <SelectTrigger className="w-full sm:w-[140px] glass-light border-border/50">
               <div className="flex items-center gap-2">
                 <SelectValue placeholder="Prioridade" />
               </div>
@@ -677,44 +712,6 @@ export default function Tarefas() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground animate-pulse font-medium">Carregando seu fluxo de trabalho...</p>
         </div>
-      ) : projectFilter === "all" ? (
-        <motion.div
-          className="w-full h-full min-h-[500px] flex items-start justify-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="w-full max-w-xl">
-            <section className="bento-card p-12 text-center border-dashed border-2 border-primary/20 bg-primary/5 rounded-[32px] relative overflow-hidden group">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
-
-              <div className="mb-8 inline-flex p-5 rounded-3xl bg-background shadow-xl ring-1 ring-border/50 group-hover:scale-110 transition-transform duration-500">
-                <Plus className="h-10 w-10 text-primary" />
-              </div>
-
-              <div className="space-y-4 mb-10">
-                <h2 className="text-2xl font-bold tracking-tight text-foreground">Pronto para começar algo incrível?</h2>
-                <p className="text-muted-foreground text-base max-w-md mx-auto leading-relaxed">
-                  Selecione um projeto acima para visualizar seu board personalizado ou crie um novo projeto para organizar suas ideias e entregas.
-                </p>
-              </div>
-
-              <div className="flex flex-col items-center gap-4">
-                <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
-                  <SelectTrigger className="w-[240px] h-12 glass shadow-2xl border-primary/20 text-base font-medium rounded-2xl hover:bg-background transition-all">
-                    <SelectValue placeholder="Escolher projeto agora" />
-                  </SelectTrigger>
-                  <SelectContent className="glass border-border/50">
-                    {projects.map((p) => (
-                      <SelectItem key={p.id} value={p.id} className="py-3">{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary/40">Sua jornada começa com um clique</p>
-              </div>
-            </section>
-          </div>
-        </motion.div>
       ) : (
         <DndContext
           sensors={sensors}
@@ -723,7 +720,15 @@ export default function Tarefas() {
           onDragEnd={handleDragEnd}
         >
           <motion.div
-            className="w-full pb-6 overflow-x-auto custom-scrollbar snap-x snap-proximity min-h-[calc(100vh-280px)] items-start"
+            ref={scrollContainerRef}
+            className={cn(
+              "w-full pb-6 overflow-x-auto custom-scrollbar snap-x snap-proximity min-h-[calc(100vh-280px)] items-start",
+              isDraggingBoard ? "cursor-grabbing" : "cursor-grab"
+            )}
+            onMouseDown={onMouseDownBoard}
+            onMouseLeave={onMouseLeaveBoard}
+            onMouseUp={onMouseUpBoard}
+            onMouseMove={onMouseMoveBoard}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
