@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DndContext,
@@ -351,15 +352,33 @@ export default function Tarefas() {
   const { toast } = useToast();
   const [query, setQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<"all" | Priority>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [projectFilter, setProjectFilter] = useState("all");
+  const [projectFilter, setProjectFilter] = useState(searchParams.get("project") || "all");
+
+  useEffect(() => {
+    const project = searchParams.get("project");
+    if (project) {
+      setProjectFilter(project);
+    }
+  }, [searchParams]);
+
+  const handleProjectFilterChange = (val: string) => {
+    setProjectFilter(val);
+    if (val === "all") {
+      searchParams.delete("project");
+    } else {
+      searchParams.set("project", val);
+    }
+    setSearchParams(searchParams);
+  };
 
   // Fetch columns from DB based on project
   const { data: dbColumns = [], isLoading: isLoadingCols } = useQuery({
     queryKey: ["kanban-columns", projectFilter],
     queryFn: async () => {
-      let query = supabase.from("kanban_columns").select("*").order("position");
+      let query = (supabase as any).from("kanban_columns").select("*").order("position");
 
       if (projectFilter !== "all") {
         query = query.eq("project_id", projectFilter);
@@ -479,7 +498,7 @@ export default function Tarefas() {
 
   const updateColumnMutation = useMutation({
     mutationFn: async ({ id, ...patch }: any) => {
-      const { error } = await supabase.from("kanban_columns").update(patch).eq("id", id);
+      const { error } = await (supabase as any).from("kanban_columns").update(patch).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -492,7 +511,7 @@ export default function Tarefas() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
-      const { error } = await supabase.from("kanban_columns").insert({
+      const { error } = await (supabase as any).from("kanban_columns").insert({
         project_id: projectFilter,
         title,
         user_id: user.id,
@@ -508,7 +527,7 @@ export default function Tarefas() {
 
   const deleteColumnMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("kanban_columns").delete().eq("id", id);
+      const { error } = await (supabase as any).from("kanban_columns").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -617,7 +636,7 @@ export default function Tarefas() {
               Exibindo: <span className="font-medium text-foreground">{projects.find(p => p.id === projectFilter)?.name}</span>
             </span>
           )}
-          <Select value={projectFilter} onValueChange={setProjectFilter}>
+          <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
             <SelectTrigger className="w-[190px] glass-light border-border/50">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />
@@ -675,7 +694,7 @@ export default function Tarefas() {
               </div>
 
               <div className="flex flex-col items-center gap-4">
-                <Select value={projectFilter} onValueChange={setProjectFilter}>
+                <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
                   <SelectTrigger className="w-[240px] h-12 glass shadow-2xl border-primary/20 text-base font-medium rounded-2xl hover:bg-background transition-all">
                     <SelectValue placeholder="Escolher projeto agora" />
                   </SelectTrigger>

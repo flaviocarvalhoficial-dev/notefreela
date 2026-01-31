@@ -16,7 +16,10 @@ import {
     Plus,
     Loader2,
     Trash2,
-    Edit2
+    Edit2,
+    Building2,
+    User,
+    ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -213,20 +216,30 @@ const ProjetoDetalhes = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 py-8 border-y border-border/10">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                            <Building2 className="h-3.5 w-3.5" />
+                            Cliente
+                        </div>
+                        <p className="text-sm font-medium">
+                            {(project as any).client_name || "Não informado"}
+                        </p>
+                    </div>
+
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                            <User className="h-3.5 w-3.5" />
+                            Responsável
+                        </div>
+                        <p className="text-sm font-medium">{(project as any).manager_name || "Não atribuído"}</p>
+                    </div>
+
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
                             <Calendar className="h-3.5 w-3.5" />
                             Prazo Final
                         </div>
                         <p className="text-sm font-medium">
                             {project.deadline ? format(new Date(project.deadline), "dd 'de' MMMM, yyyy", { locale: ptBR }) : "Sem prazo definido"}
                         </p>
-                    </div>
-
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-                            <Users className="h-3.5 w-3.5" />
-                            Equipe
-                        </div>
-                        <p className="text-sm font-medium">{project.team_size || 1} participante(s)</p>
                     </div>
 
                     <div className="space-y-1">
@@ -238,16 +251,6 @@ const ProjetoDetalhes = () => {
                             <Progress value={project.progress || 0} className="h-2 flex-1" />
                             <span className="text-xs font-bold tabular-nums">{project.progress || 0}%</span>
                         </div>
-                    </div>
-
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-                            <Clock className="h-3.5 w-3.5" />
-                            Criado em
-                        </div>
-                        <p className="text-sm font-medium">
-                            {format(new Date(project.created_at), "dd/MM/yyyy")}
-                        </p>
                     </div>
                 </div>
 
@@ -341,11 +344,13 @@ const ProjetoDetalhes = () => {
                                     </div>
                                 ))}
 
-                                {tasks.length > 0 && (
-                                    <Button variant="outline" className="w-full glass-light border-border/50 h-10 rounded-lg text-xs" onClick={() => navigate("/tarefas")}>
-                                        Ver todas as tarefas
-                                    </Button>
-                                )}
+                                <Button
+                                    variant="outline"
+                                    className="w-full glass-light border-border/50 h-11 rounded-xl text-sm font-semibold hover:bg-primary/5 hover:border-primary/30 transition-all flex items-center justify-center gap-2 group"
+                                    onClick={() => navigate(`/tarefas?project=${id}`)}
+                                >
+                                    Ir para o Kanban <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                </Button>
                             </div>
                         </section>
 

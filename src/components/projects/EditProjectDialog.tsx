@@ -19,6 +19,8 @@ interface Project {
     priority: string;
     deadline: string | null;
     progress: number;
+    client_name?: string | null;
+    manager_name?: string | null;
 }
 
 interface EditProjectDialogProps {
@@ -44,6 +46,8 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
     const [newPriority, setNewPriority] = useState<"high" | "medium" | "low">(project.priority as any);
     const [newDeadline, setNewDeadline] = useState(project.deadline || "");
     const [newProgress, setNewProgress] = useState(project.progress);
+    const [newClient, setNewClient] = useState(project.client_name || "");
+    const [newManager, setNewManager] = useState(project.manager_name || "");
 
     useEffect(() => {
         if (open) {
@@ -53,6 +57,8 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
             setNewPriority(project.priority as any);
             setNewDeadline(project.deadline || "");
             setNewProgress(project.progress);
+            setNewClient(project.client_name || "");
+            setNewManager(project.manager_name || "");
         }
     }, [open, project]);
 
@@ -67,6 +73,8 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                     priority: newPriority,
                     deadline: newDeadline || null,
                     progress: newProgress,
+                    client_name: newClient,
+                    manager_name: newManager,
                 })
                 .eq("id", project.id);
 
@@ -117,6 +125,27 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             value={newDesc}
                             onChange={(e) => setNewDesc(e.target.value)}
                         />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-project-client">Cliente</Label>
+                            <Input
+                                id="edit-project-client"
+                                className="glass-light border-border/50"
+                                value={newClient}
+                                onChange={(e) => setNewClient(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-project-manager">Responsável</Label>
+                            <Input
+                                id="edit-project-manager"
+                                className="glass-light border-border/50"
+                                value={newManager}
+                                onChange={(e) => setNewManager(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
