@@ -435,7 +435,7 @@ export default function Tarefas() {
           *,
           projects (name)
         `)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data.map(t => ({

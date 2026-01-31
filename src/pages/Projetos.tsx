@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Filter, Search, MoreVertical, Users, Calendar, TrendingUp, Loader2 } from "lucide-react";
+import { Plus, Filter, Search, MoreVertical, Users, Calendar, TrendingUp, Loader2, Briefcase } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -163,6 +164,12 @@ const Projetos = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
+                        <div className="p-2 rounded-md bg-muted/30 group-hover:bg-primary/10 transition-colors">
+                          {(() => {
+                            const Icon = (LucideIcons as any)[(project as any).avatar_emoji];
+                            return Icon ? <Icon className="h-4 w-4 text-primary" /> : <Briefcase className="h-4 w-4 text-primary" />;
+                          })()}
+                        </div>
                         <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
                           {project.name}
                         </h3>

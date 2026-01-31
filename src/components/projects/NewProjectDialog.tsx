@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+import { IconPicker } from "./IconPicker";
+
 type ProjectStatus = "active" | "planning" | "review" | "completed";
 
 interface NewProjectDialogProps {
@@ -35,6 +37,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [newName, setNewName] = useState("");
     const [newClient, setNewClient] = useState("");
     const [newDesc, setNewDesc] = useState("");
+    const [newIcon, setNewIcon] = useState("Briefcase");
 
     // Step 2: Prazo & Responsável
     const [newDeadline, setNewDeadline] = useState("");
@@ -55,6 +58,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setNewManager("");
         setNewPriority("medium");
         setNewValue("");
+        setNewIcon("Briefcase");
         setTasks([]);
         setTaskInput("");
     };
@@ -88,6 +92,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     user_id: user.id,
                     progress: 0,
                     value: newValue || 0,
+                    avatar_emoji: newIcon,
                 })
                 .select()
                 .single();
@@ -207,6 +212,13 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             onChange={(e) => setNewName(e.target.value)}
                                             autoFocus
                                         />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs uppercase tracking-wider opacity-60">Ícone do Projeto</Label>
+                                        <div className="flex items-center gap-3">
+                                            <IconPicker value={newIcon} onChange={setNewIcon} />
+                                            <span className="text-xs text-muted-foreground">Personalize a identidade do projeto</span>
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="project-client" className="text-xs uppercase tracking-wider opacity-60 flex items-center gap-2">

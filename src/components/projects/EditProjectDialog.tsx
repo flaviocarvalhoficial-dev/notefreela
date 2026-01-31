@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { IconPicker } from "./IconPicker";
 
 type ProjectStatus = "active" | "planning" | "review" | "completed";
 
@@ -22,6 +23,7 @@ interface Project {
     value?: number | null;
     client_name?: string | null;
     manager_name?: string | null;
+    avatar_emoji?: string | null;
 }
 
 interface EditProjectDialogProps {
@@ -50,6 +52,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
     const [newClient, setNewClient] = useState(project.client_name || "");
     const [newManager, setNewManager] = useState(project.manager_name || "");
     const [newValue, setNewValue] = useState(project.value || 0);
+    const [newIcon, setNewIcon] = useState(project.avatar_emoji || "Briefcase");
 
     useEffect(() => {
         if (open) {
@@ -62,6 +65,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
             setNewClient(project.client_name || "");
             setNewManager(project.manager_name || "");
             setNewValue(project.value || 0);
+            setNewIcon(project.avatar_emoji || "Briefcase");
         }
     }, [open, project]);
 
@@ -79,6 +83,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                     client_name: newClient,
                     manager_name: newManager,
                     value: newValue,
+                    avatar_emoji: newIcon,
                 })
                 .eq("id", project.id);
 
@@ -119,6 +124,14 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs uppercase tracking-wider opacity-60">Ícone do Projeto</Label>
+                        <div className="flex items-center gap-3">
+                            <IconPicker value={newIcon} onChange={setNewIcon} />
+                            <span className="text-xs text-muted-foreground">Ícone de identificação no board</span>
+                        </div>
                     </div>
 
                     <div className="space-y-2">

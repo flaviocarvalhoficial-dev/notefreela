@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import * as LucideIcons from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
@@ -157,7 +158,7 @@ const ProjetoDetalhes = () => {
                 .from("tasks")
                 .select("*")
                 .eq("project_id", id as string)
-                .order("created_at", { ascending: false });
+                .order("created_at", { ascending: true });
 
             if (error) throw error;
             return data;
@@ -229,7 +230,7 @@ const ProjetoDetalhes = () => {
 
                 <div className="absolute top-4 right-4 opacity-0 group-hover/banner:opacity-100 transition-opacity z-10">
                     <Button
-                        variant="background"
+                        variant="outline"
                         size="sm"
                         className="bg-background/80 backdrop-blur-sm h-8 gap-2 border border-border shadow-sm rounded-md"
                         onClick={() => {
@@ -237,7 +238,7 @@ const ProjetoDetalhes = () => {
                             if (url) updateProjectMeta.mutate({ cover_url: url });
                         }}
                     >
-                        <ImageIcon className="h-3.5 w-3.5" /> Mudar Capa
+                        <LucideIcons.ImageIcon className="h-3.5 w-3.5" /> Mudar Capa
                     </Button>
                 </div>
             </motion.div>
@@ -248,16 +249,20 @@ const ProjetoDetalhes = () => {
                     <div className="flex items-end gap-6">
                         <div className="relative group/avatar">
                             <div className="h-32 w-32 rounded-xl bg-card border-[4px] border-background shadow-md flex items-center justify-center text-5xl">
-                                {(project as any).avatar_emoji || project.name.charAt(0)}
+                                {(() => {
+                                    const Icon = (LucideIcons as any)[(project as any).avatar_emoji];
+                                    return Icon ? <Icon className="h-16 w-16 text-primary/40" /> : project.name.charAt(0);
+                                })()}
                             </div>
                             <button
-                                className="absolute -bottom-1 -right-1 p-2 rounded-full bg-foreground text-background shadow-sm opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+                                className="absolute -bottom-1 -right-1 p-2 rounded-full bg-foreground text-background shadow-sm opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center"
                                 onClick={() => {
-                                    const emoji = prompt("Escolha um emoji para o projeto:", (project as any).avatar_emoji || "📁");
+                                    // We will use the EditProjectDialog for this eventually, but for now a simple prompt or emoji
+                                    const emoji = prompt("Escolha um emoji ou nome de ícone do Lucide (Ex: Briefcase):", (project as any).avatar_emoji || "📁");
                                     if (emoji) updateProjectMeta.mutate({ avatar_emoji: emoji });
                                 }}
                             >
-                                <Smile className="h-4 w-4" />
+                                <LucideIcons.Smile className="h-4 w-4" />
                             </button>
                         </div>
                         <div className="pb-2">
