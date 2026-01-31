@@ -86,9 +86,10 @@ function formatDayLabel(d: Date) {
 
 function dayLabelMinimal(d: Date) {
   return (
+    <div className="flex flex-col items-center">
       <span className="text-[10px] uppercase font-normal text-muted-foreground/40">{d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
       <span className="text-lg font-medium tracking-tighter text-foreground/80">{d.getDate()}</span>
-    </div >
+    </div>
   );
 }
 
@@ -134,12 +135,26 @@ export function TimelineSection({
   const [viewRange, setViewRange] = useState(7);
   const [selected, setSelected] = useState<TimelineActivity | null>(null);
   const lastDragEndedAtRef = useRef(0);
-  const today = useMemo(() => startOfDay(new Date()), []);
+  const today = useMemo(() => {
+    const d = new Date();
+    if (d.getHours() < 7) d.setDate(d.getDate() - 1);
+    return startOfDay(d);
+  }, []);
   const [selectedProject, setSelectedProject] = useState<string>("all");
+  const [now, setNow] = useState(() => {
+    const d = new Date();
+    const currentHour = d.getHours() + d.getMinutes() / 60;
+    return currentHour < 7 ? currentHour + 24 : currentHour;
+  });
 
-  const d = new Date();
-  const currentHour = d.getHours() + d.getMinutes() / 60;
-  const now = currentHour < 7 ? currentHour + 24 : currentHour;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const d = new Date();
+      const currentHour = d.getHours() + d.getMinutes() / 60;
+      setNow(currentHour < 7 ? currentHour + 24 : currentHour);
+    }, 60000); // 1 minute
+    return () => clearInterval(interval);
+  }, []);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects-timeline-filter"],
@@ -167,8 +182,11 @@ export function TimelineSection({
 
       // 3. Map Events
       const mappedEvents = events.map((e: any) => {
-        const eventDate = startOfDay(new Date(e.date + "T12:00:00"));
-        const diffTime = eventDate.getTime() - today.getTime();
+        const startH = parseTimeToHour(e.start_time);
+        const eventDate = new Date(e.date + "T12:00:00");
+        if (startH >= 24) eventDate.setDate(eventDate.getDate() - 1);
+
+        const diffTime = startOfDay(eventDate).getTime() - today.getTime();
         const dayOffset = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
         return {
@@ -177,7 +195,7 @@ export function TimelineSection({
           meta: e.type,
           type: e.type as ActivityType,
           dayOffset,
-          startHour: parseTimeToHour(e.start_time),
+          startHour: startH,
           endHour: parseTimeToHour(e.end_time),
           avatars: e.participants?.[0] ? [e.participants[0][0]] : ["U"],
           extraCount: e.participants ? e.participants.length - 1 : 0
@@ -437,7 +455,7 @@ export function TimelineSection({
 
                     <div className="relative flex-1 bg-muted/5" style={{ height: (RANGE + 1) * 60 }}>
                       {/* Local Needle - Only for Today */}
-                      {day.dayOffset === 0 && (
+                      {day.dayOffset === 0 && now >= RANGE_START && now <= RANGE_END && (
                         <div
                           className="absolute left-0 right-0 h-[1.5px] bg-primary z-40 pointer-events-none transition-all duration-1000 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
                           style={{ top: `${needleTopPx}px` }}
