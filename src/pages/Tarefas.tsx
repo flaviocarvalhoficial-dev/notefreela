@@ -353,7 +353,41 @@ export default function Tarefas() {
   const [priorityFilter, setPriorityFilter] = useState<"all" | Priority>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [columns, setColumns] = useState(defaultColumns);
+  const [projectFilter, setProjectFilter] = useState("all");
+
+  // Fetch columns from DB based on project
+  const { data: dbColumns = [], isLoading: isLoadingCols } = useQuery({
+    queryKey: ["kanban-columns", projectFilter],
+    queryFn: async () => {
+      let query = supabase.from("kanban_columns").select("*").order("position");
+
+      if (projectFilter !== "all") {
+        query = query.eq("project_id", projectFilter);
+      } else {
+        // For "All", we might want to show default columns or nothing.
+        // Let's show a global default set or just fetch all (which is messy).
+        // Best: if all is selected, we don't allow column editing and show hardcoded defaults.
+        return defaultColumns;
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      if (data.length === 0 && projectFilter !== "all") {
+        // Fallback for projects without columns (shouldn't happen with trigger)
+        return defaultColumns;
+      }
+      return data;
+    }
+  });
+
+  const [columns, setColumns] = useState<Column[]>(defaultColumns);
+
+  React.useEffect(() => {
+    if (dbColumns.length > 0) {
+      setColumns(dbColumns as Column[]);
+    }
+  }, [dbColumns]);
 
   const { data: tags = [] } = useQuery({
     queryKey: ["tags"],
@@ -426,12 +460,15 @@ export default function Tarefas() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
+      // Use first column as default
+      const defaultColId = columns[0]?.id || "todo";
+
       const { error } = await supabase.from("tasks").insert({
         title: values.title,
         due_date: values.due ? format(values.due, "yyyy-MM-dd") : null,
         user_id: user.id,
-        column_id: "todo" as any,
-        project_id: values.project, // Now receives ID directly
+        column_id: defaultColId as any,
+        project_id: values.project,
         progress: 0
       });
       if (error) throw error;
@@ -442,9 +479,51 @@ export default function Tarefas() {
     }
   });
 
+  const updateColumnMutation = useMutation({
+    mutationFn: async ({ id, ...patch }: any) => {
+      const { error } = await supabase.from("kanban_columns").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban-columns", projectFilter] });
+    }
+  });
+
+  const createColumnMutation = useMutation({
+    mutationFn: async (title: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      const { error } = await supabase.from("kanban_columns").insert({
+        project_id: projectFilter,
+        title,
+        user_id: user.id,
+        position: columns.length,
+        hint: "Nova etapa"
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban-columns", projectFilter] });
+      toast({ title: "Sucesso", description: "Nova etapa adicionada." });
+    }
+  });
+
+  const deleteColumnMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("kanban_columns").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban-columns", projectFilter] });
+      toast({ title: "Sucesso", description: "Etapa removida." });
+    }
+  });
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
-  const [projectFilter, setProjectFilter] = useState("all");
+  // Removed old setProjectFilter state since it's now grouped up top 
+
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -572,11 +651,49 @@ export default function Tarefas() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4">
+      {isLoading || isLoadingCols ? (
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground animate-pulse">Organizando seu workflow...</p>
+          <p className="text-muted-foreground animate-pulse font-medium">Carregando seu fluxo de trabalho...</p>
         </div>
+      ) : projectFilter === "all" ? (
+        <motion.div
+          className="w-full h-full min-h-[500px] flex items-start justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="w-full max-w-xl">
+            <section className="bento-card p-12 text-center border-dashed border-2 border-primary/20 bg-primary/5 rounded-[32px] relative overflow-hidden group">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
+
+              <div className="mb-8 inline-flex p-5 rounded-3xl bg-background shadow-xl ring-1 ring-border/50 group-hover:scale-110 transition-transform duration-500">
+                <Plus className="h-10 w-10 text-primary" />
+              </div>
+
+              <div className="space-y-4 mb-10">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">Pronto para começar algo incrível?</h2>
+                <p className="text-muted-foreground text-base max-w-md mx-auto leading-relaxed">
+                  Selecione um projeto acima para visualizar seu board personalizado ou crie um novo projeto para organizar suas ideias e entregas.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center gap-4">
+                <Select value={projectFilter} onValueChange={setProjectFilter}>
+                  <SelectTrigger className="w-[240px] h-12 glass shadow-2xl border-primary/20 text-base font-medium rounded-2xl hover:bg-background transition-all">
+                    <SelectValue placeholder="Escolher projeto agora" />
+                  </SelectTrigger>
+                  <SelectContent className="glass border-border/50">
+                    {projects.map((p) => (
+                      <SelectItem key={p.id} value={p.id} className="py-3">{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary/40">Sua jornada começa com um clique</p>
+              </div>
+            </section>
+          </div>
+        </motion.div>
       ) : (
         <DndContext
           sensors={sensors}
@@ -607,19 +724,34 @@ export default function Tarefas() {
                         count={colTasks.length}
                         color={col.color}
                         onRename={(newTitle) => {
-                          setColumns(prev => prev.map(c => c.id === col.id ? { ...c, title: newTitle } : c));
+                          if (projectFilter === "all") {
+                            setColumns(prev => prev.map(c => c.id === col.id ? { ...c, title: newTitle } : c));
+                          } else {
+                            updateColumnMutation.mutate({ id: col.id, title: newTitle });
+                          }
                           toast({ title: "Coluna atualizada", description: "O título da etapa foi alterado." });
                         }}
                         onHintChange={(newHint) => {
-                          setColumns(prev => prev.map(c => c.id === col.id ? { ...c, hint: newHint } : c));
+                          if (projectFilter === "all") {
+                            setColumns(prev => prev.map(c => c.id === col.id ? { ...c, hint: newHint } : c));
+                          } else {
+                            updateColumnMutation.mutate({ id: col.id, hint: newHint });
+                          }
                           toast({ title: "Descrição atualizada", description: "O subtítulo da etapa foi alterado." });
                         }}
                         onDelete={() => {
-                          setColumns(prev => prev.filter(c => c.id !== col.id));
-                          toast({ title: "Coluna removida", description: "A etapa foi excluída do seu workflow." });
+                          if (projectFilter === "all") {
+                            setColumns(prev => prev.filter(c => c.id !== col.id));
+                          } else {
+                            deleteColumnMutation.mutate(col.id);
+                          }
                         }}
                         onColorChange={(newColor) => {
-                          setColumns(prev => prev.map(c => c.id === col.id ? { ...c, color: newColor } : c));
+                          if (projectFilter === "all") {
+                            setColumns(prev => prev.map(c => c.id === col.id ? { ...c, color: newColor } : c));
+                          } else {
+                            updateColumnMutation.mutate({ id: col.id, color: newColor });
+                          }
                         }}
                       >
                         <div className="space-y-3">
@@ -666,14 +798,17 @@ export default function Tarefas() {
                   variant="ghost"
                   className="w-full min-h-[160px] glass-light border border-dashed border-border/50 flex flex-col gap-2 rounded-2xl hover:bg-muted/10 group"
                   onClick={() => {
-                    const newTitles = ["Pendente", "Bloqueado", "Review", "QA"];
-                    const nextTitle = newTitles[columns.length - 3] || `Coluna ${columns.length + 1}`;
-                    setColumns([...columns, {
-                      id: `col-${Date.now()}`,
-                      title: nextTitle,
-                      hint: "Configurar objetivo desta coluna"
-                    }]);
-                    toast({ title: "Nova coluna", description: `Coluna '${nextTitle}' adicionada.` });
+                    if (projectFilter === "all") {
+                      const newTitles = ["Pendente", "Bloqueado", "Review", "QA"];
+                      const nextTitle = newTitles[columns.length - 3] || `Coluna ${columns.length + 1}`;
+                      setColumns([...columns, {
+                        id: `col-${Date.now()}`,
+                        title: nextTitle,
+                        hint: "Configurar objetivo desta coluna"
+                      }]);
+                    } else {
+                      createColumnMutation.mutate("Nova Etapa");
+                    }
                   }}
                 >
                   <div className="p-2 rounded-full bg-muted/20 text-muted-foreground group-hover:text-primary transition-colors">
@@ -695,8 +830,7 @@ export default function Tarefas() {
             ) : null}
           </DragOverlay>
         </DndContext>
-      )
-      }
+      )}
     </div >
   );
 }
