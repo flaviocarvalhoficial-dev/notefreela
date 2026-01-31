@@ -68,12 +68,21 @@ function addDays(d: Date, days: number) {
   return n;
 }
 
-function dayLabel(d: Date) {
+function formatDayLabel(d: Date) {
   return d.toLocaleDateString("pt-BR", {
     weekday: "short",
     day: "2-digit",
     month: "short",
   });
+}
+
+function dayLabelMinimal(d: Date) {
+  return (
+    <div className="flex flex-col items-center leading-none">
+      <span className="text-[10px] uppercase font-medium text-muted-foreground/50">{d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
+      <span className="text-lg font-semibold tracking-tighter">{d.getDate()}</span>
+    </div>
+  );
 }
 
 function typeClass(t: ActivityType) {
@@ -206,7 +215,7 @@ export function TimelineSection({
     return Array.from({ length: viewRange }, (_, i) => {
       const date = addDays(today, i);
       const dayOffset = i;
-      return { date, dayOffset, label: dayLabel(date) };
+      return { date, dayOffset, label: formatDayLabel(date) };
     });
   }, [today, viewRange]);
 
@@ -227,13 +236,17 @@ export function TimelineSection({
       });
 
       const laneCount = laneEnds.length > 0 ? Math.max(...positioned.map(p => p.lane || 0)) + 1 : 1;
-      const height = Math.max(80, 20 + laneCount * 50); // Lane height 50px for task cards of 40px
+      const height = Math.max(60, 10 + laneCount * 40); // Lane height 40px for task cards of 30px
 
       grouped[day.dayOffset] = { height, items: positioned };
     });
 
     return grouped;
   }, [timelineActivities, activeDays]);
+
+  const totalTimelineHeight = useMemo(() => {
+    return Object.values(activitiesByDay).reduce((acc, curr) => acc + curr.height + 24, 60); // 24 = gap-6
+  }, [activitiesByDay]);
 
   const nowLeftPx = (now - RANGE_START) * slotPx;
 
@@ -362,46 +375,43 @@ export function TimelineSection({
           aria-label="Timeline horizontal"
         >
           <div className="timeline-inner" style={{ width: innerWidth }}>
-            <div className="timeline-hours">
+            <div className="timeline-hours mb-2">
               {hours.map((h) => (
-                <div key={h} className="timeline-hour">
+                <div key={h} className="timeline-hour font-semibold">
                   {String(h >= 24 ? h - 24 : h).padStart(2, "0")}:00
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-col gap-6">
-              {activeDays.map(day => {
+            <div className="relative flex flex-col gap-6">
+              {/* Global Needle - Spans full height of the list */}
+              <div className="absolute top-0 bottom-0 w-[1.5px] bg-primary/80 z-40 pointer-events-none" style={{ left: nowLeftPx }}>
+                <div className="absolute top-0 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+              </div>
+
+              {activeDays.map((day, idx) => {
                 const dayData = activitiesByDay[day.dayOffset];
                 const items = dayData?.items || [];
-                const rowHeight = dayData?.height || 100;
+                const rowHeight = dayData?.height || 60;
 
                 return (
-                  <div key={day.date.toISOString()} className="relative">
-                    {/* Day Header/Label inside the scrollable area so it aligns with content */}
-                    <div className="sticky left-0 w-24 z-10 -mt-7 mb-1 font-semibold text-sm bg-background/80 backdrop-blur rounded px-2">
-                      {day.label}
+                  <div key={day.date.toISOString()} className="flex items-start gap-3">
+                    {/* Minimalist Day Label */}
+                    <div className="sticky left-0 z-20 shrink-0 w-12 h-10 flex items-center justify-center bg-background/90 backdrop-blur rounded-lg border border-border/40 shadow-sm mt-2">
+                      {dayLabelMinimal(day.date)}
                     </div>
 
-                    <div className="timeline-track relative bg-muted/20 rounded-xl" style={{ height: rowHeight }}>
+                    <div className="timeline-track flex-1 relative bg-muted/5 rounded-lg border border-border/30 overflow-hidden" style={{ height: rowHeight }}>
                       {/* Background Grid Lines */}
                       <div className="absolute inset-0 pointer-events-none"
                         style={{
-                          background: `repeating-linear-gradient(90deg, hsl(var(--border) / 0.1) 0, hsl(var(--border) / 0.1) 1px, transparent 1px, transparent ${slotPx}px)`
+                          background: `repeating-linear-gradient(90deg, hsl(var(--border) / 0.08) 0, hsl(var(--border) / 0.08) 1px, transparent 1px, transparent ${slotPx}px)`
                         }}
                       />
 
-                      {/* Current Time Indicator (Only for Today) */}
-                      {day.dayOffset === 0 && (
-                        <>
-                          <div className="timeline-now" style={{ left: nowLeftPx, height: '100%', zIndex: 5 }} aria-hidden="true" />
-                          <div className="timeline-now-dot" style={{ left: nowLeftPx, zIndex: 6 }} aria-hidden="true" />
-                        </>
-                      )}
-
                       {items.map((a) => {
                         const lane = (a.lane ?? 0) as number;
-                        const top = 10 + lane * 50; // Spacing logic
+                        const top = 8 + lane * 40;
                         const leftPx = (a.startHour - RANGE_START) * slotPx;
                         const widthPx = (a.endHour - a.startHour) * slotPx;
 
@@ -409,23 +419,23 @@ export function TimelineSection({
                           <Tooltip key={a.id}>
                             <TooltipTrigger asChild>
                               <div
-                                className="absolute rounded-lg transition-all hover:scale-[1.01] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-4"
+                                className="absolute rounded-[4px] transition-all hover:scale-[1.01] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-6"
                                 style={{
                                   left: leftPx,
                                   width: widthPx,
                                   top,
-                                  height: 40,
+                                  height: 30,
                                   backgroundColor: a.color || "hsl(var(--card))",
                                   color: a.color ? "#fff" : "hsl(var(--foreground))",
-                                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                                  boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
                                 }}
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => onActivityClick(a)}
                               >
-                                <div className="min-w-0 flex items-center gap-3">
-                                  <p className="text-sm font-bold whitespace-nowrap leading-none drop-shadow-sm">{a.title}</p>
-                                  <span className="text-[9px] font-medium opacity-70 uppercase tracking-widest whitespace-nowrap drop-shadow-sm border-l border-white/20 pl-2">
+                                <div className="min-w-0 flex items-center gap-4">
+                                  <p className="text-[13px] font-bold whitespace-nowrap leading-none tracking-tight">{a.title}</p>
+                                  <span className="text-[8px] font-black opacity-60 uppercase tracking-widest whitespace-nowrap border-l border-white/20 pl-3">
                                     {a.meta}
                                   </span>
                                 </div>
@@ -435,6 +445,9 @@ export function TimelineSection({
                               <div className="space-y-1">
                                 <p className="text-sm font-medium">{a.title}</p>
                                 <p className="text-xs text-muted-foreground uppercase">{a.meta}</p>
+                                <p className="text-xs text-muted-foreground font-medium">
+                                  {formatDayLabel(addDays(today, a.dayOffset))}
+                                </p>
                                 <p className="text-xs text-muted-foreground">
                                   {formatHourLabel(a.startHour)} → {formatHourLabel(a.endHour)}
                                 </p>
@@ -459,7 +472,7 @@ export function TimelineSection({
           ...selected,
           startLabel: formatHourLabel(selected.startHour),
           endLabel: formatHourLabel(selected.endHour),
-          dateLabel: dayLabel(addDays(today, selected.dayOffset)),
+          dateLabel: formatDayLabel(addDays(today, selected.dayOffset)),
         } as any : null}
       />
     </motion.section>
