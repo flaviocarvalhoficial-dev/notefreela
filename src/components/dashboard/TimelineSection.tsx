@@ -425,15 +425,6 @@ export function TimelineSection({
             </div>
 
             <div className="relative flex">
-              {/* Global Horizontal Needle - Spans all columns */}
-              <div
-                className="absolute left-0 right-0 h-[1.5px] bg-primary/70 z-40 pointer-events-none transition-all duration-1000"
-                style={{ top: 60 + needleTopPx }}
-              >
-                <div className="absolute left-0 -translate-y-1/2 w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
-                <div className="absolute inset-0 bg-primary/20 blur-[1px]" />
-              </div>
-
               {activeDays.map((day) => {
                 const dayData = activitiesByDay[day.dayOffset];
                 const items = dayData?.items || [];
@@ -446,6 +437,17 @@ export function TimelineSection({
                     </div>
 
                     <div className="relative flex-1 bg-muted/5" style={{ height: (RANGE + 1) * 60 }}>
+                      {/* Local Needle - Only for Today */}
+                      {day.dayOffset === 0 && (
+                        <div
+                          className="absolute left-0 right-0 h-[1.5px] bg-primary/70 z-40 pointer-events-none transition-all duration-1000"
+                          style={{ top: needleTopPx }}
+                        >
+                          <div className="absolute left-0 -translate-y-1/2 w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
+                          <div className="absolute inset-0 bg-primary/20 blur-[1px]" />
+                        </div>
+                      )}
+
                       {/* Row Grid Lines */}
                       <div className="absolute inset-0 pointer-events-none"
                         style={{
