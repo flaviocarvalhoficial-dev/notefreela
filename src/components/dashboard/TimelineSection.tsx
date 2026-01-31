@@ -294,12 +294,12 @@ export function TimelineSection({
     return grouped;
   }, [timelineActivities, activeDays]);
 
-  const totalTimelineHeight = (RANGE + 1) * 60; // Fixed height in column view
+  const totalTimelineHeight = activeDays.length * 100; // Estimated height
 
-  // Needle position (vertical offset in pixels)
-  const needleTopPx = useMemo(() => {
-    return (now - RANGE_START) * 60; // 60px per hour
-  }, [now]);
+  // Needle position (horizontal offset in pixels)
+  const needleLeftPx = useMemo(() => {
+    return (now - RANGE_START) * slotPx;
+  }, [now, slotPx]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -436,11 +436,11 @@ export function TimelineSection({
           role="application"
           aria-label="Timeline horizontal"
         >
-          <div className="timeline-inner flex min-w-max pb-4">
-            {/* Vertical Hours Scale on the Left */}
-            <div className="sticky left-0 z-50 flex flex-col pt-[60px] bg-background/95 backdrop-blur-sm border-r border-border/40 shadow-xl">
+          <div className="timeline-inner flex flex-col min-w-max pb-4 relative">
+            {/* Horizontal Hours Scale at the Top */}
+            <div className="sticky top-0 z-50 flex pl-[80px] bg-background/95 backdrop-blur-sm border-b border-border/40 shadow-sm h-10">
               {hours.map((h) => (
-                <div key={h} className="h-[60px] flex items-start justify-end pr-3 -mt-3">
+                <div key={h} className="shrink-0 flex items-center justify-center border-r border-border/10" style={{ width: slotPx }}>
                   <span className="text-[11px] font-semibold text-muted-foreground/60 tabular-nums">
                     {String(h >= 24 ? h - 24 : h).padStart(2, "0")}:00
                   </span>
@@ -448,18 +448,18 @@ export function TimelineSection({
               ))}
             </div>
 
-            <div className="relative flex">
-              {/* Global Needle - Spans across all days */}
+            <div className="relative flex flex-col">
+              {/* Global Needle - Vertical Line spanning all rows */}
               {now >= RANGE_START && now <= RANGE_END && (
                 <div
-                  className="absolute left-0 right-0 h-px bg-primary/40 z-40 pointer-events-none transition-all duration-1000"
-                  style={{ top: `${needleTopPx + 60}px` }} // +60 to account for header height
+                  className="absolute bottom-0 top-0 w-px bg-primary/60 z-40 pointer-events-none transition-all duration-1000"
+                  style={{ left: `${needleLeftPx + 80}px` }} // +80 for the day sidebar
                 >
-                  <div className="sticky left-0">
-                    <div className="absolute left-0 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary shadow-glow flex items-center justify-center z-50">
+                  <div className="sticky top-10">
+                    <div className="absolute top-0 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary shadow-glow flex items-center justify-center z-50">
                       <div className="w-1 h-1 rounded-full bg-white" />
                     </div>
-                    <div className="absolute left-3 -translate-y-1/2 top-0 px-1.5 py-0.5 rounded-sm bg-primary text-[8px] font-bold text-white uppercase tracking-tighter shadow-lg whitespace-nowrap z-50">
+                    <div className="absolute top-4 -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-primary text-[8px] font-bold text-white uppercase tracking-tighter shadow-lg whitespace-nowrap z-50">
                       Agora
                     </div>
                   </div>
@@ -469,47 +469,56 @@ export function TimelineSection({
               {activeDays.map((day) => {
                 const dayData = activitiesByDay[day.dayOffset];
                 const items = dayData?.items || [];
+                const rowHeight = Math.max(100, 20 + (dayData?.height || 60));
 
                 return (
-                  <div key={day.date.toISOString()} className="relative w-[300px] border-r border-border/20 flex flex-col">
-                    {/* Minimalist Day Column Header */}
-                    <div className="h-[60px] flex items-center justify-center border-b border-border/30 bg-muted/5">
+                  <div key={day.date.toISOString()} className="flex border-b border-border/10 group/row" style={{ height: rowHeight }}>
+                    {/* Day Label Sidebar (Sticky Left) */}
+                    <div className="sticky left-0 z-30 w-[80px] bg-background/95 backdrop-blur-sm border-r border-border/40 flex flex-col items-center justify-center shadow-lg">
                       {dayLabelMinimal(day.date)}
                     </div>
 
-                    <div className="relative flex-1 bg-muted/5" style={{ height: (RANGE + 1) * 60 }}>
-                      {/* Row Grid Lines */}
-                      <div className="absolute inset-0 pointer-events-none"
-                        style={{
-                          background: `repeating-linear-gradient(180deg, hsl(var(--border) / 0.1) 0, hsl(var(--border) / 0.1) 1px, transparent 1px, transparent 60px)`
-                        }}
-                      />
+                    {/* Day Activity Row */}
+                    <div className="relative flex-1 overflow-hidden" style={{ width: slotPx * RANGE }}>
+                      {/* Vertical Hour Grid Lines */}
+                      <div className="absolute inset-0 pointer-events-none flex">
+                        {hours.map((h) => (
+                          <div key={`grid-${h}`} className="h-full border-r border-border/5 shrink-0" style={{ width: slotPx }} />
+                        ))}
+                      </div>
 
                       {items.map((a) => {
                         const lane = (a.lane ?? 0) as number;
-                        const baseTop = (a.startHour - RANGE_START) * 60;
-                        const top = baseTop + 12 + (lane * 35); // Adjusted vertical start
+                        const left = (a.startHour - RANGE_START) * slotPx;
+                        const duration = a.endHour - a.startHour;
+                        const width = Math.max(80, duration * slotPx); // At least 80px wide
+                        const top = 20 + (lane * 45);
 
                         return (
                           <Tooltip key={a.id}>
                             <TooltipTrigger asChild>
                               <div
-                                className="absolute left-[5%] w-[90%] rounded-[4px] transition-all hover:scale-[1.02] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-4"
+                                className="absolute rounded-lg transition-all hover:scale-[1.01] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-3 border border-white/10 group/item"
                                 style={{
+                                  left: `${left + 10}px`, // Slight padding
                                   top: `${top}px`,
-                                  height: 30,
+                                  width: `${width - 20}px`,
+                                  height: 36,
                                   backgroundColor: a.color || "hsl(var(--card))",
                                   color: a.color ? "#fff" : "hsl(var(--foreground))",
-                                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)'
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                                 }}
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => onActivityClick(a)}
                               >
-                                <div className="min-w-0 flex items-center gap-3">
-                                  <p className="text-[12px] font-bold whitespace-nowrap overflow-hidden text-ellipsis leading-none tracking-tight">{a.title}</p>
-                                  <span className="text-[7px] font-black opacity-60 uppercase tracking-widest whitespace-nowrap border-l border-white/20 pl-2">
-                                    {a.meta}
+                                <div className="min-w-0 flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-white/40 shrink-0" />
+                                  <p className="text-[11px] font-bold whitespace-nowrap overflow-hidden text-ellipsis leading-none tracking-tight">
+                                    {a.title}
+                                  </p>
+                                  <span className="text-[7px] font-black opacity-40 uppercase tracking-widest whitespace-nowrap ml-auto">
+                                    {formatHourLabel(a.startHour)}
                                   </span>
                                 </div>
                               </div>
