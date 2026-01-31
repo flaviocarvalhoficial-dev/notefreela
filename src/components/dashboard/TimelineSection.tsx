@@ -270,11 +270,12 @@ export function TimelineSection({
     return grouped;
   }, [timelineActivities, activeDays]);
 
-  const totalTimelineHeight = useMemo(() => {
-    return Object.values(activitiesByDay).reduce((acc, curr) => acc + curr.height + 24, 60); // 24 = gap-6
-  }, [activitiesByDay]);
+  const totalTimelineHeight = (RANGE + 1) * 60; // Fixed height in column view
 
-  const nowLeftPx = (now - RANGE_START) * slotPx;
+  // Needle position (vertical offset in pixels)
+  const needleTopPx = useMemo(() => {
+    return (now - RANGE_START) * 60; // 60px per hour
+  }, [now]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -403,7 +404,6 @@ export function TimelineSection({
         <div
           className={`timeline-viewport ${isDragging ? "is-dragging" : ""}`}
           ref={viewportRef}
-          style={{ ["--timeline-slot" as any]: `${slotPx}px` }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
@@ -412,68 +412,71 @@ export function TimelineSection({
           role="application"
           aria-label="Timeline horizontal"
         >
-          <div className="timeline-inner" style={{ width: innerWidth }}>
-            <div className="timeline-hours mb-2">
+          <div className="timeline-inner flex min-w-max pb-4">
+            {/* Vertical Hours Scale on the Left */}
+            <div className="sticky left-0 z-50 flex flex-col pt-[60px] bg-background/95 backdrop-blur-sm border-r border-border/40 shadow-xl">
               {hours.map((h) => (
-                <div key={h} className="timeline-hour font-semibold">
-                  {String(h >= 24 ? h - 24 : h).padStart(2, "0")}:00
+                <div key={h} className="h-[60px] flex items-start justify-end pr-3 -mt-3">
+                  <span className="text-[11px] font-semibold text-muted-foreground/60 tabular-nums">
+                    {String(h >= 24 ? h - 24 : h).padStart(2, "0")}:00
+                  </span>
                 </div>
               ))}
             </div>
 
-            <div className="relative flex flex-col gap-6">
-              {/* Global Needle - Spans full height of the list */}
-              <div className="absolute top-0 bottom-0 w-[1.5px] bg-primary/80 z-40 pointer-events-none" style={{ left: nowLeftPx }}>
-                <div className="absolute top-0 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+            <div className="relative flex">
+              {/* Global Horizontal Needle - Spans all columns */}
+              <div
+                className="absolute left-0 right-0 h-[1.5px] bg-primary/70 z-40 pointer-events-none transition-all duration-1000"
+                style={{ top: 60 + needleTopPx }}
+              >
+                <div className="absolute left-0 -translate-y-1/2 w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
+                <div className="absolute inset-0 bg-primary/20 blur-[1px]" />
               </div>
 
-              {activeDays.map((day, idx) => {
+              {activeDays.map((day) => {
                 const dayData = activitiesByDay[day.dayOffset];
                 const items = dayData?.items || [];
-                const rowHeight = dayData?.height || 60;
 
                 return (
-                  <div key={day.date.toISOString()} className="flex items-start gap-3">
-                    {/* Minimalist Day Label */}
-                    <div className="sticky left-0 z-20 shrink-0 w-12 h-10 flex items-center justify-center bg-background/90 backdrop-blur rounded-lg border border-border/40 shadow-sm mt-2">
+                  <div key={day.date.toISOString()} className="relative w-[300px] border-r border-border/20 flex flex-col">
+                    {/* Minimalist Day Column Header */}
+                    <div className="h-[60px] flex items-center justify-center border-b border-border/30 bg-muted/5">
                       {dayLabelMinimal(day.date)}
                     </div>
 
-                    <div className="timeline-track flex-1 relative bg-muted/5 rounded-lg border border-border/30 overflow-hidden" style={{ height: rowHeight }}>
-                      {/* Background Grid Lines */}
+                    <div className="relative flex-1 bg-muted/5" style={{ height: (RANGE + 1) * 60 }}>
+                      {/* Row Grid Lines */}
                       <div className="absolute inset-0 pointer-events-none"
                         style={{
-                          background: `repeating-linear-gradient(90deg, hsl(var(--border) / 0.08) 0, hsl(var(--border) / 0.08) 1px, transparent 1px, transparent ${slotPx}px)`
+                          background: `repeating-linear-gradient(180deg, hsl(var(--border) / 0.1) 0, hsl(var(--border) / 0.1) 1px, transparent 1px, transparent 60px)`
                         }}
                       />
 
                       {items.map((a) => {
                         const lane = (a.lane ?? 0) as number;
-                        const top = 8 + lane * 40;
-                        const leftPx = (a.startHour - RANGE_START) * slotPx;
-                        const widthPx = (a.endHour - a.startHour) * slotPx;
+                        const baseTop = (a.startHour - RANGE_START) * 60;
+                        const top = baseTop + 10 + (lane * 35); // Stack within the hour slot
 
                         return (
                           <Tooltip key={a.id}>
                             <TooltipTrigger asChild>
                               <div
-                                className="absolute rounded-[4px] transition-all hover:scale-[1.01] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-6"
+                                className="absolute left-[5%] w-[90%] rounded-[4px] transition-all hover:scale-[1.02] hover:brightness-110 cursor-pointer overflow-hidden flex flex-col justify-center px-4"
                                 style={{
-                                  left: leftPx,
-                                  width: widthPx,
                                   top,
                                   height: 30,
                                   backgroundColor: a.color || "hsl(var(--card))",
                                   color: a.color ? "#fff" : "hsl(var(--foreground))",
-                                  boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+                                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)'
                                 }}
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => onActivityClick(a)}
                               >
-                                <div className="min-w-0 flex items-center gap-4">
-                                  <p className="text-[13px] font-bold whitespace-nowrap leading-none tracking-tight">{a.title}</p>
-                                  <span className="text-[8px] font-black opacity-60 uppercase tracking-widest whitespace-nowrap border-l border-white/20 pl-3">
+                                <div className="min-w-0 flex items-center gap-3">
+                                  <p className="text-[12px] font-bold whitespace-nowrap overflow-hidden text-ellipsis leading-none tracking-tight">{a.title}</p>
+                                  <span className="text-[7px] font-black opacity-60 uppercase tracking-widest whitespace-nowrap border-l border-white/20 pl-2">
                                     {a.meta}
                                   </span>
                                 </div>
