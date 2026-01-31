@@ -373,18 +373,14 @@ export default function Tarefas() {
       const { data, error } = await query;
       if (error) throw error;
 
-      if (data.length === 0 && projectFilter !== "all") {
-        // Fallback for projects without columns (shouldn't happen with trigger)
-        return defaultColumns;
-      }
       return data;
     }
   });
 
-  const [columns, setColumns] = useState<Column[]>(defaultColumns);
+  const [columns, setColumns] = useState<Column[]>([]);
 
   React.useEffect(() => {
-    if (dbColumns.length > 0) {
+    if (dbColumns) {
       setColumns(dbColumns as Column[]);
     }
   }, [dbColumns]);
@@ -796,7 +792,10 @@ export default function Tarefas() {
               >
                 <Button
                   variant="ghost"
-                  className="w-full min-h-[160px] glass-light border border-dashed border-border/50 flex flex-col gap-2 rounded-2xl hover:bg-muted/10 group"
+                  className={cn(
+                    "w-full glass-light border border-dashed border-border/50 flex flex-col gap-3 rounded-2xl hover:bg-muted/10 group transition-all",
+                    columns.length === 0 ? "min-h-[300px] border-primary/30 bg-primary/5" : "min-h-[160px]"
+                  )}
                   onClick={() => {
                     if (projectFilter === "all") {
                       const newTitles = ["Pendente", "Bloqueado", "Review", "QA"];
@@ -811,10 +810,23 @@ export default function Tarefas() {
                     }
                   }}
                 >
-                  <div className="p-2 rounded-full bg-muted/20 text-muted-foreground group-hover:text-primary transition-colors">
-                    <Plus className="h-5 w-5" />
+                  <div className={cn(
+                    "p-3 rounded-full transition-colors",
+                    columns.length === 0 ? "bg-primary/20 text-primary shadow-glow" : "bg-muted/20 text-muted-foreground group-hover:text-primary"
+                  )}>
+                    <Plus className={columns.length === 0 ? "h-6 w-6" : "h-5 w-5"} />
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">Nova Coluna</span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className={cn(
+                      "font-semibold",
+                      columns.length === 0 ? "text-base text-primary" : "text-sm text-muted-foreground"
+                    )}>
+                      {columns.length === 0 ? "Começar meu Fluxo" : "Nova Coluna"}
+                    </span>
+                    {columns.length === 0 && (
+                      <p className="text-xs text-muted-foreground max-w-[200px]">Adicione a primeira etapa do seu projeto</p>
+                    )}
+                  </div>
                 </Button>
               </motion.div>
             </div>
