@@ -180,7 +180,13 @@ export function TimelineSection({
 
       if (tasksError) throw tasksError;
 
-      // 3. Map Events
+      // 3. Fetch Kanban Columns for Colors
+      const { data: kbCols, error: kbError } = await (supabase as any).from("kanban_columns").select("id, color");
+      if (kbError) throw kbError;
+
+      const colMap = new Map((kbCols as any[])?.map(cl => [cl.id, cl.color]) || []);
+
+      // 4. Map Events
       const mappedEvents = events.map((e: any) => {
         const startH = parseTimeToHour(e.start_time);
         const eventDate = new Date(e.date + "T12:00:00");
@@ -202,13 +208,14 @@ export function TimelineSection({
         } as TimelineActivity;
       });
 
-      // 4. Map Tasks
+      // 5. Map Tasks
       const mappedTasks = tasks.map((t: any) => {
         const taskDate = startOfDay(new Date(t.due_date + "T12:00:00"));
         const diffTime = taskDate.getTime() - today.getTime();
         const dayOffset = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-        const colColor = COLUMN_COLORS[t.column_id as string] || COLUMN_COLORS["todo"];
+        // Use color from DB columns if available, otherwise fallback to defaults
+        const colColor = colMap.get(t.column_id) || COLUMN_COLORS[t.column_id as string] || COLUMN_COLORS["todo"];
 
         return {
           id: t.id,
@@ -445,7 +452,7 @@ export function TimelineSection({
               {/* Global Needle - Spans across all days */}
               {now >= RANGE_START && now <= RANGE_END && (
                 <div
-                  className="absolute left-0 right-0 h-[1.5px] bg-primary z-40 pointer-events-none transition-all duration-1000 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                  className="absolute left-0 right-0 h-px bg-primary/40 z-40 pointer-events-none transition-all duration-1000"
                   style={{ top: `${needleTopPx + 60}px` }} // +60 to account for header height
                 >
                   <div className="sticky left-0">
