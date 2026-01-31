@@ -501,7 +501,6 @@ export default function Tarefas() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kanban-columns", projectFilter] });
-      toast({ title: "Sucesso", description: "Nova etapa adicionada." });
     }
   });
 
@@ -725,7 +724,6 @@ export default function Tarefas() {
                           } else {
                             updateColumnMutation.mutate({ id: col.id, title: newTitle });
                           }
-                          toast({ title: "Coluna atualizada", description: "O título da etapa foi alterado." });
                         }}
                         onHintChange={(newHint) => {
                           if (projectFilter === "all") {
@@ -733,7 +731,6 @@ export default function Tarefas() {
                           } else {
                             updateColumnMutation.mutate({ id: col.id, hint: newHint });
                           }
-                          toast({ title: "Descrição atualizada", description: "O subtítulo da etapa foi alterado." });
                         }}
                         onDelete={() => {
                           if (projectFilter === "all") {
