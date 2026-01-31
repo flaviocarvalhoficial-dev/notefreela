@@ -302,11 +302,7 @@ export function TimelineSection({
     setIsDragging(false);
   };
 
-  const subtitle = useMemo(() => {
-    if (tab === "today") return "O que está planejado para hoje";
-    if (tab === "tomorrow") return "O que está planejado para amanhã";
-    return `O que está planejado para ${dayLabel(activeDate)}`;
-  }, [tab, activeDate]);
+
 
   const onActivityClick = (a: TimelineActivity) => {
     if (Date.now() - lastDragEndedAtRef.current < 180) return;
