@@ -37,8 +37,21 @@ export default defineConfig(({ mode }) => ({
         icons: [
           {
             src: 'iconnotefreela.svg',
-            sizes: 'any',
-            type: 'image/svg+xml'
+            sizes: '192x192',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: 'iconnotefreela.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: 'iconnotefreela.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'maskable'
           }
         ]
       }
