@@ -94,7 +94,7 @@ const Clientes = () => {
             const allClients = [...(dbClients || []), ...implicitClients];
 
             return allClients.map((client: any) => {
-                const clientProjects = projectsData.filter((p: any) =>
+                const clientProjects = (projectsData || []).filter((p: any) =>
                     p.client_id === client.id ||
                     (p.client_name && p.client_name.toLowerCase() === client.name.toLowerCase()) ||
                     (p.client_name && client.company_name && p.client_name.toLowerCase() === client.company_name.toLowerCase())

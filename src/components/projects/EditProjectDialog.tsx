@@ -24,6 +24,7 @@ interface Project {
     client_name?: string | null;
     manager_name?: string | null;
     avatar_emoji?: string | null;
+    services?: string[] | null;
 }
 
 interface EditProjectDialogProps {
@@ -53,6 +54,8 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
     const [newManager, setNewManager] = useState(project.manager_name || "");
     const [newValue, setNewValue] = useState(project.value || 0);
     const [newIcon, setNewIcon] = useState(project.avatar_emoji || "Briefcase");
+    const [services, setServices] = useState<string[]>(project.services || []);
+    const [serviceInput, setServiceInput] = useState("");
 
     useEffect(() => {
         if (open) {
@@ -66,8 +69,19 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
             setNewManager(project.manager_name || "");
             setNewValue(project.value || 0);
             setNewIcon(project.avatar_emoji || "Briefcase");
+            setServices(project.services || []);
         }
     }, [open, project]);
+
+    const addService = () => {
+        if (!serviceInput.trim()) return;
+        setServices([...services, serviceInput.trim()]);
+        setServiceInput("");
+    };
+
+    const removeService = (index: number) => {
+        setServices(services.filter((_, i) => i !== index));
+    };
 
     const updateProjectMutation = useMutation({
         mutationFn: async () => {
@@ -84,6 +98,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                     manager_name: newManager,
                     value: newValue,
                     avatar_emoji: newIcon,
+                    services: services,
                 })
                 .eq("id", project.id);
 
@@ -143,6 +158,49 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             value={newDesc}
                             onChange={(e) => setNewDesc(e.target.value)}
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs opacity-60">Serviços Contratados (Escopo)</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder="Ex: Website, App, Logo..."
+                                className="glass-light border-border/50 h-9 text-sm"
+                                value={serviceInput}
+                                onChange={(e) => setServiceInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        addService();
+                                    }
+                                }}
+                            />
+                            <Button
+                                type="button"
+                                onClick={addService}
+                                size="sm"
+                                className="shrink-0 bg-primary/20 text-primary hover:bg-primary/30 h-9 px-3"
+                            >
+                                Adicionar
+                            </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {services.map((svc, i) => (
+                                <div key={i} className="flex items-center gap-1.5 bg-secondary/30 px-2.5 py-1 rounded-full border border-border/40 text-[11px] font-medium">
+                                    <span>{svc}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeService(i)}
+                                        className="text-muted-foreground hover:text-destructive transition-colors px-1"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                            {services.length === 0 && (
+                                <p className="text-[10px] text-muted-foreground italic">Nenhum serviço listado no escopo.</p>
+                            )}
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
@@ -242,7 +300,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             Cancelar
                         </Button>
                         <Button
-                            className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                            className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-glow"
                             onClick={() => updateProjectMutation.mutate()}
                             disabled={updateProjectMutation.isPending || !newName}
                         >
