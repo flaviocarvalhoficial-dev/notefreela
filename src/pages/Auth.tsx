@@ -64,12 +64,10 @@ export default function Auth() {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bento-card max-w-md w-full p-8 relative z-10"
+                className="bento-card max-w-md w-full py-20 px-12 relative z-10"
             >
-                <div className="text-center mb-8">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4">
-                        <span className="text-xl font-bold text-background">N</span>
-                    </div>
+                <div className="text-center mb-10">
+                    <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-14 h-14 mx-auto mb-4" />
                     <h1 className="text-2xl font-bold">{isSignUp ? "Criar conta" : "Bem-vindo de volta"}</h1>
                     <p className="text-muted-foreground text-sm mt-2">
                         {isSignUp
