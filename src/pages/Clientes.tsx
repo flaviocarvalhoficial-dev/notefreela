@@ -294,7 +294,7 @@ function ClientCard({ client, onDelete, index }: { client: Client, onDelete: (id
                 </div>
                 <div>
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">Valor Total</p>
-                    <span className="text-sm font-bold text-emerald-500">
+                    <span className="text-sm font-bold text-foreground">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.total_value || 0)}
                     </span>
                 </div>
@@ -342,7 +342,7 @@ function ClientListItem({ client, onDelete, index }: { client: Client, onDelete:
                 </div>
                 <div className="flex flex-col items-end w-24">
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Total</span>
-                    <span className="text-sm font-bold text-emerald-500">
+                    <span className="text-sm font-bold text-foreground">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.total_value || 0)}
                     </span>
                 </div>

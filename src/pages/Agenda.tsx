@@ -190,7 +190,7 @@ const Agenda = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Calendário Principal */}
+        {/* Calendário Principal (Esquerda - 2 Colunas) - Agora com 2 calendários lado a lado */}
         <motion.div
           className="lg:col-span-2"
           initial={{ opacity: 0, y: 20 }}
@@ -199,7 +199,7 @@ const Agenda = () => {
           <div className="bento-card">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">
-                {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+                Agenda
               </h2>
               <div className="flex items-center gap-2">
                 <Button
@@ -233,53 +233,98 @@ const Agenda = () => {
               </div>
             </div>
 
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              className="w-full"
-              components={{
-                DayContent: ({ date }) => {
-                  const dayEvents = allEvents.filter((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
-                  return (
-                    <div className="flex flex-col items-center justify-start h-full w-full pt-1 relative z-10">
-                      <span className="text-sm font-normal mb-1">{date.getDate()}</span>
-                      <div className="flex flex-col gap-0.5 w-full px-0.5">
-                        {dayEvents.slice(0, 3).map((ev) => (
-                          <div
-                            key={ev.id}
-                            className="h-1.5 w-full rounded-sm opacity-90"
-                            style={{ backgroundColor: getEventColor(ev) }}
-                            title={ev.title}
-                          />
-                        ))}
-                        {dayEvents.length > 3 && (
-                          <div className="h-1.5 w-full flex items-center justify-center">
-                            <div className="h-1 w-1 rounded-full bg-muted-foreground" />
-                            <div className="h-1 w-1 rounded-full bg-muted-foreground ml-0.5" />
+            <div className="grid md:grid-cols-2 gap-8 items-start">
+              <div className="space-y-4">
+                <h3 className="font-medium text-muted-foreground ml-2 capitalize">
+                  {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+                </h3>
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  month={currentMonth}
+                  onMonthChange={setCurrentMonth}
+                  className="w-full border-none shadow-none"
+                  classNames={{
+                    month: "w-full",
+                    table: "w-full",
+                    head_row: "flex w-full justify-between",
+                    row: "flex w-full mt-2 justify-between",
+                  }}
+                  components={{
+                    DayContent: ({ date }) => {
+                      const dayEvents = allEvents.filter((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
+                      return (
+                        <div className="flex flex-col items-center justify-start h-full w-full pt-1 relative z-10">
+                          <span className="text-sm font-normal mb-1">{date.getDate()}</span>
+                          <div className="flex items-center justify-center gap-1 w-full px-0.5 mt-1">
+                            {dayEvents.slice(0, 4).map((ev) => (
+                              <div
+                                key={ev.id}
+                                className="h-1.5 w-1.5 rounded-full shrink-0"
+                                style={{ backgroundColor: getEventColor(ev) }}
+                                title={ev.title}
+                              />
+                            ))}
+                            {dayEvents.length > 4 && (
+                              <div className="h-1 w-1 rounded-full bg-muted-foreground shrink-0" />
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                },
-              }}
-              modifiers={{
-                hasEvents: (date) => hasEvents(date),
-              }}
-              modifiersClassNames={{
-                hasEvents: "",
-              }}
-            />
+                        </div>
+                      );
+                    },
+                  }}
+                  modifiers={{
+                    hasEvents: (date) => hasEvents(date),
+                  }}
+                  modifiersClassNames={{
+                    hasEvents: "",
+                  }}
+                />
+              </div>
+
+              <div className="hidden md:block space-y-4 border-l border-border/30 pl-8">
+                <h3 className="font-medium text-muted-foreground ml-2 capitalize">
+                  {format(nextMonth, "MMMM yyyy", { locale: ptBR })}
+                </h3>
+                <Calendar
+                  mode="single"
+                  month={nextMonth}
+                  selected={undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      setCurrentMonth(date);
+                      setSelectedDate(date);
+                    }
+                  }}
+                  className="w-full border-none shadow-none pointer-events-auto"
+                  classNames={{
+                    month: "w-full",
+                    table: "w-full",
+                    head_row: "flex w-full justify-between",
+                    row: "flex w-full mt-2 justify-between",
+                    nav: "hidden",
+                    caption: "hidden"
+                  }}
+                  components={{
+                    DayContent: ({ date }) => {
+                      const hasEvent = allEvents.some((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
+                      return (
+                        <div className="relative w-full h-full flex items-center justify-center p-2">
+                          {date.getDate()}
+                          {hasEvent && <div className="absolute bottom-1 w-1 h-1 bg-primary rounded-full" />}
+                        </div>
+                      )
+                    }
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        {/* Coluna Direita: Eventos + Próximo Mês */}
+        {/* Coluna Direita: Apenas Eventos */}
         <div className="flex flex-col gap-4">
-
-          {/* Card Eventos do Dia */}
           <div className="bento-card h-fit min-h-[300px]">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -337,45 +382,6 @@ const Agenda = () => {
               </div>
             )}
           </div>
-
-          {/* Card Próximo Mês */}
-          <div className="bento-card h-fit bg-card/50 hidden lg:block">
-            <div className="mb-2 px-1">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                Próximo Mês ({format(nextMonth, "MMM", { locale: ptBR })})
-              </h2>
-            </div>
-            <Calendar
-              mode="single"
-              month={nextMonth}
-              selected={undefined}
-              onSelect={(date) => {
-                if (date) {
-                  setCurrentMonth(date);
-                  setSelectedDate(date);
-                }
-              }}
-              className="w-full p-0 flex justify-center scale-95"
-              classNames={{
-                head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
-                cell: "h-8 w-8 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:bg-accent rounded-md transition-colors",
-                caption: "hidden"
-              }}
-              components={{
-                DayContent: ({ date }) => {
-                  const hasEvent = allEvents.some((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
-                  return (
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      {date.getDate()}
-                      {hasEvent && <div className="absolute bottom-1 w-1 h-1 bg-primary rounded-full" />}
-                    </div>
-                  )
-                }
-              }}
-            />
-          </div>
-
         </div>
       </div>
     </div>

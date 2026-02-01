@@ -48,6 +48,30 @@ const Index = () => {
     }
   });
 
+  const { data: clientsData = [] } = useQuery({
+    queryKey: ["clients-data-index"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, name");
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const uniqueClientsCount = (() => {
+    const explicitNames = new Set((clientsData || []).map((c: any) => c.name.toLowerCase()));
+    const implicitNames = new Set<string>();
+
+    (projects || []).forEach((p: any) => {
+      if (p.client_name && !explicitNames.has(p.client_name.toLowerCase())) {
+        implicitNames.add(p.client_name.toLowerCase());
+      }
+    });
+
+    return explicitNames.size + implicitNames.size;
+  })();
+
   const createTaskMutation = useMutation({
     mutationFn: async (values: NewTaskValues) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -95,23 +119,23 @@ const Index = () => {
 
   const stats = [
     {
-      title: "Projetos Ativos",
-      value: projects.filter(p => p.status === "active").length.toString(),
-      change: "Gestão em tempo real",
+      title: "Projetos",
+      value: projects.length.toString(),
+      change: "Total cadastrado",
       icon: TrendingUp,
       color: "hsl(var(--peach))"
     },
     {
-      title: "Tarefas Concluídas",
-      value: tasksStats?.completed.toString() || "0",
-      change: `${tasksStats?.total || 0} no total`,
+      title: "Tarefas",
+      value: tasksStats?.total.toString() || "0",
+      change: `${tasksStats?.completed || 0} concluídas`,
       icon: CheckCircle2,
       color: "hsl(var(--peach))"
     },
     {
       title: "Clientes",
-      value: "0",
-      change: "Clientes ativos",
+      value: uniqueClientsCount.toString(),
+      change: "Carteira Total",
       icon: Users,
       color: "hsl(var(--peach))"
     },
