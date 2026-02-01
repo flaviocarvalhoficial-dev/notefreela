@@ -50,6 +50,7 @@ interface InboxItem {
     title: string;
     content: string;
     type: 'idea' | 'prompt' | 'snippet' | 'note';
+    category: string;
     tags: string[];
 }
 
@@ -76,6 +77,7 @@ const CaixaEntrada = () => {
 
     // New Item State
     const [newTitle, setNewTitle] = useState("");
+    const [newCategory, setNewCategory] = useState("");
     const [newContent, setNewContent] = useState("");
     const [newType, setNewType] = useState<'idea' | 'prompt' | 'snippet' | 'note'>('idea');
     const [newTags, setNewTags] = useState("");
@@ -101,6 +103,7 @@ const CaixaEntrada = () => {
             const { error } = await (supabase as any).from("inbox").insert({
                 user_id: user.id,
                 title: newTitle,
+                category: newCategory,
                 content: newContent,
                 type: newType,
                 tags: newTags.split(",").map(t => t.trim()).filter(t => t !== "")
@@ -114,6 +117,7 @@ const CaixaEntrada = () => {
             toast({ title: "Capturado!", description: "Item adicionado à sua caixa de entrada." });
             setIsAdding(false);
             setNewTitle("");
+            setNewCategory("");
             setNewContent("");
             setNewType("idea");
             setNewTags("");
@@ -141,6 +145,7 @@ const CaixaEntrada = () => {
                 .from("inbox")
                 .update({
                     title: updatedItem.title,
+                    category: updatedItem.category,
                     content: updatedItem.content,
                     type: updatedItem.type,
                     tags: updatedItem.tags
@@ -221,6 +226,7 @@ const CaixaEntrada = () => {
     const filteredItems = items.filter(item => {
         const matchesSearch =
             (item.title?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+            (item.category?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
             item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -310,16 +316,16 @@ const CaixaEntrada = () => {
                                 <div className="bento-card p-6 space-y-4 border-primary/30 shadow-glow-sm">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label className="text-xs opacity-60">Título (Opcional)</Label>
+                                            <Label className="text-xs opacity-60">Título</Label>
                                             <Input
                                                 placeholder="Resumo curto..."
                                                 value={newTitle}
                                                 onChange={(e) => setNewTitle(e.target.value)}
-                                                className="glass-light h-9"
+                                                className="glass-light h-9 text-sm"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-xs opacity-60">Categoria</Label>
+                                            <Label className="text-xs opacity-60">Tipo</Label>
                                             <div className="flex gap-2">
                                                 {['idea', 'prompt', 'snippet', 'note'].map((t) => (
                                                     <button
@@ -340,6 +346,30 @@ const CaixaEntrada = () => {
                                         </div>
                                     </div>
 
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs opacity-60">Categoria</Label>
+                                            <Input
+                                                placeholder="ex: Estudo, Trabalho..."
+                                                value={newCategory}
+                                                onChange={(e) => setNewCategory(e.target.value)}
+                                                className="glass-light h-9 text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs opacity-60">Tags (Separadas por vírgula)</Label>
+                                            <div className="relative">
+                                                <TagsIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/50" />
+                                                <Input
+                                                    placeholder="ex: ai, marketing..."
+                                                    className="pl-9 glass-light h-9 text-xs"
+                                                    value={newTags}
+                                                    onChange={(e) => setNewTags(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
                                         <Label className="text-xs opacity-60">Conteúdo</Label>
                                         <Textarea
@@ -350,18 +380,7 @@ const CaixaEntrada = () => {
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-60">Tags (Separadas por vírgula)</Label>
-                                        <div className="relative">
-                                            <TagsIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/50" />
-                                            <Input
-                                                placeholder="ex: ai, marketing, copy..."
-                                                className="pl-9 glass-light h-8 text-xs"
-                                                value={newTags}
-                                                onChange={(e) => setNewTags(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
+
 
                                     <div className="flex justify-end gap-2 pt-2">
                                         <Button variant="ghost" size="sm" onClick={() => setIsAdding(false)}>Cancelar</Button>
@@ -414,9 +433,16 @@ const CaixaEntrada = () => {
                                                         <h3 className="font-semibold text-foreground tracking-tight text-sm truncate max-w-[120px]">
                                                             {item.title || "Captura"}
                                                         </h3>
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none">
-                                                            {format(new Date(item.created_at), "dd/MM/yy", { locale: ptBR })}
-                                                        </p>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none">
+                                                                {format(new Date(item.created_at), "dd/MM/yy", { locale: ptBR })}
+                                                            </p>
+                                                            {item.category && (
+                                                                <span className="text-[9px] text-primary/70 font-medium truncate max-w-[80px]">
+                                                                    {item.category}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -506,6 +532,7 @@ const CaixaEntrada = () => {
                                             {['idea', 'prompt', 'snippet', 'note'].map((t) => (
                                                 <button
                                                     key={t}
+                                                    type="button"
                                                     onClick={() => setEditingItem({ ...editingItem, type: t as any })}
                                                     className={cn(
                                                         "p-2 rounded-md transition-all border",
@@ -521,6 +548,26 @@ const CaixaEntrada = () => {
                                     </div>
                                 </div>
 
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-xs opacity-60">Categoria</Label>
+                                        <Input
+                                            value={editingItem.category || ""}
+                                            onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                                            className="glass-light"
+                                            placeholder="ex: Trabalho, Estudo..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs opacity-60">Tags (Separadas por vírgula)</Label>
+                                        <Input
+                                            value={editingItem.tags.join(", ")}
+                                            onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map(t => t.trim()) })}
+                                            className="glass-light"
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
                                     <Label className="text-xs opacity-60">Conteúdo</Label>
                                     <Textarea
@@ -530,14 +577,7 @@ const CaixaEntrada = () => {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-xs opacity-60">Tags (Separadas por vírgula)</Label>
-                                    <Input
-                                        value={editingItem.tags.join(", ")}
-                                        onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map(t => t.trim()) })}
-                                        className="glass-light"
-                                    />
-                                </div>
+
 
                                 <DialogFooter className="pt-4">
                                     <Button variant="ghost" onClick={() => setEditingItem(null)}>Cancelar</Button>
@@ -565,7 +605,14 @@ const CaixaEntrada = () => {
                                     </div>
                                 )}
                                 <div>
-                                    <DialogTitle className="text-xl">{viewingItem?.title || "Detalhes do Registro"}</DialogTitle>
+                                    <DialogTitle className="text-xl flex items-center gap-2">
+                                        {viewingItem?.title || "Detalhes do Registro"}
+                                        {viewingItem?.category && (
+                                            <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary border-none">
+                                                {viewingItem.category}
+                                            </Badge>
+                                        )}
+                                    </DialogTitle>
                                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
                                         {viewingItem && format(new Date(viewingItem.created_at), "PPPP", { locale: ptBR })}
                                     </p>
