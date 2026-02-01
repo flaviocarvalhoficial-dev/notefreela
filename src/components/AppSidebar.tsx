@@ -12,9 +12,13 @@ import {
   Terminal,
   Type,
   ChevronRight,
-  Circle
+  Circle,
+  Rocket,
+  Info
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Sidebar,
   SidebarContent,
@@ -48,8 +52,25 @@ const navItems = [
   { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
 ];
 
+const APP_VERSION = "V1.1.0";
+
 export function AppSidebar() {
   const { open } = useSidebar();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const lastVersion = localStorage.getItem("notefreela_version");
+    if (lastVersion && lastVersion !== APP_VERSION) {
+      setTimeout(() => {
+        toast({
+          title: "🎉 Atualização Disponível!",
+          description: `NoteFreela foi atualizado de ${lastVersion} para ${APP_VERSION}. Aproveite as novas funcionalidades!`,
+          duration: 6000,
+        });
+      }, 1000);
+    }
+    localStorage.setItem("notefreela_version", APP_VERSION);
+  }, [toast]);
 
   const { data: inboxItems = [] } = useQuery({
     queryKey: ["inbox-sidebar"],
@@ -195,7 +216,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-sidebar-border">
+      <SidebarFooter className="p-3 border-t border-sidebar-border space-y-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -214,6 +235,20 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+
+        {open && (
+          <div className="px-4 py-2 flex items-center justify-between opacity-30 hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="text-[10px] font-medium tracking-tight text-muted-foreground">NoteFreela {APP_VERSION}</span>
+            </div>
+          </div>
+        )}
+        {!open && (
+          <div className="flex justify-center text-[8px] font-bold text-muted-foreground/10 py-1">
+            {APP_VERSION}
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );
