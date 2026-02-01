@@ -160,6 +160,10 @@ const CaixaEntrada = () => {
             toast({ title: "Atualizado", description: "Alterações salvas com sucesso." });
             setEditingItem(null);
         },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["inbox"] });
+            queryClient.invalidateQueries({ queryKey: ["inbox-sidebar"] });
+        },
         onError: (error: any) => {
             toast({ title: "Erro", description: error.message, variant: "destructive" });
         }
@@ -493,12 +497,12 @@ const CaixaEntrada = () => {
                                         </div>
 
                                         <div className="mt-4 flex flex-wrap gap-1.5 pt-3 border-t border-border/10">
-                                            {item.tags.map((tag, idx) => (
+                                            {(item.tags || []).map((tag, idx) => (
                                                 <Badge key={idx} variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-background/50 border-border/50 text-muted-foreground hover:bg-primary/5 cursor-default truncate max-w-[80px]">
                                                     #{tag}
                                                 </Badge>
                                             ))}
-                                            {item.tags.length === 0 && (
+                                            {(!item.tags || item.tags.length === 0) && (
                                                 <span className="text-[9px] text-muted-foreground italic">Sem tags</span>
                                             )}
                                         </div>
@@ -641,7 +645,7 @@ const CaixaEntrada = () => {
                                 </div>
 
                                 <div className="flex flex-wrap gap-2 pt-2">
-                                    {viewingItem.tags.map((tag, idx) => (
+                                    {(viewingItem.tags || []).map((tag, idx) => (
                                         <Badge key={idx} variant="outline" className="text-[11px] px-3 py-0.5 bg-primary/5 border-primary/20 text-primary">
                                             #{tag}
                                         </Badge>

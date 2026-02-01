@@ -77,7 +77,7 @@ export function AppSidebar() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("inbox")
-        .select("id, title, type")
+        .select("id, title, type, category")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
