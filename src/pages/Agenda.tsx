@@ -4,7 +4,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Loader2 } fr
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
@@ -46,6 +46,8 @@ const Agenda = () => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const nextMonth = addMonths(currentMonth, 1);
+
   // Form State
   const [newTitle, setNewTitle] = useState("");
   const [newType, setNewType] = useState<EventType>("task");
@@ -86,8 +88,6 @@ const Agenda = () => {
       return [...(manualEvents as AgendaEvent[]), ...taskEvents];
     },
   });
-
-  // ... (rest of the component)
 
   const getEventColor = (event: AgendaEvent) => {
     if (event.type === "task" && event.column_id) {
@@ -190,7 +190,7 @@ const Agenda = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Calendário */}
+        {/* Calendário Principal */}
         <motion.div
           className="lg:col-span-2"
           initial={{ opacity: 0, y: 20 }}
@@ -270,15 +270,17 @@ const Agenda = () => {
                 hasEvents: (date) => hasEvents(date),
               }}
               modifiersClassNames={{
-                hasEvents: "", // Remove default modifier style since we handle it in DayContent
+                hasEvents: "",
               }}
             />
           </div>
         </motion.div>
 
-        {/* Eventos do dia */}
+        {/* Coluna Direita: Eventos + Próximo Mês */}
         <div className="flex flex-col gap-4">
-          <div className="bento-card h-full">
+
+          {/* Card Eventos do Dia */}
+          <div className="bento-card h-fit min-h-[300px]">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-semibold">
@@ -335,6 +337,45 @@ const Agenda = () => {
               </div>
             )}
           </div>
+
+          {/* Card Próximo Mês */}
+          <div className="bento-card h-fit bg-card/50 hidden lg:block">
+            <div className="mb-2 px-1">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Próximo Mês ({format(nextMonth, "MMM", { locale: ptBR })})
+              </h2>
+            </div>
+            <Calendar
+              mode="single"
+              month={nextMonth}
+              selected={undefined}
+              onSelect={(date) => {
+                if (date) {
+                  setCurrentMonth(date);
+                  setSelectedDate(date);
+                }
+              }}
+              className="w-full p-0 flex justify-center scale-95"
+              classNames={{
+                head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
+                cell: "h-8 w-8 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:bg-accent rounded-md transition-colors",
+                caption: "hidden"
+              }}
+              components={{
+                DayContent: ({ date }) => {
+                  const hasEvent = allEvents.some((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
+                  return (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      {date.getDate()}
+                      {hasEvent && <div className="absolute bottom-1 w-1 h-1 bg-primary rounded-full" />}
+                    </div>
+                  )
+                }
+              }}
+            />
+          </div>
+
         </div>
       </div>
     </div>
