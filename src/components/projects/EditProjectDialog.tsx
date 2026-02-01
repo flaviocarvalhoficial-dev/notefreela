@@ -93,6 +93,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
             queryClient.invalidateQueries({ queryKey: ["projects"] });
             queryClient.invalidateQueries({ queryKey: ["project", project.id] });
             queryClient.invalidateQueries({ queryKey: ["projects-index"] });
+            queryClient.invalidateQueries({ queryKey: ["clients"] });
             toast({
                 title: "Sucesso!",
                 description: "Projeto atualizado com sucesso.",
@@ -111,7 +112,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-            <DialogContent className="glass border-border/50 max-w-lg">
+            <DialogContent className="border-border/50 max-w-lg max-h-[90vh] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%]">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-semibold">Editar Projeto</DialogTitle>
                 </DialogHeader>
@@ -127,7 +128,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-xs uppercase tracking-wider opacity-60">Ícone do Projeto</Label>
+                        <Label className="text-xs opacity-60">Ícone do Projeto</Label>
                         <div className="flex items-center gap-3">
                             <IconPicker value={newIcon} onChange={setNewIcon} />
                             <span className="text-xs text-muted-foreground">Ícone de identificação no board</span>

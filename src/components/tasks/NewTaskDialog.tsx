@@ -119,7 +119,7 @@ export function NewTaskDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
-      <DialogContent className="glass border-border/50 max-w-lg">
+      <DialogContent className="border-border/50 max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Criar Nova Tarefa</DialogTitle>
         </DialogHeader>

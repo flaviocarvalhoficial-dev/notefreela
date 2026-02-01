@@ -158,7 +158,7 @@ const Index = () => {
                     <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">{stat.title}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/70">{stat.title}</p>
                     <div className="text-2xl font-bold leading-none mt-1 tracking-tight">{stat.value}</div>
                     <p className="text-[11px] text-muted-foreground mt-2">{stat.change}</p>
                   </div>
@@ -174,7 +174,7 @@ const Index = () => {
             >
               <div className="bento-card bento-card--compact h-[132px] flex flex-col justify-between border-border/60 bg-card">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/80">Ações Rápidas</h2>
+                  <h2 className="text-sm font-bold text-foreground/80">Ações Rápidas</h2>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                     <Clock className="h-3.5 w-3.5" />
                     <span>Saúde Geral</span>
@@ -232,7 +232,7 @@ const Index = () => {
               >
                 <div className="bento-card bento-card--compact overflow-hidden border-border/60 bg-card">
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/80">Projetos Recentes</h2>
+                    <h2 className="text-sm font-bold text-foreground/80">Projetos Recentes</h2>
                     <Button
                       variant="ghost"
                       size="sm"

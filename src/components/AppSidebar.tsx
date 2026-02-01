@@ -1,4 +1,4 @@
-import { Home, FolderKanban, CheckSquare, Calendar, Activity, FileText, BarChart3, Settings } from "lucide-react";
+import { Home, FolderKanban, CheckSquare, Calendar, Users, FileText, BarChart3, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -19,7 +19,7 @@ const navItems = [
   { title: "Projetos", url: "/projetos", icon: FolderKanban },
   { title: "Tarefas", url: "/tarefas", icon: CheckSquare },
   { title: "Agenda", url: "/agenda", icon: Calendar },
-  { title: "Atividades", url: "/atividades", icon: Activity },
+  { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Documentos", url: "/documentos", icon: FileText },
   { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
 ];
@@ -37,9 +37,7 @@ export function AppSidebar() {
         {open ? (
           <div className="w-full flex items-center justify-between px-4">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center shrink-0">
-                <span className="text-sm font-bold text-primary-foreground">N</span>
-              </div>
+              <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-8 h-8 shrink-0" />
               <span className="font-bold text-foreground tracking-tight">NoteFreela</span>
             </div>
             <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-8 w-8" />
@@ -51,11 +49,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          {open && (
-            <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 px-6 mb-2">
-              Menu
-            </SidebarGroupLabel>
-          )}
+
           <SidebarGroupContent>
             <SidebarMenu className="gap-1 px-3">
               {navItems.map((item) => (

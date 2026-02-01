@@ -130,6 +130,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         },
         onSuccess: (project) => {
             queryClient.invalidateQueries({ queryKey: ["projects"] });
+            queryClient.invalidateQueries({ queryKey: ["clients"] });
             toast({
                 title: "🔥 Projeto Criado!",
                 description: `O projeto "${project.name}" foi configurado com sucesso.`,
@@ -164,7 +165,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             if (!val) resetForm();
         }}>
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-            <DialogContent className="glass border-border/50 max-w-xl p-0 overflow-hidden">
+            <DialogContent className="border-border/50 max-w-xl p-0 overflow-hidden">
                 {/* Header with Progress Bar */}
                 <div className="relative h-1.5 w-full bg-muted/20">
                     <motion.div
@@ -180,7 +181,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                             {step === 1 && <Briefcase className="h-4 w-4" />}
                             {step === 2 && <User className="h-4 w-4" />}
                             {step === 3 && <ListTodo className="h-4 w-4" />}
-                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">
+                            <span className="text-[10px] font-bold opacity-70">
                                 Passo {step} de 3
                             </span>
                         </div>
@@ -203,7 +204,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                             {step === 1 && (
                                 <>
                                     <div className="space-y-2">
-                                        <Label htmlFor="project-name" className="text-xs uppercase tracking-wider opacity-60">Nome do Projeto</Label>
+                                        <Label htmlFor="project-name" className="text-xs opacity-60">Nome do Projeto</Label>
                                         <Input
                                             id="project-name"
                                             placeholder="Ex: Identidade Visual NoteFreela"
@@ -214,14 +215,14 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-xs uppercase tracking-wider opacity-60">Ícone do Projeto</Label>
+                                        <Label className="text-xs opacity-60">Ícone do Projeto</Label>
                                         <div className="flex items-center gap-3">
                                             <IconPicker value={newIcon} onChange={setNewIcon} />
                                             <span className="text-xs text-muted-foreground">Personalize a identidade do projeto</span>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="project-client" className="text-xs uppercase tracking-wider opacity-60 flex items-center gap-2">
+                                        <Label htmlFor="project-client" className="text-xs opacity-60 flex items-center gap-2">
                                             <Building2 className="h-3 w-3" /> Cliente
                                         </Label>
                                         <Input
@@ -233,7 +234,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="project-desc" className="text-xs uppercase tracking-wider opacity-60">Descrição Rápida (Opcional)</Label>
+                                        <Label htmlFor="project-desc" className="text-xs opacity-60">Descrição Rápida (Opcional)</Label>
                                         <Input
                                             id="project-desc"
                                             placeholder="Do que se trata o projeto?"
@@ -249,7 +250,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                 <>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="project-deadline" className="text-xs uppercase tracking-wider opacity-60 flex items-center gap-2">
+                                            <Label htmlFor="project-deadline" className="text-xs opacity-60 flex items-center gap-2">
                                                 <Calendar className="h-3 w-3" /> Prazo Final
                                             </Label>
                                             <Input
@@ -261,7 +262,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="project-manager" className="text-xs uppercase tracking-wider opacity-60 flex items-center gap-2">
+                                            <Label htmlFor="project-manager" className="text-xs opacity-60 flex items-center gap-2">
                                                 <User className="h-3 w-3" /> Responsável
                                             </Label>
                                             <Input
@@ -276,7 +277,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
 
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="project-value" className="text-xs uppercase tracking-wider opacity-60 flex items-center gap-2">
+                                            <Label htmlFor="project-value" className="text-xs opacity-60 flex items-center gap-2">
                                                 <DollarSign className="h-3 w-3" /> Valor Estimado (R$)
                                             </Label>
                                             <Input
@@ -290,7 +291,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="text-xs uppercase tracking-wider opacity-60">Prioridade Inicial</Label>
+                                            <Label className="text-xs opacity-60">Prioridade Inicial</Label>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {(['low', 'medium', 'high'] as const).map((p) => (
                                                     <Button

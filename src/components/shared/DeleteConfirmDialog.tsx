@@ -34,7 +34,7 @@ export function DeleteConfirmDialog({
                     </Button>
                 )}
             </AlertDialogTrigger>
-            <AlertDialogContent className="notion-card border-border/40 max-w-[400px]">
+            <AlertDialogContent className="bg-card border border-border/40 max-w-[400px]">
                 <AlertDialogHeader>
                     <AlertDialogTitle className="text-lg font-bold">{title}</AlertDialogTitle>
                     <AlertDialogDescription className="text-sm text-muted-foreground">

@@ -12,7 +12,7 @@ import Projetos from "./pages/Projetos";
 import ProjetoDetalhes from "./pages/ProjetoDetalhes";
 import Tarefas from "./pages/Tarefas";
 import Agenda from "./pages/Agenda";
-import Atividades from "./pages/Atividades";
+import Clientes from "./pages/Clientes";
 import Documentos from "./pages/Documentos";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
@@ -70,7 +70,7 @@ const AppLayout = () => {
               <Route path="/projetos/:id" element={<ProjetoDetalhes />} />
               <Route path="/tarefas" element={<Tarefas />} />
               <Route path="/agenda" element={<Agenda />} />
-              <Route path="/atividades" element={<Atividades />} />
+              <Route path="/clientes" element={<Clientes />} />
               <Route path="/documentos" element={<Documentos />} />
               <Route path="/relatorios" element={<Relatorios />} />
               <Route path="/configuracoes" element={<Configuracoes />} />

@@ -57,6 +57,7 @@ const Projetos = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast({ title: "Sucesso", description: "Projeto excluído." });
     }
   });
@@ -89,7 +90,7 @@ const Projetos = () => {
             <div className="flex flex-col justify-center">
               <div className="flex items-center gap-2 text-muted-foreground/60 mb-0.5">
                 <LucideIcons.Layout className="h-3 w-3" />
-                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Projetos</span>
+                <span className="text-[10px] font-bold leading-none">Projetos</span>
               </div>
               <h1 className="text-xl font-bold tracking-tight text-foreground leading-none">Workspace</h1>
             </div>
@@ -103,7 +104,7 @@ const Projetos = () => {
                   <stat.icon className="h-3.5 w-3.5" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 leading-none mb-1">{stat.label}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground/50 leading-none mb-1">{stat.label}</p>
                   <p className="text-sm font-bold leading-none">{stat.value}</p>
                 </div>
               </div>
@@ -114,7 +115,7 @@ const Projetos = () => {
           <div className="flex items-center gap-3 shrink-0">
             <NewProjectDialog
               trigger={
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-md px-4 h-9 shadow-sm text-xs uppercase tracking-wide">
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-md px-4 h-9 shadow-sm text-xs">
                   <Plus className="h-3.5 w-3.5 mr-2" />
                   Novo
                 </Button>
@@ -170,7 +171,7 @@ const Projetos = () => {
               variant="ghost"
               size="sm"
               onClick={() => setViewMode("grid")}
-              className={cn("h-7 px-3 rounded-sm text-[10px] font-bold uppercase tracking-wider", viewMode === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+              className={cn("h-7 px-3 rounded-sm text-[10px] font-bold", viewMode === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
             >
               Grid
             </Button>
@@ -178,7 +179,7 @@ const Projetos = () => {
               variant="ghost"
               size="sm"
               onClick={() => setViewMode("list")}
-              className={cn("h-7 px-3 rounded-sm text-[10px] font-bold uppercase tracking-wider", viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+              className={cn("h-7 px-3 rounded-sm text-[10px] font-bold", viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
             >
               Lista
             </Button>
@@ -321,20 +322,20 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
 
         <div className="space-y-4 pt-4 border-t border-border/30">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
               <div className={cn("h-1.5 w-1.5 rounded-full",
                 project.status === 'active' ? 'bg-emerald-500' :
                   project.status === 'review' ? 'bg-amber-500' : 'bg-slate-400')} />
               {(statusLabels as any)[project.status] || project.status}
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
               <Clock className="h-3 w-3" />
               {project.deadline ? format(new Date(project.deadline), "dd MMM") : "S/ prazo"}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground/60">
+            <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground/60">
               <span>{project.progress}% completed</span>
             </div>
             <div className="h-1 w-full bg-muted/40 rounded-full overflow-hidden">
@@ -367,7 +368,7 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
         </div>
         <div className="min-w-0 flex-1 pr-6">
           <h3 className="font-bold text-sm truncate text-foreground group-hover:text-primary transition-colors underline-offset-4 hover:underline">{project.name}</h3>
-          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest truncate">{project.client_name || "Sem cliente"}</p>
+          <p className="text-[10px] text-muted-foreground font-black truncate">{project.client_name || "Sem cliente"}</p>
         </div>
       </div>
 
@@ -379,7 +380,7 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
           <span className="text-[10px] font-bold tabular-nums text-muted-foreground">{project.progress}%</span>
         </div>
         <div className="hidden sm:flex flex-col text-right w-24">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">{(statusLabels as any)[project.status] || project.status}</span>
+          <span className="text-[9px] font-bold text-muted-foreground/60">{(statusLabels as any)[project.status] || project.status}</span>
         </div>
         <div className="hidden xl:flex flex-col text-right w-24 opacity-60">
           <span className="text-xs font-bold tabular-nums">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}</span>

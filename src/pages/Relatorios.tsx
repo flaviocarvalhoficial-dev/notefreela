@@ -142,7 +142,7 @@ export default function Relatorios() {
                 >
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg font-semibold tracking-tight">Status das Tarefas</h2>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Volume por Etapa</p>
+                        <p className="text-xs text-muted-foreground">Volume por Etapa</p>
                     </div>
                     <div className="h-full pb-8">
                         <ResponsiveContainer width="100%" height="100%">
@@ -212,7 +212,7 @@ export default function Relatorios() {
                         {stats?.projectStats.map((s, i) => (
                             <div key={s.name} className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                                <span className="text-[10px] text-muted-foreground uppercase">{s.name} ({s.value})</span>
+                                <span className="text-[10px] text-muted-foreground">{s.name} ({s.value})</span>
                             </div>
                         ))}
                     </div>
@@ -238,7 +238,7 @@ export default function Relatorios() {
                     ].map((item, i) => (
                         <div key={item.name} className="space-y-2">
                             <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground uppercase">{item.name}</span>
+                                <span className="text-muted-foreground">{item.name}</span>
                                 <span className="font-bold">{item.progress}%</span>
                             </div>
                             <Progress value={item.progress} className="h-1.5" />

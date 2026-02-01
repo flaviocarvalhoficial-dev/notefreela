@@ -38,7 +38,7 @@ export function AddDocumentDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="notion-card max-w-[400px]">
+            <DialogContent className="bg-card border border-border/40 max-w-[400px]">
                 <DialogHeader>
                     <DialogTitle className="text-lg font-bold">Anexar {category.toUpperCase()}</DialogTitle>
                 </DialogHeader>
