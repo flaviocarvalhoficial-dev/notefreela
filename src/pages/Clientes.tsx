@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase";
 import { NewClientDialog } from "@/components/clients/NewClientDialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
 
 type Client = {
     id: string;
@@ -42,11 +43,13 @@ type Client = {
     // Computed or Joined
     project_count?: number;
     total_value?: number;
+    projects?: any[];
 };
 
 const Clientes = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -64,7 +67,7 @@ const Clientes = () => {
             // 2. Fetch Projects to aggregate and find implicit clients
             const { data: projectsData, error: projectsError } = await supabase
                 .from("projects")
-                .select("id, client_name, value, status, client_id");
+                .select("id, name, client_name, value, status, client_id, deadline, services");
 
             if (projectsError) throw projectsError;
 
@@ -102,7 +105,8 @@ const Clientes = () => {
                 return {
                     ...client,
                     project_count: clientProjects.length,
-                    total_value: totalValue
+                    total_value: totalValue,
+                    projects: clientProjects
                 };
             }).sort((a, b) => a.name.localeCompare(b.name));
         }
@@ -173,6 +177,12 @@ const Clientes = () => {
                 <NewClientDialog />
             </motion.div >
 
+            <ClientDetailsDialog
+                client={selectedClient as any}
+                open={!!selectedClient}
+                onOpenChange={(open) => !open && setSelectedClient(null)}
+            />
+
             {/* Content */}
             {
                 isLoading ? (
@@ -201,6 +211,7 @@ const Clientes = () => {
                                         client={client}
                                         index={i}
                                         onDelete={deleteClientMutation.mutate}
+                                        onClick={() => setSelectedClient(client)}
                                     />
                                 ))}
                             </motion.div>
@@ -219,6 +230,7 @@ const Clientes = () => {
                                         client={client}
                                         index={i}
                                         onDelete={deleteClientMutation.mutate}
+                                        onClick={() => setSelectedClient(client)}
                                     />
                                 ))}
                             </motion.div>
@@ -230,13 +242,14 @@ const Clientes = () => {
     );
 };
 
-function ClientCard({ client, onDelete, index }: { client: Client, onDelete: (id: string) => void, index: number }) {
+function ClientCard({ client, onDelete, onClick, index }: { client: Client, onDelete: (id: string) => void, onClick: () => void, index: number }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="bg-card border border-border/60 rounded-xl p-5 hover:border-border transition-colors group relative overflow-hidden h-full flex flex-col"
+            className="bg-card border border-border/60 rounded-xl p-5 hover:border-border transition-colors group relative overflow-hidden h-full flex flex-col cursor-pointer"
+            onClick={onClick}
         >
             <div className="absolute top-2 right-2 z-10">
                 <ClientActions client={client} onDelete={onDelete} />
@@ -303,13 +316,14 @@ function ClientCard({ client, onDelete, index }: { client: Client, onDelete: (id
     );
 }
 
-function ClientListItem({ client, onDelete, index }: { client: Client, onDelete: (id: string) => void, index: number }) {
+function ClientListItem({ client, onDelete, onClick, index }: { client: Client, onDelete: (id: string) => void, onClick: () => void, index: number }) {
     return (
         <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.03 }}
-            className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-lg hover:bg-muted/10 group transition-all"
+            className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-lg hover:bg-muted/10 group transition-all cursor-pointer"
+            onClick={onClick}
         >
             <div className="flex items-center gap-4 flex-1 min-w-0">
                 <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">

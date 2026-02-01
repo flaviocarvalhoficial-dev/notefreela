@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,13 +23,23 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
         city: client?.city || "",
         businessType: client?.business_type || "",
     });
+    const [selectedProject, setSelectedProject] = useState<string>("");
+
+    const { data: projects = [] } = useQuery({
+        queryKey: ["projects-list"],
+        queryFn: async () => {
+            const { data } = await supabase.from("projects").select("id, name, client_id");
+            return data || [];
+        },
+        enabled: open // Only fetch when dialog is open
+    });
 
     const createClientMutation = useMutation({
         mutationFn: async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuário não autenticado");
 
-            const { error } = await (supabase as any).from("clients").insert({
+            const { data: newClient, error } = await (supabase as any).from("clients").insert({
                 user_id: user.id,
                 name: formData.name,
                 company_name: formData.companyName,
@@ -36,15 +47,30 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                 phone: formData.phone,
                 city: formData.city,
                 business_type: formData.businessType,
-            });
+            }).select().single();
 
             if (error) throw error;
+
+            // Update linked project if selected
+            if (selectedProject && newClient) {
+                const { error: projectError } = await (supabase as any)
+                    .from("projects")
+                    .update({
+                        client_id: newClient.id,
+                        client_name: newClient.name // Sync name too
+                    })
+                    .eq("id", selectedProject);
+
+                if (projectError) console.error("Error linking project:", projectError);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["clients"] });
+            queryClient.invalidateQueries({ queryKey: ["projects-index"] }); // Refresh projects too
             toast({ title: "Sucesso", description: "Cliente cadastrado com sucesso!" });
             setOpen(false);
             setFormData({ name: "", companyName: "", email: "", phone: "", city: "", businessType: "" });
+            setSelectedProject("");
         },
         onError: (error: any) => {
             toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -185,6 +211,23 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                                 />
                             </div>
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Vincular Projeto Existente (Opcional)</Label>
+                        <Select value={selectedProject} onValueChange={setSelectedProject} disabled={!!client}>
+                            <SelectTrigger className="glass-light">
+                                <SelectValue placeholder="Selecione um projeto para vincular..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {projects.map((project: any) => (
+                                    <SelectItem key={project.id} value={project.id}>
+                                        {project.name} {project.client_id ? "(Já vinculado)" : ""}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {!!client && <p className="text-[10px] text-muted-foreground">Vínculo de projetos disponível apenas na criação.</p>}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">

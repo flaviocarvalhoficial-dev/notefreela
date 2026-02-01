@@ -38,6 +38,8 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [newClient, setNewClient] = useState("");
     const [newDesc, setNewDesc] = useState("");
     const [newIcon, setNewIcon] = useState("Briefcase");
+    const [services, setServices] = useState<string[]>([]);
+    const [serviceInput, setServiceInput] = useState("");
 
     // Step 2: Prazo & Responsável
     const [newDeadline, setNewDeadline] = useState("");
@@ -61,6 +63,18 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setNewIcon("Briefcase");
         setTasks([]);
         setTaskInput("");
+        setServices([]);
+        setServiceInput("");
+    };
+
+    const addService = () => {
+        if (!serviceInput.trim()) return;
+        setServices([...services, serviceInput.trim()]);
+        setServiceInput("");
+    };
+
+    const removeService = (index: number) => {
+        setServices(services.filter((_, i) => i !== index));
     };
 
     const addTask = () => {
@@ -93,6 +107,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     progress: 0,
                     value: newValue || 0,
                     avatar_emoji: newIcon,
+                    services: services // Assumes column 'services' exists (jsonb or text[])
                 })
                 .select()
                 .single();
@@ -240,8 +255,32 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             placeholder="Do que se trata o projeto?"
                                             className="glass-light border-border/50"
                                             value={newDesc}
-                                            onChange={(e) => setNewDesc(e.target.value)}
                                         />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs opacity-60">Serviços Contratados (Escopo)</Label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="Ex: Website, App, Logo..."
+                                                className="glass-light border-border/50 h-9 text-sm"
+                                                value={serviceInput}
+                                                onChange={(e) => setServiceInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
+                                            />
+                                            <Button type="button" onClick={addService} size="sm" className="shrink-0 bg-primary/20 text-primary hover:bg-primary/30">
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {services.map((svc, i) => (
+                                                <div key={i} className="flex items-center gap-1 bg-secondary/20 px-2 py-1 rounded-md border border-border/20 text-xs">
+                                                    <span>{svc}</span>
+                                                    <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive">
+                                                        <Plus className="h-3 w-3 rotate-45" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </>
                             )}
