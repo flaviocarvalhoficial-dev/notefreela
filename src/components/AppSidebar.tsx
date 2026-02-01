@@ -114,13 +114,13 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-0.5 px-3">
+            <SidebarMenu className="gap-0 px-3">
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
                     tooltip={!open ? item.title : undefined}
-                    className="h-9 rounded-md transition-colors hover:bg-transparent"
+                    className="h-[34px] rounded-md transition-colors hover:bg-transparent"
                   >
                     <NavLink
                       to={item.url}
@@ -141,7 +141,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     tooltip={!open ? "Caixa de Entrada" : undefined}
-                    className="h-9 rounded-md transition-colors hover:bg-transparent"
+                    className="h-[34px] rounded-md transition-colors hover:bg-transparent"
                   >
                     <NavLink
                       to="/caixa-entrada"
@@ -161,7 +161,7 @@ export function AppSidebar() {
                         </SidebarMenuAction>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <SidebarMenuSub className="ml-4 mt-0.5 border-l border-border/40 gap-0">
+                        <SidebarMenuSub className="ml-3 mt-0.5 border-l border-border/40 gap-0">
                           {inboxGroups.map((group) => {
                             const items = inboxItems.filter((i: any) => i.type === group.type);
                             return (
@@ -170,7 +170,7 @@ export function AppSidebar() {
                                   <div className="flex items-center group">
                                     <NavLink
                                       to={`/caixa-entrada?type=${group.type}`}
-                                      className="flex items-center gap-2 px-3 py-1.5 text-[11px] text-muted-foreground/70 hover:text-primary transition-colors flex-1"
+                                      className="flex items-center gap-2 px-3 py-1 text-[11px] text-muted-foreground/70 hover:text-primary transition-colors flex-1"
                                       activeClassName="text-primary font-medium"
                                     >
                                       <group.icon className="h-3 w-3" />
@@ -190,7 +190,7 @@ export function AppSidebar() {
                                           <button
                                             key={i.id}
                                             onClick={() => {/* Navigate to item or open preview */ }}
-                                            className="px-4 py-1 text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2"
+                                            className="px-4 py-0.5 text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2"
                                           >
                                             <Circle className="h-1 w-1 fill-current" />
                                             {i.title || "Sem título"}
@@ -222,7 +222,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               tooltip={!open ? "Configurações" : undefined}
-              className="h-9 rounded-md transition-colors hover:bg-transparent"
+              className="h-[34px] rounded-md transition-colors hover:bg-transparent"
             >
               <NavLink
                 to="/configuracoes"
