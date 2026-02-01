@@ -168,7 +168,7 @@ export function EditableTaskCard({
                 {task.title}
               </p>
               <p
-                className="text-[9px] text-muted-foreground mt-0.5 truncate uppercase tracking-wider font-bold opacity-60"
+                className="text-[9px] text-muted-foreground mt-0.5 truncate font-bold opacity-60"
                 style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
               >
                 {task.project || "Sem Projeto"}
@@ -244,16 +244,13 @@ export function EditableTaskCard({
                     onValueChange={(vals) => form.setValue("progress", vals[0], { shouldDirty: true })}
                     max={100}
                     step={5}
-                    className="w-full"
-                    thumbClassName={accentColor ? "border-current" : undefined}
-                    trackClassName="bg-black/5"
-                    rangeClassName={accentColor ? "bg-current opacity-50" : "bg-primary/50"}
+                    className="w-full h-1.5"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-0.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prioridade</label>
+                    <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prioridade</label>
                     <Select value={form.watch("priority")} onValueChange={(v) => form.setValue("priority", v as any)}>
                       <SelectTrigger
                         className="h-7 bg-transparent border-transparent text-[10px] font-medium focus:ring-0 px-2 rounded-md transition-colors"
@@ -273,7 +270,7 @@ export function EditableTaskCard({
                   </div>
 
                   <div className="space-y-0.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Projeto</label>
+                    <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Projeto</label>
                     <Select
                       value={form.watch("projectId") || "unassigned"}
                       onValueChange={(v) => form.setValue("projectId", v === "unassigned" ? "" : v, { shouldDirty: true })}
@@ -297,7 +294,7 @@ export function EditableTaskCard({
                   </div>
 
                   <div className="space-y-0.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prazo</label>
+                    <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prazo</label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -328,7 +325,7 @@ export function EditableTaskCard({
                 </div>
 
                 <div className="space-y-0.5">
-                  <label className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Responsável</label>
+                  <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Responsável</label>
                   <Select
                     value={form.watch("assignee")}
                     onValueChange={(v) => form.setValue("assignee", v, { shouldDirty: true })}
@@ -359,7 +356,7 @@ export function EditableTaskCard({
                 </div>
 
                 <div className="space-y-0.5">
-                  <label className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Tags</label>
+                  <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Tags</label>
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {/* Existing Tags */}
                     {(form.watch("tags") || []).map((tagId, index) => {
@@ -479,7 +476,7 @@ export function EditableTaskCard({
               className="flex items-center justify-between text-[10px] font-bold text-muted-foreground"
               style={{ color: accentColor ? getContrastColor(accentColor) : undefined, opacity: 0.7 }}
             >
-              <span className="uppercase tracking-widest">Progresso</span>
+              <span className="font-bold">Progresso</span>
               <span>{task.progress}%</span>
             </div>
             <Progress value={task.progress} className="h-1 bg-black/5" />

@@ -91,7 +91,7 @@ export function Header() {
 
     return (
         <header className="sticky top-0 w-full h-16 border-b border-border/50 glass-light z-[40]">
-            <div className="max-w-[1600px] mx-auto h-full flex items-center justify-between px-6">
+            <div className="max-w-[1700px] mx-auto h-full flex items-center justify-between px-6 lg:px-10 transition-all duration-300">
 
                 {/* Left Area: Welcome Message (Photo and Name in Line) */}
                 <div className="flex items-center gap-4">
@@ -100,7 +100,7 @@ export function Header() {
                             <Button variant="ghost" className="h-10 gap-2.5 hover:bg-muted/20 transition-all pl-0 pr-3 rounded-xl group flex items-center">
                                 <Avatar className="h-8 w-8 border border-border/50 shadow-sm shrink-0">
                                     <AvatarImage src={profile?.avatar_url} className="object-cover" />
-                                    <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-[10px] font-bold uppercase text-white">
+                                    <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-[10px] font-bold text-white">
                                         {userInitial}
                                     </AvatarFallback>
                                 </Avatar>

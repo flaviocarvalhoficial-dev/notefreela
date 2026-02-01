@@ -53,18 +53,18 @@ const AppLayout = () => {
   }, [isDashboard]);
 
   return (
-    <div className={`flex w-full bg-background ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
+    <div className="flex h-screen w-full">
       <AppSidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
         <main
           className={
             isDashboard
-              ? "h-[calc(100vh-4rem)] pt-20 overflow-hidden"
+              ? "h-[calc(100vh-64px)] overflow-hidden"
               : "flex-1 pt-24 overflow-auto"
           }
         >
-          <div className={`max-w-[1600px] mx-auto px-6 ${isDashboard ? "h-full" : ""}`}>
+          <div className="max-w-[1700px] mx-auto px-6 lg:px-10 w-full h-full transition-all duration-300">
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/projetos" element={<Projetos />} />

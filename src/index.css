@@ -216,23 +216,80 @@
     @apply -translate-y-[1px] shadow-md border-primary/40;
   }
 
-  /* Custom Scrollbar to match Linear */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  /* Premium Technical Scrollbars 
+     Targeting internal elements (Modals, Popups, Sidebars, etc.)
+  */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-track {
+  ::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
+  ::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
-    border-radius: 9999px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    /* Acts as padding */
+    background-clip: content-box;
   }
 
-  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground));
+  /* Internal elements with persistent dark gutter as requested */
+  .custom-scrollbar,
+  [data-radix-scroll-area-viewport],
+  [role="dialog"] .overflow-auto,
+  [role="dialog"] .overflow-y-auto,
+  .popover-content .overflow-auto,
+  .overflow-auto:not(body),
+  .overflow-y-auto:not(body) {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(220 5% 45%) hsl(220 10% 8%);
+    /* Firefox fallback: Gray thumb, Dark track */
+  }
+
+  /* Webkit override for "Fundo Escuro / Barra Cinza" */
+  .custom-scrollbar::-webkit-scrollbar,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar,
+  [role="dialog"] .overflow-auto::-webkit-scrollbar,
+  [role="dialog"] .overflow-y-auto::-webkit-scrollbar,
+  .overflow-auto:not(body)::-webkit-scrollbar,
+  .overflow-y-auto:not(body)::-webkit-scrollbar {
+    width: 10px;
+    /* Slightly wider to accommodate the dark track aesthetic */
+    height: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-track,
+  [role="dialog"] .overflow-auto::-webkit-scrollbar-track,
+  [role="dialog"] .overflow-y-auto::-webkit-scrollbar-track,
+  .overflow-auto:not(body)::-webkit-scrollbar-track,
+  .overflow-y-auto:not(body)::-webkit-scrollbar-track {
+    background: hsl(220 10% 8%) !important;
+    /* Premium ultra-dark slate track */
+    border-radius: 0;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb,
+  [role="dialog"] .overflow-auto::-webkit-scrollbar-thumb,
+  [role="dialog"] .overflow-y-auto::-webkit-scrollbar-thumb,
+  .overflow-auto:not(body)::-webkit-scrollbar-thumb,
+  .overflow-y-auto:not(body)::-webkit-scrollbar-thumb {
+    background: hsl(220 5% 45%) !important;
+    /* Elegant gray thumb */
+    border-radius: 10px;
+    border: 2px solid hsl(220 10% 8%);
+    /* Integrated padding against the dark track */
+    box-shadow: inset 0 0 0 1px hsla(0, 0%, 100%, 0.05);
+    /* Subtle highlight */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  [data-radix-scroll-area-viewport]::-webkit-scrollbar-thumb:hover {
+    background: hsl(220 5% 55%) !important;
   }
 }
 
@@ -322,31 +379,6 @@
   border-radius: 999px;
 }
 
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-
-.custom-scrollbar:hover {
-  scrollbar-color: hsl(var(--border) / 0.4) transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  height: 5px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 20px;
-}
-
-.custom-scrollbar:hover::-webkit-scrollbar-thumb {
-  background: hsl(var(--border) / 0.45);
-}
 
 .timeline-inner {
   position: relative;

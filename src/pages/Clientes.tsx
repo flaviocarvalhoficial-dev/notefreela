@@ -299,14 +299,14 @@ function ClientCard({ client, onDelete, onClick, index }: { client: Client, onDe
 
             <div className="pt-4 border-t border-border/40 grid grid-cols-2 gap-4 mt-auto">
                 <div>
-                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">Projetos</p>
+                    <p className="text-[10px] text-muted-foreground font-semibold mb-0.5">Projetos</p>
                     <div className="flex items-center gap-1.5">
                         <Briefcase className="h-3.5 w-3.5 text-primary" />
                         <span className="text-sm font-bold">{client.project_count || 0}</span>
                     </div>
                 </div>
                 <div>
-                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">Valor Total</p>
+                    <p className="text-[10px] text-muted-foreground font-semibold mb-0.5">Valor Total</p>
                     <span className="text-sm font-bold text-foreground">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.total_value || 0)}
                     </span>
@@ -348,14 +348,14 @@ function ClientListItem({ client, onDelete, onClick, index }: { client: Client, 
 
             <div className="flex items-center gap-6 md:gap-12 mr-4">
                 <div className="hidden sm:flex flex-col items-end w-20">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Projetos</span>
+                    <span className="text-[10px] text-muted-foreground font-bold">Projetos</span>
                     <div className="flex items-center gap-1.5 font-bold text-sm">
                         <Briefcase className="h-3 w-3 text-primary/70" />
                         {client.project_count || 0}
                     </div>
                 </div>
                 <div className="flex flex-col items-end w-24">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Total</span>
+                    <span className="text-[10px] text-muted-foreground font-bold">Total</span>
                     <span className="text-sm font-bold text-foreground">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.total_value || 0)}
                     </span>

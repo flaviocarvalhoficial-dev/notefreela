@@ -46,7 +46,7 @@ export function DeleteConfirmDialog({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="mt-6">
-                    <AlertDialogCancel className="rounded-md font-bold text-xs uppercase tracking-widest border-border/60">
+                    <AlertDialogCancel className="rounded-md font-bold text-xs border-border/60">
                         Cancelar
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -54,7 +54,7 @@ export function DeleteConfirmDialog({
                             e.stopPropagation();
                             onConfirm();
                         }}
-                        className="rounded-md font-bold text-xs uppercase tracking-widest bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className="rounded-md font-bold text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                         Excluir
                     </AlertDialogAction>

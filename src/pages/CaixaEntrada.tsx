@@ -438,7 +438,7 @@ const CaixaEntrada = () => {
                                                             {item.title || "Captura"}
                                                         </h3>
                                                         <div className="flex flex-col gap-0.5">
-                                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none">
+                                                            <p className="text-[10px] text-muted-foreground font-bold leading-none">
                                                                 {format(new Date(item.created_at), "dd/MM/yy", { locale: ptBR })}
                                                             </p>
                                                             {item.category && (
@@ -612,12 +612,12 @@ const CaixaEntrada = () => {
                                     <DialogTitle className="text-xl flex items-center gap-2">
                                         {viewingItem?.title || "Detalhes do Registro"}
                                         {viewingItem?.category && (
-                                            <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary border-none">
+                                            <Badge variant="secondary" className="text-[9px] font-bold bg-primary/10 text-primary border-none">
                                                 {viewingItem.category}
                                             </Badge>
                                         )}
                                     </DialogTitle>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                                    <p className="text-[10px] text-muted-foreground font-bold">
                                         {viewingItem && format(new Date(viewingItem.created_at), "PPPP", { locale: ptBR })}
                                     </p>
                                 </div>
@@ -676,8 +676,8 @@ const CaixaEntrada = () => {
                 {/* Sidebar Stats / Info */}
                 <div className="space-y-6">
                     <div className="bento-card p-5 space-y-4 bg-primary/5 border-primary/20">
-                        <h4 className="text-sm font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" /> Visão Geral
+                        <h4 className="text-sm font-bold text-primary flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4" /> Visão geral
                         </h4>
                         <div className="space-y-3">
                             <div className="flex justify-between items-center text-sm">
@@ -687,11 +687,11 @@ const CaixaEntrada = () => {
                             <Separator className="bg-primary/10" />
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="p-2 rounded-lg bg-background/50 border border-primary/10">
-                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Ideias</p>
+                                    <p className="text-[10px] text-muted-foreground font-bold">Ideias</p>
                                     <p className="text-lg font-bold">{items.filter(i => i.type === 'idea').length}</p>
                                 </div>
                                 <div className="p-2 rounded-lg bg-background/50 border border-emerald-500/10">
-                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Prompts</p>
+                                    <p className="text-[10px] text-muted-foreground font-bold">Prompts</p>
                                     <p className="text-lg font-bold">{items.filter(i => i.type === 'prompt').length}</p>
                                 </div>
                             </div>
@@ -699,8 +699,8 @@ const CaixaEntrada = () => {
                     </div>
 
                     <div className="bento-card p-5 space-y-4">
-                        <h4 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                            <Type className="h-4 w-4 text-primary" /> Workspace Tip
+                        <h4 className="text-sm font-bold flex items-center gap-2">
+                            <Type className="h-4 w-4 text-primary" /> Workspace tip
                         </h4>
                         <p className="text-xs text-muted-foreground leading-relaxed italic">
                             "Sua mente é para ter ideias, não para guardá-las." Use a Caixa de Entrada para liberar sua memória de trabalho e focar na execução.

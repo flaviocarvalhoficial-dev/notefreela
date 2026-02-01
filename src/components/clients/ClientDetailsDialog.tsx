@@ -72,19 +72,19 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                            <p className="text-xs text-muted-foreground font-semibold uppercase">Total Investido</p>
+                            <p className="text-xs text-muted-foreground font-semibold">Total investido</p>
                             <p className="text-2xl font-bold text-primary">
                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.total_value || 0)}
                             </p>
                         </div>
                         <div className="p-4 rounded-lg bg-secondary/5 border border-border/50">
-                            <p className="text-xs text-muted-foreground font-semibold uppercase">Projetos Totais</p>
+                            <p className="text-xs text-muted-foreground font-semibold">Projetos totais</p>
                             <p className="text-2xl font-bold">
                                 {projects.length}
                             </p>
                         </div>
                         <div className="p-4 rounded-lg bg-secondary/5 border border-border/50">
-                            <p className="text-xs text-muted-foreground font-semibold uppercase">Projetos Ativos</p>
+                            <p className="text-xs text-muted-foreground font-semibold">Projetos ativos</p>
                             <p className="text-2xl font-bold">
                                 {projects.filter(p => p.status === 'active' || p.status === 'inprogress').length}
                             </p>
@@ -135,7 +135,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                         {project.name || project.title || "Sem título"}
                                                     </td>
                                                     <td className="p-3">
-                                                        <Badge variant="outline" className={cn("text-[10px] font-bold uppercase tracking-wider h-6", getStatusColor(project.status))}>
+                                                        <Badge variant="outline" className={cn("text-[10px] font-bold h-6", getStatusColor(project.status))}>
                                                             {translateStatus(project.status)}
                                                         </Badge>
                                                     </td>
@@ -143,7 +143,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                         <div className="flex flex-col gap-2">
                                                             <Badge
                                                                 className={cn(
-                                                                    "text-[9px] font-bold uppercase tracking-widest w-fit",
+                                                                    "text-[9px] font-bold w-fit",
                                                                     (project.value - (project.advance_payment || 0)) <= 0 ? "bg-emerald-500/10 text-emerald-500" :
                                                                         (project.advance_payment || 0) > 0 ? "bg-blue-500/10 text-blue-500" :
                                                                             "bg-amber-500/10 text-amber-500"
@@ -154,15 +154,15 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                             </Badge>
                                                             <div className="flex items-center gap-6 text-[10px] font-bold">
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-muted-foreground/40 uppercase tracking-tighter">Total</span>
+                                                                    <span className="text-muted-foreground/40">Total</span>
                                                                     <span className="text-foreground">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value)}</span>
                                                                 </div>
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-muted-foreground/40 uppercase tracking-tighter">Pago</span>
+                                                                    <span className="text-muted-foreground/40">Pago</span>
                                                                     <span className="text-emerald-500">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.advance_payment || 0)}</span>
                                                                 </div>
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-muted-foreground/40 uppercase tracking-tighter">Restante</span>
+                                                                    <span className="text-muted-foreground/40">Restante</span>
                                                                     <span className="text-amber-500">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value - (project.advance_payment || 0))}</span>
                                                                 </div>
                                                             </div>

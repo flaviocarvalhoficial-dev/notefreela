@@ -143,7 +143,7 @@ const Atividades = () => {
                             {activity.description}
                           </p>
                         </div>
-                        <Badge variant="secondary" className="text-[10px] h-5 glass-light shrink-0 uppercase">
+                        <Badge variant="secondary" className="text-[10px] h-5 glass-light shrink-0">
                           {activity.type}
                         </Badge>
                       </div>

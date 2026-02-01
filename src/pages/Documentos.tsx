@@ -98,7 +98,7 @@ const Documentos = () => {
                         </div>
                         <div className="mt-4">
                             <h3 className="text-sm font-bold">{cat.name}</h3>
-                            <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1 opacity-60">Modelos</p>
+                            <p className="text-[10px] text-muted-foreground font-black mt-1 opacity-60">Modelos</p>
                         </div>
                     </motion.div>
                 ))}
@@ -116,7 +116,7 @@ const Documentos = () => {
                             className="pl-10 bg-transparent border-0 focus-visible:ring-0 h-9 text-sm placeholder:text-muted-foreground/40"
                         />
                     </div>
-                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 hover:text-foreground">
+                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold text-muted-foreground/60 hover:text-foreground">
                         <Filter className="h-3.5 w-3.5 mr-2" />
                         Filtros
                     </Button>
@@ -132,7 +132,7 @@ const Documentos = () => {
                         ) : (
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 border-b border-border/20">
+                                    <tr className="text-[10px] font-black text-muted-foreground/40 border-b border-border/20">
                                         <th className="px-6 py-4">Nome do Modelo</th>
                                         <th className="px-6 py-4">Categoria</th>
                                         <th className="px-6 py-4">Modificado</th>
@@ -153,12 +153,12 @@ const Documentos = () => {
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-bold group-hover:text-primary transition-colors">{doc.title}</p>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{doc.type}</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground/40">{doc.type}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <Badge variant="secondary" className="bg-muted/60 text-foreground border-none text-[10px] font-bold uppercase tracking-widest h-5">
+                                                <Badge variant="secondary" className="bg-muted/60 text-foreground border-none text-[10px] font-bold h-5">
                                                     {doc.category}
                                                 </Badge>
                                             </td>

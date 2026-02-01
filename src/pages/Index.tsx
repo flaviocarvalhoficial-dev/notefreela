@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { TrendingUp, Users, CheckCircle2, Clock, ArrowUpRight, Calendar, Zap, Target, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { TimelineSection } from "@/components/dashboard/TimelineSection";
@@ -51,7 +52,7 @@ const Index = () => {
   const { data: clientsData = [] } = useQuery({
     queryKey: ["clients-data-index"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("clients")
         .select("id, name");
       if (error) throw error;
@@ -144,14 +145,13 @@ const Index = () => {
   const quickActions = [
     { label: "Novo Projeto", icon: Target, action: () => setIsProjectModalOpen(true) },
     { label: "Criar Tarefa", icon: Zap, action: () => setIsTaskModalOpen(true) },
-    { label: "Agenda", icon: Calendar, action: () => navigate("/agenda") },
   ];
 
   const isLoading = loadingProjects || loadingTasks;
   const completionRate = tasksStats?.total ? Math.round((tasksStats.completed / tasksStats.total) * 100) : 0;
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="w-full max-w-full min-w-0 h-full flex flex-col gap-8 overflow-y-auto overflow-x-hidden custom-scrollbar pt-8 pb-12">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight mb-1">Dashboard</h1>
         <p className="text-muted-foreground text-sm">Sua central de operações NoteFreela</p>
@@ -163,11 +163,11 @@ const Index = () => {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-12">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-10">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.title}
-                className="md:col-span-2"
+                className="lg:col-span-2"
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.06 }}
@@ -191,7 +191,7 @@ const Index = () => {
             ))}
 
             <motion.div
-              className="md:col-span-6"
+              className="sm:col-span-2 lg:col-span-4"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.22 }}
@@ -205,7 +205,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {quickActions.map((action, index) => (
                     <motion.div
                       key={action.label}
@@ -216,11 +216,19 @@ const Index = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full justify-center gap-2 border-border/50 bg-background hover:bg-muted transition-colors rounded-md h-9"
+                        className={cn(
+                          "w-full justify-start gap-3 transition-all rounded-md h-10 px-4 group border-border/40",
+                          action.label === "Novo Projeto" ? "bg-primary/5 border-primary/20 hover:bg-primary/10" :
+                            "bg-background/50 border-border/40 hover:bg-muted"
+                        )}
                         onClick={action.action}
                       >
-                        <action.icon className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline text-xs font-medium">{action.label}</span>
+                        <action.icon className={cn(
+                          "h-3.5 w-3.5 transition-colors",
+                          action.label === "Novo Projeto" ? "text-primary" :
+                            "text-muted-foreground group-hover:text-primary"
+                        )} />
+                        <span className="text-[11px] font-bold tracking-tight">{action.label}</span>
                       </Button>
                     </motion.div>
                   ))}
@@ -235,7 +243,10 @@ const Index = () => {
           </div>
 
           <motion.div
-            className={projectsCollapsed ? "flex-[4] min-h-0 mb-0" : "flex-[2.5] min-h-0"}
+            className={cn(
+              "min-w-0 overflow-hidden",
+              projectsCollapsed ? "flex-1 min-h-[500px] mb-0" : "flex-1 min-h-[380px]"
+            )}
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.28 }}
