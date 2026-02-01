@@ -296,7 +296,14 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="glass border-border/50 text-foreground">
-                <EditProjectDialog project={project} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+                <EditProjectDialog
+                  project={project}
+                  trigger={
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>
+                    </div>
+                  }
+                />
                 <DeleteConfirmDialog
                   title="Excluir Projeto"
                   description="Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita."
@@ -395,7 +402,14 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="glass border-border/50 text-foreground">
-            <EditProjectDialog project={project} trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>} />
+            <EditProjectDialog
+              project={project}
+              trigger={
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>
+                </div>
+              }
+            />
             <DeleteConfirmDialog
               title="Excluir Projeto"
               description="Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita."

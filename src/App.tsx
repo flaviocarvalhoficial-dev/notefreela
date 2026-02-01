@@ -15,7 +15,7 @@ import Agenda from "./pages/Agenda";
 import Clientes from "./pages/Clientes";
 import CaixaEntrada from "./pages/CaixaEntrada";
 import Documentos from "./pages/Documentos";
-import Relatorios from "./pages/Relatorios";
+import Financeiro from "./pages/Financeiro";
 import Configuracoes from "./pages/Configuracoes";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -74,7 +74,7 @@ const AppLayout = () => {
               <Route path="/clientes" element={<Clientes />} />
               <Route path="/caixa-entrada" element={<CaixaEntrada />} />
               <Route path="/documentos" element={<Documentos />} />
-              <Route path="/relatorios" element={<Relatorios />} />
+              <Route path="/financeiro" element={<Financeiro />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

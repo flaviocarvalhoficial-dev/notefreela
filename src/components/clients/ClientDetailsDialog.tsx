@@ -5,8 +5,9 @@ import { Briefcase, Calendar, CheckCircle2, Clock, ChevronDown, List } from "luc
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Project {
     id: string;
@@ -16,7 +17,8 @@ interface Project {
     value: number;
     deadline?: string;
     type?: string;
-    services?: string[];
+    advance_payment?: number;
+    services?: { name: string; price: number }[];
 }
 
 interface ClientWithProjects {
@@ -127,44 +129,79 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                         </tr>
                                     ) : (
                                         filteredProjects.map((project, i) => (
-                                            <tr key={project.id || i} className="group hover:bg-muted/30 transition-colors odd:bg-transparent even:bg-secondary/20">
-                                                <td className="p-3 font-medium text-foreground">
-                                                    {project.name || project.title || "Sem título"}
-                                                </td>
-                                                <td className="p-3">
-                                                    <Badge variant="outline" className={getStatusColor(project.status)}>
-                                                        {translateStatus(project.status)}
-                                                    </Badge>
-                                                </td>
-                                                <td className="p-3 font-medium">
-                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value || 0)}
-                                                </td>
-                                                <td className="p-3 text-muted-foreground">
-                                                    {project.deadline ? format(new Date(project.deadline), "dd/MM/yyyy") : "-"}
-                                                </td>
-                                                <td className="p-3">
-                                                    {project.services && project.services.length > 0 ? (
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
-                                                                    Ver ({project.services.length}) <ChevronDown className="h-3 w-3" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="glass border-border/50">
-                                                                <DropdownMenuLabel className="text-xs">Serviços Contratados</DropdownMenuLabel>
-                                                                <DropdownMenuSeparator />
+                                            <Fragment key={project.id || i}>
+                                                <tr className="group hover:bg-muted/30 transition-colors odd:bg-transparent even:bg-secondary/10 border-b border-border/5">
+                                                    <td className="p-3 font-semibold text-foreground">
+                                                        {project.name || project.title || "Sem título"}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <Badge variant="outline" className={cn("text-[10px] font-bold uppercase tracking-wider h-6", getStatusColor(project.status))}>
+                                                            {translateStatus(project.status)}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <div className="flex flex-col gap-2">
+                                                            <Badge
+                                                                className={cn(
+                                                                    "text-[9px] font-bold uppercase tracking-widest w-fit",
+                                                                    (project.value - (project.advance_payment || 0)) <= 0 ? "bg-emerald-500/10 text-emerald-500" :
+                                                                        (project.advance_payment || 0) > 0 ? "bg-blue-500/10 text-blue-500" :
+                                                                            "bg-amber-500/10 text-amber-500"
+                                                                )}
+                                                            >
+                                                                {(project.value - (project.advance_payment || 0)) <= 0 ? "Quitado" :
+                                                                    (project.advance_payment || 0) > 0 ? "Entrada Paga" : "Pendente"}
+                                                            </Badge>
+                                                            <div className="flex items-center gap-6 text-[10px] font-bold">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-muted-foreground/40 uppercase tracking-tighter">Total</span>
+                                                                    <span className="text-foreground">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value)}</span>
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-muted-foreground/40 uppercase tracking-tighter">Pago</span>
+                                                                    <span className="text-emerald-500">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.advance_payment || 0)}</span>
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-muted-foreground/40 uppercase tracking-tighter">Restante</span>
+                                                                    <span className="text-amber-500">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value - (project.advance_payment || 0))}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-3 text-muted-foreground text-xs">
+                                                        {project.deadline ? format(new Date(project.deadline), "dd/MM/yyyy") : "-"}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                                                            <List className="h-3 w-3" />
+                                                            {project.services?.length || 0} Itens
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {project.services && project.services.length > 0 && (
+                                                    <tr className="border-b border-border/5">
+                                                        <td colSpan={5} className="p-0 bg-muted/5">
+                                                            <div className="flex flex-col">
                                                                 {project.services.map((svc, k) => (
-                                                                    <DropdownMenuItem key={k} className="text-xs cursor-default">
-                                                                        {svc}
-                                                                    </DropdownMenuItem>
+                                                                    <div
+                                                                        key={k}
+                                                                        className={cn(
+                                                                            "px-10 py-2.5 text-[11px] flex items-center gap-3 transition-colors",
+                                                                            k % 2 === 0 ? "bg-background/40" : "bg-muted/10"
+                                                                        )}
+                                                                    >
+                                                                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0" />
+                                                                        <span className="text-foreground/70 font-medium flex-1">{svc.name}</span>
+                                                                        <span className="text-primary font-bold pr-4">
+                                                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price || 0)}
+                                                                        </span>
+                                                                    </div>
                                                                 ))}
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    ) : (
-                                                        <span className="text-muted-foreground text-xs pl-3">-</span>
-                                                    )}
-                                                </td>
-                                            </tr>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </Fragment>
                                         ))
                                     )}
                                 </tbody>

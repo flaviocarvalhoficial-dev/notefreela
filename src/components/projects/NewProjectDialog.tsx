@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Loader2, ChevronRight, ChevronLeft, Check, ListTodo, User, Calendar, Briefcase, Building2, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,14 +38,18 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [newClient, setNewClient] = useState("");
     const [newDesc, setNewDesc] = useState("");
     const [newIcon, setNewIcon] = useState("Briefcase");
-    const [services, setServices] = useState<string[]>([]);
+    const [services, setServices] = useState<{ name: string; price: number }[]>([]);
     const [serviceInput, setServiceInput] = useState("");
+    const [servicePriceInput, setServicePriceInput] = useState<number | "">("");
 
     // Step 2: Prazo & Responsável
     const [newDeadline, setNewDeadline] = useState("");
     const [newManager, setNewManager] = useState("");
     const [newPriority, setNewPriority] = useState<"high" | "medium" | "low">("medium");
     const [newValue, setNewValue] = useState<number | "">("");
+    const [newAdvance, setNewAdvance] = useState<number | "">("");
+    const [newPaymentMethod, setNewPaymentMethod] = useState<string>("pix");
+    const [newPaymentStatus, setNewPaymentStatus] = useState<string>("pending");
 
     // Step 3: Tarefas
     const [tasks, setTasks] = useState<{ id: string, title: string }[]>([]);
@@ -60,6 +64,9 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setNewManager("");
         setNewPriority("medium");
         setNewValue("");
+        setNewAdvance("");
+        setNewPaymentMethod("pix");
+        setNewPaymentStatus("pending");
         setNewIcon("Briefcase");
         setTasks([]);
         setTaskInput("");
@@ -67,10 +74,20 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setServiceInput("");
     };
 
+    // Auto-calculate global project value
+    useEffect(() => {
+        const sum = services.reduce((acc, s) => acc + s.price, 0);
+        setNewValue(sum);
+    }, [services]);
+
     const addService = () => {
         if (!serviceInput.trim()) return;
-        setServices([...services, serviceInput.trim()]);
+        setServices([...services, {
+            name: serviceInput.trim(),
+            price: Number(servicePriceInput) || 0
+        }]);
         setServiceInput("");
+        setServicePriceInput("");
     };
 
     const removeService = (index: number) => {
@@ -106,6 +123,9 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     user_id: user.id,
                     progress: 0,
                     value: newValue || 0,
+                    advance_payment: newAdvance || 0,
+                    payment_method: newPaymentMethod,
+                    payment_status: newPaymentStatus,
                     avatar_emoji: newIcon,
                     services: services // Assumes column 'services' exists (jsonb or text[])
                 })
@@ -260,24 +280,44 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                     <div className="space-y-2">
                                         <Label className="text-xs opacity-60">Serviços Contratados (Escopo)</Label>
                                         <div className="flex gap-2">
-                                            <Input
-                                                placeholder="Ex: Website, App, Logo..."
-                                                className="glass-light border-border/50 h-9 text-sm"
-                                                value={serviceInput}
-                                                onChange={(e) => setServiceInput(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
-                                            />
-                                            <Button type="button" onClick={addService} size="sm" className="shrink-0 bg-primary/20 text-primary hover:bg-primary/30">
+                                            <div className="flex-1">
+                                                <Input
+                                                    placeholder="Serviço (ex: Website)"
+                                                    className="glass-light border-border/50 h-9 text-xs"
+                                                    value={serviceInput}
+                                                    onChange={(e) => setServiceInput(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
+                                                />
+                                            </div>
+                                            <div className="w-24">
+                                                <Input
+                                                    type="number"
+                                                    placeholder="R$ 0,00"
+                                                    className="glass-light border-border/50 h-9 text-xs"
+                                                    value={servicePriceInput}
+                                                    onChange={(e) => setServicePriceInput(e.target.value ? Number(e.target.value) : "")}
+                                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
+                                                />
+                                            </div>
+                                            <Button type="button" onClick={addService} size="sm" className="shrink-0 bg-primary/20 text-primary hover:bg-primary/30 h-9">
                                                 <Plus className="h-4 w-4" />
                                             </Button>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 mt-2">
+                                        <div className="flex flex-col gap-1.5 mt-3">
                                             {services.map((svc, i) => (
-                                                <div key={i} className="flex items-center gap-1 bg-secondary/20 px-2 py-1 rounded-md border border-border/20 text-xs">
-                                                    <span>{svc}</span>
-                                                    <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive">
-                                                        <Plus className="h-3 w-3 rotate-45" />
-                                                    </button>
+                                                <div key={i} className="flex items-center justify-between bg-secondary/10 px-3 py-1.5 rounded-md border border-border/20 text-xs group">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                                                        <span className="font-medium">{svc.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-primary font-bold">
+                                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price)}
+                                                        </span>
+                                                        <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Plus className="h-3 w-3 rotate-45" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -315,18 +355,72 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="project-value" className="text-xs opacity-60 flex items-center gap-2">
-                                                <DollarSign className="h-3 w-3" /> Valor Estimado (R$)
-                                            </Label>
-                                            <Input
-                                                id="project-value"
-                                                type="number"
-                                                placeholder="0,00"
-                                                className="glass-light border-border/50 h-11"
-                                                value={newValue}
-                                                onChange={(e) => setNewValue(Number(e.target.value))}
-                                            />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="project-value" className="text-xs opacity-60 flex items-center gap-2">
+                                                    <DollarSign className="h-3 w-3" /> Valor Total (Serviços)
+                                                </Label>
+                                                <div className="relative">
+                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                    <Input
+                                                        id="project-value"
+                                                        type="number"
+                                                        placeholder="0,00"
+                                                        className="glass-light border-border/50 h-11 pl-10 bg-muted/20 cursor-default opacity-80 font-bold text-primary"
+                                                        value={newValue}
+                                                        readOnly
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="project-advance" className="text-xs opacity-60 flex items-center gap-2">
+                                                    <Calendar className="h-3 w-3" /> Entrada Réu (Pago)
+                                                </Label>
+                                                <div className="relative">
+                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                    <Input
+                                                        id="project-advance"
+                                                        type="number"
+                                                        placeholder="0,00"
+                                                        className="glass-light border-border/50 h-11 pl-10"
+                                                        value={newAdvance}
+                                                        onChange={(e) => setNewAdvance(Number(e.target.value))}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs opacity-60">Status Financeiro</Label>
+                                                <Select value={newPaymentStatus} onValueChange={setNewPaymentStatus}>
+                                                    <SelectTrigger className="glass-light border-border/50 h-11">
+                                                        <SelectValue placeholder="Status" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="glass border-border/50">
+                                                        <SelectItem value="pending">Pendente</SelectItem>
+                                                        <SelectItem value="partial">Parcial / Entrada</SelectItem>
+                                                        <SelectItem value="paid">Quitado / Pago</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="text-xs opacity-60">Meio de Pagamento</Label>
+                                                <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
+                                                    <SelectTrigger className="glass-light border-border/50 h-11">
+                                                        <SelectValue placeholder="Metodo" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="glass border-border/50">
+                                                        <SelectItem value="pix">PIX</SelectItem>
+                                                        <SelectItem value="boleto">Boleto</SelectItem>
+                                                        <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                                                        <SelectItem value="transfer">Transferência</SelectItem>
+                                                        <SelectItem value="cash">Dinheiro / Espécie</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">

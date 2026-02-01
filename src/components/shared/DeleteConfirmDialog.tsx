@@ -34,7 +34,11 @@ export function DeleteConfirmDialog({
                     </Button>
                 )}
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-card border border-border/40 max-w-[400px]">
+            <AlertDialogContent
+                className="bg-card border border-border/40 max-w-[400px]"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+            >
                 <AlertDialogHeader>
                     <AlertDialogTitle className="text-lg font-bold">{title}</AlertDialogTitle>
                     <AlertDialogDescription className="text-sm text-muted-foreground">

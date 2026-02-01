@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Circle,
   Rocket,
+  DollarSign,
   Info
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -49,7 +50,7 @@ const navItems = [
   { title: "Agenda", url: "/agenda", icon: Calendar },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Documentos", url: "/documentos", icon: FileText },
-  { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
+  { title: "Financeiro", url: "/financeiro", icon: DollarSign },
 ];
 
 const APP_VERSION = "V1.1.0";
@@ -120,7 +121,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     tooltip={!open ? item.title : undefined}
-                    className="h-[34px] rounded-md transition-colors hover:bg-transparent"
+                    className="h-[34px] rounded-md transition-colors"
                   >
                     <NavLink
                       to={item.url}
@@ -141,7 +142,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     tooltip={!open ? "Caixa de Entrada" : undefined}
-                    className="h-[34px] rounded-md transition-colors hover:bg-transparent"
+                    className="h-[34px] rounded-md transition-colors"
                   >
                     <NavLink
                       to="/caixa-entrada"
@@ -156,7 +157,7 @@ export function AppSidebar() {
                   {open && (
                     <>
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 hover:bg-transparent">
+                        <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
                           <ChevronRight className="h-4 w-4" />
                         </SidebarMenuAction>
                       </CollapsibleTrigger>
@@ -222,7 +223,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               tooltip={!open ? "Configurações" : undefined}
-              className="h-[34px] rounded-md transition-colors hover:bg-transparent"
+              className="h-[34px] rounded-md transition-colors"
             >
               <NavLink
                 to="/configuracoes"
