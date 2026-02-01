@@ -6,75 +6,57 @@
 
 @layer base {
   :root {
-    /* Linear Design System - Dark Theme Source of Truth */
-    /* Converted to HSL for Tailwind Compatibility */
+    /* Premium Light Theme - Source: #FCFCFC */
+    --background: 0 0% 99%;
+    /* #FCFCFC */
+    --foreground: 220 10% 10%;
 
-    /* Backgrounds */
-    --background: 220 10% 6.1%;
-    /* #0E0F11 */
-    --foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 10% 10%;
 
-    /* Cards & Surfaces */
-    --card: 210 10% 7.8%;
-    /* #121416 - Requested */
-    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 10%;
 
-    --popover: 210 10% 9%;
-    /* Slightly elevated from card */
-    --popover-foreground: 0 0% 100%;
+    --primary: 220 10% 15%;
+    /* Elegant Dark Slate */
+    --primary-foreground: 0 0% 100%;
 
-    /* Primary */
-    --primary: 0 0% 90%;
-    /* #E6E6E6 */
-    --primary-foreground: 0 0% 9%;
-    /* Dark text on light primary */
+    --secondary: 220 10% 96%;
+    --secondary-foreground: 220 10% 20%;
 
-    /* Secondary */
-    --secondary: 210 10% 9%;
-    /* Matching popover/elevated */
-    --secondary-foreground: 0 0% 100%;
+    --muted: 220 10% 97%;
+    --muted-foreground: 220 5% 45%;
 
-    /* Muted */
-    --muted: 210 10% 8.5%;
-    /* Slightly lighter than card */
-    --muted-foreground: 220 5% 65%;
+    --accent: 220 10% 94%;
+    --accent-foreground: 220 10% 10%;
 
-    /* Accent */
-    --accent: 210 10% 11%;
-    /* Hover state */
-    --accent-foreground: 0 0% 100%;
-
-    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders */
-    --border: 210 10% 14%;
-    --input: 210 10% 14%;
-    --ring: 0 0% 90%;
+    --border: 220 10% 91%;
+    --input: 220 10% 91%;
+    --ring: 220 10% 15%;
 
-    /* Sidebar specific */
-    --sidebar-background: 220 10% 5%;
-    --sidebar-foreground: 220 5% 65%;
-    --sidebar-primary: 0 0% 90%;
-    --sidebar-primary-foreground: 0 0% 9%;
-    --sidebar-accent: 210 10% 11%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 10% 14%;
-    --sidebar-ring: 0 0% 90%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 5% 40%;
+    --sidebar-primary: 220 10% 15%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 10% 93%;
+    --sidebar-accent-foreground: 220 10% 10%;
+    --sidebar-border: 220 10% 92%;
+    --sidebar-ring: 220 10% 15%;
 
-    /* Radius */
-    --radius: 0.5rem;
-    /* 8px (Linear Card = lg = radius. Linear Button = md = radius - 2px = 6px) */
+    --radius: 0.6rem;
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-    --shadow-focus: 0 0 0 3px rgba(94, 106, 210, 0.3);
+    /* Light Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-focus: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
   }
 
-  /* Force Dark Mode styles as default since Linear is dark-first */
   .dark {
     --background: 220 10% 6.1%;
     --foreground: 0 0% 100%;
@@ -103,6 +85,13 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 210 10% 14%;
     --sidebar-ring: 0 0% 90%;
+
+    /* Dark Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
   }
 
   * {
