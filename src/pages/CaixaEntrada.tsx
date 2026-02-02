@@ -261,7 +261,7 @@ const CaixaEntrada = () => {
 
     return (
         <div className="h-full flex flex-col gap-6 pb-10 max-w-6xl mx-auto">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight mb-1 flex items-center gap-2">
                         <Inbox className="h-8 w-8 text-primary" />
@@ -269,44 +269,64 @@ const CaixaEntrada = () => {
                     </h1>
                     <p className="text-muted-foreground text-sm">Capture ideias, prompts e fragmentos de conhecimento rapidamente.</p>
                 </div>
-                <Button onClick={() => setIsAdding(true)} className="btn-gradient">
-                    <Plus className="h-4 w-4 mr-2" /> Novo Registro
-                </Button>
+                <div className="flex items-center gap-3">
+                    <Button onClick={() => setIsAdding(true)} className="btn-gradient h-10 px-6">
+                        <Plus className="h-4 w-4 mr-2" /> Novo Registro
+                    </Button>
+                </div>
             </div>
 
-            {/* Quick Actions & Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-3 space-y-4">
-                    <div className="flex items-center gap-4">
-                        <div className="relative flex-1">
+            <div className="flex flex-col gap-6">
+                <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="relative w-full md:max-w-xs">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
                             <Input
-                                placeholder="Procurar em ideias, prompts, tags..."
-                                className="pl-9 glass-light"
+                                placeholder="Procurar..."
+                                className="pl-9 glass-light h-10"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                    </div>
 
-                    <div className="flex gap-2">
-                        {['all', 'idea', 'prompt', 'snippet', 'note'].map((type) => (
-                            <Button
-                                key={type}
-                                variant={selectedType === type ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setSelectedType(type)}
-                                className={cn(
-                                    "rounded-full text-xs h-7 px-4",
-                                    selectedType === type ? "bg-primary text-white" : "glass-light"
-                                )}
-                            >
-                                {type === 'all' ? 'Tudo' :
-                                    type === 'idea' ? 'Ideias' :
-                                        type === 'prompt' ? 'Prompts' :
-                                            type === 'snippet' ? 'Fragmentos' : 'Notas'}
-                            </Button>
-                        ))}
+                        <div className="flex-1 flex items-center justify-between gap-6 overflow-hidden">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/20 border border-border/20 overflow-x-auto scrollbar-hide">
+                                <div className="flex flex-col items-center px-4 border-r border-border/40">
+                                    <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">Total</span>
+                                    <span className="text-xs font-semibold">{items.length}</span>
+                                </div>
+                                <div className="flex flex-col items-center px-4 border-r border-border/40">
+                                    <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest text-amber-500/40">Ideias</span>
+                                    <span className="text-xs font-semibold">{items.filter(i => i.type === 'idea').length}</span>
+                                </div>
+                                <div className="flex flex-col items-center px-4">
+                                    <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest text-emerald-500/40">Prompts</span>
+                                    <span className="text-xs font-semibold">{items.filter(i => i.type === 'prompt').length}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
+                                {['all', 'idea', 'prompt', 'snippet', 'note'].map((type) => (
+                                    <Button
+                                        key={type}
+                                        variant={selectedType === type ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => setSelectedType(type)}
+                                        className={cn(
+                                            "rounded-full text-[9px] font-bold uppercase tracking-wider h-7 px-4",
+                                            selectedType === type
+                                                ? "bg-primary text-white shadow-glow-sm"
+                                                : "glass-light hover:bg-muted/50 border-border/20"
+                                        )}
+                                    >
+                                        {type === 'all' ? 'Tudo' :
+                                            type === 'idea' ? 'Ideias' :
+                                                type === 'prompt' ? 'Prompts' :
+                                                    type === 'snippet' ? 'Fragmentos' : 'Notas'}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     <AnimatePresence>
@@ -403,7 +423,22 @@ const CaixaEntrada = () => {
                     </AnimatePresence>
 
                     {/* Items Grid/List */}
-                    <div className="space-y-4">
+                    <div className="space-y-6">
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-center gap-4 group"
+                        >
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <Type className="h-5 w-5 text-primary" />
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed italic pr-8">
+                                "Sua mente é para ter ideias, não para guardá-las." Use a Caixa de Entrada para liberar sua memória de trabalho e focar na execução.
+                            </p>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </motion.div>
                         {isLoading ? (
                             <div className="flex items-center justify-center py-20">
                                 <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
@@ -438,7 +473,7 @@ const CaixaEntrada = () => {
                                                             {item.title || "Captura"}
                                                         </h3>
                                                         <div className="flex flex-col gap-0.5">
-                                                            <p className="text-[10px] text-muted-foreground font-bold leading-none">
+                                                            <p className="text-[10px] text-muted-foreground font-medium leading-none">
                                                                 {format(new Date(item.created_at), "dd/MM/yy", { locale: ptBR })}
                                                             </p>
                                                             {item.category && (
@@ -498,7 +533,7 @@ const CaixaEntrada = () => {
 
                                         <div className="mt-4 flex flex-wrap gap-1.5 pt-3 border-t border-border/10">
                                             {(item.tags || []).map((tag, idx) => (
-                                                <Badge key={idx} variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-background/50 border-border/50 text-muted-foreground hover:bg-primary/5 cursor-default truncate max-w-[80px]">
+                                                <Badge key={idx} variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-background/50 border-border/50 text-muted-foreground hover:bg-primary/5 cursor-default truncate max-w-[80px] font-semibold">
                                                     #{tag}
                                                 </Badge>
                                             ))}
@@ -612,12 +647,12 @@ const CaixaEntrada = () => {
                                     <DialogTitle className="text-xl flex items-center gap-2">
                                         {viewingItem?.title || "Detalhes do Registro"}
                                         {viewingItem?.category && (
-                                            <Badge variant="secondary" className="text-[9px] font-bold bg-primary/10 text-primary border-none">
+                                            <Badge variant="secondary" className="text-[9px] font-semibold bg-primary/10 text-primary border-none">
                                                 {viewingItem.category}
                                             </Badge>
                                         )}
                                     </DialogTitle>
-                                    <p className="text-[10px] text-muted-foreground font-bold">
+                                    <p className="text-[10px] text-muted-foreground font-medium">
                                         {viewingItem && format(new Date(viewingItem.created_at), "PPPP", { locale: ptBR })}
                                     </p>
                                 </div>
@@ -672,41 +707,6 @@ const CaixaEntrada = () => {
                         )}
                     </DialogContent>
                 </Dialog>
-
-                {/* Sidebar Stats / Info */}
-                <div className="space-y-6">
-                    <div className="bento-card p-5 space-y-4 bg-primary/5 border-primary/20">
-                        <h4 className="text-sm font-bold text-primary flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" /> Visão geral
-                        </h4>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground">Total de itens</span>
-                                <span className="font-bold">{items.length}</span>
-                            </div>
-                            <Separator className="bg-primary/10" />
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="p-2 rounded-lg bg-background/50 border border-primary/10">
-                                    <p className="text-[10px] text-muted-foreground font-bold">Ideias</p>
-                                    <p className="text-lg font-bold">{items.filter(i => i.type === 'idea').length}</p>
-                                </div>
-                                <div className="p-2 rounded-lg bg-background/50 border border-emerald-500/10">
-                                    <p className="text-[10px] text-muted-foreground font-bold">Prompts</p>
-                                    <p className="text-lg font-bold">{items.filter(i => i.type === 'prompt').length}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bento-card p-5 space-y-4">
-                        <h4 className="text-sm font-bold flex items-center gap-2">
-                            <Type className="h-4 w-4 text-primary" /> Workspace tip
-                        </h4>
-                        <p className="text-xs text-muted-foreground leading-relaxed italic">
-                            "Sua mente é para ter ideias, não para guardá-las." Use a Caixa de Entrada para liberar sua memória de trabalho e focar na execução.
-                        </p>
-                    </div>
-                </div>
             </div>
         </div>
     );

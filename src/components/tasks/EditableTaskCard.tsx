@@ -162,13 +162,13 @@ export function EditableTaskCard({
           {!isEditing ? (
             <>
               <p
-                className="text-xs font-bold leading-snug truncate"
+                className="text-xs font-semibold leading-snug truncate"
                 style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
               >
                 {task.title}
               </p>
               <p
-                className="text-[9px] text-muted-foreground mt-0.5 truncate font-bold opacity-60"
+                className="text-[9px] text-muted-foreground mt-0.5 truncate font-medium opacity-60"
                 style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
               >
                 {task.project || "Sem Projeto"}
@@ -182,7 +182,7 @@ export function EditableTaskCard({
                   <Button
                     type="submit"
                     size="sm"
-                    className={cn("h-6 px-3 font-bold text-[10px] rounded-md hover:opacity-90 shadow-sm transition-all",
+                    className={cn("h-6 px-3 font-semibold text-[10px] rounded-md hover:opacity-90 shadow-sm transition-all",
                       accentColor ? "border-0" : "bg-primary text-primary-foreground"
                     )}
                     style={accentColor ? {
@@ -208,7 +208,7 @@ export function EditableTaskCard({
                 </div>
                 <Badge
                   variant="outline"
-                  className="bg-transparent text-[9px] font-bold px-1.5 py-0 h-6"
+                  className="bg-transparent text-[9px] font-semibold px-1.5 py-0 h-6"
                   style={{
                     borderColor: accentColor ? `${getContrastColor(accentColor)}30` : 'rgba(0,0,0,0.1)',
                     color: accentColor ? getContrastColor(accentColor) : undefined
@@ -223,7 +223,7 @@ export function EditableTaskCard({
                 <div>
                   <Input
                     {...form.register("title")}
-                    className="text-sm font-bold bg-transparent border-0 border-b rounded-none px-0 h-auto focus-visible:ring-0 placeholder:opacity-50 py-1"
+                    className="text-sm font-semibold bg-transparent border-0 border-b rounded-none px-0 h-auto focus-visible:ring-0 placeholder:opacity-50 py-1"
                     placeholder="Nome da tarefa"
                     style={{
                       color: accentColor ? getContrastColor(accentColor) : undefined,
@@ -235,7 +235,7 @@ export function EditableTaskCard({
 
                 {/* Progress Slider Compact */}
                 <div className="space-y-3 pt-1">
-                  <div className="flex items-center justify-between text-[10px] font-bold opacity-60" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
+                  <div className="flex items-center justify-between text-[10px] font-medium opacity-60" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
                     <span>Progresso</span>
                     <span>{(form.watch("progress") as number) || 0}%</span>
                   </div>
@@ -250,7 +250,7 @@ export function EditableTaskCard({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-0.5">
-                    <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prioridade</label>
+                    <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prioridade</label>
                     <Select value={form.watch("priority")} onValueChange={(v) => form.setValue("priority", v as any)}>
                       <SelectTrigger
                         className="h-7 bg-transparent border-transparent text-[10px] font-medium focus:ring-0 px-2 rounded-md transition-colors"
@@ -270,7 +270,7 @@ export function EditableTaskCard({
                   </div>
 
                   <div className="space-y-0.5">
-                    <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Projeto</label>
+                    <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Projeto</label>
                     <Select
                       value={form.watch("projectId") || "unassigned"}
                       onValueChange={(v) => form.setValue("projectId", v === "unassigned" ? "" : v, { shouldDirty: true })}
@@ -294,7 +294,7 @@ export function EditableTaskCard({
                   </div>
 
                   <div className="space-y-0.5">
-                    <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prazo</label>
+                    <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prazo</label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -325,7 +325,7 @@ export function EditableTaskCard({
                 </div>
 
                 <div className="space-y-0.5">
-                  <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Responsável</label>
+                  <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Responsável</label>
                   <Select
                     value={form.watch("assignee")}
                     onValueChange={(v) => form.setValue("assignee", v, { shouldDirty: true })}
@@ -339,7 +339,7 @@ export function EditableTaskCard({
                     >
                       <div className="flex items-center gap-2">
                         {/* Mini Avatar */}
-                        <div className="h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-bold opacity-80" style={{ backgroundColor: accentColor ? `${getContrastColor(accentColor)}20` : 'rgba(0,0,0,0.1)' }}>
+                        <div className="h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-semibold opacity-80" style={{ backgroundColor: accentColor ? `${getContrastColor(accentColor)}20` : 'rgba(0,0,0,0.1)' }}>
                           {form.watch("assignee") ? form.watch("assignee")!.charAt(0).toUpperCase() : <User className="h-2.5 w-2.5" />}
                         </div>
                         <span>{form.watch("assignee") || "Atribuir..."}</span>
@@ -356,7 +356,7 @@ export function EditableTaskCard({
                 </div>
 
                 <div className="space-y-0.5">
-                  <label className="text-[9px] font-bold opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Tags</label>
+                  <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Tags</label>
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {/* Existing Tags */}
                     {(form.watch("tags") || []).map((tagId, index) => {
@@ -459,7 +459,7 @@ export function EditableTaskCard({
         {!isEditing && (
           <Badge
             variant="outline"
-            className="bg-transparent border-transparent text-[9px] font-bold px-1 py-0 h-5 shrink-0 opacity-70"
+            className="bg-transparent border-transparent text-[9px] font-semibold px-1 py-0 h-5 shrink-0 opacity-70"
             style={{
               color: priorityTint[task.priority],
             }}
@@ -473,10 +473,10 @@ export function EditableTaskCard({
         <>
           <div className="space-y-1.5">
             <div
-              className="flex items-center justify-between text-[10px] font-bold text-muted-foreground"
+              className="flex items-center justify-between text-[10px] font-medium text-muted-foreground"
               style={{ color: accentColor ? getContrastColor(accentColor) : undefined, opacity: 0.7 }}
             >
-              <span className="font-bold">Progresso</span>
+              <span className="font-medium">Progresso</span>
               <span>{task.progress}%</span>
             </div>
             <Progress value={task.progress} className="h-1 bg-black/5" />

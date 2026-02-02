@@ -34,6 +34,7 @@ import {
 import {
     AnimatePresence
 } from "framer-motion";
+import { FinancialChart } from "@/components/dashboard/FinancialChart";
 
 interface Project {
     id: string;
@@ -129,11 +130,20 @@ export default function Financeiro() {
                         </div>
                         <div>
                             <p className="label-text text-muted-foreground mb-1">{kpi.label}</p>
-                            <h3 className="text-xl font-bold tabular-nums tracking-tight">{kpi.value}</h3>
+                            <h3 className="text-xl font-semibold tabular-nums tracking-tight">{kpi.value}</h3>
                         </div>
                     </motion.div>
                 ))}
             </div>
+
+            {/* Financial Chart */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+            >
+                <FinancialChart projects={stats?.projects || []} />
+            </motion.div>
 
             {/* Projects Financial Table */}
             <motion.div
@@ -155,11 +165,11 @@ export default function Financeiro() {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-muted/10 text-left border-b border-border/60">
-                                <th className="p-4 font-semibold text-muted-foreground/90 text-[10px]">Projeto / Cliente</th>
-                                <th className="p-4 font-semibold text-muted-foreground/90 text-[10px]">Valor Total</th>
-                                <th className="p-4 font-semibold text-muted-foreground/90 text-[10px]">Entrada / Pago</th>
-                                <th className="p-4 font-semibold text-muted-foreground/90 text-[10px]">Restante</th>
-                                <th className="p-4 font-semibold text-muted-foreground/90 text-[10px] text-center">Status Pagto</th>
+                                <th className="p-4 font-medium text-muted-foreground/60 text-[10px]">Projeto / Cliente</th>
+                                <th className="p-4 font-medium text-muted-foreground/60 text-[10px]">Valor Total</th>
+                                <th className="p-4 font-medium text-muted-foreground/60 text-[10px]">Entrada / Pago</th>
+                                <th className="p-4 font-medium text-muted-foreground/60 text-[10px]">Restante</th>
+                                <th className="p-4 font-medium text-muted-foreground/60 text-[10px] text-center">Status Pagto</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -193,25 +203,25 @@ export default function Financeiro() {
                                                         </Button>
                                                     )}
                                                     <div className="flex flex-col flex-1 min-w-0 cursor-pointer" onClick={() => toggleRow(p.id)}>
-                                                        <span className="font-bold text-foreground truncate max-w-[180px]">{p.name}</span>
+                                                        <span className="font-semibold text-foreground truncate max-w-[180px]">{p.name}</span>
                                                         <span className="text-[10px] text-muted-foreground">{p.client_name || "Sem cliente"}</span>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4 font-semibold text-foreground/80">
+                                            <td className="p-4 font-medium text-foreground/80">
                                                 {formatCurrency(p.value || 0)}
                                             </td>
-                                            <td className="p-4 font-semibold text-emerald-500">
+                                            <td className="p-4 font-medium text-emerald-500/90">
                                                 {formatCurrency(p.advance_payment || 0)}
                                             </td>
-                                            <td className="p-4 font-semibold text-amber-500">
+                                            <td className="p-4 font-medium text-amber-500/90">
                                                 {formatCurrency(remaining)}
                                             </td>
                                             <td className="p-4 text-center">
                                                 <Badge
                                                     variant="outline"
                                                     className={cn(
-                                                        "text-[9px] font-bold border-none",
+                                                        "text-[9px] font-semibold border-none",
                                                         isPaid ? "bg-emerald-500/10 text-emerald-600" :
                                                             hasAdvance ? "bg-blue-500/10 text-blue-600" :
                                                                 "bg-amber-500/10 text-amber-600"
@@ -231,14 +241,14 @@ export default function Financeiro() {
                                                         className="overflow-hidden bg-primary/[0.02]"
                                                     >
                                                         <div className="px-14 py-3 space-y-2">
-                                                            <div className="grid grid-cols-2 gap-4 pb-1 border-b border-border/10 text-[10px] font-bold text-muted-foreground">
+                                                            <div className="grid grid-cols-2 gap-4 pb-1 border-b border-border/10 text-[10px] font-medium text-muted-foreground/60">
                                                                 <span>Serviço</span>
                                                                 <span className="text-right">Valor</span>
                                                             </div>
                                                             {p.services.map((svc, idx) => (
                                                                 <div key={idx} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border/5 last:border-0 hover:bg-primary/5 transition-colors rounded-sm px-1">
                                                                     <span className="text-muted-foreground font-medium">{svc.name}</span>
-                                                                    <span className="text-right font-bold text-foreground/80">{formatCurrency(svc.price)}</span>
+                                                                    <span className="text-right font-semibold text-foreground/60">{formatCurrency(svc.price)}</span>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -271,7 +281,7 @@ export default function Financeiro() {
                     <h2 className="heading-2 mb-6">Eficiência de Faturamento</h2>
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <div className="flex justify-between text-[11px] font-bold">
+                            <div className="flex justify-between text-[11px] font-medium">
                                 <span className="text-muted-foreground">Liquidez Geral (Recebido / Total)</span>
                                 <span className="text-primary">
                                     {stats?.totalValue ? Math.round((stats.totalPaid / stats.totalValue) * 100) : 0}%
@@ -300,9 +310,9 @@ export default function Financeiro() {
                         <TrendingUp className="h-8 w-8" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold mb-1">Crescimento de Caixa</h3>
+                        <h3 className="text-lg font-semibold mb-1">Crescimento de Caixa</h3>
                         <p className="body-text text-muted-foreground max-w-[280px]">
-                            Seus projetos atuais garantem uma projeção de <span className="text-foreground font-bold">{formatCurrency(stats?.totalRemaining || 0)}</span> para recebimento futuro.
+                            Seus projetos atuais garantem uma projeção de <span className="text-foreground font-semibold">{formatCurrency(stats?.totalRemaining || 0)}</span> para recebimento futuro.
                         </p>
                     </div>
                     <Button variant="outline" size="sm" className="mt-2 text-xs border-border/60 hover:bg-background">

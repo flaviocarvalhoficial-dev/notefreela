@@ -53,7 +53,7 @@ export function IconPicker({ value, onChange, trigger }: IconPickerProps) {
             </DialogTrigger>
             <DialogContent className="max-w-md p-0 overflow-hidden bg-card border-border shadow-2xl">
                 <DialogHeader className="p-4 border-b border-border/40">
-                    <DialogTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">
+                    <DialogTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/40">
                         Escolher Ícone do Projeto
                     </DialogTitle>
                     <div className="mt-2">

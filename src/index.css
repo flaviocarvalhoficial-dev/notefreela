@@ -131,7 +131,7 @@
   }
 
   .label-text {
-    @apply text-xs font-medium leading-tight text-foreground;
+    @apply text-xs font-normal leading-tight text-foreground;
     /* 12px */
   }
 

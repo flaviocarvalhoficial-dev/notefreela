@@ -189,7 +189,7 @@ function DroppableColumn({
               )}
               <Badge variant="secondary" className="text-[10px] h-4 py-0 px-1.5 glass-light shrink-0">{count}</Badge>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1 font-medium opacity-70">{hint}</p>
+            <p className="text-[10px] text-muted-foreground mt-1 font-medium opacity-50">{hint}</p>
           </div>
 
           <DropdownMenu>
@@ -206,7 +206,7 @@ function DroppableColumn({
                 <DropdownMenuSubTrigger>Escolher Cor</DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="glass border-border/50 p-3 min-w-[200px] shadow-2xl">
-                    <div className="text-[10px] font-bold text-muted-foreground mb-2">Cores Pastel</div>
+                    <div className="text-[10px] font-semibold text-muted-foreground/60 mb-2">Cores Pastel</div>
                     <div className="grid grid-cols-4 gap-2 mb-3">
                       {PASTEL_COLORS.map((c) => (
                         <button

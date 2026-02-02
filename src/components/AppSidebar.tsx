@@ -103,7 +103,7 @@ export function AppSidebar() {
           <div className="w-full flex items-center justify-between px-4">
             <div className="flex items-center gap-3 overflow-hidden">
               <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-8 h-8 shrink-0" />
-              <span className="font-bold text-foreground tracking-tight">NoteFreela</span>
+              <span className="font-semibold text-foreground tracking-tight">NoteFreela</span>
             </div>
             <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors h-8 w-8" />
           </div>
@@ -246,7 +246,7 @@ export function AppSidebar() {
           </div>
         )}
         {!open && (
-          <div className="flex justify-center text-[8px] font-bold text-muted-foreground/10 py-1">
+          <div className="flex justify-center text-[8px] font-semibold text-muted-foreground/5 py-1">
             {APP_VERSION}
           </div>
         )}

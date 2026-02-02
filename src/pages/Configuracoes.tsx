@@ -175,7 +175,7 @@ export default function Configuracoes() {
                                 <div className="relative group">
                                     <Avatar className="h-24 w-24 border-2 border-border/50 shadow-xl overflow-hidden">
                                         <AvatarImage src={profile.avatar_url} className="object-cover" />
-                                        <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-2xl font-bold uppercase text-white">
+                                        <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-2xl font-semibold uppercase text-white">
                                             {profile.full_name?.[0] || user?.email?.[0]}
                                         </AvatarFallback>
                                     </Avatar>
@@ -359,7 +359,7 @@ export default function Configuracoes() {
                         </div>
                         <div>
                             <Badge className="bg-primary/20 text-primary border-primary/30 mb-2">Plano Atual: Free Beta</Badge>
-                            <h3 className="text-2xl font-bold">NoteFreela Pro</h3>
+                            <h3 className="text-2xl font-semibold">NoteFreela Pro</h3>
                             <p className="text-muted-foreground max-w-sm mx-auto mt-2">
                                 Acesso ilimitado a projetos, relatórios avançados e integração total com o calendário.
                             </p>

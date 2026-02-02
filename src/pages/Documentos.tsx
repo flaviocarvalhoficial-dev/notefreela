@@ -94,10 +94,10 @@ const Documentos = () => {
                             <div className="p-2 rounded-lg bg-muted/60 text-foreground">
                                 <cat.icon className="h-5 w-5" />
                             </div>
-                            <span className="text-xs font-bold tabular-nums text-muted-foreground">{cat.count}</span>
+                            <span className="text-xs font-semibold tabular-nums text-muted-foreground">{cat.count}</span>
                         </div>
                         <div className="mt-4">
-                            <h3 className="text-sm font-bold">{cat.name}</h3>
+                            <h3 className="text-sm font-semibold">{cat.name}</h3>
                             <p className="text-[10px] text-muted-foreground font-black mt-1 opacity-60">Modelos</p>
                         </div>
                     </motion.div>
@@ -158,7 +158,7 @@ const Documentos = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <Badge variant="secondary" className="bg-muted/60 text-foreground border-none text-[10px] font-bold h-5">
+                                                <Badge variant="secondary" className="bg-muted/60 text-foreground border-none text-[10px] font-semibold h-5">
                                                     {doc.category}
                                                 </Badge>
                                             </td>

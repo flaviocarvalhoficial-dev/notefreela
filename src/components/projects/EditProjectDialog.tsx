@@ -28,6 +28,7 @@ interface Project {
     payment_method?: string | null;
     payment_status?: string | null;
     services?: { name: string; price: number }[] | null;
+    created_at: string;
 }
 
 interface EditProjectDialogProps {
@@ -63,6 +64,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
     const [services, setServices] = useState<{ name: string; price: number }[]>(project.services || []);
     const [serviceInput, setServiceInput] = useState("");
     const [servicePriceInput, setServicePriceInput] = useState<number | "">("");
+    const [startDate, setStartDate] = useState(project.created_at ? new Date(project.created_at).toISOString().split('T')[0] : "");
 
     useEffect(() => {
         if (open) {
@@ -79,6 +81,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
             setNewPaymentStatus(project.payment_status || "pending");
             setNewIcon(project.avatar_emoji || "Briefcase");
             setServices(project.services || []);
+            setStartDate(project.created_at ? new Date(project.created_at).toISOString().split('T')[0] : "");
         }
     }, [open, project]);
 
@@ -121,6 +124,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                     payment_status: newPaymentStatus,
                     avatar_emoji: newIcon,
                     services: services,
+                    created_at: startDate ? new Date(startDate).toISOString() : project.created_at
                 })
                 .eq("id", project.id);
 
@@ -225,7 +229,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                                         <span className="font-medium">{svc.name}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-primary font-bold">
+                                        <span className="text-primary font-semibold">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price)}
                                         </span>
                                         <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
@@ -265,11 +269,11 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label htmlFor="edit-project-value">Valor Total (R$)</Label>
                             <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-semibold">R$</div>
                                 <Input
                                     id="edit-project-value"
                                     type="number"
-                                    className="glass-light border-border/50 pl-10 bg-muted/20 cursor-default opacity-80 font-bold text-primary"
+                                    className="glass-light border-border/50 pl-10 bg-muted/20 cursor-default opacity-80 font-semibold text-primary/80"
                                     value={newValue}
                                     readOnly
                                 />
@@ -279,7 +283,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label htmlFor="edit-project-advance">Valor de Entrada (R$)</Label>
                             <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-semibold">R$</div>
                                 <Input
                                     id="edit-project-advance"
                                     type="number"
@@ -356,6 +360,17 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
+                            <Label htmlFor="edit-project-start" className="text-xs opacity-60">Início do Projeto (Gráfico)</Label>
+                            <Input
+                                id="edit-project-start"
+                                type="date"
+                                className="glass-light border-border/50 [color-scheme:dark]"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
                             <Label htmlFor="edit-project-deadline">Prazo</Label>
                             <Input
                                 id="edit-project-deadline"
@@ -363,19 +378,6 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                                 className="glass-light border-border/50 [color-scheme:dark]"
                                 value={newDeadline}
                                 onChange={(e) => setNewDeadline(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-project-progress">Progresso (%)</Label>
-                            <Input
-                                id="edit-project-progress"
-                                type="number"
-                                min="0"
-                                max="100"
-                                className="glass-light border-border/50"
-                                value={newProgress}
-                                onChange={(e) => setNewProgress(Number(e.target.value))}
                             />
                         </div>
                     </div>
@@ -389,7 +391,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             Cancelar
                         </Button>
                         <Button
-                            className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-glow"
+                            className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-glow font-semibold"
                             onClick={() => updateProjectMutation.mutate()}
                             disabled={updateProjectMutation.isPending || !newName}
                         >

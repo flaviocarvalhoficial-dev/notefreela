@@ -257,11 +257,11 @@ function ClientCard({ client, onDelete, onClick, index }: { client: Client, onDe
 
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
                         {client.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h3 className="font-bold text-base leading-none mb-1 text-foreground">{client.name}</h3>
+                        <h3 className="font-semibold text-base leading-none mb-1 text-foreground">{client.name}</h3>
                         {client.company_name && (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                 <Building2 className="h-3 w-3" />
@@ -299,15 +299,15 @@ function ClientCard({ client, onDelete, onClick, index }: { client: Client, onDe
 
             <div className="pt-4 border-t border-border/40 grid grid-cols-2 gap-4 mt-auto">
                 <div>
-                    <p className="text-[10px] text-muted-foreground font-semibold mb-0.5">Projetos</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Projetos</p>
                     <div className="flex items-center gap-1.5">
                         <Briefcase className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-sm font-bold">{client.project_count || 0}</span>
+                        <span className="text-sm font-semibold">{client.project_count || 0}</span>
                     </div>
                 </div>
                 <div>
-                    <p className="text-[10px] text-muted-foreground font-semibold mb-0.5">Valor Total</p>
-                    <span className="text-sm font-bold text-foreground">
+                    <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Valor Total</p>
+                    <span className="text-sm font-semibold text-foreground">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.total_value || 0)}
                     </span>
                 </div>
@@ -326,12 +326,12 @@ function ClientListItem({ client, onDelete, onClick, index }: { client: Client, 
             onClick={onClick}
         >
             <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
                     {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col min-w-0 pr-6 gap-0.5">
                     <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-sm text-foreground truncate">{client.name}</h3>
+                        <h3 className="font-semibold text-sm text-foreground truncate">{client.name}</h3>
                         {client.company_name && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50 truncate max-w-[150px]">
                                 {client.company_name}
@@ -348,15 +348,15 @@ function ClientListItem({ client, onDelete, onClick, index }: { client: Client, 
 
             <div className="flex items-center gap-6 md:gap-12 mr-4">
                 <div className="hidden sm:flex flex-col items-end w-20">
-                    <span className="text-[10px] text-muted-foreground font-bold">Projetos</span>
-                    <div className="flex items-center gap-1.5 font-bold text-sm">
+                    <span className="text-[10px] text-muted-foreground font-medium">Projetos</span>
+                    <div className="flex items-center gap-1.5 font-semibold text-sm">
                         <Briefcase className="h-3 w-3 text-primary/70" />
                         {client.project_count || 0}
                     </div>
                 </div>
                 <div className="flex flex-col items-end w-24">
-                    <span className="text-[10px] text-muted-foreground font-bold">Total</span>
-                    <span className="text-sm font-bold text-foreground">
+                    <span className="text-[10px] text-muted-foreground font-medium">Total</span>
+                    <span className="text-sm font-semibold text-foreground">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.total_value || 0)}
                     </span>
                 </div>

@@ -182,8 +182,8 @@ const Index = () => {
                     <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground/70">{stat.title}</p>
-                    <div className="text-2xl font-bold leading-none mt-1 tracking-tight">{stat.value}</div>
+                    <p className="text-[10px] font-medium text-muted-foreground/40">{stat.title}</p>
+                    <div className="text-2xl font-semibold leading-none mt-1 tracking-tight">{stat.value}</div>
                     <p className="text-[11px] text-muted-foreground mt-2">{stat.change}</p>
                   </div>
                 </div>
@@ -198,7 +198,7 @@ const Index = () => {
             >
               <div className="bento-card bento-card--compact h-[132px] flex flex-col justify-between border-border/60 bg-card">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-bold text-foreground/80">Ações Rápidas</h2>
+                  <h2 className="text-sm font-semibold text-foreground/80">Ações Rápidas</h2>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                     <Clock className="h-3.5 w-3.5" />
                     <span>Saúde Geral</span>
@@ -228,7 +228,7 @@ const Index = () => {
                           action.label === "Novo Projeto" ? "text-primary" :
                             "text-muted-foreground group-hover:text-primary"
                         )} />
-                        <span className="text-[11px] font-bold tracking-tight">{action.label}</span>
+                        <span className="text-[11px] font-semibold tracking-tight">{action.label}</span>
                       </Button>
                     </motion.div>
                   ))}
@@ -236,7 +236,7 @@ const Index = () => {
 
                 <div className="flex items-center gap-3">
                   <Progress value={completionRate} className="h-1 flex-1 bg-muted" />
-                  <span className="text-[11px] font-bold text-muted-foreground whitespace-nowrap">{completionRate}%</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground whitespace-nowrap">{completionRate}%</span>
                 </div>
               </div>
             </motion.div>
@@ -267,7 +267,7 @@ const Index = () => {
               >
                 <div className="bento-card bento-card--compact overflow-hidden border-border/60 bg-card">
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    <h2 className="text-sm font-bold text-foreground/80">Projetos Recentes</h2>
+                    <h2 className="text-sm font-semibold text-foreground/80">Projetos Recentes</h2>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -301,7 +301,7 @@ const Index = () => {
                                   <h3 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{project.name}</h3>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold text-muted-foreground tabular-nums whitespace-nowrap group-hover:hidden">
+                                  <span className="text-[10px] font-semibold text-muted-foreground tabular-nums whitespace-nowrap group-hover:hidden">
                                     {project.progress || 0}%
                                   </span>
                                   <div className="hidden group-hover:block" onClick={(e) => e.stopPropagation()}>

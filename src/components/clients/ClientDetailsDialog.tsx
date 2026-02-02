@@ -57,7 +57,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                 style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'fixed' }}
             >
                 <DialogHeader className="mb-6">
-                    <DialogTitle className="text-2xl font-bold flex flex-col gap-1">
+                    <DialogTitle className="text-2xl font-semibold flex flex-col gap-1">
                         <span>{client.name}</span>
                         {client.company_name && (
                             <span className="text-sm font-normal text-muted-foreground">{client.company_name}</span>
@@ -72,20 +72,20 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                            <p className="text-xs text-muted-foreground font-semibold">Total investido</p>
-                            <p className="text-2xl font-bold text-primary">
+                            <p className="text-xs text-muted-foreground font-medium opacity-50">Total investido</p>
+                            <p className="text-2xl font-semibold text-primary">
                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.total_value || 0)}
                             </p>
                         </div>
                         <div className="p-4 rounded-lg bg-secondary/5 border border-border/50">
-                            <p className="text-xs text-muted-foreground font-semibold">Projetos totais</p>
-                            <p className="text-2xl font-bold">
+                            <p className="text-xs text-muted-foreground font-medium opacity-50">Projetos totais</p>
+                            <p className="text-2xl font-semibold">
                                 {projects.length}
                             </p>
                         </div>
                         <div className="p-4 rounded-lg bg-secondary/5 border border-border/50">
-                            <p className="text-xs text-muted-foreground font-semibold">Projetos ativos</p>
-                            <p className="text-2xl font-bold">
+                            <p className="text-xs text-muted-foreground font-medium opacity-50">Projetos ativos</p>
+                            <p className="text-2xl font-semibold">
                                 {projects.filter(p => p.status === 'active' || p.status === 'inprogress').length}
                             </p>
                         </div>
@@ -135,7 +135,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                         {project.name || project.title || "Sem título"}
                                                     </td>
                                                     <td className="p-3">
-                                                        <Badge variant="outline" className={cn("text-[10px] font-bold h-6", getStatusColor(project.status))}>
+                                                        <Badge variant="outline" className={cn("text-[10px] font-semibold h-6", getStatusColor(project.status))}>
                                                             {translateStatus(project.status)}
                                                         </Badge>
                                                     </td>
@@ -143,7 +143,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                         <div className="flex flex-col gap-2">
                                                             <Badge
                                                                 className={cn(
-                                                                    "text-[9px] font-bold w-fit",
+                                                                    "text-[9px] font-semibold w-fit",
                                                                     (project.value - (project.advance_payment || 0)) <= 0 ? "bg-emerald-500/10 text-emerald-500" :
                                                                         (project.advance_payment || 0) > 0 ? "bg-blue-500/10 text-blue-500" :
                                                                             "bg-amber-500/10 text-amber-500"
@@ -152,7 +152,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                                 {(project.value - (project.advance_payment || 0)) <= 0 ? "Quitado" :
                                                                     (project.advance_payment || 0) > 0 ? "Entrada Paga" : "Pendente"}
                                                             </Badge>
-                                                            <div className="flex items-center gap-6 text-[10px] font-bold">
+                                                            <div className="flex items-center gap-6 text-[10px] font-semibold">
                                                                 <div className="flex flex-col">
                                                                     <span className="text-muted-foreground/40">Total</span>
                                                                     <span className="text-foreground">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value)}</span>
@@ -192,7 +192,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                                     >
                                                                         <div className="h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0" />
                                                                         <span className="text-foreground/70 font-medium flex-1">{svc.name}</span>
-                                                                        <span className="text-primary font-bold pr-4">
+                                                                        <span className="text-primary font-semibold pr-4">
                                                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price || 0)}
                                                                         </span>
                                                                     </div>

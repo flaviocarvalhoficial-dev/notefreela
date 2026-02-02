@@ -237,12 +237,12 @@ const ProjetoDetalhes = () => {
 
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="space-y-4">
-                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground">{project.name}</h1>
+                        <h1 className="text-4xl font-bold tracking-tight text-foreground">{project.name}</h1>
                         <div className="flex items-center gap-3">
-                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 font-bold tracking-wide text-[10px] border-emerald-500/20 px-2 rounded-md">
+                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 font-semibold tracking-wide text-[10px] border-emerald-500/20 px-2 rounded-md">
                                 {statusLabels[project.status] || project.status}
                             </Badge>
-                            <Badge variant="outline" className="text-muted-foreground font-bold tracking-wide text-[10px] border-border/80 px-2 rounded-md">
+                            <Badge variant="outline" className="text-muted-foreground font-semibold tracking-wide text-[10px] border-border/80 px-2 rounded-md">
                                 {priorityLabels[project.priority] || project.priority}
                             </Badge>
                         </div>
@@ -286,27 +286,27 @@ const ProjetoDetalhes = () => {
             {/* Project Properties (Notion Style) */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-8 py-8 border-y border-border/40">
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-[hsl(var(--peach))]">
+                    <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground/60">
                         <Building2 className="h-3.5 w-3.5" />
                         Cliente
                     </div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-sm font-medium text-foreground">
                         {(project as any).client_name || "Não informado"}
                     </p>
                 </div>
 
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-[hsl(var(--peach))]">
+                    <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground/60">
                         <DollarSign className="h-3.5 w-3.5" />
                         Valor
                     </div>
-                    <p className="text-sm font-bold text-foreground tabular-nums">
+                    <p className="text-sm font-semibold text-foreground tabular-nums">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((project as any).value || 0)}
                     </p>
                 </div>
 
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-[hsl(var(--peach))]">
+                    <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground/60">
                         <User className="h-3.5 w-3.5" />
                         Manager
                     </div>
@@ -314,7 +314,7 @@ const ProjetoDetalhes = () => {
                 </div>
 
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-[hsl(var(--peach))]">
+                    <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground/60">
                         <Calendar className="h-3.5 w-3.5" />
                         Prazo
                     </div>
@@ -324,7 +324,7 @@ const ProjetoDetalhes = () => {
                 </div>
 
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-[hsl(var(--peach))]">
+                    <div className="flex items-center gap-2 text-[10px] font-semibold text-[hsl(var(--peach))] opacity-60">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Progresso
                     </div>
@@ -332,7 +332,7 @@ const ProjetoDetalhes = () => {
                         <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
                             <div className="h-full bg-primary/40" style={{ width: `${project.progress || 0}%` }} />
                         </div>
-                        <span className="text-xs font-bold tabular-nums text-foreground">{project.progress || 0}%</span>
+                        <span className="text-xs font-semibold tabular-nums text-foreground">{project.progress || 0}%</span>
                     </div>
                 </div>
             </div>
@@ -341,7 +341,7 @@ const ProjetoDetalhes = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-12">
                 <div className="lg:col-span-2 space-y-8">
                     <section>
-                        <h2 className="text-sm font-bold text-muted-foreground/40 mb-4">Descrição e notas</h2>
+                        <h2 className="text-sm font-semibold text-muted-foreground/30 mb-4">Descrição e notas</h2>
                         <div
                             className={cn(
                                 "bg-card p-6 rounded-lg border border-border/60 transition-all relative group/desc",
@@ -393,7 +393,7 @@ const ProjetoDetalhes = () => {
                                         </Button>
                                         <Button
                                             size="sm"
-                                            className="bg-primary text-primary-foreground font-bold px-6 rounded-md shadow-sm"
+                                            className="bg-primary text-primary-foreground font-semibold px-6 rounded-md shadow-sm"
                                             onClick={() => updateDescMutation.mutate(descValue)}
                                             disabled={updateDescMutation.isPending}
                                         >
@@ -420,16 +420,16 @@ const ProjetoDetalhes = () => {
                 <div className="space-y-12">
                     <section>
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-[10px] font-bold text-muted-foreground/60">Próximas tarefas</h2>
-                            <Badge variant="outline" className="text-[9px] font-bold border-border/40 px-1.5 h-4">{tasks.length}</Badge>
+                            <h2 className="text-[10px] font-semibold text-muted-foreground/30">Próximas tarefas</h2>
+                            <Badge variant="outline" className="text-[9px] font-semibold border-border/40 px-1.5 h-4 opacity-50">{tasks.length}</Badge>
                         </div>
 
                         <div className="space-y-2">
                             {(tasks.length === 0 ? [] : tasks.slice(0, 5)).map(task => (
                                 <div key={task.id} className="p-3 bg-card rounded-lg border border-border/60 flex items-center justify-between group hover:border-primary/40 transition-all">
                                     <div className="min-w-0">
-                                        <p className="text-sm font-bold truncate text-foreground/80">{task.title}</p>
-                                        <p className="text-[9px] font-bold text-muted-foreground/40">{task.priority}</p>
+                                        <p className="text-sm font-semibold truncate text-foreground/80">{task.title}</p>
+                                        <p className="text-[9px] font-medium text-muted-foreground/40">{task.priority}</p>
                                     </div>
                                     <ChevronRight className="h-3 w-3 text-muted-foreground/20 group-hover:text-primary transition-colors" />
                                 </div>
@@ -437,7 +437,7 @@ const ProjetoDetalhes = () => {
 
                             <Button
                                 variant="outline"
-                                className="w-full bg-background border-border/60 shadow-none h-9 rounded-md text-[10px] font-bold hover:bg-muted transition-colors flex items-center justify-center gap-2 mt-4"
+                                className="w-full bg-background border-border/60 shadow-none h-9 rounded-md text-[10px] font-semibold hover:bg-muted transition-colors flex items-center justify-center gap-2 mt-4 text-muted-foreground"
                                 onClick={() => navigate(`/tarefas?project=${id}`)}
                             >
                                 Kanban completo <ChevronRight className="h-3 w-3" />
@@ -447,7 +447,7 @@ const ProjetoDetalhes = () => {
 
                     <section className="bg-muted/5 p-6 rounded-xl border border-border/40">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-[10px] font-bold text-muted-foreground/60">Documentação</h3>
+                            <h3 className="text-[10px] font-semibold text-muted-foreground/30">Documentação</h3>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/40">
@@ -480,7 +480,7 @@ const ProjetoDetalhes = () => {
                                             {cat === 'contrato' && <FileCheck className="h-4 w-4 text-[hsl(var(--peach))]" />}
                                             {cat === 'recibo' && <Receipt className="h-4 w-4 text-[hsl(var(--peach))]" />}
                                             {cat === 'nf' && <FileCode className="h-4 w-4 text-[hsl(var(--peach))]" />}
-                                            <span className="text-[10px] font-bold truncate">
+                                            <span className="text-[10px] font-medium truncate">
                                                 {doc ? doc.name : cat}
                                             </span>
                                         </div>

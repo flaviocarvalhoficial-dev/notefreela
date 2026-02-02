@@ -265,9 +265,9 @@ export function TimelineSection({
     >
       <header className="p-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
-          <h2 className="text-[10px] font-black text-muted-foreground/40 leading-none">Cronograma</h2>
+          <h2 className="text-[10px] font-bold text-muted-foreground/30 leading-none">Cronograma</h2>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger className="h-7 w-[160px] bg-muted/30 border-none text-[10px] font-bold rounded-md focus:ring-0">
+            <SelectTrigger className="h-7 w-[160px] bg-muted/30 border-none text-[10px] font-semibold rounded-md focus:ring-0">
               <SelectValue placeholder="Projeto" />
             </SelectTrigger>
             <SelectContent className="notion-card border-border/40">
@@ -284,7 +284,7 @@ export function TimelineSection({
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(d => {
               const n = new Date(d); n.setDate(n.getDate() - 7); return n;
             })}><ChevronLeft className="h-3 w-3" /></Button>
-            <Button variant="ghost" size="sm" className="text-[10px] font-bold px-3 h-6" onClick={() => setCurrentDate(new Date())}>Hoje</Button>
+            <Button variant="ghost" size="sm" className="text-[10px] font-semibold px-3 h-6" onClick={() => setCurrentDate(new Date())}>Hoje</Button>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(d => {
               const n = new Date(d); n.setDate(n.getDate() + 7); return n;
             })}><ChevronRight className="h-3 w-3" /></Button>
@@ -322,7 +322,7 @@ export function TimelineSection({
               <div className="flex">
                 {monthsInTrack.map((m, idx) => (
                   <div key={idx} className="h-7 flex items-center px-4 border-r border-border/10 overflow-hidden" style={{ width: m.width }}>
-                    <span className="text-[9px] font-black text-muted-foreground/20 whitespace-nowrap">
+                    <span className="text-[9px] font-bold text-muted-foreground/10 whitespace-nowrap">
                       {m.label}
                     </span>
                   </div>
@@ -336,8 +336,8 @@ export function TimelineSection({
                     isToday(d) && "bg-primary/5 shadow-[inset_0_0_0_1px_rgba(var(--primary),0.1)]"
                   )} style={{ width: slotPx }}>
                     <span className={cn(
-                      "text-[10px] font-bold tabular-nums",
-                      isToday(d) ? "text-primary" : "text-muted-foreground/30"
+                      "text-[10px] font-semibold tabular-nums",
+                      isToday(d) ? "text-primary" : "text-muted-foreground/20"
                     )}>
                       {d.getDate()}
                     </span>
@@ -406,7 +406,7 @@ export function TimelineSection({
                               {/* Gradient Overlay */}
                               <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
 
-                              <p className="text-[10px] font-bold leading-none relative z-10 text-zinc-900 group-hover:text-black whitespace-nowrap drop-shadow-sm">
+                              <p className="text-[10px] font-semibold leading-none relative z-10 text-zinc-900 group-hover:text-black whitespace-nowrap drop-shadow-sm">
                                 {a.title}
                               </p>
                             </div>
@@ -423,8 +423,8 @@ export function TimelineSection({
                       </div>
                     </TooltipTrigger>
                     <TooltipContent className="notion-card border-border/40 px-3 py-2">
-                      <p className="text-xs font-bold mb-0.5">{a.title}</p>
-                      <p className="text-[9px] font-black text-muted-foreground/60">
+                      <p className="text-xs font-semibold mb-0.5">{a.title}</p>
+                      <p className="text-[9px] font-bold text-muted-foreground/40">
                         {a.projectName ? `${a.meta} • ${a.projectName}` : a.meta}
                       </p>
                     </TooltipContent>

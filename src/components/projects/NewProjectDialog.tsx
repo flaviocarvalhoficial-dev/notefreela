@@ -43,6 +43,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [servicePriceInput, setServicePriceInput] = useState<number | "">("");
 
     // Step 2: Prazo & Responsável
+    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
     const [newDeadline, setNewDeadline] = useState("");
     const [newManager, setNewManager] = useState("");
     const [newPriority, setNewPriority] = useState<"high" | "medium" | "low">("medium");
@@ -61,6 +62,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setNewClient("");
         setNewDesc("");
         setNewDeadline("");
+        setStartDate(new Date().toISOString().split('T')[0]);
         setNewManager("");
         setNewPriority("medium");
         setNewValue("");
@@ -127,7 +129,8 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     payment_method: newPaymentMethod,
                     payment_status: newPaymentStatus,
                     avatar_emoji: newIcon,
-                    services: services // Assumes column 'services' exists (jsonb or text[])
+                    services: services, // Assumes column 'services' exists (jsonb or text[])
+                    created_at: startDate ? new Date(startDate).toISOString() : new Date().toISOString()
                 })
                 .select()
                 .single();
@@ -216,7 +219,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                             {step === 1 && <Briefcase className="h-4 w-4" />}
                             {step === 2 && <User className="h-4 w-4" />}
                             {step === 3 && <ListTodo className="h-4 w-4" />}
-                            <span className="text-[10px] font-bold opacity-70">
+                            <span className="text-[10px] font-semibold opacity-50">
                                 Passo {step} de 3
                             </span>
                         </div>
@@ -311,7 +314,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                         <span className="font-medium">{svc.name}</span>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="text-primary font-bold">
+                                                        <span className="text-primary font-semibold">
                                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price)}
                                                         </span>
                                                         <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
@@ -329,6 +332,18 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                 <>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
+                                            <Label htmlFor="project-start" className="text-xs opacity-60 flex items-center gap-2">
+                                                <Calendar className="h-3 w-3" /> Início do Projeto (Gráfico)
+                                            </Label>
+                                            <Input
+                                                id="project-start"
+                                                type="date"
+                                                className="glass-light border-border/50 h-11 [color-scheme:dark]"
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
                                             <Label htmlFor="project-deadline" className="text-xs opacity-60 flex items-center gap-2">
                                                 <Calendar className="h-3 w-3" /> Prazo Final
                                             </Label>
@@ -340,6 +355,9 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                 onChange={(e) => setNewDeadline(e.target.value)}
                                             />
                                         </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1">
                                         <div className="space-y-2">
                                             <Label htmlFor="project-manager" className="text-xs opacity-60 flex items-center gap-2">
                                                 <User className="h-3 w-3" /> Responsável
@@ -361,12 +379,12 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     <DollarSign className="h-3 w-3" /> Valor Total (Serviços)
                                                 </Label>
                                                 <div className="relative">
-                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-semibold">R$</div>
                                                     <Input
                                                         id="project-value"
                                                         type="number"
                                                         placeholder="0,00"
-                                                        className="glass-light border-border/50 h-11 pl-10 bg-muted/20 cursor-default opacity-80 font-bold text-primary"
+                                                        className="glass-light border-border/50 h-11 pl-10 bg-muted/20 cursor-default opacity-80 font-semibold text-primary"
                                                         value={newValue}
                                                         readOnly
                                                     />
@@ -378,7 +396,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     <Calendar className="h-3 w-3" /> Entrada Réu (Pago)
                                                 </Label>
                                                 <div className="relative">
-                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-semibold">R$</div>
                                                     <Input
                                                         id="project-advance"
                                                         type="number"

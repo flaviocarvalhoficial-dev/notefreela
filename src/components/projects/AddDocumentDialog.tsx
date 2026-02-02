@@ -40,11 +40,11 @@ export function AddDocumentDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="bg-card border border-border/40 max-w-[400px]">
                 <DialogHeader>
-                    <DialogTitle className="text-lg font-bold">Anexar {category.toUpperCase()}</DialogTitle>
+                    <DialogTitle className="text-lg font-semibold">Anexar {category.toUpperCase()}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        <Label className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/40">
                             Nome do Arquivo
                         </Label>
                         <Input
@@ -56,7 +56,7 @@ export function AddDocumentDialog({
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        <Label className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/40">
                             URL do Arquivo (Opcional)
                         </Label>
                         <Input
@@ -71,13 +71,13 @@ export function AddDocumentDialog({
                             type="button"
                             variant="ghost"
                             onClick={() => onOpenChange(false)}
-                            className="rounded-md font-bold text-xs uppercase tracking-widest"
+                            className="rounded-md font-semibold text-xs uppercase tracking-wider"
                         >
                             Cancelar
                         </Button>
                         <Button
                             type="submit"
-                            className="rounded-md font-bold text-xs uppercase tracking-widest bg-primary text-primary-foreground"
+                            className="rounded-md font-semibold text-xs uppercase tracking-wider bg-primary text-primary-foreground"
                         >
                             Anexar
                         </Button>
