@@ -51,6 +51,8 @@ export function SortableTaskItem({
         <div
             ref={setNodeRef}
             style={style}
+            id={task.id}
+            data-task-id={task.id}
             className={isDragging ? "opacity-40" : "opacity-100"}
             {...(!isEditing ? attributes : {})}
             {...(!isEditing ? listeners : {})}

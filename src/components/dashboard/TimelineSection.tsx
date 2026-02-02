@@ -339,26 +339,33 @@ export function TimelineSection({
                 return (
                   <Tooltip key={a.id}>
                     <TooltipTrigger asChild>
-                      <div className="absolute" style={{
-                        left: `${left + 3}px`,
-                        top: `${top + 10}px`,
-                        width: 'max-content',
-                        maxWidth: '400px', // Prevent infinite width
-                        height: 28,
-                        zIndex: 10
-                      }}>
+                      <div className="absolute cursor-pointer"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          // Default navigation logic
+                          // Don't stop propagation here to allow ContextMenu to potentially work if it relies on bubbling (usually capture though)
+                          // But prevent default might be needed?
+                          if (e.button === 0) { // Only Left Click
+                            console.log("Container Clicked:", a);
+                            if (a.type === 'task') {
+                              navigate(`/tarefas?taskId=${a.id}${a.project_id ? `&project=${a.project_id}` : ''}`);
+                            } else {
+                              setSelected(a);
+                            }
+                          }
+                        }}
+                        style={{
+                          left: `${left + 3}px`,
+                          top: `${top + 10}px`,
+                          width: 'max-content',
+                          maxWidth: '400px', // Prevent infinite width
+                          height: 28,
+                          zIndex: 50 // Increased z-index
+                        }}>
                         <ContextMenu>
                           <ContextMenuTrigger>
                             <div
-                              className="w-full h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex flex-col justify-center px-4 border border-white/5 relative overflow-hidden group shadow-sm bg-background/5"
-                              onClick={() => {
-                                if (a.project_id) {
-                                  navigate(`/tarefas?project=${a.project_id}`);
-                                } else {
-                                  // Fallback behavior if no project (e.g., personal task or unassigned)
-                                  setSelected(a);
-                                }
-                              }}
+                              className="w-full h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex flex-col justify-center px-4 border border-white/5 relative overflow-hidden group shadow-sm bg-background/5 pointer-events-auto z-20"
                               style={{
                                 boxShadow: "0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)"
                               }}
@@ -416,6 +423,6 @@ export function TimelineSection({
         } as any : null}
         onDelete={handleDelete}
       />
-    </motion.section>
+    </motion.section >
   );
 }

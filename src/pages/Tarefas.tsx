@@ -82,7 +82,35 @@ export default function Tarefas() {
         if (project) {
             setProjectFilter(project);
         }
-    }, [searchParams]);
+
+        const taskId = searchParams.get("taskId");
+        if (taskId && tasks.length > 0) {
+            const taskFound = tasks.find(t => t.id === taskId);
+            if (taskFound) {
+                console.log("Auto-scrolling to task:", taskId);
+                // setEditingId(taskId); // Disabled as per user request
+
+                // Remove taskId from URL
+                const newParams = new URLSearchParams(searchParams);
+                newParams.delete("taskId");
+                setSearchParams(newParams, { replace: true });
+
+                // Try to scroll to it
+                setTimeout(() => {
+                    // Try to find by multiple selectors/strategies
+                    const el = document.getElementById(taskId) ||
+                        document.querySelector(`[data-task-id="${taskId}"]`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+                        setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 2000);
+                    }
+                }, 800);
+            } else {
+                console.warn("Task ID form URL not found in loaded tasks:", taskId);
+            }
+        }
+    }, [searchParams, tasks]);
 
     const handleProjectFilterChange = (val: string) => {
         setProjectFilter(val);
