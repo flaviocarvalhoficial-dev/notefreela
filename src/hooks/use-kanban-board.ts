@@ -22,7 +22,7 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
     const { data: dbScenarios = [], isLoading: isLoadingScenarios } = useQuery({
         queryKey: ["kanban-scenarios", projectFilter],
         queryFn: async () => {
-            let query = supabase.from("kanban_scenarios").select("*").order("position");
+            let query = supabase.from("kanban_scenarios").select("*").order("created_at", { ascending: true });
 
             if (projectFilter !== "all") {
                 query = query.eq("project_id", projectFilter);
@@ -256,14 +256,88 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
         }
     });
 
-    const deleteScenarioMutation = useMutation({
-        mutationFn: async (id: string) => {
-            const { error } = await supabase.from("kanban_scenarios").delete().eq("id", id);
+    const updateScenarioMutation = useMutation({
+        mutationFn: async ({ id, ...patch }: any) => {
+            const { error } = await supabase.from("kanban_scenarios").update(patch).eq("id", id);
             if (error) throw error;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["kanban-scenarios", projectFilter] });
-            toast({ title: "Sucesso", description: "Seção removida." });
+        }
+    });
+
+    const deleteScenarioMutation = useMutation({
+        mutationFn: async (id: string) => {
+            // Attempt direct delete first (works if CASCADE is set)
+            const { error } = await supabase.from("kanban_scenarios").delete().eq("id", id);
+
+            // If foreign key violation (code 23503), perform manual cascade
+            if (error && error.code === '23503') {
+                console.log("Cascade delete trigger for scenario:", id);
+                // 1. Get associated columns
+                const { data: cols, error: fetchErr } = await supabase
+                    .from("kanban_columns")
+                    .select("id")
+                    .eq("scenario_id", id);
+
+                if (fetchErr) throw fetchErr;
+
+                const colIds = cols?.map(c => c.id) || [];
+
+                if (colIds.length > 0) {
+                    // 2. Delete tasks in those columns
+                    const { error: tasksErr } = await supabase
+                        .from("tasks")
+                        .delete()
+                        .in("column_id", colIds);
+                    if (tasksErr) throw tasksErr;
+
+                    // 3. Delete columns
+                    const { error: colsErr } = await supabase
+                        .from("kanban_columns")
+                        .delete()
+                        .eq("scenario_id", id);
+                    if (colsErr) throw colsErr;
+                }
+
+                // 4. Retry delete scenario
+                const { error: retryError } = await supabase
+                    .from("kanban_scenarios")
+                    .delete()
+                    .eq("id", id);
+                if (retryError) throw retryError;
+            } else if (error) {
+                throw error;
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["kanban-scenarios", projectFilter] });
+            // Also invalidate columns and tasks as we might have deleted them
+            queryClient.invalidateQueries({ queryKey: ["kanban-columns", projectFilter] });
+            queryClient.invalidateQueries({ queryKey: ["tasks"] });
+            toast({ title: "Sucesso", description: "Seção e seus itens removidos." });
+        },
+        onError: (error) => {
+            console.error("Failed to delete scenario:", error);
+            toast({
+                title: "Erro ao excluir",
+                description: `Não foi possível excluir a seção: ${error.message || "Erro desconhecido"}`,
+                variant: "destructive"
+            });
+        }
+    });
+
+    const deleteTaskMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase.from("tasks").delete().eq("id", id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["tasks"] });
+            toast({ title: "Tarefa removida" });
+        },
+        onError: (err) => {
+            toast({ title: "Erro ao excluir tarefa", description: err.message, variant: "destructive" });
         }
     });
 
@@ -278,9 +352,11 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
             updateTask: updateTaskMutation.mutate,
             moveTask: moveTaskMutation.mutate,
             createTask: createTaskMutation.mutate,
+            deleteTask: deleteTaskMutation.mutate,
             updateColumn: updateColumnMutation.mutate,
             createColumn: createColumnMutation.mutate,
             createScenario: createScenarioMutation.mutate,
+            updateScenario: updateScenarioMutation.mutate,
             deleteColumn: deleteColumnMutation.mutate,
             deleteScenario: deleteScenarioMutation.mutate
         }

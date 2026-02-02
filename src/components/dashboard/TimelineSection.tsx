@@ -169,49 +169,15 @@ export function TimelineSection({
     const filtered = (timelineActivities as TimelineActivity[]).filter(a => selectedProject === "all" || a.project_id === selectedProject || a.type !== "task");
     const sorted = [...filtered].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
-    const lanes: number[][] = [];
-    return sorted.map(a => {
-      // Force Day Boundaries to ensure items on the same day collide
-      const startOfDay = new Date(a.startDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      const start = startOfDay.getTime();
-
-      const endOfDay = new Date(a.startDate);
-      endOfDay.setDate(endOfDay.getDate() + a.durationDays);
-      endOfDay.setHours(0, 0, 0, 0); // Effectively the start of the next day
-      const end = endOfDay.getTime(); // Use strict boundary
-
-      // Find a lane where the last item ends BEFORE this item starts
-      // Using < instead of <= ensures that if an item ends at 00:00 of Day X,
-      // and new item starts at 00:00 of Day X, they COLLIDE (because Max(Lane) is End, not Start)
-      // Actually, if Max(Lane) is EndTime.
-      // If Prev ends at T. Curr starts at T.
-      // If T <= T, it fits.
-      // But we want to treat "Same Day" as overlap.
-      // If I force "End" to be "Start + 24h", and Start to be "Start 00:00".
-      // Then strict < means buffers needed.
-
-      let lane = lanes.findIndex(l => Math.max(...l) < start + 1000); // Add slight buffer to force separation
-
-      // Simpler logic: Just check if any existing item in lane overlaps
-      // But we are storing only 'max' end time for performance? 
-      // The current logic stores `l` as array of ends? No, `lanes` is `number[][]` (array of lanes, each having a list of end times?). Use a single max per lane is closer to standard logic.
-      // Actually, logic was: `Math.max(...l)` -> finds the latest end time in that lane.
-
-      if (lane === -1) {
-        lane = lanes.length;
-        lanes[lane] = [end];
-      } else {
-        lanes[lane].push(end);
-      }
-
-      return { ...a, lane };
-    });
+    // Simple Waterfall: One item per lane
+    return sorted.map((a, i) => ({ ...a, lane: i }));
   }, [timelineActivities, selectedProject]);
 
   const slotPx = DAY_WIDTH * zoom;
+  const totalHeight = Math.max(positionedActivities.length * LANE_HEIGHT, 300);
 
   const monthsInTrack = useMemo(() => {
+    // ... existing month calc ...
     const months: { label: string, width: number }[] = [];
     let currentMonth = "";
     let currentWidth = 0;
@@ -231,6 +197,10 @@ export function TimelineSection({
   }, [daysInRange, slotPx]);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Only drag horizontally if we are not interacting with main scroll
+    // But here we want 2D scrolling? Or just horizontal?
+    // User requested "one line per task", implying vertical list.
+    // Let's keep existing drag for Horizontal, but allow native Vertical scroll.
     if (e.button !== 0) return;
     dragRef.current = { active: true, startClientX: e.clientX, startScrollLeft: viewportRef.current?.scrollLeft || 0 };
     setIsDragging(true);
@@ -264,6 +234,7 @@ export function TimelineSection({
       transition={{ duration: 0.35 }}
     >
       <header className="p-4 border-b border-border/40 flex items-center justify-between shrink-0">
+        {/* ... (Existing header content) ... */}
         <div className="flex items-center gap-4">
           <h2 className="text-[10px] font-bold text-muted-foreground/30 leading-none">Cronograma</h2>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -302,22 +273,20 @@ export function TimelineSection({
               {projectsCollapsed ? <Maximize2 className="h-3.5 w-3.5" /> : <Minimize2 className="h-3.5 w-3.5" />}
             </Button>
           )}
-
-
         </div>
       </header>
 
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="timeline-viewport flex-1 select-none scrollbar-hide"
+      <div className="flex-1 overflow-hidden flex flex-col relative">
+        <div className="timeline-viewport flex-1 select-none overflow-auto custom-scrollbar"
           ref={viewportRef}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
           onPointerLeave={endDrag}>
-          <div className="min-w-max relative flex flex-col h-full bg-background/50">
+          <div className="min-w-max relative flex flex-col bg-background/50" style={{ height: totalHeight + 100 }}>
             {/* Header X-Axis */}
-            <div className="sticky top-0 z-50 bg-background border-b border-border/20">
+            <div className="sticky top-0 z-50 bg-background border-b border-border/20 shadow-sm">
               {/* Months Row */}
               <div className="flex">
                 {monthsInTrack.map((m, idx) => (
