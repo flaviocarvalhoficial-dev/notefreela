@@ -98,8 +98,10 @@ export function EditableTaskCard({
   onStartEdit,
   onCancelEdit,
   onSave,
+  onDelete,
   accentColor,
-  projects = [], // List of projects for selection
+  projects = [],
+  variant = 'card',
 }: {
   task: EditableTask;
   isOverlay?: boolean;
@@ -107,8 +109,10 @@ export function EditableTaskCard({
   onStartEdit?: () => void;
   onCancelEdit?: () => void;
   onSave?: (values: EditTaskValues) => void;
+  onDelete?: () => void;
   accentColor?: string;
   projects?: { id: string, name: string }[];
+  variant?: 'card' | 'minimal';
 }) {
   const form = useForm<EditTaskValues>({
     resolver: zodResolver(EditTaskSchema),
@@ -138,22 +142,29 @@ export function EditableTaskCard({
   const [newTagName, setNewTagName] = React.useState("");
 
   function submit(values: EditTaskValues) {
+    console.log("Submitting task values:", values);
     onSave?.(values);
   }
 
-  const rootClass = isOverlay
-    ? "glass rounded-2xl p-4 shadow-hover"
-    : "glass-light rounded-xl p-4 transition-all duration-200 hover:bg-muted/20 border border-transparent hover:border-border/50";
+  function onError(errors: any) {
+    console.error("Task validation errors:", errors);
+  }
+
+  const rootClass = variant === 'minimal'
+    ? "group bg-transparent px-0 py-1 transition-all duration-200"
+    : (isOverlay
+      ? "glass rounded-2xl p-4 shadow-hover"
+      : "glass-light rounded-xl p-4 transition-all duration-200 hover:bg-muted/20 border border-transparent hover:border-border/50");
 
   return (
     <div
       className={cn(rootClass, "flex flex-col gap-2 relative overflow-hidden transition-all duration-300")}
       onClick={!isEditing ? onStartEdit : undefined}
       style={{
-        borderColor: accentColor ? `${accentColor}40` : undefined,
-        backgroundColor: accentColor || undefined,
-        boxShadow: accentColor ? `0 2px 10px -5px ${accentColor}20` : undefined,
-        padding: isEditing ? '0.75rem' : '0.75rem' // p-3
+        borderColor: variant === 'minimal' ? 'transparent' : (accentColor ? `${accentColor}40` : undefined),
+        backgroundColor: variant === 'minimal' ? 'transparent' : (accentColor || undefined),
+        boxShadow: variant === 'minimal' ? 'none' : (accentColor ? `0 2px 10px -5px ${accentColor}20` : undefined),
+        padding: variant === 'minimal' ? '0' : (isEditing ? '1rem' : '1rem')
       }}
     >
       {/* Header / Title Area */}
@@ -162,20 +173,27 @@ export function EditableTaskCard({
           {!isEditing ? (
             <>
               <p
-                className="text-xs font-semibold leading-snug truncate"
-                style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
+                className={cn(
+                  "text-xs font-semibold leading-snug truncate",
+                  task.progress === 100 && variant === 'minimal' && "line-through text-muted-foreground decoration-muted-foreground/50 font-normal"
+                )}
+                style={{
+                  color: variant === 'card' && accentColor ? getContrastColor(accentColor) : undefined
+                }}
               >
                 {task.title}
               </p>
-              <p
-                className="text-[9px] text-muted-foreground mt-0.5 truncate font-medium opacity-60"
-                style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
-              >
-                {task.project || "Sem Projeto"}
-              </p>
+              {variant === 'card' && (
+                <p
+                  className="text-[9px] text-muted-foreground mt-0.5 truncate font-medium opacity-60"
+                  style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
+                >
+                  {task.project || "Sem Projeto"}
+                </p>
+              )}
             </>
           ) : (
-            <form onSubmit={form.handleSubmit(submit)} className="w-full space-y-3" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={form.handleSubmit(submit, onError)} className="w-full space-y-3" onClick={(e) => e.stopPropagation()}>
               {/* Controls Bar - Compact */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1">
@@ -456,7 +474,7 @@ export function EditableTaskCard({
           )}
         </div>
 
-        {!isEditing && (
+        {!isEditing && variant === 'card' && (
           <Badge
             variant="outline"
             className="bg-transparent border-transparent text-[9px] font-semibold px-1 py-0 h-5 shrink-0 opacity-70"
@@ -467,50 +485,97 @@ export function EditableTaskCard({
             {priorityLabel[task.priority]}
           </Badge>
         )}
-      </div>
 
-      {!isEditing && (
-        <>
-          <div className="space-y-1.5">
-            <div
-              className="flex items-center justify-between text-[10px] font-medium text-muted-foreground"
-              style={{ color: accentColor ? getContrastColor(accentColor) : undefined, opacity: 0.7 }}
-            >
-              <span className="font-medium">Progresso</span>
-              <span>{task.progress}%</span>
-            </div>
-            <Progress value={task.progress} className="h-1 bg-black/5" />
-          </div>
-
-          <div
-            className="flex items-center justify-between mt-auto pt-2 border-t border-black/5"
-            style={{ borderColor: accentColor ? 'rgba(0,0,0,0.05)' : undefined }}
-          >
-            <div className="flex items-center gap-3">
-              {task.due && (
-                <div className="flex items-center gap-1.5 text-xs font-medium opacity-70" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
-                  <CalendarIcon className="h-3.5 w-3.5" />
-                  <span>{formatDue(task.due)}</span>
-                </div>
-              )}
-              {task.assignee && (
-                <div className="flex items-center gap-1.5 text-xs font-medium opacity-70" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
-                  <User className="h-3.5 w-3.5" />
-                  <span>{task.assignee.split(' ')[0]}</span>
-                </div>
-              )}
-            </div>
-
+        {!isEditing && variant === 'minimal' && (
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
-              onClick={onStartEdit}
+              className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-40 hover:opacity-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartEdit?.();
+              }}
             >
               <Pencil className="h-3 w-3" />
             </Button>
           </div>
+        )}
+      </div>
+
+      {!isEditing && (
+        <>
+          {variant === 'card' && (
+            <>
+              <div className="space-y-1.5">
+                <div
+                  className="flex items-center justify-between text-[10px] font-medium text-muted-foreground"
+                  style={{ color: accentColor ? getContrastColor(accentColor) : undefined, opacity: 0.7 }}
+                >
+                  <span className="font-medium">Progresso</span>
+                  <span>{task.progress}%</span>
+                </div>
+                <Progress value={task.progress} className="h-1 bg-black/5" />
+              </div>
+
+              <div
+                className="flex items-center justify-between mt-auto pt-2 border-t border-black/5"
+                style={{ borderColor: accentColor ? 'rgba(0,0,0,0.05)' : undefined }}
+              >
+                <div className="flex items-center gap-3">
+                  {task.due && (
+                    <div className="flex items-center gap-1.5 text-xs font-medium opacity-70" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      <span>{formatDue(task.due)}</span>
+                    </div>
+                  )}
+                  {task.assignee && (
+                    <div className="flex items-center gap-1.5 text-xs font-medium opacity-70" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
+                      <User className="h-3.5 w-3.5" />
+                      <span>{task.assignee.split(' ')[0]}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete?.();
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStartEdit?.();
+                    }}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

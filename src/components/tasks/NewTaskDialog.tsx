@@ -61,6 +61,7 @@ const NewTaskSchema = z.object({
     .or(z.literal("")),
   startTime: z.string().optional().or(z.literal("")),
   endTime: z.string().optional().or(z.literal("")),
+  progress: z.number().min(0).max(100).optional().default(0),
 });
 
 export type NewTaskValues = z.infer<typeof NewTaskSchema>;
@@ -158,7 +159,7 @@ export function NewTaskDialog({
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="glass border-border/50 z-50">
+                      <SelectContent className="bg-popover text-popover-foreground border-border/50 z-[200] shadow-xl">
                         {projects.map((p) => (
                           <SelectItem key={p.id} value={p.id}>
                             {p.name}
@@ -183,7 +184,7 @@ export function NewTaskDialog({
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="glass border-border/50 z-50">
+                      <SelectContent className="bg-popover text-popover-foreground border-border/50 z-[200] shadow-xl">
                         {priorities.map((p) => (
                           <SelectItem key={p.value} value={p.value}>
                             {p.label}
@@ -220,7 +221,7 @@ export function NewTaskDialog({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="glass border-border/50 w-auto p-0" align="start">
+                      <PopoverContent className="bg-popover text-popover-foreground border-border/50 w-auto p-0 shadow-xl z-[200]" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value}

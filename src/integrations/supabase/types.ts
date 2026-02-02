@@ -135,6 +135,139 @@ export type Database = {
                 }
                 Relationships: []
             }
+            kanban_scenarios: {
+                Row: {
+                    created_at: string
+                    id: string
+                    position: number
+                    project_id: string
+                    title: string
+                    type: "kanban" | "checklist"
+                    user_id: string
+                }
+                Insert: {
+                    created_at?: string
+                    id?: string
+                    position?: number
+                    project_id: string
+                    title: string
+                    type: "kanban" | "checklist"
+                    user_id?: string
+                }
+                Update: {
+                    created_at?: string
+                    id?: string
+                    position?: number
+                    project_id?: string
+                    title?: string
+                    type?: "kanban" | "checklist"
+                    user_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "kanban_scenarios_project_id_fkey"
+                        columns: ["project_id"]
+                        isOneToOne: false
+                        referencedRelation: "projects"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            kanban_columns: {
+                Row: {
+                    color: string | null
+                    created_at: string
+                    hint: string | null
+                    id: string
+                    position: number
+                    project_id: string | null
+                    scenario_id: string | null
+                    title: string
+                    user_id: string
+                }
+                Insert: {
+                    color?: string | null
+                    created_at?: string
+                    hint?: string | null
+                    id?: string
+                    position?: number
+                    project_id?: string | null
+                    scenario_id?: string | null
+                    title: string
+                    user_id: string
+                }
+                Update: {
+                    color?: string | null
+                    created_at?: string
+                    hint?: string | null
+                    id?: string
+                    position?: number
+                    project_id?: string | null
+                    scenario_id?: string | null
+                    title?: string
+                    user_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "kanban_columns_project_id_fkey"
+                        columns: ["project_id"]
+                        isOneToOne: false
+                        referencedRelation: "projects"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "kanban_columns_scenario_id_fkey"
+                        columns: ["scenario_id"]
+                        isOneToOne: false
+                        referencedRelation: "kanban_scenarios"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            inbox: {
+                Row: {
+                    category: string | null
+                    content: string
+                    created_at: string
+                    id: string
+                    project_id: string | null
+                    tags: string[] | null
+                    title: string | null
+                    type: string | null
+                    user_id: string
+                }
+                Insert: {
+                    category?: string | null
+                    content: string
+                    created_at?: string
+                    id?: string
+                    project_id?: string | null
+                    tags?: string[] | null
+                    title?: string | null
+                    type?: string | null
+                    user_id: string
+                }
+                Update: {
+                    category?: string | null
+                    content?: string
+                    created_at?: string
+                    id?: string
+                    project_id?: string | null
+                    tags?: string[] | null
+                    title?: string | null
+                    type?: string | null
+                    user_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "inbox_project_id_fkey"
+                        columns: ["project_id"]
+                        isOneToOne: false
+                        referencedRelation: "projects"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             tasks: {
                 Row: {
                     assignee: string | null
@@ -180,6 +313,85 @@ export type Database = {
                         referencedRelation: "projects"
                         referencedColumns: ["id"]
                     },
+                ]
+            }
+            project_costs: {
+                Row: {
+                    amount: number
+                    category: string
+                    created_at: string
+                    date: string
+                    id: string
+                    project_id: string | null
+                    title: string
+                    user_id: string
+                }
+                Insert: {
+                    amount: number
+                    category: string
+                    created_at?: string
+                    date: string
+                    id?: string
+                    project_id?: string | null
+                    title: string
+                    user_id: string
+                }
+                Update: {
+                    amount?: number
+                    category?: string
+                    created_at?: string
+                    date?: string
+                    id?: string
+                    project_id?: string | null
+                    title?: string
+                    user_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "project_costs_project_id_fkey"
+                        columns: ["project_id"]
+                        isOneToOne: false
+                        referencedRelation: "projects"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            project_documents: {
+                Row: {
+                    category: string
+                    created_at: string
+                    file_url: string
+                    id: string
+                    name: string
+                    project_id: string
+                    user_id: string
+                }
+                Insert: {
+                    category: string
+                    created_at?: string
+                    file_url: string
+                    id?: string
+                    name: string
+                    project_id: string
+                    user_id: string
+                }
+                Update: {
+                    category?: string
+                    created_at?: string
+                    file_url?: string
+                    id?: string
+                    name?: string
+                    project_id?: string
+                    user_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "project_documents_project_id_fkey"
+                        columns: ["project_id"]
+                        isOneToOne: false
+                        referencedRelation: "projects"
+                        referencedColumns: ["id"]
+                    }
                 ]
             }
         }

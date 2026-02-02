@@ -19,11 +19,22 @@ import {
     Loader2,
     Type,
     Copy,
-    ExternalLink
+    ExternalLink,
+    Briefcase,
+    LayoutGrid,
+    List
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -38,6 +49,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -52,6 +64,8 @@ interface InboxItem {
     type: 'idea' | 'prompt' | 'snippet' | 'note';
     category: string;
     tags: string[];
+    project_id: string | null;
+    projects?: { name: string } | null;
 }
 
 const CaixaEntrada = () => {
@@ -59,10 +73,18 @@ const CaixaEntrada = () => {
     const queryClient = useQueryClient();
     const [searchParams, setSearchParams] = useSearchParams();
     const urlType = searchParams.get("type");
+    const projectFilter = searchParams.get("project");
 
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedType, setSelectedType] = useState<string>(urlType || "all");
     const [isAdding, setIsAdding] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+        return (localStorage.getItem("inbox_view_mode") as 'grid' | 'list') || 'grid';
+    });
+
+    useEffect(() => {
+        localStorage.setItem("inbox_view_mode", viewMode);
+    }, [viewMode]);
 
     // Sincroniza o estado quando a URL muda (clique no sidebar)
     useEffect(() => {
@@ -81,17 +103,30 @@ const CaixaEntrada = () => {
     const [newContent, setNewContent] = useState("");
     const [newType, setNewType] = useState<'idea' | 'prompt' | 'snippet' | 'note'>('idea');
     const [newTags, setNewTags] = useState("");
+    const [newProjectId, setNewProjectId] = useState<string | null>(projectFilter);
 
     const { data: items = [], isLoading } = useQuery({
         queryKey: ["inbox"],
         queryFn: async () => {
             const { data, error } = await (supabase as any)
                 .from("inbox")
-                .select("*")
+                .select("*, projects(name)")
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
             return (data || []) as InboxItem[];
+        }
+    });
+
+    const { data: projects = [] } = useQuery({
+        queryKey: ["projects"],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("projects")
+                .select("id, name")
+                .order("name");
+            if (error) throw error;
+            return data || [];
         }
     });
 
@@ -106,7 +141,8 @@ const CaixaEntrada = () => {
                 category: newCategory,
                 content: newContent,
                 type: newType,
-                tags: newTags.split(",").map(t => t.trim()).filter(t => t !== "")
+                tags: newTags.split(",").map(t => t.trim()).filter(t => t !== ""),
+                project_id: newProjectId
             });
 
             if (error) throw error;
@@ -121,6 +157,7 @@ const CaixaEntrada = () => {
             setNewContent("");
             setNewType("idea");
             setNewTags("");
+            setNewProjectId(projectFilter);
         },
         onError: (error: any) => {
             toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -148,7 +185,8 @@ const CaixaEntrada = () => {
                     category: updatedItem.category,
                     content: updatedItem.content,
                     type: updatedItem.type,
-                    tags: updatedItem.tags
+                    tags: updatedItem.tags,
+                    project_id: updatedItem.project_id
                 })
                 .eq("id", updatedItem.id);
 
@@ -235,8 +273,9 @@ const CaixaEntrada = () => {
             item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
         const matchesType = selectedType === "all" || item.type === selectedType;
+        const matchesProject = !projectFilter || item.project_id === projectFilter;
 
-        return matchesSearch && matchesType;
+        return matchesSearch && matchesType && matchesProject;
     });
 
     const getTypeIcon = (type: string) => {
@@ -254,7 +293,7 @@ const CaixaEntrada = () => {
             case 'idea': return "text-amber-500 bg-amber-500/10";
             case 'prompt': return "text-emerald-500 bg-emerald-500/10";
             case 'snippet': return "text-blue-500 bg-blue-500/10";
-            case 'note': return "text-purple-500 bg-purple-500/10";
+            case 'note': return "text-indigo-500 bg-indigo-500/10";
             default: return "text-muted-foreground bg-muted";
         }
     };
@@ -278,53 +317,94 @@ const CaixaEntrada = () => {
 
             <div className="flex flex-col gap-6">
                 <div className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="relative w-full md:max-w-xs">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-muted/5 p-4 rounded-2xl border border-border/20 backdrop-blur-sm">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                             <Input
-                                placeholder="Procurar..."
-                                className="pl-9 glass-light h-10"
+                                placeholder="Pesquisar em suas capturas..."
+                                className="pl-10 glass-light border-border/40 focus:border-primary/40 h-10 w-full"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
 
-                        <div className="flex-1 flex items-center justify-between gap-6 overflow-hidden">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/20 border border-border/20 overflow-x-auto scrollbar-hide">
-                                <div className="flex flex-col items-center px-4 border-r border-border/40">
-                                    <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">Total</span>
-                                    <span className="text-xs font-semibold">{items.length}</span>
-                                </div>
-                                <div className="flex flex-col items-center px-4 border-r border-border/40">
-                                    <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest text-amber-500/40">Ideias</span>
-                                    <span className="text-xs font-semibold">{items.filter(i => i.type === 'idea').length}</span>
-                                </div>
-                                <div className="flex flex-col items-center px-4">
-                                    <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest text-emerald-500/40">Prompts</span>
-                                    <span className="text-xs font-semibold">{items.filter(i => i.type === 'prompt').length}</span>
+                        <div className="flex flex-wrap items-center gap-4">
+                            {/* Stats Compacto - Opcional, mostra apenas se não estiver filtrando */}
+                            <div className="hidden xl:flex items-center gap-4 pr-4 border-r border-border/20">
+                                <div className="flex flex-col">
+                                    <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">Capturas</span>
+                                    <span className="text-xs font-semibold">{filteredItems.length}</span>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
-                                {['all', 'idea', 'prompt', 'snippet', 'note'].map((type) => (
-                                    <Button
-                                        key={type}
-                                        variant={selectedType === type ? "default" : "outline"}
-                                        size="sm"
-                                        onClick={() => setSelectedType(type)}
-                                        className={cn(
-                                            "rounded-full text-[9px] font-bold uppercase tracking-wider h-7 px-4",
-                                            selectedType === type
-                                                ? "bg-primary text-white shadow-glow-sm"
-                                                : "glass-light hover:bg-muted/50 border-border/20"
-                                        )}
-                                    >
-                                        {type === 'all' ? 'Tudo' :
-                                            type === 'idea' ? 'Ideias' :
-                                                type === 'prompt' ? 'Prompts' :
-                                                    type === 'snippet' ? 'Fragmentos' : 'Notas'}
-                                    </Button>
-                                ))}
+                            {/* Filtro de Projetos */}
+                            <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest ml-1">Projeto</span>
+                                <Select
+                                    value={projectFilter || "all"}
+                                    onValueChange={(val) => {
+                                        const params = new URLSearchParams(searchParams);
+                                        if (val === "all") params.delete("project");
+                                        else params.set("project", val);
+                                        setSearchParams(params);
+                                    }}
+                                >
+                                    <SelectTrigger className="glass-light h-10 w-[180px] border-border/40 shadow-sm">
+                                        <Briefcase className="h-3.5 w-3.5 mr-2 text-muted-foreground/40" />
+                                        <SelectValue placeholder="Todos os Projetos" />
+                                    </SelectTrigger>
+                                    <SelectContent className="glass border-border/40">
+                                        <SelectItem value="all">Todos os Projetos</SelectItem>
+                                        <Separator className="my-1 opacity-10" />
+                                        {projects.map((p: any) => (
+                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Filtro de Tipos */}
+                            <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest ml-1">Tipo</span>
+                                <Select value={selectedType} onValueChange={(val) => {
+                                    const params = new URLSearchParams(searchParams);
+                                    if (val === "all") params.delete("type");
+                                    else params.set("type", val);
+                                    setSearchParams(params);
+                                    setSelectedType(val);
+                                }}>
+                                    <SelectTrigger className="glass-light h-10 w-[140px] border-border/40 shadow-sm">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="glass border-border/40">
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        <Separator className="my-1 opacity-10" />
+                                        <SelectItem value="idea">💡 Ideias</SelectItem>
+                                        <SelectItem value="prompt">💻 Prompts</SelectItem>
+                                        <SelectItem value="snippet">📄 Fragmentos</SelectItem>
+                                        <SelectItem value="note">📝 Notas</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Toggle Visualização */}
+                            <div className="flex items-center gap-1 bg-background/50 p-1 rounded-lg border border-border/20 ml-auto lg:ml-0">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn("h-8 w-8 rounded-md transition-all", viewMode === 'grid' ? "bg-primary/20 text-primary shadow-sm" : "text-muted-foreground")}
+                                    onClick={() => setViewMode('grid')}
+                                >
+                                    <LayoutGrid className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn("h-8 w-8 rounded-md transition-all", viewMode === 'list' ? "bg-primary/20 text-primary shadow-sm" : "text-muted-foreground")}
+                                    onClick={() => setViewMode('list')}
+                                >
+                                    <List className="h-3.5 w-3.5" />
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -394,6 +474,26 @@ const CaixaEntrada = () => {
                                         </div>
                                     </div>
 
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs opacity-60">Vincular Projeto</Label>
+                                            <Select
+                                                value={newProjectId || "none"}
+                                                onValueChange={(val: string) => setNewProjectId(val === "none" ? null : val)}
+                                            >
+                                                <SelectTrigger className="glass-light h-9 text-sm">
+                                                    <SelectValue placeholder="Selecione um projeto..." />
+                                                </SelectTrigger>
+                                                <SelectContent className="glass">
+                                                    <SelectItem value="none">Nenhum projeto específico</SelectItem>
+                                                    {projects.map((p: any) => (
+                                                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
                                         <Label className="text-xs opacity-60">Conteúdo</Label>
                                         <Textarea
@@ -433,7 +533,7 @@ const CaixaEntrada = () => {
                                 <Type className="h-5 w-5 text-primary" />
                             </div>
                             <p className="text-xs text-muted-foreground leading-relaxed italic pr-8">
-                                "Sua mente é para ter ideias, não para guardá-las." Use a Caixa de Entrada para liberar sua memória de trabalho e focar na execução.
+                                "Sua mente é para ter ideias, não para guardá-las." Use a Caixa de Entrada para liberar sua memória de trabalho.
                             </p>
                             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
                                 <X className="h-4 w-4" />
@@ -450,7 +550,12 @@ const CaixaEntrada = () => {
                                 <p className="text-sm text-muted-foreground/60">Sua caixa de entrada está limpa. Comece a capturar ideias!</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-fr">
+                            <div className={cn(
+                                "gap-4 auto-rows-fr",
+                                viewMode === 'grid'
+                                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+                                    : "flex flex-col"
+                            )}>
                                 {filteredItems.map((item) => (
                                     <motion.div
                                         layout
@@ -460,86 +565,114 @@ const CaixaEntrada = () => {
                                         transition={{ duration: 0.2 }}
                                         key={item.id}
                                         onClick={() => setViewingItem(item)}
-                                        className="bento-card group hover:border-primary/30 transition-all p-5 flex flex-col justify-between cursor-pointer"
+                                        className={cn(
+                                            "bento-card group hover:border-primary/30 transition-all cursor-pointer",
+                                            viewMode === 'grid' ? "p-5 flex flex-col justify-between" : "p-3 flex items-center justify-between"
+                                        )}
                                     >
-                                        <div className="space-y-4">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={cn("p-2 rounded-lg shrink-0", getTypeColor(item.type))}>
-                                                        {getTypeIcon(item.type)}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <h3 className="font-semibold text-foreground tracking-tight text-sm truncate max-w-[120px]">
-                                                            {item.title || "Captura"}
-                                                        </h3>
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <p className="text-[10px] text-muted-foreground font-medium leading-none">
-                                                                {format(new Date(item.created_at), "dd/MM/yy", { locale: ptBR })}
-                                                            </p>
-                                                            {item.category && (
-                                                                <span className="text-[9px] text-primary/70 font-medium truncate max-w-[80px]">
-                                                                    {item.category}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                        <div className={cn("flex min-w-0", viewMode === 'grid' ? "flex-col gap-4" : "flex-row items-center gap-4 flex-1")}>
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className={cn("p-2 rounded-lg shrink-0", getTypeColor(item.type))}>
+                                                    {getTypeIcon(item.type)}
                                                 </div>
-
-                                                <div className="flex items-center gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
-                                                        onClick={(e) => handleCopy(e, item.content)}
-                                                        title="Copiar conteúdo"
-                                                    >
-                                                        <Copy className="h-3.5 w-3.5" />
-                                                    </Button>
-
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                                                <MoreVertical className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="glass border-border/50">
-                                                            <DropdownMenuItem
-                                                                className="gap-2 cursor-pointer"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setEditingItem(item);
-                                                                }}
-                                                            >
-                                                                <Edit className="h-4 w-4" /> Editar
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                className="text-destructive focus:text-destructive gap-2 cursor-pointer"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    deleteItemMutation.mutate(item.id);
-                                                                }}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" /> Excluir
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="font-semibold text-foreground tracking-tight text-sm truncate max-w-[200px]">
+                                                        {item.title || "Captura"}
+                                                    </h3>
+                                                    <div className={cn("flex", viewMode === 'grid' ? "flex-col gap-0.5" : "flex-row items-center gap-3")}>
+                                                        <p className="text-[10px] text-muted-foreground font-medium leading-none">
+                                                            {format(new Date(item.created_at), "dd/MM/yy", { locale: ptBR })}
+                                                        </p>
+                                                        {item.category && (
+                                                            <span className="text-[9px] text-primary/70 font-medium truncate max-w-[80px]">
+                                                                {item.category}
+                                                            </span>
+                                                        )}
+                                                        {item.projects?.name && (
+                                                            <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-medium">
+                                                                <Briefcase className="h-2 w-2" />
+                                                                <span className="truncate max-w-[100px]">{item.projects.name}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-[8] leading-relaxed bg-muted/5 p-3 rounded-lg border border-border/10 group-hover:bg-muted/10 transition-colors h-full min-h-[100px]">
-                                                {item.content}
-                                            </div>
+                                            {viewMode === 'list' && (
+                                                <p className="text-[11px] text-muted-foreground/60 line-clamp-1 flex-1 px-4 border-l border-border/10">
+                                                    {item.content}
+                                                </p>
+                                            )}
+
+                                            {viewMode === 'list' && item.tags.length > 0 && (
+                                                <div className="flex gap-1 ml-auto mr-4">
+                                                    {item.tags.slice(0, 2).map((tag, idx) => (
+                                                        <Badge key={idx} variant="outline" className="text-[8px] h-4 border-border/40 px-1 opacity-40">
+                                                            #{tag}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <div className="mt-4 flex flex-wrap gap-1.5 pt-3 border-t border-border/10">
-                                            {(item.tags || []).map((tag, idx) => (
-                                                <Badge key={idx} variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-background/50 border-border/50 text-muted-foreground hover:bg-primary/5 cursor-default truncate max-w-[80px] font-semibold">
-                                                    #{tag}
-                                                </Badge>
-                                            ))}
-                                            {(!item.tags || item.tags.length === 0) && (
-                                                <span className="text-[9px] text-muted-foreground italic">Sem tags</span>
-                                            )}
+                                        {viewMode === 'grid' && (
+                                            <>
+                                                <div className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-[6] leading-relaxed bg-muted/5 p-3 rounded-lg border border-border/10 group-hover:bg-muted/10 transition-colors my-4">
+                                                    {item.content}
+                                                </div>
+                                                <div className="flex flex-wrap gap-1 mb-4">
+                                                    {(item.tags || []).slice(0, 4).map((tag, idx) => (
+                                                        <Badge key={idx} variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-background/50 border-border/50 text-muted-foreground hover:bg-primary/5 cursor-default font-semibold">
+                                                            #{tag}
+                                                        </Badge>
+                                                    ))}
+                                                    {item.tags.length > 4 && (
+                                                        <span className="text-[8px] text-muted-foreground">+{item.tags.length - 4}</span>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+                                                    onClick={(e) => handleCopy(e, item.content)}
+                                                    title="Copiar conteúdo"
+                                                >
+                                                    <Copy className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </div>
+
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="glass border-border/50">
+                                                    <DropdownMenuItem
+                                                        className="gap-2 cursor-pointer"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingItem(item);
+                                                        }}
+                                                    >
+                                                        <Edit className="h-3.5 w-3.5" /> Editar
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        className="gap-2 text-destructive cursor-pointer"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            deleteItemMutation.mutate(item.id);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" /> Excluir
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -547,191 +680,191 @@ const CaixaEntrada = () => {
                         )}
                     </div>
                 </div>
+            </div>
 
-                {/* Edit Item Modal */}
-                <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
-                    <DialogContent className="border-border/50 max-w-xl">
-                        <DialogHeader>
-                            <DialogTitle>Editar Registro</DialogTitle>
-                        </DialogHeader>
-                        {editingItem && (
-                            <div className="space-y-4 pt-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-60">Título</Label>
-                                        <Input
-                                            value={editingItem.title}
-                                            onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                                            className="glass-light"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-60">Tipo</Label>
-                                        <div className="flex gap-2">
-                                            {['idea', 'prompt', 'snippet', 'note'].map((t) => (
-                                                <button
-                                                    key={t}
-                                                    type="button"
-                                                    onClick={() => setEditingItem({ ...editingItem, type: t as any })}
-                                                    className={cn(
-                                                        "p-2 rounded-md transition-all border",
-                                                        editingItem.type === t
-                                                            ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
-                                                            : "border-border/50 hover:border-border text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {getTypeIcon(t)}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-60">Categoria</Label>
-                                        <Input
-                                            value={editingItem.category || ""}
-                                            onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                                            className="glass-light"
-                                            placeholder="ex: Trabalho, Estudo..."
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-60">Tags (Separadas por vírgula)</Label>
-                                        <Input
-                                            value={editingItem.tags.join(", ")}
-                                            onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map(t => t.trim()) })}
-                                            className="glass-light"
-                                        />
-                                    </div>
-                                </div>
-
+            {/* Edit Item Modal */}
+            <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+                <DialogContent className="border-border/50 max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Editar Registro</DialogTitle>
+                    </DialogHeader>
+                    {editingItem && (
+                        <div className="space-y-4 pt-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label className="text-xs opacity-60">Conteúdo</Label>
-                                    <Textarea
-                                        className="min-h-[150px] glass-light"
-                                        value={editingItem.content}
-                                        onChange={(e) => setEditingItem({ ...editingItem, content: e.target.value })}
+                                    <Label className="text-xs opacity-60">Título</Label>
+                                    <Input
+                                        value={editingItem.title}
+                                        onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                                        className="glass-light"
                                     />
                                 </div>
-
-
-
-                                <DialogFooter className="pt-4">
-                                    <Button variant="ghost" onClick={() => setEditingItem(null)}>Cancelar</Button>
-                                    <Button
-                                        className="btn-gradient"
-                                        onClick={() => updateItemMutation.mutate(editingItem)}
-                                        disabled={updateItemMutation.isPending}
-                                    >
-                                        {updateItemMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
-                                    </Button>
-                                </DialogFooter>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
-
-                {/* View Item Details Modal */}
-                <Dialog open={!!viewingItem} onOpenChange={(open) => !open && setViewingItem(null)}>
-                    <DialogContent className="border-border/50 max-w-2xl bg-sidebar/95 backdrop-blur-xl">
-                        <DialogHeader>
-                            <div className="flex items-center gap-3 mb-2">
-                                {viewingItem && (
-                                    <div className={cn("p-2 rounded-lg", getTypeColor(viewingItem.type))}>
-                                        {getTypeIcon(viewingItem.type)}
-                                    </div>
-                                )}
-                                <div>
-                                    <DialogTitle className="text-xl flex items-center gap-2">
-                                        {viewingItem?.title || "Detalhes do Registro"}
-                                        {viewingItem?.category && (
-                                            <Badge variant="secondary" className="text-[9px] font-semibold bg-primary/10 text-primary border-none">
-                                                {viewingItem.category}
-                                            </Badge>
-                                        )}
-                                    </DialogTitle>
-                                    <p className="text-[10px] text-muted-foreground font-medium">
-                                        {viewingItem && format(new Date(viewingItem.created_at), "PPPP", { locale: ptBR })}
-                                    </p>
-                                </div>
-                            </div>
-                        </DialogHeader>
-
-                        {viewingItem && (
-                            <div className="space-y-6 pt-2">
-                                <div className="relative group">
-                                    <div className="absolute right-4 top-4 z-10">
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            className="h-8 gap-2 bg-background/50 hover:bg-background/80"
-                                            onClick={(e) => handleCopy(e, viewingItem.content)}
-                                        >
-                                            <Copy className="h-3.5 w-3.5" /> Copiar Tudo
-                                        </Button>
-                                    </div>
-                                    <div className="bg-muted/30 p-6 rounded-xl border border-border/20 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                                        <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono">
-                                            {viewingItem.content}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2 pt-2">
-                                    {(viewingItem.tags || []).map((tag, idx) => (
-                                        <Badge key={idx} variant="outline" className="text-[11px] px-3 py-0.5 bg-primary/5 border-primary/20 text-primary">
-                                            #{tag}
-                                        </Badge>
-                                    ))}
-                                </div>
-
-                                <div className="flex justify-between items-center pt-4 border-t border-border/10">
+                                <div className="space-y-2">
+                                    <Label className="text-xs opacity-60">Tipo</Label>
                                     <div className="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 gap-2"
-                                            onClick={() => {
-                                                setViewingItem(null);
-                                                setEditingItem(viewingItem);
-                                            }}
-                                        >
-                                            <Edit className="h-3.5 w-3.5" /> Editar
-                                        </Button>
+                                        {['idea', 'prompt', 'snippet', 'note'].map((t) => (
+                                            <button
+                                                key={t}
+                                                type="button"
+                                                onClick={() => setEditingItem({ ...editingItem, type: t as any })}
+                                                className={cn(
+                                                    "p-2 rounded-md transition-all border",
+                                                    editingItem.type === t
+                                                        ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
+                                                        : "border-border/50 hover:border-border text-muted-foreground"
+                                                )}
+                                            >
+                                                {getTypeIcon(t)}
+                                            </button>
+                                        ))}
                                     </div>
-                                    <Button variant="ghost" size="sm" onClick={() => setViewingItem(null)}>Fechar</Button>
                                 </div>
                             </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
-            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs opacity-60">Categoria</Label>
+                                    <Input
+                                        value={editingItem.category || ""}
+                                        onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                                        className="glass-light"
+                                        placeholder="ex: Trabalho, Estudo..."
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs opacity-60">Tags (Separadas por vírgula)</Label>
+                                    <Input
+                                        value={editingItem.tags.join(", ")}
+                                        onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map(t => t.trim()) })}
+                                        className="glass-light"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-xs opacity-60">Vincular Projeto</Label>
+                                <Select
+                                    value={editingItem.project_id || "none"}
+                                    onValueChange={(val: string) => setEditingItem({ ...editingItem, project_id: val === "none" ? null : val })}
+                                >
+                                    <SelectTrigger className="glass-light h-9 text-sm">
+                                        <SelectValue placeholder="Selecione um projeto..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="glass">
+                                        <SelectItem value="none">Nenhum projeto específico</SelectItem>
+                                        {projects.map((p: any) => (
+                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-xs opacity-60">Conteúdo</Label>
+                                <Textarea
+                                    className="min-h-[150px] glass-light"
+                                    value={editingItem.content}
+                                    onChange={(e) => setEditingItem({ ...editingItem, content: e.target.value })}
+                                />
+                            </div>
+
+                            <DialogFooter className="pt-4">
+                                <Button variant="ghost" onClick={() => setEditingItem(null)}>Cancelar</Button>
+                                <Button
+                                    className="btn-gradient"
+                                    onClick={() => updateItemMutation.mutate(editingItem)}
+                                    disabled={updateItemMutation.isPending}
+                                >
+                                    {updateItemMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* View Item Details Modal */}
+            <Dialog open={!!viewingItem} onOpenChange={(open) => !open && setViewingItem(null)}>
+                <DialogContent className="border-border/50 max-w-2xl bg-sidebar/95 backdrop-blur-xl">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3 mb-2">
+                            {viewingItem && (
+                                <div className={cn("p-2 rounded-lg", getTypeColor(viewingItem.type))}>
+                                    {getTypeIcon(viewingItem.type)}
+                                </div>
+                            )}
+                            <div>
+                                <DialogTitle className="text-xl flex items-center gap-2">
+                                    {viewingItem?.title || "Detalhes do Registro"}
+                                    {viewingItem?.category && (
+                                        <Badge variant="secondary" className="text-[9px] font-semibold bg-primary/10 text-primary border-none">
+                                            {viewingItem.category}
+                                        </Badge>
+                                    )}
+                                    {viewingItem?.projects?.name && (
+                                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1">
+                                            <Briefcase className="h-3 w-3" />
+                                            {viewingItem.projects.name}
+                                        </div>
+                                    )}
+                                </DialogTitle>
+                                <p className="text-[10px] text-muted-foreground font-medium">
+                                    {viewingItem && format(new Date(viewingItem.created_at), "PPPP", { locale: ptBR })}
+                                </p>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    {viewingItem && (
+                        <div className="space-y-6 pt-2">
+                            <div className="relative group">
+                                <div className="absolute right-4 top-4 z-10">
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="h-8 gap-2 bg-background/50 hover:bg-background/80"
+                                        onClick={(e) => handleCopy(e, viewingItem.content)}
+                                    >
+                                        <Copy className="h-3.5 w-3.5" /> Copiar Tudo
+                                    </Button>
+                                </div>
+                                <div className="bg-muted/30 p-6 rounded-xl border border-border/20 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                                    <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono">
+                                        {viewingItem.content}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 pt-2">
+                                {(viewingItem.tags || []).map((tag, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-[11px] px-3 py-0.5 bg-primary/5 border-primary/20 text-primary">
+                                        #{tag}
+                                    </Badge>
+                                ))}
+                            </div>
+
+                            <div className="flex justify-between items-center pt-4 border-t border-border/10">
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 gap-2"
+                                        onClick={() => {
+                                            setViewingItem(null);
+                                            setEditingItem(viewingItem);
+                                        }}
+                                    >
+                                        <Edit className="h-3.5 w-3.5" /> Editar
+                                    </Button>
+                                </div>
+                                <Button variant="ghost" size="sm" onClick={() => setViewingItem(null)}>Fechar</Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
-
-// Internal components to keep it clean
-const Label = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-    <label className={cn("text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70", className)}>
-        {children}
-    </label>
-);
-
-const Separator = ({ className }: { className?: string }) => (
-    <div className={cn("h-px w-full bg-border", className)} />
-);
-
-const BarChart3 = ({ className }: { className?: string }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24" height="24" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        className={className}
-    >
-        <path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" />
-    </svg>
-);
 
 export default CaixaEntrada;

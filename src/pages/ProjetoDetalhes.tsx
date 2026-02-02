@@ -34,7 +34,11 @@ import {
     Trophy,
     Target,
     Maximize2,
-    Minimize2
+    Minimize2,
+    Lightbulb,
+    Terminal,
+    Type,
+    Inbox
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -173,6 +177,21 @@ const ProjetoDetalhes = () => {
 
             if (error) throw error;
             return data;
+        },
+        enabled: !!id,
+    });
+
+    const { data: projectInbox = [] } = useQuery({
+        queryKey: ["project-inbox", id],
+        queryFn: async () => {
+            const { data, error } = await (supabase as any)
+                .from("inbox")
+                .select("*")
+                .eq("project_id", id as string)
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+            return data || [];
         },
         enabled: !!id,
     });
@@ -442,6 +461,58 @@ const ProjetoDetalhes = () => {
                             >
                                 Kanban completo <ChevronRight className="h-3 w-3" />
                             </Button>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-[10px] font-semibold text-muted-foreground/30 uppercase tracking-widest">Insights e Prompts</h2>
+                            <Badge variant="outline" className="text-[9px] font-semibold border-border/40 px-1.5 h-4 opacity-50">{projectInbox.length}</Badge>
+                        </div>
+
+                        <div className="space-y-3">
+                            {projectInbox.length === 0 ? (
+                                <div className="p-4 rounded-lg border border-dashed border-border/40 text-center">
+                                    <p className="text-[10px] text-muted-foreground">Nenhum insight vinculado ainda.</p>
+                                    <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="text-[10px] h-auto p-0 mt-1"
+                                        onClick={() => navigate(`/caixa-entrada?project=${id}`)}
+                                    >
+                                        Criar na Caixa de Entrada
+                                    </Button>
+                                </div>
+                            ) : (
+                                projectInbox.slice(0, 3).map((item: any) => (
+                                    <div
+                                        key={item.id}
+                                        className="p-3 bg-card/40 rounded-lg border border-border/40 hover:border-primary/30 transition-all cursor-pointer group"
+                                        onClick={() => navigate(`/caixa-entrada?project=${id}`)}
+                                    >
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            {item.type === 'idea' && <Lightbulb className="h-3 w-3 text-amber-500" />}
+                                            {item.type === 'prompt' && <Terminal className="h-3 w-3 text-emerald-500" />}
+                                            {item.type === 'snippet' && <Type className="h-3 w-3 text-blue-500" />}
+                                            {item.type === 'note' && <FileText className="h-3 w-3 text-indigo-500" />}
+                                            <span className="text-xs font-semibold text-foreground/80 truncate">{item.title || "Captura"}</span>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+                                            {item.content}
+                                        </p>
+                                    </div>
+                                ))
+                            )}
+
+                            {projectInbox.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full bg-background border-border/60 shadow-none h-9 rounded-md text-[10px] font-semibold hover:bg-muted transition-colors flex items-center justify-center gap-2 mt-2 text-muted-foreground"
+                                    onClick={() => navigate(`/caixa-entrada?project=${id}`)}
+                                >
+                                    Ver todos os insights <ChevronRight className="h-3 w-3" />
+                                </Button>
+                            )}
                         </div>
                     </section>
 
