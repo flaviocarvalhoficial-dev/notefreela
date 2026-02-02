@@ -14,8 +14,11 @@ import {
     Briefcase,
     BadgePercent,
     ChevronDown,
-    List
+    List,
+    TrendingDown,
+    Wallet
 } from "lucide-react";
+import { CostRegistrationDialog } from "@/components/dashboard/CostRegistrationDialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
@@ -81,6 +84,18 @@ export default function Financeiro() {
         }
     });
 
+    const { data: costStats } = useQuery({
+        queryKey: ["finance_costs"],
+        queryFn: async () => {
+            const { data } = await (supabase as any).from("project_costs").select("amount");
+            const totalCosts = data?.reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
+            return { totalCosts };
+        }
+    });
+
+    const totalCosts = costStats?.totalCosts || 0;
+    const netProfit = (stats?.totalPaid || 0) - totalCosts;
+
     if (isLoading) {
         return (
             <div className="h-full flex items-center justify-center py-24">
@@ -101,22 +116,31 @@ export default function Financeiro() {
                     <p className="text-muted-foreground text-sm">Gestão de pagamentos e fluxo de caixa por projeto</p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" className="h-9 border-border/80 gap-2 text-xs font-medium">
-                        <Filter className="h-3.5 w-3.5" /> Filtros
-                    </Button>
-                    <Button className="h-9 bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-xs font-medium shadow-sm transition-all active:scale-[0.98]">
-                        <Download className="h-3.5 w-3.5" /> Relatório Financeiro
-                    </Button>
-                </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <CostRegistrationDialog
+                    trigger={
+                        <Button variant="outline" className="h-9 border-red-500/20 text-red-500 hover:text-red-600 hover:bg-red-500/10 gap-2 text-xs font-medium">
+                            <TrendingDown className="h-3.5 w-3.5" /> Registrar Custo
+                        </Button>
+                    }
+                />
+                <Button variant="outline" className="h-9 border-border/80 gap-2 text-xs font-medium">
+                    <Filter className="h-3.5 w-3.5" /> Filtros
+                </Button>
+                <Button className="h-9 bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-xs font-medium shadow-sm transition-all active:scale-[0.98]">
+                    <Download className="h-3.5 w-3.5" /> Relatório Financeiro
+                </Button>
             </div>
 
             {/* KPI Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: "Valor Total Contratado", value: formatCurrency(stats?.totalValue || 0), icon: Briefcase, color: "hsl(212, 52%, 52%)" },
                     { label: "Total Recebido (Entradas)", value: formatCurrency(stats?.totalPaid || 0), icon: DollarSign, color: "hsl(158, 64%, 52%)" },
-                    { label: "Total à Receber", value: formatCurrency(stats?.totalRemaining || 0), icon: Clock, color: "hsl(340, 75%, 60%)" }
+                    { label: "Custos Totais", value: formatCurrency(totalCosts), icon: TrendingDown, color: "#ef4444" },
+                    { label: "Lucro Líquido", value: formatCurrency(netProfit), icon: Wallet, color: netProfit >= 0 ? "hsl(158, 64%, 52%)" : "#ef4444" },
+                    { label: "A Receber (Futuro)", value: formatCurrency(stats?.totalRemaining || 0), icon: Clock, color: "hsl(212, 52%, 52%)" }
                 ].map((kpi, i) => (
                     <motion.div
                         key={kpi.label}
@@ -320,7 +344,7 @@ export default function Financeiro() {
                     </Button>
                 </motion.div>
             </div>
-        </div>
+        </div >
     );
 }
 
