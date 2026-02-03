@@ -581,7 +581,13 @@ const CaixaEntrada = () => {
         const isFolderMode = allCategories.includes(searchQuery);
 
         if (!searchQuery) {
-            matchesFolder = !item.category || item.category === "";
+            // Se houver filtro de TIPO ativo (ex: clicou em 'Ideias' na sidebar), ignora a regra de pastas
+            // e mostra tudo daquele tipo. Caso contrário, mostra só os não categorizados.
+            if (selectedType !== 'all') {
+                matchesFolder = true;
+            } else {
+                matchesFolder = !item.category || item.category === "";
+            }
         } else if (isFolderMode) {
             matchesFolder = item.category === searchQuery;
         } else {
