@@ -17,6 +17,7 @@ import {
   DollarSign,
   Info
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +59,7 @@ const APP_VERSION = "V1.1.0";
 export function AppSidebar() {
   const { open } = useSidebar();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const lastVersion = localStorage.getItem("notefreela_version");
@@ -190,8 +192,8 @@ export function AppSidebar() {
                                         items.map((i: any) => (
                                           <button
                                             key={i.id}
-                                            onClick={() => {/* Navigate to item or open preview */ }}
-                                            className="px-4 py-0.5 text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2"
+                                            onClick={() => navigate(`/caixa-entrada?id=${i.id}`)}
+                                            className="px-4 py-0.5 text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2 w-full"
                                           >
                                             <Circle className="h-1 w-1 fill-current" />
                                             {i.title || "Sem título"}
