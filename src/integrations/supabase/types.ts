@@ -108,6 +108,10 @@ export type Database = {
                     status: Database["public"]["Enums"]["project_status"]
                     team_size: number | null
                     user_id: string
+                    client_id: string | null
+                    client_name: string | null
+                    value: number | null
+                    services: Json | null
                 }
                 Insert: {
                     created_at?: string
@@ -120,6 +124,10 @@ export type Database = {
                     status?: Database["public"]["Enums"]["project_status"]
                     team_size?: number | null
                     user_id: string
+                    client_id?: string | null
+                    client_name?: string | null
+                    value?: number | null
+                    services?: Json | null
                 }
                 Update: {
                     created_at?: string
@@ -131,6 +139,54 @@ export type Database = {
                     progress?: number | null
                     status?: Database["public"]["Enums"]["project_status"]
                     team_size?: number | null
+                    user_id?: string
+                    client_id?: string | null
+                    client_name?: string | null
+                    value?: number | null
+                    services?: Json | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "projects_client_id_fkey"
+                        columns: ["client_id"]
+                        isOneToOne: false
+                        referencedRelation: "clients"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            clients: {
+                Row: {
+                    id: string
+                    created_at: string
+                    name: string
+                    company_name: string | null
+                    email: string | null
+                    phone: string | null
+                    city: string | null
+                    business_type: string | null
+                    user_id: string
+                }
+                Insert: {
+                    id?: string
+                    created_at?: string
+                    name: string
+                    company_name?: string | null
+                    email?: string | null
+                    phone?: string | null
+                    city?: string | null
+                    business_type?: string | null
+                    user_id: string
+                }
+                Update: {
+                    id?: string
+                    created_at?: string
+                    name?: string
+                    company_name?: string | null
+                    email?: string | null
+                    phone?: string | null
+                    city?: string | null
+                    business_type?: string | null
                     user_id?: string
                 }
                 Relationships: []

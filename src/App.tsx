@@ -29,31 +29,10 @@ const AppLayout = () => {
   const { pathname } = useLocation();
   const isDashboard = pathname === "/";
 
-  // Remove scrollbar do navegador apenas no Dashboard (layout encaixado)
-  // e restaura para as demais rotas.
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-
-    const prevHtmlOverflow = html.style.overflow;
-    const prevBodyOverflow = body.style.overflow;
-
-    if (isDashboard) {
-      html.style.overflow = "hidden";
-      body.style.overflow = "hidden";
-    } else {
-      html.style.overflow = prevHtmlOverflow;
-      body.style.overflow = prevBodyOverflow;
-    }
-
-    return () => {
-      html.style.overflow = prevHtmlOverflow;
-      body.style.overflow = prevBodyOverflow;
-    };
-  }, [isDashboard]);
-
   return (
-    <div className="flex h-screen w-full">
+    // When on the dashboard, the entire layout is fixed-height (h-screen).
+    // No JS DOM manipulation needed — this is purely declarative CSS.
+    <div className={`flex w-full ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />

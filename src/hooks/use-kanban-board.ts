@@ -289,7 +289,7 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
                     const { error: tasksErr } = await supabase
                         .from("tasks")
                         .delete()
-                        .in("column_id", colIds);
+                        .in("column_id", colIds as never[]);
                     if (tasksErr) throw tasksErr;
 
                     // 3. Delete columns

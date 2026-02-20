@@ -78,7 +78,7 @@ export function AppSidebar() {
   const { data: inboxItems = [] } = useQuery({
     queryKey: ["inbox-sidebar"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("inbox")
         .select("id, title, type, category")
         .order("created_at", { ascending: false });

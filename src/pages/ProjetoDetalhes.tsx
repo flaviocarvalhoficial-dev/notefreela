@@ -276,7 +276,7 @@ const ProjetoDetalhes = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-card border-border shadow-md">
                                 <EditProjectDialog
-                                    project={project}
+                                    project={project as unknown as Parameters<typeof EditProjectDialog>[0]["project"]}
                                     trigger={
                                         <DropdownMenuItem className="gap-2 font-medium" onSelect={(e) => e.preventDefault()}>
                                             <Edit2 className="h-4 w-4" /> Editar Projeto
