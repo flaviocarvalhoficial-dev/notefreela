@@ -230,7 +230,10 @@ const Clientes = () => {
                                         client={client}
                                         index={i}
                                         onDelete={deleteClientMutation.mutate}
-                                        onClick={() => setSelectedClient(client)}
+                                        onClick={() => {
+                                            toast({ title: "Detalhes do Cliente", description: `Abrindo painel de ${client.name}` });
+                                            setSelectedClient(client);
+                                        }}
                                     />
                                 ))}
                             </motion.div>
@@ -249,7 +252,10 @@ const Clientes = () => {
                                         client={client}
                                         index={i}
                                         onDelete={deleteClientMutation.mutate}
-                                        onClick={() => setSelectedClient(client)}
+                                        onClick={() => {
+                                            toast({ title: "Detalhes do Cliente", description: `Abrindo painel de ${client.name}` });
+                                            setSelectedClient(client);
+                                        }}
                                     />
                                 ))}
                             </motion.div>
