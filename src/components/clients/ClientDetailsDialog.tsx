@@ -110,7 +110,16 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[1100px] h-[92vh] flex flex-col p-0 border-border/40 bg-[#0B0B0B] gap-0 overflow-hidden shadow-2xl">
+            <DialogContent
+                className="max-w-[1100px] h-[92vh] flex flex-col p-0 border-border/40 bg-[#0B0B0B] gap-0 overflow-hidden shadow-2xl"
+                style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 100
+                }}
+            >
                 {/* Header Premium */}
                 <div className="p-8 pb-6 bg-gradient-to-b from-[#141414] to-transparent">
                     <div className="flex items-center justify-between mb-8">

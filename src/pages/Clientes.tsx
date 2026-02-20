@@ -86,7 +86,7 @@ const Clientes = () => {
     ];
 
     return (
-        <div className="h-full flex flex-col gap-8 pb-10 pt-4 overflow-y-auto custom-scrollbar pr-2">
+        <div className="flex flex-col gap-8 pb-10 pt-4">
             <div>
                 <h1 className="text-3xl font-semibold tracking-tight mb-1">Clientes</h1>
                 <p className="text-muted-foreground text-sm">Gerencie sua carteira de clientes e negócios.</p>
@@ -196,12 +196,6 @@ const Clientes = () => {
                 <NewClientDialog />
             </motion.div >
 
-            <ClientDetailsDialog
-                client={selectedClient}
-                open={!!selectedClient}
-                onOpenChange={(open) => !open && setSelectedClient(null)}
-            />
-
             {/* Content Area */}
             {
                 isLoading ? (
@@ -263,7 +257,15 @@ const Clientes = () => {
                     </AnimatePresence>
                 )
             }
-        </div >
+
+            <ClientDetailsDialog
+                client={selectedClient}
+                open={!!selectedClient}
+                onOpenChange={(open) => {
+                    if (!open) setSelectedClient(null);
+                }}
+            />
+        </div>
     );
 };
 
