@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Briefcase, Calendar, CheckCircle2, Clock, ShieldCheck, List, Search, Filter, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +29,7 @@ interface ClientWithProjects {
     phone?: string;
     totalValue?: number;
     projects?: Project[];
+    allProjects?: Project[];
 }
 
 interface ClientDetailsDialogProps {
@@ -44,17 +45,29 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
     const [monthFilter, setMonthFilter] = useState("all");
     const [serviceFilter, setServiceFilter] = useState("all");
 
-    // Memoize pre-calculation to handle null client
-    const allProjects = useMemo(() => client?.projects || [], [client]);
+    // Resetar filtros toda vez que abrir um NOVO cliente
+    useEffect(() => {
+        if (open && client) {
+            setStatusFilter("all");
+            setYearFilter("all");
+            setMonthFilter("all");
+            setServiceFilter("all");
+        }
+    }, [open, client?.id]);
 
-    // Gerar opções de filtros com base nos projetos DESTE cliente
+    const allProjects = useMemo(() => client?.allProjects || [], [client]);
+
     const filterOptions = useMemo(() => {
         const years = new Set<string>();
         const services = new Set<string>();
 
         allProjects.forEach(p => {
             if (p.created_at) years.add(getYear(parseISO(p.created_at)).toString());
-            p.services?.forEach(s => services.add((s as any).name));
+            const pServices = (p.services as any[]) || [];
+            pServices.forEach(s => {
+                const sName = typeof s === 'string' ? s : s?.name;
+                if (sName) services.add(sName);
+            });
         });
 
         return {
@@ -63,34 +76,47 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
         };
     }, [allProjects]);
 
-    // Lógica de Filtragem
     const filteredProjects = useMemo(() => {
-        return allProjects.filter(p => {
+        const results = allProjects.filter(p => {
             const pDate = p.created_at ? parseISO(p.created_at) : null;
 
-            // Filtro de Status
+            // 1. Status
+            const isCompleted = ["completed", "done"].includes(p.status);
             const matchesStatus = statusFilter === "all" ||
-                (statusFilter === "active" ? !["completed", "done"].includes(p.status) : ["completed", "done"].includes(p.status));
+                (statusFilter === "active" ? !isCompleted : isCompleted);
 
-            // Filtro de Ano
-            const matchesYear = yearFilter === "all" || (pDate && getYear(pDate).toString() === yearFilter);
+            // 2. Ano
+            const matchesYear = yearFilter === "all" ||
+                (pDate && getYear(pDate).toString() === yearFilter);
 
-            // Filtro de Mês
-            const matchesMonth = monthFilter === "all" || (pDate && getMonth(pDate).toString() === monthFilter);
+            // 3. Mês
+            const matchesMonth = monthFilter === "all" ||
+                (pDate && getMonth(pDate).toString() === monthFilter);
 
-            // Filtro de Serviço
+            // 4. Serviço
+            const pServices = (p.services as any[]) || [];
             const matchesService = serviceFilter === "all" ||
-                p.services?.some(s => (s as any).name.toLowerCase().includes(serviceFilter.toLowerCase()));
+                pServices.some(s => {
+                    const sName = typeof s === 'string' ? s : s?.name;
+                    return sName === serviceFilter;
+                });
 
             return matchesStatus && matchesYear && matchesMonth && matchesService;
         });
-    }, [allProjects, statusFilter, yearFilter, monthFilter, serviceFilter]);
 
-    // Cálculo dos Indicadores baseados nos filtros
+        console.log(`[Filter] ${client?.name}:`, {
+            total: allProjects.length,
+            filtered: results.length,
+            filters: { statusFilter, yearFilter, monthFilter, serviceFilter }
+        });
+
+        return results;
+    }, [allProjects, statusFilter, yearFilter, monthFilter, serviceFilter, client?.id]);
+
     const stats = useMemo(() => {
         const total = filteredProjects.reduce((acc, p) => acc + (p.value || 0), 0);
-        const active = filteredProjects.filter(p => !["completed", "done"].includes(p.status)).length;
-        return { total, active, count: filteredProjects.length };
+        const activeCount = filteredProjects.filter(p => !["completed", "done"].includes(p.status)).length;
+        return { total, active: activeCount, count: filteredProjects.length };
     }, [filteredProjects]);
 
     const months = [
@@ -111,7 +137,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
         <Dialog open={open} onOpenChange={onOpenChange}>
             {client && (
                 <DialogContent
-                    className="max-w-[1100px] h-[92vh] flex flex-col p-0 border-border/40 bg-[#0B0B0B] gap-0 overflow-hidden shadow-2xl z-[100]"
+                    className="max-w-[1100px] h-[92vh] flex flex-col p-0 border-border/40 bg-[#0B0B0B] gap-0 overflow-hidden shadow-2xl z-50"
                 >
                     {/* Header Premium */}
                     <div className="p-8 pb-6 bg-gradient-to-b from-[#141414] to-transparent">

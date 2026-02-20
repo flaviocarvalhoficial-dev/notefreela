@@ -31,85 +31,90 @@ export function useClientsData() {
 
     // Processamento de Filtros e Agregação
     const filteredData = useMemo(() => {
-        // 1. Filtrar projetos com base nos seletores globais
-        const filteredProjects = projects.filter((p) => {
-            const pDate = p.created_at ? parseISO(p.created_at) : null;
-
-            const matchesYear = selectedYear === "all" || (pDate && getYear(pDate).toString() === selectedYear);
-            const matchesMonth = selectedMonth === "all" || (pDate && getMonth(pDate).toString() === selectedMonth);
-
-            // Filtro de Serviço (procura no JSON services)
-            const pServices = (p.services as any[]) || [];
-            const matchesService = selectedServiceType === "all" ||
-                pServices.some(s => s.name.toLowerCase().includes(selectedServiceType.toLowerCase()));
-
-            return matchesYear && matchesMonth && matchesService;
-        });
-
-        // 2. Agrupar por cliente
         const clientMap = new Map();
 
-        // Primeiro, adicionamos todos os clientes registrados no banco
+        // Pass 1: Registrar todos os clientes conhecidos
         dbClients.forEach(c => {
             clientMap.set(c.id, {
                 ...c,
+                allProjects: [],
                 projects: [],
                 totalValue: 0,
                 activeProjects: 0
             });
         });
 
-        // Segundo, identificamos clientes implícitos (apenas nome no projeto)
-        const registeredNames = new Set(dbClients.map(c => c.name.toLowerCase()));
-
+        // Pass 2: Identificar clientes virtuais e agrupar projetos
         projects.forEach(p => {
-            if (!p.client_id && p.client_name) {
-                const nameLower = p.client_name.toLowerCase();
-                if (!registeredNames.has(nameLower)) {
-                    const virtualId = `virtual-${nameLower}`;
-                    if (!clientMap.has(virtualId)) {
-                        clientMap.set(virtualId, {
-                            id: virtualId,
-                            name: p.client_name,
-                            city: "Não cadastrado",
-                            company_name: "Automático",
-                            projects: [],
-                            totalValue: 0,
-                            activeProjects: 0
-                        });
-                    }
-                }
-            }
-        });
-
-        // 3. Vinculamos projetos filtrados aos clientes (considerando ID ou Nome)
-        filteredProjects.forEach(p => {
-            let client = null;
+            let clientRef = null;
             if (p.client_id) {
-                client = clientMap.get(p.client_id);
+                clientRef = clientMap.get(p.client_id);
             } else if (p.client_name) {
-                // Tenta encontrar pelo nome (virtual ou real)
                 const nameLower = p.client_name.toLowerCase();
+                // Tenta encontrar por nome nos clientes já mapeados
                 for (const c of clientMap.values()) {
                     if (c.name.toLowerCase() === nameLower) {
-                        client = c;
+                        clientRef = c;
                         break;
                     }
                 }
+
+                // Se não achou e é um nome novo, cria cliente virtual
+                if (!clientRef) {
+                    const virtualId = `virtual-${nameLower}`;
+                    clientRef = {
+                        id: virtualId,
+                        name: p.client_name,
+                        city: "Não cadastrado",
+                        company_name: "Automático",
+                        allProjects: [],
+                        projects: [],
+                        totalValue: 0,
+                        activeProjects: 0
+                    };
+                    clientMap.set(virtualId, clientRef);
+                }
             }
 
-            if (client) {
-                client.projects.push(p);
-                client.totalValue += p.value || 0;
-                if (!["completed", "done"].includes(p.status)) client.activeProjects++;
+            if (clientRef) {
+                // Adiciona ao histórico completo sempre
+                clientRef.allProjects.push(p);
+
+                // Aplica filtros globais para ver se entra na visão atual do card
+                const pDate = p.created_at ? parseISO(p.created_at) : null;
+                const matchesYear = selectedYear === "all" || (pDate && getYear(pDate).toString() === selectedYear);
+                const matchesMonth = selectedMonth === "all" || (pDate && getMonth(pDate).toString() === selectedMonth);
+
+                const pServices = (p.services as any[]) || [];
+                const matchesService = selectedServiceType === "all" ||
+                    pServices.some(s => {
+                        const sName = typeof s === 'string' ? s : s?.name;
+                        return sName?.toLowerCase().includes(selectedServiceType.toLowerCase());
+                    });
+
+                if (matchesYear && matchesMonth && matchesService) {
+                    clientRef.projects.push(p);
+                    clientRef.totalValue += (p.value || 0);
+                    if (!["completed"].includes(p.status)) {
+                        clientRef.activeProjects++;
+                    }
+                }
             }
         });
 
-        // Converter para array e aplicar busca textual
-        return Array.from(clientMap.values()).filter(c =>
-            c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (c.company_name?.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
+        // Pass 3: Filtragem final da lista de clientes
+        const hasActiveFilters = selectedYear !== "all" || selectedMonth !== "all" || selectedServiceType !== "all";
+
+        return Array.from(clientMap.values()).filter(c => {
+            const matchesSearch =
+                c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (c.company_name?.toLowerCase() || "").includes(searchQuery.toLowerCase());
+
+            // Se tem filtro de tempo/serviço, esconde quem não tem projeto no período
+            if (hasActiveFilters && c.projects.length === 0) return false;
+
+            return matchesSearch;
+        });
     }, [dbClients, projects, searchQuery, selectedYear, selectedMonth, selectedServiceType]);
 
     // Indicadores Globais (Baseados no Filtro)
