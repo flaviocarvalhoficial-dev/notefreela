@@ -230,7 +230,7 @@ const DraggableInboxItem = ({ item, viewMode, children }: { item: InboxItem, vie
 };
 
 // Componente DroppableFolder (Caixa)
-const DroppableFolder = ({ folder, count, isActive, onClick, onRename, onDelete, isSystem, children }: any) => {
+const DroppableFolder = ({ folder, count, isActive, onClick, onRename, onDelete, isSystem, isPinned, onTogglePin, children }: any) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `folder-${folder || 'uncategorized'}`,
         data: { folder }
@@ -250,15 +250,24 @@ const DroppableFolder = ({ folder, count, isActive, onClick, onRename, onDelete,
         >
             {children}
 
-            {!isSystem && (
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn("h-6 w-6", isPinned ? "text-amber-500 opacity-100" : "text-muted-foreground")}
+                    onClick={(e) => onTogglePin(e, folder)}
+                >
+                    <Plus className={cn("h-3 w-3 transition-transform", isPinned ? "rotate-45" : "")} />
+                </Button>
+
+                {!isSystem && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-6 w-6">
                                 <MoreHorizontal className="h-3 w-3" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="glass transition-all">
                             <DropdownMenuItem onClick={onRename} className="gap-2">
                                 <Pencil className="h-3.5 w-3.5" /> Renomear
                             </DropdownMenuItem>
@@ -268,7 +277,10 @@ const DroppableFolder = ({ folder, count, isActive, onClick, onRename, onDelete,
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                </div>
+                )}
+            </div>
+            {isPinned && !isActive && (
+                <div className="absolute top-0 right-0 h-0.5 w-6 bg-amber-500/50" />
             )}
         </motion.div>
     );
@@ -297,6 +309,24 @@ const CaixaEntrada = () => {
     const [newFolderName, setNewFolderName] = useState("");
     const [folderToRename, setFolderToRename] = useState<{ oldName: string, newName: string } | null>(null);
     const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+    const [boxSearchQuery, setBoxSearchQuery] = useState("");
+    const [pinnedBoxes, setPinnedBoxes] = useState<string[]>(() => {
+        return JSON.parse(localStorage.getItem("inbox_pinned_boxes") || "[]");
+    });
+
+    const togglePin = (e: React.MouseEvent, folder: string) => {
+        e.stopPropagation();
+        const updated = pinnedBoxes.includes(folder)
+            ? pinnedBoxes.filter(b => b !== folder)
+            : [...pinnedBoxes, folder];
+        setPinnedBoxes(updated);
+        localStorage.setItem("inbox_pinned_boxes", JSON.stringify(updated));
+        toast({
+            title: pinnedBoxes.includes(folder) ? "Desafixado" : "Afixado",
+            description: `A caixa "${folder}" foi ${pinnedBoxes.includes(folder) ? "removida do topo" : "fixada no topo"}.`,
+            duration: 2000
+        });
+    };
 
     // Sensores Dnd
     const sensors = useSensors(
@@ -795,33 +825,54 @@ const CaixaEntrada = () => {
                         {/* Seção de Caixas */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                    <Inbox className="h-4 w-4" /> Caixas
+                                <h2 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Inbox className="h-3 w-3" /> Caixas / Projetos
                                 </h2>
-                                <div className="flex gap-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative group/boxsearch">
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 group-focus-within/boxsearch:text-primary/50 transition-colors" />
+                                        <Input
+                                            placeholder="Localizar caixa..."
+                                            className="h-8 w-32 md:w-48 pl-8 text-[11px] glass-light border-border/30 focus:border-primary/40 transition-all rounded-lg"
+                                            value={boxSearchQuery}
+                                            onChange={(e) => setBoxSearchQuery(e.target.value)}
+                                        />
+                                        {boxSearchQuery && (
+                                            <button
+                                                onClick={() => setBoxSearchQuery("")}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-foreground transition-colors"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="h-4 w-[1px] bg-border/20 mx-1" />
+
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => {
                                             if (confirm("Deseja resetar as caixas locais?")) {
                                                 localStorage.removeItem("inbox_folders");
+                                                localStorage.removeItem("inbox_pinned_boxes");
                                                 setSearchParams(prev => { prev.set("refresh", Date.now().toString()); return prev; });
                                             }
                                         }}
-                                        className="h-6 text-xs text-muted-foreground hover:text-foreground"
+                                        className="h-8 text-[10px] font-semibold text-muted-foreground/50 hover:text-foreground"
                                     >
                                         Reset
                                     </Button>
                                     <Button
-                                        variant="ghost"
+                                        variant="outline"
                                         size="sm"
                                         onClick={() => {
                                             setNewFolderName("");
                                             setIsCreatingFolder(true);
                                         }}
-                                        className="h-6 text-xs hover:text-primary"
+                                        className="h-8 text-[11px] font-semibold border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/40 gap-2 whitespace-nowrap"
                                     >
-                                        <Plus className="h-3 w-3 mr-1" /> Nova Caixa
+                                        <Plus className="h-3 w-3" /> Nova Caixa
                                     </Button>
                                 </div>
                             </div>
@@ -832,29 +883,43 @@ const CaixaEntrada = () => {
                                     // Combine local folders and DB categories
                                     const dbCategories = items.map(i => i.category).filter(Boolean);
                                     const localFolders = JSON.parse(localStorage.getItem("inbox_folders") || "[]");
-                                    const uniqueFolders = Array.from(new Set([...localFolders, ...dbCategories])).sort();
+                                    const allUniqueFolders = Array.from(new Set([...localFolders, ...dbCategories]));
 
-                                    if (uniqueFolders.length === 0) {
+                                    // Filter by search query
+                                    const filteredBoxes = allUniqueFolders.filter(f =>
+                                        f.toLowerCase().includes(boxSearchQuery.toLowerCase())
+                                    );
+
+                                    // Sort: Pinned first, then alphabetical
+                                    const sortedFolders = filteredBoxes.sort((a, b) => {
+                                        const aPinned = pinnedBoxes.includes(a);
+                                        const bPinned = pinnedBoxes.includes(b);
+                                        if (aPinned && !bPinned) return -1;
+                                        if (!aPinned && bPinned) return 1;
+                                        return a.localeCompare(b);
+                                    });
+
+                                    if (sortedFolders.length === 0) {
                                         return (
-                                            <div className="col-span-full py-8 text-center border-2 border-dashed border-border/30 rounded-xl bg-muted/5 flex flex-col items-center justify-center gap-2">
-                                                <Inbox className="h-8 w-8 text-muted-foreground/20" />
-                                                <p className="text-sm text-muted-foreground/50">Nenhuma caixa criada</p>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setIsCreatingFolder(true)}
-                                                    className="mt-2 text-xs"
-                                                >
-                                                    <Plus className="h-3 w-3 mr-1" /> Criar Primeira Caixa
-                                                </Button>
+                                            <div className="col-span-full py-12 text-center border-2 border-dashed border-border/20 rounded-2xl bg-muted/5 flex flex-col items-center justify-center gap-3">
+                                                <Search className="h-8 w-8 text-muted-foreground/10" />
+                                                <p className="text-sm text-muted-foreground/40 font-medium">
+                                                    {boxSearchQuery ? `Nenhuma caixa chamada "${boxSearchQuery}"` : "Nenhuma caixa criada"}
+                                                </p>
+                                                {boxSearchQuery && (
+                                                    <Button variant="ghost" size="sm" onClick={() => setBoxSearchQuery("")} className="text-xs">
+                                                        Limpar busca
+                                                    </Button>
+                                                )}
                                             </div>
                                         );
                                     }
 
-                                    return uniqueFolders.map(folder => {
+                                    return sortedFolders.map(folder => {
                                         if (!folder) return null;
                                         const count = items.filter(i => i.category === folder).length;
                                         const isActive = searchQuery === folder;
+                                        const isPinned = pinnedBoxes.includes(folder);
 
                                         return (
                                             <DroppableFolder
@@ -862,6 +927,8 @@ const CaixaEntrada = () => {
                                                 folder={folder}
                                                 count={count}
                                                 isActive={isActive}
+                                                isPinned={isPinned}
+                                                onTogglePin={togglePin}
                                                 onClick={() => {
                                                     if (searchQuery === folder) setSearchQuery("");
                                                     else setSearchQuery(folder);
@@ -869,13 +936,24 @@ const CaixaEntrada = () => {
                                                 onDelete={() => setFolderToDelete(folder)}
                                                 onRename={() => setFolderToRename({ oldName: folder, newName: folder })}
                                             >
-                                                <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center transition-colors text-primary")}>
-                                                    <Inbox className="h-5 w-5" />
+                                                <div className={cn(
+                                                    "h-8 w-8 rounded-lg flex items-center justify-center transition-colors shadow-sm border border-primary/10",
+                                                    isActive ? "bg-primary text-primary-foreground" : "bg-primary/5 text-primary"
+                                                )}>
+                                                    <Inbox className="h-4 w-4" />
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
-                                                    <span className="text-xs font-medium truncate pr-4">{folder}</span>
+                                                    <span className={cn(
+                                                        "text-[11px] font-bold truncate pr-6",
+                                                        isActive ? "text-primary" : "text-foreground/80"
+                                                    )}>{folder}</span>
+                                                    <span className="text-[9px] text-muted-foreground/60 font-medium">{count} {count === 1 ? 'item' : 'itens'}</span>
                                                 </div>
-                                                <span className="text-[10px] text-muted-foreground absolute top-3 right-3">{count}</span>
+                                                {isPinned && !isActive && (
+                                                    <div className="absolute bottom-0 right-0 p-1 opacity-20">
+                                                        <Plus className="h-3 w-3 rotate-45 text-amber-500" />
+                                                    </div>
+                                                )}
                                             </DroppableFolder>
                                         );
                                     });

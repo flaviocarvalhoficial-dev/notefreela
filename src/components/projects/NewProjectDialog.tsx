@@ -137,19 +137,38 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
 
             if (pError) throw pError;
 
-            // 2. Create Default Columns for this project
+            // 2. Create a default Scenario for this project
+            const { data: scenario, error: sError } = await (supabase as any)
+                .from("kanban_scenarios")
+                .insert({
+                    project_id: project.id,
+                    title: "Fluxo Principal",
+                    type: "kanban",
+                    user_id: user.id,
+                    position: 0
+                })
+                .select()
+                .single();
+
+            if (sError) throw sError;
+
+            // 3. Create Default Columns for this project linked to the scenario
             const defaultColsToInsert = [
-                { project_id: project.id, title: "Início", hint: "Planeje e quebre em passos", position: 0, color: "hsl(215, 20%, 65%)", user_id: user.id },
-                { project_id: project.id, title: "Em Progresso", hint: "Foco no que está em execução", position: 1, color: "hsl(158, 64%, 52%)", user_id: user.id },
-                { project_id: project.id, title: "Concluído", hint: "Entrega e validação", position: 2, color: "hsl(221, 83%, 62%)", user_id: user.id }
+                { project_id: project.id, scenario_id: scenario.id, title: "Início", hint: "Planeje e quebre em passos", position: 0, color: "hsl(220, 15%, 75%)", user_id: user.id },
+                { project_id: project.id, scenario_id: scenario.id, title: "Em Progresso", hint: "Foco no que está em execução", position: 1, color: "hsl(200, 85%, 82%)", user_id: user.id },
+                { project_id: project.id, scenario_id: scenario.id, title: "Concluído", hint: "Entrega e validação", position: 2, color: "hsl(158, 65%, 82%)", user_id: user.id }
             ];
 
-            const { data: createdCols, error: cError } = await (supabase as any).from("kanban_columns").insert(defaultColsToInsert).select();
+            const { data: createdCols, error: cError } = await (supabase as any)
+                .from("kanban_columns")
+                .insert(defaultColsToInsert)
+                .select();
+
             if (cError) throw cError;
 
-            const todoColId = createdCols.find((c: any) => c.position === 0)?.id || "todo";
+            const todoColId = createdCols.find((c: any) => c.position === 0)?.id;
 
-            // 3. Create Tasks if any
+            // 4. Create Tasks if any
             if (tasks.length > 0) {
                 const tasksToInsert = tasks.map(t => ({
                     title: t.title,

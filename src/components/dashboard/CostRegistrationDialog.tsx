@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface Project {
     id: string;
@@ -19,9 +20,15 @@ interface CostRegistrationDialogProps {
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     trigger?: React.ReactNode;
+    costToEdit?: any; // If provided, we are in Edit Mode
 }
 
-export function CostRegistrationDialog({ open: externalOpen, onOpenChange: setExternalOpen, trigger }: CostRegistrationDialogProps) {
+export function CostRegistrationDialog({
+    open: externalOpen,
+    onOpenChange: setExternalOpen,
+    trigger,
+    costToEdit
+}: CostRegistrationDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false);
     const isControlled = externalOpen !== undefined;
     const open = isControlled ? externalOpen : internalOpen;
@@ -50,6 +57,17 @@ export function CostRegistrationDialog({ open: externalOpen, onOpenChange: setEx
     });
 
     useEffect(() => {
+        if (costToEdit) {
+            setTitle(costToEdit.title || "");
+            setCategory(costToEdit.category || "tool");
+            setAmount(costToEdit.amount || "");
+            setProjectId(costToEdit.project_id || "general");
+            setDate(costToEdit.date ? costToEdit.date.split('T')[0] : new Date().toISOString().split('T')[0]);
+            setShowCalculator(false);
+        }
+    }, [costToEdit]);
+
+    useEffect(() => {
         if (showCalculator && typeof hours === 'number' && typeof hourlyRate === 'number') {
             setAmount(hours * hourlyRate);
         }
@@ -66,29 +84,39 @@ export function CostRegistrationDialog({ open: externalOpen, onOpenChange: setEx
         setShowCalculator(false);
     };
 
-    const createCostMutation = useMutation({
+    const upsertCostMutation = useMutation({
         mutationFn: async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuário não autenticado");
 
-            const { error } = await supabase
-                .from("project_costs")
-                .insert({
-                    user_id: user.id,
-                    project_id: projectId === "general" ? null : projectId,
-                    title,
-                    category,
-                    amount: typeof amount === 'number' ? amount : 0,
-                    date
-                });
+            const payload = {
+                user_id: user.id,
+                project_id: projectId === "general" ? null : projectId,
+                title,
+                category,
+                amount: typeof amount === 'number' ? amount : 0,
+                date
+            };
 
-            if (error) throw error;
+            if (costToEdit?.id) {
+                const { error } = await supabase
+                    .from("project_costs")
+                    .update(payload)
+                    .eq("id", costToEdit.id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase
+                    .from("project_costs")
+                    .insert(payload);
+                if (error) throw error;
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["finance_costs"] });
+            queryClient.invalidateQueries({ queryKey: ["project_costs_detailed"] });
             toast({
-                title: "Custo Registrado!",
-                description: "O custo foi adicionado ao controle financeiro.",
+                title: costToEdit ? "Custo Atualizado!" : "Custo Registrado!",
+                description: costToEdit ? "As alterações foram salvas." : "O custo foi adicionado ao controle financeiro.",
             });
             setOpen(false);
             resetForm();
@@ -119,10 +147,10 @@ export function CostRegistrationDialog({ open: externalOpen, onOpenChange: setEx
             <DialogContent className="border-border/50 max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
-                            <DollarSign className="h-5 w-5" />
+                        <div className={cn("p-2 rounded-lg", costToEdit ? "bg-amber-500/10 text-amber-500" : "bg-red-500/10 text-red-500")}>
+                            {costToEdit ? <Plus className="h-5 w-5 rotate-45" /> : <DollarSign className="h-5 w-5" />}
                         </div>
-                        Registrar Novo Custo
+                        {costToEdit ? "Editar Custo" : "Registrar Novo Custo"}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -241,11 +269,11 @@ export function CostRegistrationDialog({ open: externalOpen, onOpenChange: setEx
                     <div className="flex justify-end gap-2 pt-4">
                         <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
                         <Button
-                            className="bg-red-500 hover:bg-red-600 text-white shadow-glow-sm"
-                            onClick={() => createCostMutation.mutate()}
-                            disabled={createCostMutation.isPending || !amount || !title}
+                            className={cn(costToEdit ? "bg-amber-500 hover:bg-amber-600" : "bg-red-500 hover:bg-red-600", "text-white shadow-glow-sm")}
+                            onClick={() => upsertCostMutation.mutate()}
+                            disabled={upsertCostMutation.isPending || !amount || !title}
                         >
-                            {createCostMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar Custo"}
+                            {upsertCostMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : costToEdit ? "Salvar Alterações" : "Registrar Custo"}
                         </Button>
                     </div>
                 </div>

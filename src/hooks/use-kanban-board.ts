@@ -26,8 +26,6 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
 
             if (projectFilter !== "all") {
                 query = query.eq("project_id", projectFilter);
-            } else {
-                query = query.is("project_id", null);
             }
 
             const { data, error } = await query;
@@ -44,13 +42,12 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
 
             if (projectFilter !== "all") {
                 query = query.eq("project_id", projectFilter);
-            } else {
-                query = query.is("project_id", null);
             }
 
             const { data, error } = await query;
             if (error) throw error;
-            return (data as Column[]) || DEFAULT_COLUMNS;
+            if (data && data.length > 0) return data as Column[];
+            return DEFAULT_COLUMNS;
         }
     });
 
@@ -100,16 +97,20 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
         columns.forEach(col => {
             map[col.id] = [];
         });
-        // Ensure "todo" exists as a fallback
-        if (!map["todo"] && columns.length === 0) map["todo"] = [];
+
+        // Ensure standard columns exist in the map if no columns are found
+        if (columns.length === 0) {
+            ["todo", "inprogress", "done"].forEach(id => map[id] = []);
+        }
 
         for (const t of filteredTasks) {
             if (map[t.column_id]) {
                 map[t.column_id].push(t);
             } else {
                 // Fallback for tasks in orphaned columns or default todo
-                if (!map["todo"]) map["todo"] = [];
-                map["todo"].push(t);
+                const fallbackId = columns[0]?.id || "todo";
+                if (!map[fallbackId]) map[fallbackId] = [];
+                map[fallbackId].push(t);
             }
         }
         return map;
@@ -203,19 +204,64 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Não autenticado");
 
-            const { error } = await supabase.from("kanban_columns").insert({
-                project_id: projectFilter === "all" ? null : projectFilter,
-                scenario_id: scenario_id || (scenarios[0]?.id),
-                title,
-                user_id: user.id,
-                position: columns.length,
-                hint: "Nova etapa",
-                color: PASTEL_COLORS[columns.length % PASTEL_COLORS.length].value
-            });
-            if (error) throw error;
+            let targetScenarioId = scenario_id || (scenarios[0]?.id);
+
+            // If we are adding a column to a mock scenario, solidify it first
+            if (targetScenarioId === 'default-scenario') {
+                const { data: newScenario, error: scError } = await supabase.from("kanban_scenarios").insert({
+                    project_id: projectFilter === "all" ? null : projectFilter,
+                    title: "Fluxo Principal",
+                    type: 'kanban',
+                    user_id: user.id,
+                    position: 0
+                }).select().single();
+
+                if (scError) throw scError;
+                targetScenarioId = newScenario.id;
+
+                // Also create the 3 default columns in the DB now so they don't disappear
+                // when we switch from DEFAULT_COLUMNS to real DB columns
+                const defaultCols = DEFAULT_COLUMNS.map((col, idx) => ({
+                    project_id: projectFilter === "all" ? null : projectFilter,
+                    scenario_id: targetScenarioId,
+                    title: col.title,
+                    user_id: user.id,
+                    position: idx,
+                    hint: col.hint,
+                    color: col.color
+                }));
+
+                const { error: colsError } = await supabase.from("kanban_columns").insert(defaultCols);
+                if (colsError) throw colsError;
+
+                // The new column will follow these 3
+                const { error: finalColErr } = await supabase.from("kanban_columns").insert({
+                    project_id: projectFilter === "all" ? null : projectFilter,
+                    scenario_id: targetScenarioId,
+                    title,
+                    user_id: user.id,
+                    position: 3,
+                    hint: "Nova etapa",
+                    color: PASTEL_COLORS[3 % PASTEL_COLORS.length].value
+                });
+                if (finalColErr) throw finalColErr;
+            } else {
+                const { error } = await supabase.from("kanban_columns").insert({
+                    project_id: projectFilter === "all" ? null : projectFilter,
+                    scenario_id: targetScenarioId,
+                    title,
+                    user_id: user.id,
+                    position: columns.length,
+                    hint: "Nova etapa",
+                    color: PASTEL_COLORS[columns.length % PASTEL_COLORS.length].value
+                });
+                if (error) throw error;
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["kanban-columns", projectFilter] });
+            queryClient.invalidateQueries({ queryKey: ["kanban-scenarios", projectFilter] });
+            toast({ title: "Coluna criada", description: "Nova etapa adicionada ao quadro." });
         }
     });
 
