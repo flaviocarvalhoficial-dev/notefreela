@@ -130,6 +130,7 @@ export function useDashboardData() {
         projects,
         tasksStats,
         uniqueClientsCount,
+        clients: clientsData,
         isLoading,
         completionRate,
         createTask: createTaskMutation.mutate,

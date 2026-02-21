@@ -19,17 +19,21 @@ import { NewTaskDialog } from "@/components/tasks/NewTaskDialog";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { Trash2 } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { DashboardStatsModals } from "@/components/dashboard/DashboardStatsModals";
 
 const Index = () => {
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [activeStatModal, setActiveStatModal] = useState<"projects" | "tasks" | "clients" | null>(null);
+  const [isStatModalOpen, setIsStatModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const {
     projects,
     tasksStats,
     uniqueClientsCount,
+    clients,
     isLoading,
     completionRate,
     createTask,
@@ -38,6 +42,7 @@ const Index = () => {
 
   const stats = [
     {
+      id: "projects",
       title: "Projetos",
       value: projects.length.toString(),
       change: "Total cadastrado",
@@ -45,6 +50,7 @@ const Index = () => {
       color: "hsl(var(--peach))",
     },
     {
+      id: "tasks",
       title: "Tarefas",
       value: tasksStats?.total.toString() || "0",
       change: `${tasksStats?.completed || 0} concluídas`,
@@ -52,6 +58,7 @@ const Index = () => {
       color: "hsl(var(--peach))",
     },
     {
+      id: "clients",
       title: "Clientes",
       value: uniqueClientsCount.toString(),
       change: "Carteira Total",
@@ -87,12 +94,18 @@ const Index = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.06 }}
               >
-                <div className="bento-card bento-card--compact h-[132px] group cursor-pointer flex flex-col justify-between border-border/60 bg-card">
+                <div
+                  onClick={() => {
+                    setActiveStatModal(stat.id as any);
+                    setIsStatModalOpen(true);
+                  }}
+                  className="bento-card bento-card--compact h-[132px] group cursor-pointer flex flex-col justify-between border-border/60 bg-card hover:bg-muted/5 hover:border-primary/20 transition-all shadow-sm hover:shadow-glow-sm active:scale-[0.98]"
+                >
                   <div className="flex items-center justify-between">
                     <div className="p-2 rounded-md bg-muted/50 transition-all duration-300 group-hover:bg-primary/10">
                       <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
                     </div>
-                    <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-30 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div>
                     <p className="text-[10px] font-medium text-muted-foreground/40">{stat.title}</p>
@@ -271,6 +284,20 @@ const Index = () => {
         open={isTaskModalOpen}
         onOpenChange={setIsTaskModalOpen}
         onCreate={createTask}
+      />
+
+      <DashboardStatsModals
+        type={activeStatModal}
+        open={isStatModalOpen}
+        onOpenChange={setIsStatModalOpen}
+        data={{
+          projects,
+          tasksStats,
+          uniqueClients: Array.from(new Set([
+            ...clients.map(c => c.name),
+            ...projects.map(p => p.client_name).filter(Boolean)
+          ])) as string[]
+        }}
       />
     </div>
   );
