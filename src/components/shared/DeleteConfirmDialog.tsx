@@ -17,6 +17,8 @@ interface DeleteConfirmDialogProps {
     description: string;
     onConfirm: () => void;
     trigger?: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
 export function DeleteConfirmDialog({
@@ -24,9 +26,11 @@ export function DeleteConfirmDialog({
     description,
     onConfirm,
     trigger,
+    open,
+    onOpenChange
 }: DeleteConfirmDialogProps) {
     return (
-        <AlertDialog>
+        <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogTrigger asChild>
                 {trigger || (
                     <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">

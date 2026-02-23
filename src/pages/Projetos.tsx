@@ -33,6 +33,9 @@ const Projetos = () => {
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [filterBilling, setFilterBilling] = useState<"all" | "pontual" | "recorrente">("all");
+  const [filterService, setFilterService] = useState<string>("all");
+  const [filterClient, setFilterClient] = useState<string>("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -65,8 +68,14 @@ const Projetos = () => {
   const filteredProjects = projects.filter(project => {
     const matchesStatus = selectedStatus === "all" || project.status === selectedStatus;
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
+    const matchesBilling = filterBilling === "all" || project.billing_type === filterBilling;
+    const matchesService = filterService === "all" || project.service_type === filterService;
+    const matchesClient = filterClient === "all" || project.client_name === filterClient;
+    return matchesStatus && matchesSearch && matchesBilling && matchesService && matchesClient;
   });
+
+  const uniqueServiceTypes = Array.from(new Set(projects.map(p => p.service_type).filter(Boolean)));
+  const uniqueClients = Array.from(new Set(projects.map(p => p.client_name).filter(Boolean)));
 
   const stats = [
     { label: "Total", value: projects.length, icon: Briefcase, color: "text-[hsl(var(--peach))]" },
@@ -184,6 +193,64 @@ const Projetos = () => {
               Lista
             </Button>
           </div>
+        </div>
+
+        {/* Extended Filters Bar */}
+        <div className="flex flex-wrap items-center gap-4 py-2">
+          <div className="flex items-center gap-2">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground/40" />
+            <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground/40">Filtros Avançados:</span>
+          </div>
+
+          <Select value={filterBilling} onValueChange={(v: any) => setFilterBilling(v)}>
+            <SelectTrigger className="h-8 w-[140px] text-[10px] font-semibold bg-card border-border/40">
+              <SelectValue placeholder="Faturamento" />
+            </SelectTrigger>
+            <SelectContent className="glass border-border/50">
+              <SelectItem value="all">Todos Faturamentos</SelectItem>
+              <SelectItem value="pontual">Pontual</SelectItem>
+              <SelectItem value="recorrente">Recorrente</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filterService} onValueChange={setFilterService}>
+            <SelectTrigger className="h-8 w-[140px] text-[10px] font-semibold bg-card border-border/40">
+              <SelectValue placeholder="Serviço" />
+            </SelectTrigger>
+            <SelectContent className="glass border-border/50">
+              <SelectItem value="all">Todos Serviços</SelectItem>
+              {uniqueServiceTypes.map((type: any) => (
+                <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterClient} onValueChange={setFilterClient}>
+            <SelectTrigger className="h-8 w-[180px] text-[10px] font-semibold bg-card border-border/40">
+              <SelectValue placeholder="Cliente" />
+            </SelectTrigger>
+            <SelectContent className="glass border-border/50">
+              <SelectItem value="all">Todos Clientes</SelectItem>
+              {uniqueClients.map((client: any) => (
+                <SelectItem key={client} value={client}>{client}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-3 text-[10px] font-bold text-muted-foreground/60 hover:text-foreground"
+            onClick={() => {
+              setFilterBilling("all");
+              setFilterService("all");
+              setFilterClient("all");
+              setSelectedStatus("all");
+              setSearchQuery("");
+            }}
+          >
+            Limpar Filtros
+          </Button>
         </div>
 
         {isLoading ? (
@@ -322,23 +389,66 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <Badge variant="outline" className={cn(
+              "text-[9px] font-bold uppercase tracking-wider h-5",
+              project.billing_type === 'recorrente'
+                ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+            )}>
+              {project.billing_type || 'pontual'}
+            </Badge>
+            {project.service_type && (
+              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider h-5 bg-muted/30 text-muted-foreground/60 border-border/40 capitalize">
+                {project.service_type}
+              </Badge>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground line-clamp-2 mb-6">
             {project.description || "Sem descrição disponível."}
           </p>
         </div>
 
         <div className="space-y-4 pt-4 border-t border-border/30">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-0.5">
+                {project.billing_type === 'recorrente' ? 'Mensalidade' : 'Valor Total'}
+              </p>
+              <p className="text-sm font-bold text-foreground tabular-nums">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value || 0)}
+              </p>
+            </div>
+            {project.billing_type === 'recorrente' && project.next_billing_date && (
+              <div className="text-right">
+                <p className="text-[9px] font-bold text-primary/60 uppercase tracking-tighter mb-0.5">Faturamento</p>
+                <p className="text-sm font-bold text-primary tabular-nums">
+                  {format(new Date(project.next_billing_date), "dd MMM")}
+                </p>
+              </div>
+            )}
+            {project.billing_type !== 'recorrente' && project.deadline && (
+              <div className="text-right">
+                <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-0.5">Prazo Final</p>
+                <p className="text-sm font-bold text-muted-foreground tabular-nums">
+                  {format(new Date(project.deadline), "dd MMM")}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-y-2">
             <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/60">
               <div className={cn("h-1.5 w-1.5 rounded-full",
-                project.status === 'active' ? 'bg-emerald-500' :
-                  project.status === 'review' ? 'bg-amber-500' : 'bg-slate-400')} />
-              {(statusLabels as any)[project.status] || project.status}
+                project.contract_status === 'active' ? 'bg-emerald-500' :
+                  project.contract_status === 'pending' ? 'bg-amber-500' : 'bg-slate-400')} />
+              {project.contract_status === 'active' ? 'Contrato Ativo' :
+                project.contract_status === 'pending' ? 'Assinatura Pendente' : 'Contrato Expirado'}
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/60">
-              <Clock className="h-3 w-3" />
-              {project.deadline ? format(new Date(project.deadline), "dd MMM") : "S/ prazo"}
-            </div>
+            {project.billing_type === 'recorrente' && (
+              <div className="text-[10px] font-bold text-indigo-400/80 bg-indigo-400/5 px-2 py-0.5 rounded border border-indigo-400/10">
+                Ciclo: {project.billing_cycle || 'Mensal'}
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -380,17 +490,33 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
       </div>
 
       <div className="flex items-center gap-8 px-6">
-        <div className="hidden lg:flex items-center gap-2 w-32">
-          <div className="h-1 flex-1 bg-muted/40 rounded-full overflow-hidden">
-            <div className="h-full bg-primary/40" style={{ width: `${project.progress}%` }} />
+        <div className="hidden lg:flex flex-col w-32">
+          <Badge variant="outline" className={cn(
+            "text-[8px] font-bold uppercase tracking-wider h-4 w-fit mb-1",
+            project.billing_type === 'recorrente'
+              ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+          )}>
+            {project.billing_type || 'pontual'}
+          </Badge>
+          <div className="flex items-center gap-1.5 text-[9px] font-medium text-muted-foreground/40">
+            <div className={cn("h-1 w-1 rounded-full",
+              project.contract_status === 'active' ? 'bg-emerald-500' :
+                project.contract_status === 'pending' ? 'bg-amber-500' : 'bg-slate-400')} />
+            {project.contract_status === 'active' ? 'Ativo' : 'Pendente'}
           </div>
-          <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">{project.progress}%</span>
         </div>
         <div className="hidden sm:flex flex-col text-right w-24">
-          <span className="text-[9px] font-medium text-muted-foreground/60">{(statusLabels as any)[project.status] || project.status}</span>
+          <span className="text-[9px] font-medium text-muted-foreground/60 capitalize">{project.service_type || "Outro"}</span>
+          <span className="text-[8px] text-muted-foreground/30 uppercase font-bold tracking-tighter">Serviço</span>
         </div>
         <div className="hidden xl:flex flex-col text-right w-24 opacity-60">
-          <span className="text-xs font-semibold tabular-nums">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}</span>
+          <span className="text-xs font-semibold tabular-nums">
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
+          </span>
+          <span className="text-[8px] text-muted-foreground/40 uppercase font-bold tracking-tighter">
+            {project.billing_type === 'recorrente' ? 'Mensal' : 'Total'}
+          </span>
         </div>
       </div>
 

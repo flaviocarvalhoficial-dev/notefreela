@@ -112,6 +112,14 @@ export type Database = {
                     client_name: string | null
                     value: number | null
                     services: Json | null
+                    billing_type: "pontual" | "recorrente" | null
+                    service_type: string | null
+                    contract_status: "active" | "expired" | "pending" | null
+                    next_billing_date: string | null
+                    billing_cycle: string | null
+                    advance_payment: number | null
+                    payment_method: string | null
+                    payment_status: string | null
                 }
                 Insert: {
                     created_at?: string
@@ -128,6 +136,14 @@ export type Database = {
                     client_name?: string | null
                     value?: number | null
                     services?: Json | null
+                    billing_type?: "pontual" | "recorrente" | null
+                    service_type?: string | null
+                    contract_status?: "active" | "expired" | "pending" | null
+                    next_billing_date?: string | null
+                    billing_cycle?: string | null
+                    advance_payment?: number | null
+                    payment_method?: string | null
+                    payment_status?: string | null
                 }
                 Update: {
                     created_at?: string
@@ -144,6 +160,14 @@ export type Database = {
                     client_name?: string | null
                     value?: number | null
                     services?: Json | null
+                    billing_type?: "pontual" | "recorrente" | null
+                    service_type?: string | null
+                    contract_status?: "active" | "expired" | "pending" | null
+                    next_billing_date?: string | null
+                    billing_cycle?: string | null
+                    advance_payment?: number | null
+                    payment_method?: string | null
+                    payment_status?: string | null
                 }
                 Relationships: [
                     {

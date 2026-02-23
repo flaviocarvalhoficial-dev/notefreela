@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 import { IconPicker } from "./IconPicker";
 
@@ -51,6 +52,11 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [newAdvance, setNewAdvance] = useState<number | "">("");
     const [newPaymentMethod, setNewPaymentMethod] = useState<string>("pix");
     const [newPaymentStatus, setNewPaymentStatus] = useState<string>("pending");
+    const [billingType, setBillingType] = useState<"pontual" | "recorrente">("pontual");
+    const [serviceType, setServiceType] = useState<string>("");
+    const [contractStatus, setContractStatus] = useState<"active" | "expired" | "pending">("active");
+    const [billingCycle, setBillingCycle] = useState<string>("mensal");
+    const [nextBillingDate, setNextBillingDate] = useState("");
 
     // Step 3: Tarefas
     const [tasks, setTasks] = useState<{ id: string, title: string }[]>([]);
@@ -74,6 +80,11 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setTaskInput("");
         setServices([]);
         setServiceInput("");
+        setBillingType("pontual");
+        setServiceType("");
+        setContractStatus("active");
+        setBillingCycle("mensal");
+        setNextBillingDate("");
     };
 
     // Auto-calculate global project value
@@ -130,6 +141,11 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     payment_status: newPaymentStatus,
                     avatar_emoji: newIcon,
                     services: services, // Assumes column 'services' exists (jsonb or text[])
+                    billing_type: billingType,
+                    service_type: serviceType,
+                    contract_status: contractStatus,
+                    billing_cycle: billingType === "recorrente" ? billingCycle : null,
+                    next_billing_date: billingType === "recorrente" ? (nextBillingDate || null) : null,
                     created_at: startDate ? new Date(startDate).toISOString() : new Date().toISOString()
                 })
                 .select()
@@ -276,6 +292,46 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         <div className="flex items-center gap-3">
                                             <IconPicker value={newIcon} onChange={setNewIcon} />
                                             <span className="text-xs text-muted-foreground">Personalize a identidade do projeto</span>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs opacity-60">Tipo de Faturamento</Label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {(['pontual', 'recorrente'] as const).map((t) => (
+                                                    <Button
+                                                        key={t}
+                                                        type="button"
+                                                        variant={billingType === t ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setBillingType(t)}
+                                                        className={cn(
+                                                            "h-9 text-[10px] font-bold uppercase tracking-wider",
+                                                            billingType === t
+                                                                ? "bg-primary/20 text-primary border-primary/50"
+                                                                : "glass-light border-border/50"
+                                                        )}
+                                                    >
+                                                        {t}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="service-type" className="text-xs opacity-60">Tipo de Serviço</Label>
+                                            <Select value={serviceType} onValueChange={setServiceType}>
+                                                <SelectTrigger className="glass-light border-border/50 h-9 text-xs">
+                                                    <SelectValue placeholder="Selecione..." />
+                                                </SelectTrigger>
+                                                <SelectContent className="glass border-border/50">
+                                                    <SelectItem value="design">Design</SelectItem>
+                                                    <SelectItem value="dev">Desenvolvimento</SelectItem>
+                                                    <SelectItem value="social_media">Social Media</SelectItem>
+                                                    <SelectItem value="traffic">Tráfego Pago</SelectItem>
+                                                    <SelectItem value="copywriting">Copywriting</SelectItem>
+                                                    <SelectItem value="other">Outro</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -460,23 +516,79 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label className="text-xs opacity-60">Prioridade Inicial</Label>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                {(['low', 'medium', 'high'] as const).map((p) => (
-                                                    <Button
-                                                        key={p}
-                                                        type="button"
-                                                        variant={newPriority === p ? "default" : "outline"}
-                                                        size="sm"
-                                                        onClick={() => setNewPriority(p)}
-                                                        className={newPriority === p ? "bg-primary/20 text-primary border-primary/50" : "glass-light border-border/50"}
-                                                    >
-                                                        {p === 'low' ? 'Baixa' : p === 'medium' ? 'Média' : 'Alta'}
-                                                    </Button>
-                                                ))}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs opacity-60">Status do Contrato</Label>
+                                                <Select value={contractStatus} onValueChange={setContractStatus as any}>
+                                                    <SelectTrigger className="glass-light border-border/50 h-11">
+                                                        <SelectValue placeholder="Status" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="glass border-border/50">
+                                                        <SelectItem value="active">Ativo</SelectItem>
+                                                        <SelectItem value="pending">Aguardando Assinatura</SelectItem>
+                                                        <SelectItem value="expired">Expirado / Finalizado</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="text-xs opacity-60">Prioridade Inicial</Label>
+                                                <div className="grid grid-cols-3 gap-2 h-11">
+                                                    {(['low', 'medium', 'high'] as const).map((p) => (
+                                                        <Button
+                                                            key={p}
+                                                            type="button"
+                                                            variant={newPriority === p ? "default" : "outline"}
+                                                            size="sm"
+                                                            onClick={() => setNewPriority(p)}
+                                                            className={cn(
+                                                                "h-full text-[10px] font-bold uppercase",
+                                                                newPriority === p ? "bg-primary/20 text-primary border-primary/50" : "glass-light border-border/50"
+                                                            )}
+                                                        >
+                                                            {p === 'low' ? 'Baixa' : p === 'medium' ? 'Méd' : 'Alt'}
+                                                        </Button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {billingType === "recorrente" && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                className="grid grid-cols-2 gap-4 pt-2"
+                                            >
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs opacity-60">Ciclo de Cobrança</Label>
+                                                    <Select value={billingCycle} onValueChange={setBillingCycle}>
+                                                        <SelectTrigger className="glass-light border-border/50 h-11">
+                                                            <SelectValue placeholder="Ciclo" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="glass border-border/50">
+                                                            <SelectItem value="semanal">Semanal</SelectItem>
+                                                            <SelectItem value="quinzenal">Quinzenal</SelectItem>
+                                                            <SelectItem value="mensal">Mensal</SelectItem>
+                                                            <SelectItem value="trimestral">Trimestral</SelectItem>
+                                                            <SelectItem value="anual">Anual</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="next-billing" className="text-xs opacity-60 flex items-center gap-2">
+                                                        <Calendar className="h-3 w-3" /> Próxima Cobrança
+                                                    </Label>
+                                                    <Input
+                                                        id="next-billing"
+                                                        type="date"
+                                                        className="glass-light border-border/50 h-11 [color-scheme:dark]"
+                                                        value={nextBillingDate}
+                                                        onChange={(e) => setNextBillingDate(e.target.value)}
+                                                    />
+                                                </div>
+                                            </motion.div>
+                                        )}
                                     </div>
                                 </>
                             )}

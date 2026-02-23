@@ -1,7 +1,8 @@
 import * as React from "react";
+import { motion } from "framer-motion";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { CalendarIcon, Check, Flag, Pencil, User, X, Tag as TagIcon, Plus } from "lucide-react";
+import { format, isBefore } from "date-fns";
+import { CalendarIcon, Check, Flag, Pencil, User, X, Tag as TagIcon, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -40,18 +41,40 @@ const priorityLabel: Record<Priority, string> = {
 
 // NOTE: Mantemos os mesmos HSLs já usados na página para consistência visual.
 const priorityTint: Record<Priority, string> = {
-  low: "hsl(220, 9%, 55%)",
-  medium: "hsl(212, 52%, 52%)",
-  high: "hsl(158, 64%, 52%)",
+  low: "hsl(220, 5%, 45%)",
+  medium: "hsl(217, 91%, 60%)",
+  high: "hsl(0, 84%, 60%)",
+};
+
+const priorityBg: Record<Priority, string> = {
+  low: "hsl(220, 5%, 95%)",
+  medium: "hsl(217, 91%, 95%)",
+  high: "hsl(0, 84%, 96%)",
+};
+
+// Dark mode overrides for priority bgs (handled via CSS or conditional)
+const getPriorityStyles = (priority: Priority) => {
+  const isDark = document.documentElement.classList.contains('dark');
+  return {
+    color: priorityTint[priority],
+    backgroundColor: isDark ? `${priorityTint[priority]}20` : priorityBg[priority],
+    borderColor: isDark ? `${priorityTint[priority]}40` : `${priorityTint[priority]}20`,
+  };
 };
 
 function formatDue(iso?: string) {
-  if (!iso) return "Sem prazo";
+  if (!iso) return null;
   try {
     const d = new Date(iso + "T00:00:00");
-    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isOverdue = isBefore(d, today);
+    return {
+      label: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      isOverdue
+    };
   } catch {
-    return iso;
+    return { label: iso, isOverdue: false };
   }
 }
 
@@ -142,7 +165,6 @@ export function EditableTaskCard({
   const [newTagName, setNewTagName] = React.useState("");
 
   function submit(values: EditTaskValues) {
-    console.log("Submitting task values:", values);
     onSave?.(values);
   }
 
@@ -151,49 +173,54 @@ export function EditableTaskCard({
   }
 
   const rootClass = variant === 'minimal'
-    ? "group bg-transparent px-0 py-1 transition-all duration-200"
+    ? "group bg-transparent px-0 py-1.5 transition-all duration-200"
     : (isOverlay
-      ? "glass rounded-2xl p-4 shadow-hover"
-      : "glass-light rounded-xl p-4 transition-all duration-200 hover:bg-muted/20 border border-transparent hover:border-border/50");
+      ? "bg-card rounded-2xl p-4 shadow-xl border-2 border-primary/10"
+      : "bg-card rounded-xl p-4 transition-all duration-300 hover:shadow-glow-sm border border-border/60 hover:border-border cursor-pointer group");
+
+  const dueInfo = formatDue(task.due);
+  const priorityStyle = getPriorityStyles(task.priority);
 
   return (
     <div
-      className={cn(rootClass, "flex flex-col gap-2 relative overflow-hidden transition-all duration-300")}
+      className={cn(rootClass, "flex flex-col gap-2.5 relative overflow-hidden")}
       onClick={!isEditing ? onStartEdit : undefined}
-      style={{
-        borderColor: variant === 'minimal' ? 'transparent' : (accentColor ? `${accentColor}40` : undefined),
-        backgroundColor: variant === 'minimal' ? 'transparent' : (accentColor || undefined),
-        boxShadow: variant === 'minimal' ? 'none' : (accentColor ? `0 2px 10px -5px ${accentColor}20` : undefined),
-        padding: variant === 'minimal' ? '0' : (isEditing ? '1rem' : '1rem')
-      }}
+      style={variant === 'card' ? {
+        borderLeftWidth: '4px',
+        borderLeftColor: accentColor || 'hsl(var(--primary))',
+      } : {}}
     >
+      {/* Subtle background glow for the accent color */}
+      {!isEditing && variant === 'card' && accentColor && (
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.06]"
+          style={{ backgroundColor: accentColor }}
+        />
+      )}
+
       {/* Header / Title Area */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-3 relative z-10">
         <div className="min-w-0 flex-1">
           {!isEditing ? (
-            <>
-              <p
+            <div className="space-y-1">
+              <h3
                 className={cn(
-                  "text-xs font-semibold leading-snug truncate",
-                  task.progress === 100 && variant === 'minimal' && "line-through text-muted-foreground decoration-muted-foreground/50 font-normal"
+                  "text-sm font-bold leading-tight text-foreground/90 tracking-tight transition-colors group-hover:text-foreground",
+                  task.progress === 100 && "line-through text-muted-foreground/60 font-medium"
                 )}
-                style={{
-                  color: variant === 'card' && accentColor ? getContrastColor(accentColor) : undefined
-                }}
               >
                 {task.title}
-              </p>
+              </h3>
               {variant === 'card' && (
-                <p
-                  className="text-[9px] text-muted-foreground mt-0.5 truncate font-medium opacity-60"
-                  style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
-                >
-                  {task.project || "Sem Projeto"}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest truncate">
+                    {task.project || "Geral"}
+                  </p>
+                </div>
               )}
-            </>
+            </div>
           ) : (
-            <form onSubmit={form.handleSubmit(submit, onError)} className="w-full" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={form.handleSubmit(submit)} className="w-full" onClick={(e) => e.stopPropagation()}>
               {variant === 'minimal' ? (
                 <div className="flex items-center gap-2 w-full pr-2">
                   <Input
@@ -204,7 +231,7 @@ export function EditableTaskCard({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
-                        form.handleSubmit(submit, onError)();
+                        form.handleSubmit(submit)();
                       }
                       if (e.key === 'Escape') {
                         e.preventDefault();
@@ -222,90 +249,62 @@ export function EditableTaskCard({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {/* Controls Bar - Compact */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
                       <Button
                         type="submit"
                         size="sm"
-                        className={cn("h-6 px-3 font-semibold text-[10px] rounded-md hover:opacity-90 shadow-sm transition-all",
-                          accentColor ? "border-0" : "bg-primary text-primary-foreground"
-                        )}
-                        style={accentColor ? {
-                          backgroundColor: getContrastColor(accentColor),
-                          color: accentColor
-                        } : undefined}
+                        className="h-7 px-4 font-bold text-[10px] uppercase tracking-wider rounded-lg bg-primary text-primary-foreground hover:opacity-90 shadow-sm transition-all"
                       >
                         Salvar
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded-md hover:bg-black/10 transition-colors"
-                        style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
+                        size="sm"
+                        className="h-7 px-2 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
                         onClick={() => {
                           onCancelEdit?.();
                           form.reset();
                         }}
                       >
-                        <X className="h-3.5 w-3.5" />
+                        Cancelar
                       </Button>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className="bg-transparent text-[9px] font-semibold px-1.5 py-0 h-6"
-                      style={{
-                        borderColor: accentColor ? `${getContrastColor(accentColor)}30` : 'rgba(0,0,0,0.1)',
-                        color: accentColor ? getContrastColor(accentColor) : undefined
-                      }}
-                    >
-                      <Flag className="h-2.5 w-2.5 mr-1 opacity-50" />
-                      {priorityLabel[form.watch("priority")]}
-                    </Badge>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
                       <Input
                         {...form.register("title")}
-                        className="text-sm font-semibold bg-transparent border-0 border-b rounded-none px-0 h-auto focus-visible:ring-0 placeholder:opacity-50 py-1"
+                        className="text-sm font-bold bg-transparent border-0 border-b border-border/60 rounded-none px-0 h-auto focus-visible:ring-0 placeholder:opacity-30 py-1"
                         placeholder="Nome da tarefa"
-                        style={{
-                          color: accentColor ? getContrastColor(accentColor) : undefined,
-                          borderColor: accentColor ? `${getContrastColor(accentColor)}20` : 'rgba(0,0,0,0.1)',
-                        }}
                         autoFocus
                       />
                     </div>
 
                     {/* Progress Slider Compact */}
-                    <div className="space-y-3 pt-1">
-                      <div className="flex items-center justify-between text-[10px] font-medium opacity-60" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         <span>Progresso</span>
-                        <span>{(form.watch("progress") as number) || 0}%</span>
+                        <span className="text-foreground">{(form.watch("progress") as number) || 0}%</span>
                       </div>
                       <Slider
                         value={[(form.watch("progress") as number) || 0]}
                         onValueChange={(vals) => form.setValue("progress", vals[0], { shouldDirty: true })}
                         max={100}
                         step={5}
-                        className="w-full h-1.5"
+                        className="w-full"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-0.5">
-                        <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prioridade</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Prioridade</label>
                         <Select value={form.watch("priority")} onValueChange={(v) => form.setValue("priority", v as any)}>
-                          <SelectTrigger
-                            className="h-7 bg-transparent border-transparent text-[10px] font-medium focus:ring-0 px-2 rounded-md transition-colors"
-                            style={{
-                              color: accentColor ? getContrastColor(accentColor) : undefined,
-                              backgroundColor: accentColor ? `${getContrastColor(accentColor)}10` : 'rgba(0,0,0,0.02)'
-                            }}
-                          >
+                          <SelectTrigger className="h-8 bg-muted/40 border-border/40 text-[10px] font-bold focus:ring-1">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -316,19 +315,13 @@ export function EditableTaskCard({
                         </Select>
                       </div>
 
-                      <div className="space-y-0.5">
-                        <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Projeto</label>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Projeto</label>
                         <Select
                           value={form.watch("projectId") || "unassigned"}
                           onValueChange={(v) => form.setValue("projectId", v === "unassigned" ? "" : v, { shouldDirty: true })}
                         >
-                          <SelectTrigger
-                            className="h-7 bg-transparent border-transparent text-[10px] font-medium focus:ring-0 px-2 rounded-md transition-colors truncate"
-                            style={{
-                              color: accentColor ? getContrastColor(accentColor) : undefined,
-                              backgroundColor: accentColor ? `${getContrastColor(accentColor)}10` : 'rgba(0,0,0,0.02)'
-                            }}
-                          >
+                          <SelectTrigger className="h-8 bg-muted/40 border-border/40 text-[10px] font-bold focus:ring-1 truncate">
                             <SelectValue placeholder="Selecione..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -340,20 +333,16 @@ export function EditableTaskCard({
                         </Select>
                       </div>
 
-                      <div className="space-y-0.5">
-                        <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Prazo</label>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Prazo</label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant="ghost"
                               className={cn(
-                                "h-7 w-full justify-start text-left font-medium bg-transparent text-[10px] px-2 rounded-md",
+                                "h-8 w-full justify-start text-left font-bold bg-muted/40 border-border/40 text-[10px] px-2 rounded-md focus:ring-1",
                                 !form.watch("due") && "opacity-60"
                               )}
-                              style={{
-                                color: accentColor ? getContrastColor(accentColor) : undefined,
-                                backgroundColor: accentColor ? `${getContrastColor(accentColor)}10` : 'rgba(0,0,0,0.02)'
-                              }}
                             >
                               <CalendarIcon className="mr-1.5 h-3 w-3 opacity-50" />
                               {form.watch("due") ? format(form.watch("due") as Date, "dd MMM") : <span>Sem prazo</span>}
@@ -371,22 +360,18 @@ export function EditableTaskCard({
                       </div>
                     </div>
 
-                    <div className="space-y-0.5">
-                      <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Responsável</label>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Responsável</label>
                       <Select
                         value={form.watch("assignee")}
                         onValueChange={(v) => form.setValue("assignee", v, { shouldDirty: true })}
                       >
                         <SelectTrigger
-                          className="h-8 bg-transparent border-transparent px-2 rounded-md text-[10px] font-medium focus:ring-0 transition-colors"
-                          style={{
-                            color: accentColor ? getContrastColor(accentColor) : undefined,
-                            backgroundColor: accentColor ? `${getContrastColor(accentColor)}10` : 'rgba(0,0,0,0.02)'
-                          }}
+                          className="h-8 bg-muted/40 border-border/40 px-2 rounded-md text-[10px] font-bold focus:ring-1"
                         >
                           <div className="flex items-center gap-2">
                             {/* Mini Avatar */}
-                            <div className="h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-semibold opacity-80" style={{ backgroundColor: accentColor ? `${getContrastColor(accentColor)}20` : 'rgba(0,0,0,0.1)' }}>
+                            <div className="h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-semibold opacity-80 bg-primary/20 text-primary">
                               {form.watch("assignee") ? form.watch("assignee")!.charAt(0).toUpperCase() : <User className="h-2.5 w-2.5" />}
                             </div>
                             <span>{form.watch("assignee") || "Atribuir..."}</span>
@@ -402,8 +387,8 @@ export function EditableTaskCard({
                       </Select>
                     </div>
 
-                    <div className="space-y-0.5">
-                      <label className="text-[9px] font-medium opacity-40" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>Tags</label>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Tags</label>
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {/* Existing Tags */}
                         {(form.watch("tags") || []).map((tagId, index) => {
@@ -416,12 +401,7 @@ export function EditableTaskCard({
                             <Badge
                               key={`${tagId}-${index}`}
                               variant="secondary"
-                              className="bg-transparent text-[9px] font-medium px-1.5 h-5 border transition-colors cursor-pointer rounded-md group relative pr-4"
-                              style={{
-                                color: accentColor ? getContrastColor(accentColor) : undefined,
-                                borderColor: accentColor ? `${getContrastColor(accentColor)}15` : 'rgba(0,0,0,0.05)',
-                                backgroundColor: accentColor ? `${getContrastColor(accentColor)}05` : 'rgba(0,0,0,0.02)'
-                              }}
+                              className="bg-muted/40 text-[9px] font-medium px-1.5 h-5 border border-border/40 transition-colors cursor-pointer rounded-md group relative pr-4"
                               onClick={() => {
                                 // Update form to remove this tag
                                 const currentTags = form.getValues("tags") || [];
@@ -438,7 +418,7 @@ export function EditableTaskCard({
                         {isAddingTag ? (
                           <div className="flex items-center gap-1">
                             <Input
-                              className="h-5 w-20 text-[9px] px-1 py-0 rounded-md bg-transparent border border-black/10 focus-visible:ring-0"
+                              className="h-5 w-20 text-[9px] px-1 py-0 rounded-md bg-muted/40 border border-border/40 focus-visible:ring-0"
                               value={newTagName}
                               onChange={(e) => setNewTagName(e.target.value)}
                               onKeyDown={(e) => {
@@ -483,11 +463,7 @@ export function EditableTaskCard({
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="h-5 w-5 rounded-full"
-                            style={{
-                              color: accentColor ? getContrastColor(accentColor) : undefined,
-                              backgroundColor: accentColor ? `${getContrastColor(accentColor)}10` : 'rgba(0,0,0,0.02)'
-                            }}
+                            className="h-5 w-5 rounded-full bg-muted/40 text-muted-foreground hover:bg-muted/60"
                             onClick={(e) => {
                               e.stopPropagation();
                               setIsAddingTag(true);
@@ -508,95 +484,73 @@ export function EditableTaskCard({
         {!isEditing && variant === 'card' && (
           <Badge
             variant="outline"
-            className="bg-transparent border-transparent text-[9px] font-semibold px-1 py-0 h-5 shrink-0 opacity-70"
+            className="text-[9px] font-bold px-1.5 h-5 shrink-0 border transition-colors uppercase tracking-tight"
             style={{
-              color: priorityTint[task.priority],
+              color: priorityStyle.color,
+              backgroundColor: priorityStyle.backgroundColor,
+              borderColor: priorityStyle.borderColor
             }}
           >
             {priorityLabel[task.priority]}
           </Badge>
         )}
-
-        {!isEditing && variant === 'minimal' && (
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10 relative z-20 cursor-pointer pointer-events-auto"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onDelete?.();
-              }}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-40 hover:opacity-100"
-              onClick={(e) => {
-                e.stopPropagation();
-                onStartEdit?.();
-              }}
-            >
-              <Pencil className="h-3 w-3" />
-            </Button>
-          </div>
-        )}
       </div>
 
       {!isEditing && (
-        <>
+        <div className="relative z-10 space-y-3">
           {variant === 'card' && (
             <>
+              {/* Progress visual */}
               <div className="space-y-1.5">
-                <div
-                  className="flex items-center justify-between text-[10px] font-medium text-muted-foreground"
-                  style={{ color: accentColor ? getContrastColor(accentColor) : undefined, opacity: 0.7 }}
-                >
-                  <span className="font-medium">Progresso</span>
-                  <span>{task.progress}%</span>
+                <div className="flex justify-between items-center text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">
+                  <span>Conclusão</span>
+                  <span className={cn(task.progress === 100 ? "text-emerald-500" : "text-muted-foreground")}>{task.progress}%</span>
                 </div>
-                <Progress value={task.progress} className="h-1 bg-black/5" />
+                <div className="h-1 w-full bg-muted/40 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${task.progress}%` }}
+                    className={cn("h-full transition-colors", task.progress === 100 ? "bg-emerald-500" : "bg-primary/60")}
+                  />
+                </div>
               </div>
 
-              <div
-                className="flex items-center justify-between mt-auto pt-2 border-t border-black/5"
-                style={{ borderColor: accentColor ? 'rgba(0,0,0,0.05)' : undefined }}
-              >
+              {/* Footer labels */}
+              <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-3">
-                  {task.due && (
-                    <div className="flex items-center gap-1.5 text-xs font-medium opacity-70" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
-                      <CalendarIcon className="h-3.5 w-3.5" />
-                      <span>{formatDue(task.due)}</span>
+                  {dueInfo && (
+                    <div className={cn(
+                      "flex items-center gap-1 text-[10px] font-bold tracking-tight",
+                      dueInfo.isOverdue ? "text-rose-500" : "text-muted-foreground/60"
+                    )}>
+                      <CalendarIcon className="h-3 w-3" />
+                      <span>{dueInfo.label}</span>
                     </div>
                   )}
                   {task.assignee && (
-                    <div className="flex items-center gap-1.5 text-xs font-medium opacity-70" style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}>
-                      <User className="h-3.5 w-3.5" />
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/60 tracking-tight">
+                      <User className="h-3 w-3" />
                       <span>{task.assignee.split(' ')[0]}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete?.();
                     }}
                   >
-                    <X className="h-3 w-3" />
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
-                    style={{ color: accentColor ? getContrastColor(accentColor) : undefined }}
+                    className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onStartEdit?.();
@@ -608,7 +562,49 @@ export function EditableTaskCard({
               </div>
             </>
           )}
-        </>
+
+          {variant === 'minimal' && !isEditing && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {dueInfo && (
+                  <span className={cn(
+                    "text-[9px] font-bold",
+                    dueInfo.isOverdue ? "text-rose-500" : "text-muted-foreground/40"
+                  )}>
+                    {dueInfo.label}
+                  </span>
+                )}
+                <Badge variant="outline" className="text-[8px] h-4 px-1 font-bold opacity-40 uppercase tracking-tighter">
+                  {priorityLabel[task.priority]}
+                </Badge>
+              </div>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete?.();
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-muted-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStartEdit?.();
+                  }}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

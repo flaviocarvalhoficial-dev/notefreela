@@ -28,6 +28,11 @@ interface Project {
     payment_method?: string | null;
     payment_status?: string | null;
     services?: { name: string; price: number }[] | null;
+    billing_type?: "pontual" | "recorrente" | null;
+    service_type?: string | null;
+    contract_status?: "active" | "expired" | "pending" | null;
+    billing_cycle?: string | null;
+    next_billing_date?: string | null;
     created_at: string;
 }
 
@@ -64,6 +69,11 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
     const [services, setServices] = useState<{ name: string; price: number }[]>(project.services || []);
     const [serviceInput, setServiceInput] = useState("");
     const [servicePriceInput, setServicePriceInput] = useState<number | "">("");
+    const [billingType, setBillingType] = useState<"pontual" | "recorrente">(project.billing_type as any || "pontual");
+    const [serviceType, setServiceType] = useState<string>(project.service_type || "");
+    const [contractStatus, setContractStatus] = useState<"active" | "expired" | "pending">(project.contract_status as any || "active");
+    const [billingCycle, setBillingCycle] = useState<string>(project.billing_cycle || "mensal");
+    const [nextBillingDate, setNextBillingDate] = useState(project.next_billing_date ? new Date(project.next_billing_date).toISOString().split('T')[0] : "");
     const [startDate, setStartDate] = useState(project.created_at ? new Date(project.created_at).toISOString().split('T')[0] : "");
 
     useEffect(() => {
@@ -81,6 +91,11 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
             setNewPaymentStatus(project.payment_status || "pending");
             setNewIcon(project.avatar_emoji || "Briefcase");
             setServices(project.services || []);
+            setBillingType(project.billing_type as any || "pontual");
+            setServiceType(project.service_type || "");
+            setContractStatus(project.contract_status || "active");
+            setBillingCycle(project.billing_cycle || "mensal");
+            setNextBillingDate(project.next_billing_date ? new Date(project.next_billing_date).toISOString().split('T')[0] : "");
             setStartDate(project.created_at ? new Date(project.created_at).toISOString().split('T')[0] : "");
         }
     }, [open, project]);
@@ -124,6 +139,11 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                     payment_status: newPaymentStatus,
                     avatar_emoji: newIcon,
                     services: services,
+                    billing_type: billingType,
+                    service_type: serviceType,
+                    contract_status: contractStatus,
+                    billing_cycle: billingType === "recorrente" ? billingCycle : null,
+                    next_billing_date: billingType === "recorrente" ? (nextBillingDate || null) : null,
                     created_at: startDate ? new Date(startDate).toISOString() : project.created_at
                 })
                 .eq("id", project.id);
@@ -246,10 +266,41 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
+                            <Label className="text-xs opacity-60">Faturamento</Label>
+                            <Select value={billingType} onValueChange={(v: any) => setBillingType(v)}>
+                                <SelectTrigger className="glass-light border-border/50 h-10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="glass border-border/50 z-50">
+                                    <SelectItem value="pontual">Pontual</SelectItem>
+                                    <SelectItem value="recorrente">Recorrente</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs opacity-60">Tipo de Serviço</Label>
+                            <Select value={serviceType} onValueChange={setServiceType}>
+                                <SelectTrigger className="glass-light border-border/50 h-10">
+                                    <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                                <SelectContent className="glass border-border/50 z-50">
+                                    <SelectItem value="design">Design</SelectItem>
+                                    <SelectItem value="dev">Desenvolvimento</SelectItem>
+                                    <SelectItem value="social_media">Social Media</SelectItem>
+                                    <SelectItem value="traffic">Tráfego Pago</SelectItem>
+                                    <SelectItem value="copywriting">Copywriting</SelectItem>
+                                    <SelectItem value="other">Outro</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
                             <Label htmlFor="edit-project-client">Cliente</Label>
                             <Input
                                 id="edit-project-client"
-                                className="glass-light border-border/50"
+                                className="glass-light border-border/50 h-10"
                                 value={newClient}
                                 onChange={(e) => setNewClient(e.target.value)}
                             />
@@ -258,12 +309,41 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             <Label htmlFor="edit-project-manager">Responsável</Label>
                             <Input
                                 id="edit-project-manager"
-                                className="glass-light border-border/50"
+                                className="glass-light border-border/50 h-10"
                                 value={newManager}
                                 onChange={(e) => setNewManager(e.target.value)}
                             />
                         </div>
                     </div>
+
+                    {billingType === "recorrente" && (
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs opacity-60">Ciclo</Label>
+                                <Select value={billingCycle} onValueChange={setBillingCycle}>
+                                    <SelectTrigger className="glass-light border-border/50 h-10">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="glass border-border/50 z-50">
+                                        <SelectItem value="semanal">Semanal</SelectItem>
+                                        <SelectItem value="quinzenal">Quinzenal</SelectItem>
+                                        <SelectItem value="mensal">Mensal</SelectItem>
+                                        <SelectItem value="trimestral">Trimestral</SelectItem>
+                                        <SelectItem value="anual">Anual</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs opacity-60">Próxima Cobrança</Label>
+                                <Input
+                                    type="date"
+                                    className="glass-light border-border/50 h-10 [color-scheme:dark]"
+                                    value={nextBillingDate}
+                                    onChange={(e) => setNextBillingDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -297,9 +377,9 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Status</Label>
+                            <Label>Status Projeto</Label>
                             <Select value={newStatus} onValueChange={(v: any) => setNewStatus(v)}>
-                                <SelectTrigger className="glass-light border-border/50">
+                                <SelectTrigger className="glass-light border-border/50 h-10">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="glass border-border/50 z-50">
@@ -312,15 +392,15 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Prioridade</Label>
-                            <Select value={newPriority} onValueChange={(v: any) => setNewPriority(v)}>
-                                <SelectTrigger className="glass-light border-border/50">
+                            <Label>Status Contrato</Label>
+                            <Select value={contractStatus} onValueChange={(v: any) => setContractStatus(v)}>
+                                <SelectTrigger className="glass-light border-border/50 h-10">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="glass border-border/50 z-50">
-                                    <SelectItem value="high">Alta</SelectItem>
-                                    <SelectItem value="medium">Média</SelectItem>
-                                    <SelectItem value="low">Baixa</SelectItem>
+                                    <SelectItem value="active">Ativo</SelectItem>
+                                    <SelectItem value="pending">Pendente</SelectItem>
+                                    <SelectItem value="expired">Expirado</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

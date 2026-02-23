@@ -111,7 +111,11 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
     const renderClients = () => (
         <div className="space-y-3 py-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             {data.uniqueClients.map((client, idx) => {
-                const projectsCount = data.projects.filter(p => p.client_name?.toLowerCase() === client.toLowerCase()).length;
+                if (!client) return null;
+                const projectsCount = data.projects.filter(p =>
+                    p.client_name?.toLowerCase() === client.toLowerCase()
+                ).length;
+
                 return (
                     <div
                         key={idx}
@@ -119,7 +123,7 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
                     >
                         <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center border border-border/40 capitalize font-bold text-primary/70">
-                                {client.charAt(0)}
+                                {client.charAt(0) || "?"}
                             </div>
                             <div>
                                 <h4 className="text-sm font-semibold capitalize">{client}</h4>

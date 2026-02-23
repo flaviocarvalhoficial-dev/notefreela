@@ -1,11 +1,11 @@
 export const PASTEL_COLORS = [
-    { name: "Cinza Suave", value: "hsl(220, 15%, 75%)" },
-    { name: "Azul Céu", value: "hsl(200, 85%, 82%)" },
-    { name: "Menta", value: "hsl(150, 65%, 82%)" },
-    { name: "Creme", value: "hsl(45, 90%, 82%)" },
-    { name: "Pêssego", value: "hsl(25, 95%, 82%)" },
-    { name: "Rose", value: "hsl(0, 85%, 85%)" },
-    { name: "Lavanda", value: "hsl(265, 70%, 85%)" },
+    { name: "Ardósia", value: "hsl(215, 15%, 70%)" },
+    { name: "Indigo", value: "hsl(230, 80%, 85%)" },
+    { name: "Esmeralda", value: "hsl(150, 70%, 82%)" },
+    { name: "Âmbar", value: "hsl(40, 95%, 82%)" },
+    { name: "Coral", value: "hsl(10, 90%, 85%)" },
+    { name: "Púrpura", value: "hsl(265, 80%, 85%)" },
+    { name: "Ciano", value: "hsl(190, 85%, 82%)" },
 ];
 
 export const DEFAULT_SCENARIOS = [

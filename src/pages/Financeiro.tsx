@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
     DollarSign,
     TrendingUp,
@@ -34,9 +36,6 @@ import {
     DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
-import {
-    AnimatePresence
-} from "framer-motion";
 import { FinancialChart } from "@/components/dashboard/FinancialChart";
 import { CostsBreakdownModal } from "@/components/dashboard/CostsBreakdownModal";
 import {
@@ -46,6 +45,7 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
+import { FinancialReportsModal } from "@/components/dashboard/FinancialReportsModal";
 import {
     Select,
     SelectContent,
@@ -61,6 +61,8 @@ interface Project {
     advance_payment: number;
     client_name: string;
     status: string;
+    deadline: string | null;
+    created_at: string;
     services?: { name: string; price: number }[];
 }
 
@@ -68,8 +70,10 @@ export default function Financeiro() {
     const [expandedRows, setExpandedRows] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [selectedMonth, setSelectedMonth] = useState<string>("all");
     const [isCostsModalOpen, setIsCostsModalOpen] = useState(false);
     const [isDetailedStatsOpen, setIsDetailedStatsOpen] = useState(false);
+    const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
     const [activeStatDetail, setActiveStatDetail] = useState<string | null>(null);
 
     const toggleRow = (id: string) => {
@@ -91,27 +95,77 @@ export default function Financeiro() {
         }
     });
 
-    const filteredProjects = projects.filter(p => {
-        const remaining = (p.value || 0) - (p.advance_payment || 0);
-        const isPaid = remaining <= 0 && (p.value || 0) > 0;
-        const hasAdvance = (p.advance_payment || 0) > 0;
-        const payStatus = isPaid ? "paid" : hasAdvance ? "partial" : "pending";
+    const monthOptions = useMemo(() => {
+        const months = new Set<string>();
+        months.add(new Date().toISOString().substring(0, 7));
 
-        const matchesSearch = (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.client_name?.toLowerCase().includes(searchQuery.toLowerCase()));
+        projects.forEach(p => {
+            if (p.created_at) months.add(p.created_at.substring(0, 7));
+            if (p.deadline) months.add(p.deadline.substring(0, 7));
+        });
 
-        const matchesStatus = statusFilter === "all" || payStatus === statusFilter;
+        return Array.from(months).sort().reverse().map(m => {
+            const [year, month] = m.split("-");
+            const date = new Date(parseInt(year), parseInt(month) - 1);
+            return {
+                value: m,
+                label: format(date, "MMMM 'de' yyyy", { locale: ptBR })
+            };
+        });
+    }, [projects]);
 
-        return matchesSearch && matchesStatus;
-    });
+    const filteredProjects = useMemo(() => {
+        return projects.filter(p => {
+            const remaining = (p.value || 0) - (p.advance_payment || 0);
+            const isPaid = remaining <= 0 && (p.value || 0) > 0;
+            const hasAdvance = (p.advance_payment || 0) > 0;
+            const payStatus = isPaid ? "paid" : hasAdvance ? "partial" : "pending";
 
-    const stats = {
-        totalValue: filteredProjects.reduce((acc, p) => acc + (p.value || 0), 0),
-        totalPaid: filteredProjects.reduce((acc, p) => acc + (p.advance_payment || 0), 0),
-        totalRemaining: filteredProjects.reduce((acc, p) => acc + (Math.max(0, (p.value || 0) - (p.advance_payment || 0))), 0),
-        projects: filteredProjects,
-        projectCount: filteredProjects.length
-    };
+            const matchesSearch = (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.client_name?.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            const matchesStatus = statusFilter === "all" || payStatus === statusFilter;
+
+            const projectMonth = p.created_at ? p.created_at.substring(0, 7) : "";
+            const deadlineMonth = p.deadline ? p.deadline.substring(0, 7) : "";
+            const matchesMonth = selectedMonth === "all" || projectMonth === selectedMonth || deadlineMonth === selectedMonth;
+
+            return matchesSearch && matchesStatus && matchesMonth;
+        });
+    }, [projects, searchQuery, statusFilter, selectedMonth]);
+
+    const stats = useMemo(() => {
+        let gains = 0;
+        let future = 0;
+        let total = 0;
+
+        filteredProjects.forEach(p => {
+            const projectMonth = (p.created_at || "").substring(0, 7);
+            const deadlineMonth = (p.deadline || "").substring(0, 7);
+
+            if (selectedMonth === "all") {
+                gains += (p.advance_payment || 0);
+                future += Math.max(0, (p.value || 0) - (p.advance_payment || 0));
+                total += (p.value || 0);
+            } else {
+                if (projectMonth === selectedMonth) {
+                    gains += (p.advance_payment || 0);
+                }
+                if (deadlineMonth === selectedMonth) {
+                    future += Math.max(0, (p.value || 0) - (p.advance_payment || 0));
+                }
+                total = gains + future;
+            }
+        });
+
+        return {
+            totalValue: total,
+            totalPaid: gains,
+            totalRemaining: future,
+            projects: filteredProjects,
+            projectCount: filteredProjects.length
+        };
+    }, [filteredProjects, selectedMonth]);
 
     const { data: costStats } = useQuery({
         queryKey: ["finance_costs"],
@@ -125,6 +179,10 @@ export default function Financeiro() {
     const totalCosts = costStats?.totalCosts || 0;
     const netProfit = (stats?.totalPaid || 0) - totalCosts;
 
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    };
+
     if (isLoading) {
         return (
             <div className="h-full flex items-center justify-center py-24">
@@ -133,10 +191,6 @@ export default function Financeiro() {
         );
     }
 
-    const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-    };
-
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/60">
@@ -144,7 +198,16 @@ export default function Financeiro() {
                     <h1 className="heading-1 mb-1">Financeiro</h1>
                     <p className="text-muted-foreground text-sm">Gestão de pagamentos e fluxo de caixa por projeto</p>
                 </div>
-
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        className="h-9 gap-2 text-xs font-semibold glass border-primary/20 hover:bg-primary/5"
+                        onClick={() => setIsReportsModalOpen(true)}
+                    >
+                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                        Relatórios Mensais
+                    </Button>
+                </div>
             </div>
 
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-muted/5 p-4 rounded-xl border border-border/40 backdrop-blur-sm">
@@ -162,13 +225,26 @@ export default function Financeiro() {
 
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                         <SelectTrigger className="h-9 w-[180px] text-xs bg-background border-border/50">
-                            <SelectValue placeholder="Status Pagamento" />
+                            <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent className="glass">
                             <SelectItem value="all">Todos Pagamentos</SelectItem>
                             <SelectItem value="paid">Quitados</SelectItem>
                             <SelectItem value="partial">Entrada Paga</SelectItem>
                             <SelectItem value="pending">Pendentes</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                        <SelectTrigger className="h-9 w-[200px] text-xs bg-background border-border/50">
+                            <Calendar className="mr-2 h-3.5 w-3.5 text-muted-foreground/60" />
+                            <SelectValue placeholder="Filtrar Mês" />
+                        </SelectTrigger>
+                        <SelectContent className="glass">
+                            <SelectItem value="all">Todo o Período</SelectItem>
+                            {monthOptions.map(m => (
+                                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
@@ -187,6 +263,7 @@ export default function Financeiro() {
                         onClick={() => {
                             setSearchQuery("");
                             setStatusFilter("all");
+                            setSelectedMonth("all");
                         }}
                         className="h-9 text-xs text-muted-foreground px-3"
                     >
@@ -280,9 +357,8 @@ export default function Financeiro() {
                                 const hasAdvance = (p.advance_payment || 0) > 0;
 
                                 return (
-                                    <>
+                                    <React.Fragment key={p.id}>
                                         <tr
-                                            key={p.id}
                                             className={cn(
                                                 "group hover:bg-muted/10 transition-colors border-b border-border/5",
                                                 expandedRows.includes(p.id) ? "bg-primary/5" : (i % 2 === 0 ? "bg-transparent" : "bg-muted/5")
@@ -332,32 +408,34 @@ export default function Financeiro() {
                                                 </Badge>
                                             </td>
                                         </tr>
-                                        {expandedRows.includes(p.id) && p.services && (
-                                            <tr className="bg-muted/10 border-b border-border/5">
-                                                <td colSpan={5} className="p-0">
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: "auto", opacity: 1 }}
-                                                        exit={{ height: 0, opacity: 0 }}
-                                                        className="overflow-hidden bg-primary/[0.02]"
-                                                    >
-                                                        <div className="px-14 py-3 space-y-2">
-                                                            <div className="grid grid-cols-2 gap-4 pb-1 border-b border-border/10 text-[10px] font-medium text-muted-foreground/60">
-                                                                <span>Serviço</span>
-                                                                <span className="text-right">Valor</span>
-                                                            </div>
-                                                            {p.services.map((svc, idx) => (
-                                                                <div key={idx} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border/5 last:border-0 hover:bg-primary/5 transition-colors rounded-sm px-1">
-                                                                    <span className="text-muted-foreground font-medium">{svc.name}</span>
-                                                                    <span className="text-right font-semibold text-foreground/60">{formatCurrency(svc.price)}</span>
+                                        <AnimatePresence>
+                                            {expandedRows.includes(p.id) && p.services && (
+                                                <tr className="bg-muted/10 border-b border-border/5">
+                                                    <td colSpan={5} className="p-0">
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: "auto", opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            className="overflow-hidden bg-primary/[0.02]"
+                                                        >
+                                                            <div className="px-14 py-3 space-y-2">
+                                                                <div className="grid grid-cols-2 gap-4 pb-1 border-b border-border/10 text-[10px] font-medium text-muted-foreground/60">
+                                                                    <span>Serviço</span>
+                                                                    <span className="text-right">Valor</span>
                                                                 </div>
-                                                            ))}
-                                                        </div>
-                                                    </motion.div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </>
+                                                                {p.services.map((svc, idx) => (
+                                                                    <div key={idx} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border/5 last:border-0 hover:bg-primary/5 transition-colors rounded-sm px-1">
+                                                                        <span className="text-muted-foreground font-medium">{svc.name}</span>
+                                                                        <span className="text-right font-semibold text-foreground/60">{formatCurrency(svc.price)}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </motion.div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </AnimatePresence>
+                                    </React.Fragment>
                                 );
                             })}
                             {stats?.projects.length === 0 && (
@@ -421,9 +499,15 @@ export default function Financeiro() {
                     </Button>
                 </motion.div>
             </div>
+
             <CostsBreakdownModal
                 open={isCostsModalOpen}
                 onOpenChange={setIsCostsModalOpen}
+            />
+
+            <FinancialReportsModal
+                open={isReportsModalOpen}
+                onOpenChange={setIsReportsModalOpen}
             />
 
             <Dialog open={isDetailedStatsOpen} onOpenChange={setIsDetailedStatsOpen}>
@@ -443,7 +527,7 @@ export default function Financeiro() {
                         {stats.projects.map(p => {
                             const val = activeStatDetail === 'income' ? p.advance_payment :
                                 activeStatDetail === 'future' ? ((p.value || 0) - (p.advance_payment || 0)) :
-                                    0; // For profit, it's complex since costs are mostly global but we could show project value
+                                    0;
 
                             if (activeStatDetail === 'profit') {
                                 return (
@@ -485,7 +569,8 @@ export default function Financeiro() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     );
 }
 
+import * as React from "react";

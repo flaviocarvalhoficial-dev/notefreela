@@ -294,7 +294,7 @@ const Index = () => {
           projects,
           tasksStats,
           uniqueClients: Array.from(new Set([
-            ...clients.map(c => c.name),
+            ...clients.filter(c => c.name).map(c => c.name),
             ...projects.map(p => p.client_name).filter(Boolean)
           ])) as string[]
         }}

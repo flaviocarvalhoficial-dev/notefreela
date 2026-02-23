@@ -11,9 +11,10 @@ interface UseKanbanBoardProps {
     projectFilter: string;
     searchQuery: string;
     priorityFilter: "all" | Priority;
+    billingPeriod?: string;
 }
 
-export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: UseKanbanBoardProps) {
+export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, billingPeriod }: UseKanbanBoardProps) {
     const queryClient = useQueryClient();
     const { toast } = useToast();
 
@@ -51,12 +52,12 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
         }
     });
 
-    const { data: projects = [] } = useQuery<{ id: string, name: string }[]>({
+    const { data: projects = [] } = useQuery<{ id: string, name: string, billing_type: string, created_at: string }[]>({
         queryKey: ["projects"],
         queryFn: async () => {
-            const { data, error } = await supabase.from("projects").select("id, name");
+            const { data, error } = await supabase.from("projects").select("id, name, billing_type, created_at");
             if (error) throw error;
-            return data;
+            return data as any;
         }
     });
 
@@ -72,7 +73,8 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
             return data.map(t => ({
                 ...t,
                 progress: t.progress ?? 0,
-                project_name: (t.projects as any)?.name
+                project_name: (t.projects as any)?.name,
+                billing_period: (t as any).billing_period
             })) as Task[];
         }
     });
@@ -88,7 +90,8 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
             const matchesQ = !q || t.title.toLowerCase().includes(q) || t.project_name?.toLowerCase().includes(q);
             const matchesP = priorityFilter === "all" || t.priority === priorityFilter;
             const matchesProject = projectFilter === "all" || String(t.project_id) === String(projectFilter);
-            return matchesQ && matchesP && matchesProject;
+            const matchesPeriod = !billingPeriod || (t as any).billing_period === billingPeriod;
+            return matchesQ && matchesP && matchesProject && matchesPeriod;
         });
     }, [tasks, searchQuery, priorityFilter, projectFilter]);
 
@@ -179,7 +182,8 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter }: U
                 project_id: values.project || null,
                 progress: values.progress || 0,
                 start_time: values.startTime || "09:00",
-                end_time: values.endTime || "10:00"
+                end_time: values.endTime || "10:00",
+                billing_period: billingPeriod
             });
             if (error) throw error;
         },

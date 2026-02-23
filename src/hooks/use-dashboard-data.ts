@@ -49,7 +49,11 @@ export function useDashboardData() {
 
     /** Total number of unique clients (explicit + implicit from projects). */
     const uniqueClientsCount = (() => {
-        const explicitNames = new Set(clientsData.map((c) => c.name.toLowerCase()));
+        const explicitNames = new Set(
+            clientsData
+                .filter(c => c.name) // Ensure name exists
+                .map((c) => c.name!.toLowerCase())
+        );
         const implicitNames = new Set<string>();
 
         projects.forEach((p) => {

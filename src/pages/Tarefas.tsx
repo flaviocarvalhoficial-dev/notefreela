@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     DndContext,
@@ -18,7 +18,8 @@ import {
 import {
     Filter, Search, Loader2, Plus, Check,
     LayoutGrid, ChevronDown, Maximize2, Minimize2,
-    ListFilter, ArrowUpDown, Zap, Settings2, Trash2, MoreHorizontal
+    ListFilter, ArrowUpDown, Zap, Settings2, Trash2, MoreHorizontal,
+    CheckCircle2, AlertCircle, BarChart3, CalendarDays, FolderKanban, Briefcase, ArrowLeft, CheckSquare
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -41,9 +42,11 @@ import {
 } from "@/components/ui/select";
 
 import { NewTaskDialog } from "@/components/tasks/NewTaskDialog";
-import { format } from "date-fns";
+import { format, startOfMonth, addMonths, subMonths, isBefore, isAfter, isSameMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { EditableTaskCard } from "@/components/tasks/EditableTaskCard";
 import { useKanbanBoard } from "@/hooks/use-kanban-board";
+import { useQuery } from "@tanstack/react-query";
 import { DroppableColumn } from "@/components/tasks/DroppableColumn";
 import { SortableTaskItem } from "@/components/tasks/SortableTaskItem";
 import { Priority, ColumnId } from "@/types/kanban";
@@ -54,6 +57,7 @@ export default function Tarefas() {
     const [query, setQuery] = useState("");
     const [priorityFilter, setPriorityFilter] = useState<"all" | Priority>("all");
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [activeId, setActiveId] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [projectFilter, setProjectFilter] = useState(searchParams.get("project") || "all");
@@ -62,6 +66,7 @@ export default function Tarefas() {
     const [collapsedScenarios, setCollapsedScenarios] = useState<Record<string, boolean>>({});
     const [editingScenarioId, setEditingScenarioId] = useState<string | null>(null);
     const [editingScenarioTitle, setEditingScenarioTitle] = useState("");
+    const [selectedCycle, setSelectedCycle] = useState<string>(format(new Date(), "MMM yyyy", { locale: ptBR }));
 
     const {
         scenarios,
@@ -74,8 +79,53 @@ export default function Tarefas() {
     } = useKanbanBoard({
         projectFilter,
         searchQuery: query,
-        priorityFilter
+        priorityFilter,
+        billingPeriod: projectFilter !== 'all' ? selectedCycle : undefined
     });
+
+    // Full project data for the selection screen
+    const { data: fullProjects = [] } = useQuery({
+        queryKey: ["projects-index"],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("projects")
+                .select("id, name, status, progress, client_name, avatar_emoji, billing_type")
+                .order("name");
+            if (error) throw error;
+            return data || [];
+        }
+    });
+
+    // Task counts per project for the selection cards
+    const taskCountsByProject = useMemo(() => {
+        const allTasks = tasks; // tasks from useKanbanBoard is unfiltered when projectFilter=all
+        const counts: Record<string, { total: number; open: number }> = {};
+        for (const t of allTasks) {
+            const pid = t.project_id || "__none__";
+            if (!counts[pid]) counts[pid] = { total: 0, open: 0 };
+            counts[pid].total++;
+            if (t.column_id !== 'done') counts[pid].open++;
+        }
+        return counts;
+    }, [tasks]);
+
+    const selectedProjectData = projects.find(p => p.id === projectFilter);
+    const isRecurring = selectedProjectData?.billing_type === 'recorrente';
+
+    const tasksTotal = tasks.length;
+    const tasksOpen = tasks.filter(t => t.column_id !== 'done').length;
+    const tasksOverdue = tasks.filter(t => t.column_id !== 'done' && t.due_date && isBefore(new Date(t.due_date), new Date())).length;
+    const projectProgress = tasksTotal > 0 ? Math.round((tasks.filter(t => t.column_id === 'done').length / tasksTotal) * 100) : 0;
+
+    const availableCycles = useMemo(() => {
+        const cycles = [];
+        const now = new Date();
+        // Generate current month and 2 months before/after for selection
+        for (let i = -6; i <= 3; i++) {
+            cycles.push(format(addMonths(now, i), "MMM yyyy", { locale: ptBR }));
+        }
+        return cycles;
+    }, []);
 
     useEffect(() => {
         const project = searchParams.get("project");
@@ -97,7 +147,6 @@ export default function Tarefas() {
 
                 // Try to scroll to it
                 setTimeout(() => {
-                    // Try to find by multiple selectors/strategies
                     const el = document.getElementById(taskId) ||
                         document.querySelector(`[data-task-id="${taskId}"]`);
                     if (el) {
@@ -106,8 +155,6 @@ export default function Tarefas() {
                         setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 2000);
                     }
                 }, 800);
-            } else {
-                console.warn("Task ID form URL not found in loaded tasks:", taskId);
             }
         }
     }, [searchParams, tasks]);
@@ -151,53 +198,274 @@ export default function Tarefas() {
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
+    // ═══════ PROJECT SELECTION SCREEN ═══════
+    if (projectFilter === "all") {
+        const statusLabels: Record<string, string> = {
+            active: "Em Progresso",
+            planning: "Planejamento",
+            review: "Revisão",
+            completed: "Concluído"
+        };
+        const statusColors: Record<string, string> = {
+            active: "bg-sky-500",
+            planning: "bg-amber-500",
+            review: "bg-indigo-500",
+            completed: "bg-emerald-500"
+        };
+
+        return (
+            <div className="space-y-8 max-w-full overflow-x-hidden pb-32">
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-3xl font-semibold tracking-tight">Tarefas</h1>
+                    <p className="text-muted-foreground text-sm">Selecione um projeto para gerenciar suas tarefas e quadros Kanban.</p>
+                </div>
+
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center py-32 gap-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-muted-foreground animate-pulse font-medium">Carregando projetos...</p>
+                    </div>
+                ) : fullProjects.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
+                        <div className="h-16 w-16 rounded-2xl bg-muted/20 flex items-center justify-center border border-dashed border-border/60">
+                            <FolderKanban className="h-8 w-8 text-muted-foreground/40" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold mb-1">Nenhum projeto encontrado</h3>
+                            <p className="text-sm text-muted-foreground max-w-sm">
+                                Crie um projeto primeiro para começar a gerenciar suas tarefas aqui.
+                            </p>
+                        </div>
+                        <Button
+                            className="bg-primary hover:bg-primary/90"
+                            onClick={() => navigate("/projetos")}
+                        >
+                            <Plus className="h-4 w-4 mr-2" /> Criar Projeto
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {(fullProjects as any[]).map((p) => {
+                            const counts = taskCountsByProject[p.id] || { total: 0, open: 0 };
+                            const progress = p.progress || 0;
+                            const statusKey = p.status || "planning";
+
+                            return (
+                                <motion.button
+                                    key={p.id}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                    onClick={() => handleProjectFilterChange(p.id)}
+                                    className="group relative text-left p-5 rounded-2xl border border-border/40 bg-card/40 hover:bg-card/80 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 cursor-pointer"
+                                >
+                                    {/* Status dot */}
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-lg font-bold group-hover:bg-primary/20 transition-colors">
+                                                {p.avatar_emoji ? (
+                                                    <span className="text-base">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
+                                                ) : (
+                                                    <Briefcase className="h-5 w-5" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
+                                                <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                                                    {p.client_name || "Sem cliente"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <div className={cn("w-1.5 h-1.5 rounded-full", statusColors[statusKey] || "bg-muted")} />
+                                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                {statusLabels[statusKey] || statusKey}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Stats row */}
+                                    <div className="flex items-center gap-4 mb-3">
+                                        <div className="flex items-center gap-1.5">
+                                            <CheckSquare className="h-3 w-3 text-muted-foreground/60" />
+                                            <span className="text-[10px] font-semibold text-muted-foreground">
+                                                {counts.total} tarefa{counts.total !== 1 ? 's' : ''}
+                                            </span>
+                                        </div>
+                                        {counts.open > 0 && (
+                                            <div className="flex items-center gap-1.5">
+                                                <AlertCircle className="h-3 w-3 text-amber-500/60" />
+                                                <span className="text-[10px] font-semibold text-amber-500/80">
+                                                    {counts.open} em aberto
+                                                </span>
+                                            </div>
+                                        )}
+                                        {p.billing_type === "recorrente" && (
+                                            <div className="flex items-center gap-1">
+                                                <CalendarDays className="h-3 w-3 text-indigo-400/60" />
+                                                <span className="text-[9px] font-bold text-indigo-400/80 uppercase">Recorrente</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Progress bar */}
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider">Progresso</span>
+                                            <span className="text-[10px] font-bold text-primary/70">{progress}%</span>
+                                        </div>
+                                        <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-primary/60 rounded-full transition-all duration-500"
+                                                style={{ width: `${progress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Hover indicator */}
+                                    <div className="absolute bottom-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ChevronDown className="h-4 w-4 -rotate-90 text-primary" />
+                                    </div>
+                                </motion.button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // ═══════ KANBAN BOARD (project selected) ═══════
     return (
         <div className="space-y-8 max-w-full overflow-x-hidden pb-32">
             {/* Header Space */}
             <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-semibold tracking-tight mb-1">Tarefas</h1>
-                        <p className="text-muted-foreground text-sm">Gerencie o fluxo de trabalho</p>
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg hover:bg-muted/40"
+                            onClick={() => handleProjectFilterChange("all")}
+                            title="Voltar para projetos"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <div>
+                            <h1 className="text-3xl font-semibold tracking-tight mb-1">
+                                {selectedProjectData?.name || "Tarefas"}
+                            </h1>
+                            <p className="text-muted-foreground text-sm">Gerencie o fluxo de trabalho</p>
+                        </div>
                     </div>
                 </div>
 
-                {/* Filters Bar */}
-                <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center bg-card/30 p-1 rounded-xl border border-border/40">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Buscar tarefa..."
-                            className="pl-10 bg-transparent border-none focus-visible:ring-0 w-full hover:bg-muted/20 transition-colors"
-                        />
+                {/* Indicators Row */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-card/40 border border-border/40 p-4 rounded-2xl flex items-center gap-4 hover:bg-card/60 transition-colors">
+                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                            <LayoutGrid className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Tarefas</p>
+                            <p className="text-xl font-bold tabular-nums">{tasksTotal}</p>
+                        </div>
                     </div>
-                    <div className="h-6 w-px bg-border/40 hidden lg:block" />
-                    <div className="flex gap-2 p-1">
-                        <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
-                            <SelectTrigger className="h-8 w-[180px] bg-background/50 border-border/30 rounded-lg text-xs font-medium">
-                                <SelectValue placeholder="Projeto" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos Projetos</SelectItem>
-                                {projects.map((p) => (
-                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as any)}>
-                            <SelectTrigger className="h-8 w-[110px] bg-background/50 border-border/30 rounded-lg text-xs font-medium">
-                                <SelectValue placeholder="Prioridade" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todas</SelectItem>
-                                <SelectItem value="high">Alta</SelectItem>
-                                <SelectItem value="medium">Média</SelectItem>
-                                <SelectItem value="low">Baixa</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="bg-card/40 border border-border/40 p-4 rounded-2xl flex items-center gap-4 hover:bg-card/60 transition-colors">
+                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                            <AlertCircle className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Em Aberto</p>
+                            <p className="text-xl font-bold tabular-nums">{tasksOpen}</p>
+                        </div>
                     </div>
+                    <div className="bg-card/40 border border-border/40 p-4 rounded-2xl flex items-center gap-4 hover:bg-card/60 transition-colors">
+                        <div className="h-10 w-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                            <Zap className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Atrasadas</p>
+                            <p className="text-xl font-bold tabular-nums">{tasksOverdue}</p>
+                        </div>
+                    </div>
+                    <div className="bg-card/40 border border-border/40 p-4 rounded-2xl flex items-center gap-4 hover:bg-card/60 transition-colors">
+                        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                            <BarChart3 className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex justify-between items-baseline">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Progresso</p>
+                                <span className="text-xs font-bold text-emerald-500">{projectProgress}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-muted/30 rounded-full mt-1.5 overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${projectProgress}%` }}
+                                    className="h-full bg-emerald-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Filters Bar with Cycle Selector */}
+                <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
+                    <div className="flex-1 flex items-center bg-card/30 p-1 rounded-xl border border-border/40">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="Buscar tarefa..."
+                                className="pl-10 bg-transparent border-none focus-visible:ring-0 w-full hover:bg-muted/20 transition-colors h-9"
+                            />
+                        </div>
+                        <div className="h-6 w-px bg-border/40 hidden lg:block" />
+                        <div className="flex gap-2 p-1">
+                            <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
+                                <SelectTrigger className="h-8 w-[180px] bg-background/50 border-border/30 rounded-lg text-xs font-medium">
+                                    <SelectValue placeholder="Projeto" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos Projetos</SelectItem>
+                                    {projects.map((p) => (
+                                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as any)}>
+                                <SelectTrigger className="h-8 w-[110px] bg-background/50 border-border/30 rounded-lg text-xs font-medium">
+                                    <SelectValue placeholder="Prioridade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas</SelectItem>
+                                    <SelectItem value="high">Alta</SelectItem>
+                                    <SelectItem value="medium">Média</SelectItem>
+                                    <SelectItem value="low">Baixa</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {isRecurring && (
+                        <div className="flex items-center gap-2 bg-indigo-500/5 border border-indigo-500/20 p-1 rounded-xl">
+                            <div className="flex items-center gap-2 pl-3 py-1">
+                                <CalendarDays className="h-4 w-4 text-indigo-400" />
+                                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest pr-2 border-r border-indigo-500/20">Ciclo</span>
+                            </div>
+                            <Select value={selectedCycle} onValueChange={setSelectedCycle}>
+                                <SelectTrigger className="h-8 w-[130px] bg-transparent border-none focus:ring-0 text-xs font-bold text-indigo-300">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="glass border-indigo-500/20">
+                                    {availableCycles.map(cycle => (
+                                        <SelectItem key={cycle} value={cycle} className="capitalize text-xs font-medium">{cycle}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -306,7 +574,6 @@ export default function Tarefas() {
                                                 <DropdownMenuLabel>Adicionar em {scenario.title}</DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem onClick={() => {
-                                                    // Find first column to add task
                                                     const firstCol = columns.find(c => c.scenario_id === scenario.id || (!c.scenario_id && scenario.id === 'default-scenario'));
                                                     if (firstCol) setQuickAddColumn(firstCol.id);
                                                 }}>
@@ -519,13 +786,12 @@ export default function Tarefas() {
                                                 <DragOverlay dropAnimation={null}>
                                                     {activeId ? (
                                                         <div className="opacity-80 rotate-3 cursor-grabbing">
-                                                            {/* We need a simple representation for drag overlay */}
                                                             {activeTask ? (
                                                                 <EditableTaskCard
                                                                     task={{ ...activeTask, project: activeTask.project_name || "Geral", dueDate: activeTask.due_date, projectId: activeTask.project_id } as any}
                                                                     isOverlay
                                                                     isEditing={false}
-                                                                    accentColor="hsl(220, 15%, 75%)" // Default or find column color
+                                                                    accentColor="hsl(220, 15%, 75%)"
                                                                 />
                                                             ) : null}
                                                         </div>
