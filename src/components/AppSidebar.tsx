@@ -17,6 +17,7 @@ import {
   DollarSign,
   Info
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useEffect, useState } from "react";
@@ -96,43 +97,49 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`transition-all duration-300 ${open ? "w-64" : "w-[80px]"} bg-sidebar border-r border-sidebar-border shadow-none`}
+      className={cn(
+        "transition-all duration-300 bg-sidebar border-r border-sidebar-border shadow-none overflow-hidden",
+        open ? "w-64" : "w-16"
+      )}
       collapsible="icon"
     >
       {/* Header Area */}
-      <div className="h-16 flex flex-col items-center justify-center border-b border-sidebar-border mb-4">
+      <div className="h-16 flex items-center justify-center border-b border-sidebar-border px-3 shrink-0">
         {open ? (
-          <div className="w-full flex items-center justify-between px-4">
+          <div className="w-full flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
-              <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-8 h-8 shrink-0" />
-              <span className="font-semibold text-foreground tracking-tight">NoteFreela</span>
+              <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-7 h-7 shrink-0" />
+              <span className="font-bold text-foreground tracking-tighter text-sm uppercase">NoteFreela</span>
             </div>
-            <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors h-8 w-8" />
+            <SidebarTrigger className="text-muted-foreground/40 hover:text-foreground transition-all h-8 w-8" />
           </div>
         ) : (
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors h-10 w-10 rounded-md" />
+          <SidebarTrigger className="text-muted-foreground/40 hover:text-foreground transition-all h-10 w-10 rounded-xl" />
         )}
       </div>
 
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-0 px-3">
+            <SidebarMenu className={cn("gap-1", open ? "px-3" : "px-0 items-center")}>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
                     tooltip={!open ? item.title : undefined}
-                    className="h-[34px] rounded-md transition-colors"
+                    className="h-9 rounded-xl transition-all hover:bg-sidebar-accent"
                   >
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
-                      className={`flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors w-full h-full ${!open ? "justify-center" : ""}`}
-                      activeClassName="text-primary font-medium"
+                      className={cn(
+                        "flex items-center text-muted-foreground transition-colors w-full h-full",
+                        open ? "gap-3 px-3" : "justify-center"
+                      )}
+                      activeClassName="text-primary font-medium bg-sidebar-accent"
                     >
-                      <item.icon className={`${open ? "h-4 w-4" : "h-5 w-5"} shrink-0`} />
-                      {open && <span className="text-[12px]">{item.title}</span>}
+                      <item.icon className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
+                      {open && <span className="text-[11px] font-medium tracking-tight">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -144,15 +151,18 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     tooltip={!open ? "Caixa de Entrada" : undefined}
-                    className="h-[34px] rounded-md transition-colors"
+                    className="h-9 rounded-xl transition-all hover:bg-sidebar-accent"
                   >
                     <NavLink
                       to="/caixa-entrada"
-                      className={`flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors w-full h-full ${!open ? "justify-center" : ""}`}
-                      activeClassName="text-primary font-medium"
+                      className={cn(
+                        "flex items-center text-muted-foreground transition-colors w-full h-full",
+                        open ? "gap-3 px-3" : "justify-center"
+                      )}
+                      activeClassName="text-primary font-medium bg-sidebar-accent"
                     >
-                      <Inbox className={`${open ? "h-4 w-4" : "h-5 w-5"} shrink-0`} />
-                      {open && <span className="text-[12px]">Caixa de Entrada</span>}
+                      <Inbox className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
+                      {open && <span className="text-[11px] font-medium tracking-tight">Caixa de Entrada</span>}
                     </NavLink>
                   </SidebarMenuButton>
 
@@ -219,21 +229,24 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-sidebar-border space-y-2">
-        <SidebarMenu>
+      <SidebarFooter className={cn("border-t border-sidebar-border space-y-2", open ? "p-3" : "p-0 py-4 items-center")}>
+        <SidebarMenu className={open ? "px-0" : "items-center"}>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               tooltip={!open ? "Configurações" : undefined}
-              className="h-[34px] rounded-md transition-colors"
+              className="h-9 rounded-xl transition-all hover:bg-sidebar-accent"
             >
               <NavLink
                 to="/configuracoes"
-                className={`flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors w-full h-full ${!open ? "justify-center" : ""}`}
-                activeClassName="text-primary font-medium"
+                className={cn(
+                  "flex items-center text-muted-foreground transition-colors w-full h-full",
+                  open ? "gap-3 px-3" : "justify-center"
+                )}
+                activeClassName="text-primary font-medium bg-sidebar-accent"
               >
-                <Settings className={`${open ? "h-4 w-4" : "h-5 w-5"} shrink-0`} />
-                {open && <span className="text-[12px]">Configurações</span>}
+                <Settings className="h-4 w-4 shrink-0" />
+                {open && <span className="text-[11px] font-medium tracking-tight">Configurações</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -248,7 +261,7 @@ export function AppSidebar() {
           </div>
         )}
         {!open && (
-          <div className="flex justify-center text-[8px] font-semibold text-muted-foreground/5 py-1">
+          <div className="flex justify-center text-[8px] font-medium text-muted-foreground/5 py-1">
             {APP_VERSION}
           </div>
         )}

@@ -137,64 +137,7 @@ const Projetos = () => {
         </div>
       </section>
 
-      <div className="space-y-8 pt-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 border-b border-border/40">
-          <div className="flex items-center gap-6 w-full sm:w-auto">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedStatus("all")}
-                className={cn("px-3 h-8 rounded-md text-xs font-semibold", selectedStatus === "all" ? "bg-muted text-foreground" : "text-muted-foreground")}
-              >
-                Todos
-              </Button>
-              {Object.keys(statusLabels).map(status => (
-                <Button
-                  key={status}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedStatus(status as any)}
-                  className={cn("px-3 h-8 rounded-md text-xs font-semibold capitalize", selectedStatus === status ? "bg-muted text-foreground" : "text-muted-foreground")}
-                >
-                  {statusLabels[status as ProjectStatus]}
-                </Button>
-              ))}
-            </div>
-
-            <div className="h-4 w-px bg-border/60 hidden md:block" />
-
-            <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
-              <Input
-                placeholder="Buscar..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 bg-transparent border-0 focus-visible:ring-0 h-8 text-sm placeholder:text-muted-foreground/40"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-md">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("grid")}
-              className={cn("h-7 px-3 rounded-sm text-[10px] font-semibold", viewMode === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
-            >
-              Grid
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className={cn("h-7 px-3 rounded-sm text-[10px] font-semibold", viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
-            >
-              Lista
-            </Button>
-          </div>
-        </div>
-
+      <div className="page-container mt-[-100px] pt-[120px]">
         {/* Extended Filters Bar */}
         <div className="flex flex-wrap items-center gap-4 py-2">
           <div className="flex items-center gap-2">
@@ -330,39 +273,57 @@ const Projetos = () => {
 function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: () => void, onClick: () => void }) {
   return (
     <motion.div
-      whileHover={{ y: -2 }}
-      className="group flex flex-col notion-card h-full min-h-[320px] cursor-pointer"
+      whileHover={{ y: -4, boxShadow: "var(--shadow-hover)" }}
+      className="group flex flex-col bg-card border border-border shadow-[var(--shadow-card)] rounded-[var(--radius)] h-full min-h-[340px] cursor-pointer relative overflow-hidden transition-all duration-300"
       onClick={onClick}
     >
-      {project.cover_url ? (
-        <div className="h-24 w-full relative overflow-hidden bg-muted/10">
-          <img src={project.cover_url} className="w-full h-full object-cover opacity-80" />
-        </div>
-      ) : (
-        <div className="h-4 w-full bg-muted/5 border-b border-border/20" />
-      )}
+      {/* Background Texture - Arthur Marques Blueprint */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
-      <div className="p-5 flex flex-col flex-1 justify-between">
+      {/* Visual Metaphor: Roadmap Route - Arthur Marques */}
+      <div className="h-24 w-full relative overflow-hidden bg-muted/5 border-b border-border/30 flex items-center justify-center">
+        <svg width="100%" height="60" viewBox="0 0 300 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-20 group-hover:opacity-40 transition-opacity duration-500">
+          <path d="M10 30C50 30 70 10 110 10C150 10 170 50 210 50C250 50 270 30 290 30" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
+          <circle cx="40" cy="30" r="3" fill="currentColor" />
+          <circle cx="110" cy="10" r="3" fill="currentColor" />
+          <circle cx="180" cy="30" r="3" fill="currentColor" />
+          <g>
+            <circle cx="240" cy="45" r="5" fill="hsl(var(--primary))" />
+            <path d="M255 45L262 45M262 45L258 41M262 45L258 49" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+        </svg>
+      </div>
+
+      <div className="p-6 flex flex-col flex-1 justify-between relative z-10">
         <div>
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-muted/40 flex items-center justify-center text-primary/80">
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/20">
                 {(() => {
                   const Icon = (LucideIcons as any)[project.avatar_emoji];
                   return Icon ? <Icon className="h-6 w-6" /> : <Briefcase className="h-6 w-6" />;
                 })()}
               </div>
-              <h3 className="font-semibold text-lg leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors underline-offset-4 hover:underline">
-                {project.name}
-              </h3>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-widest h-4 bg-muted/50 text-muted-foreground border-border/50">
+                    {project.status || 'planning'}
+                  </Badge>
+                </div>
+                <h3 className="font-bold text-lg leading-none tracking-tight text-foreground group-hover:text-primary transition-colors truncate max-w-[160px]">
+                  {project.name}
+                </h3>
+              </div>
             </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md opacity-20 group-hover:opacity-100">
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-20 group-hover:opacity-100 hover:bg-muted">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass border-border/50 text-foreground">
+              <DropdownMenuContent align="end" className="glass border-border/50">
                 <EditProjectDialog
                   project={project}
                   trigger={
@@ -373,12 +334,12 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
                 />
                 <DeleteConfirmDialog
                   title="Excluir Projeto"
-                  description="Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita."
+                  description="Ação irreversível. Confirmar exclusão do projeto?"
                   onConfirm={onDelete}
                   trigger={
                     <div onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuItem
-                        className="text-destructive font-semibold focus:bg-destructive/10 focus:text-destructive"
+                        className="text-destructive font-bold focus:bg-destructive/10"
                         onSelect={(e) => e.preventDefault()}
                       >
                         Excluir
@@ -389,77 +350,38 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <Badge variant="outline" className={cn(
-              "text-[9px] font-bold uppercase tracking-wider h-5",
-              project.billing_type === 'recorrente'
-                ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-            )}>
-              {project.billing_type || 'pontual'}
-            </Badge>
-            {project.service_type && (
-              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider h-5 bg-muted/30 text-muted-foreground/60 border-border/40 capitalize">
-                {project.service_type}
-              </Badge>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-6">
-            {project.description || "Sem descrição disponível."}
+
+          <p className="text-xs text-muted-foreground/80 line-clamp-2 mb-6 font-medium leading-relaxed">
+            {project.description || "Mapeamento estratégico e execução criativa em andamento."}
           </p>
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-border/30">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-0.5">
-                {project.billing_type === 'recorrente' ? 'Mensalidade' : 'Valor Total'}
-              </p>
-              <p className="text-sm font-bold text-foreground tabular-nums">
+        <div className="space-y-4 pt-4 border-t border-border/40">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-1">Faturamento</span>
+              <span className="text-sm font-bold text-foreground tabular-nums">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value || 0)}
-              </p>
+              </span>
             </div>
-            {project.billing_type === 'recorrente' && project.next_billing_date && (
-              <div className="text-right">
-                <p className="text-[9px] font-bold text-primary/60 uppercase tracking-tighter mb-0.5">Faturamento</p>
-                <p className="text-sm font-bold text-primary tabular-nums">
-                  {format(new Date(project.next_billing_date), "dd MMM")}
-                </p>
-              </div>
-            )}
-            {project.billing_type !== 'recorrente' && project.deadline && (
-              <div className="text-right">
-                <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-0.5">Prazo Final</p>
-                <p className="text-sm font-bold text-muted-foreground tabular-nums">
-                  {format(new Date(project.deadline), "dd MMM")}
-                </p>
-              </div>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-y-2">
-            <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/60">
-              <div className={cn("h-1.5 w-1.5 rounded-full",
-                project.contract_status === 'active' ? 'bg-emerald-500' :
-                  project.contract_status === 'pending' ? 'bg-amber-500' : 'bg-slate-400')} />
-              {project.contract_status === 'active' ? 'Contrato Ativo' :
-                project.contract_status === 'pending' ? 'Assinatura Pendente' : 'Contrato Expirado'}
+            <div className="flex flex-col text-right">
+              <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-1">Prazo</span>
+              <span className="text-sm font-bold text-foreground/80 tabular-nums">
+                {project.deadline ? format(new Date(project.deadline), "dd/MM/yy") : "--/--/--"}
+              </span>
             </div>
-            {project.billing_type === 'recorrente' && (
-              <div className="text-[10px] font-bold text-indigo-400/80 bg-indigo-400/5 px-2 py-0.5 rounded border border-indigo-400/10">
-                Ciclo: {project.billing_cycle || 'Mensal'}
-              </div>
-            )}
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground/30">
-              <span>{project.progress}% completed</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">
+              <span>{project.progress}% Evolução</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_hsl(var(--primary))]" />
             </div>
-            <div className="h-1 w-full bg-muted/40 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden border border-border/20">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${project.progress}%` }}
-                className="h-full bg-primary/60"
+                className="h-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.3)] transition-all duration-1000"
               />
             </div>
           </div>

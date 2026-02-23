@@ -277,7 +277,7 @@ export function TimelineSection({
       </header>
 
       <div className="flex-1 overflow-hidden flex flex-col relative">
-        <div className="timeline-viewport flex-1 select-none overflow-auto custom-scrollbar"
+        <div className="timeline-viewport flex-1 select-none overflow-auto technical-scrollbar"
           ref={viewportRef}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

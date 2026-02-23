@@ -13,6 +13,18 @@ import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { AddDocumentDialog } from "@/components/projects/AddDocumentDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { NewTaskDialog } from "@/components/tasks/NewTaskDialog";
+import { CostRegistrationDialog } from "@/components/dashboard/CostRegistrationDialog";
+import { AddInboxDialog } from "@/components/project-hub/AddInboxDialog";
+import { type BlockEditorRef } from "@/components/project-hub/BlockEditor";
+interface ActivityLog {
+    id: string;
+    title: string;
+    description: string | null;
+    created_at: string;
+    type: string;
+}
+
 
 const ProjetoHub = () => {
     const { id } = useParams();
@@ -26,7 +38,13 @@ const ProjetoHub = () => {
     const [isEditingParam, setIsEditingParam] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isAddingDoc, setIsAddingDoc] = useState(false);
+    const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+    const [isAddInboxOpen, setIsAddInboxOpen] = useState(false);
+    const [isAddCostOpen, setIsAddCostOpen] = useState(false);
     const [selectedDocCategory, setSelectedDocCategory] = useState<string>("");
+
+    const editorRef = useRef<BlockEditorRef>(null);
+
 
     // Local page title state for smooth typing (avoids mutation per keystroke)
     const [pageTitleLocal, setPageTitleLocal] = useState("");
@@ -114,6 +132,34 @@ const ProjetoHub = () => {
         },
         enabled: !!id,
     });
+
+
+    const { data: activities = [] } = useQuery({
+        queryKey: ["project-activities", id],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("activities")
+                .select("*")
+                .order("created_at", { ascending: false })
+                .limit(40);
+
+            if (error) throw error;
+
+            // Filter manually if needed or use the project_id if it exists in metadata
+            const filtered = data?.filter((a: any) =>
+                a.metadata?.project_id === id ||
+                a.title?.toLowerCase().includes(project?.name?.toLowerCase())
+            ) || [];
+
+            if (filtered.length > 0) return filtered;
+
+            return [
+                { title: "Dashboard iniciado", created_at: project?.created_at, type: 'status' }
+            ].filter(a => !!a.created_at);
+        },
+        enabled: !!id && !!project,
+    });
+
 
     const activePage = useMemo(() => {
         if (!activePageId) return null;
@@ -239,6 +285,64 @@ const ProjetoHub = () => {
         }
     });
 
+    const createTaskMutation = useMutation({
+        mutationFn: async (values: any) => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Auth error");
+
+            const { data, error } = await supabase.from("tasks").insert({
+                title: values.title,
+                project_id: id,
+                priority: values.priority,
+                due_date: values.due?.toISOString(),
+                assignee: values.assignee,
+                user_id: user.id,
+                column_id: 'todo'
+            }).select().single();
+
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (data: any, variables: any) => {
+            queryClient.invalidateQueries({ queryKey: ["project-tasks", id] });
+            toast({ title: "Tarefa criada" });
+
+            // If created from editor, insert reference
+            if (sourceBlockId) {
+                editorRef.current?.insertItem('task', data.id, variables.title);
+                setSourceBlockId(null);
+            }
+        }
+    });
+
+    const createInboxMutation = useMutation({
+        mutationFn: async (values: any) => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Auth error");
+
+            const { data, error } = await supabase.from("inbox").insert({
+                title: values.title || values.content?.substring(0, 30),
+                content: values.content,
+                type: values.type || 'note',
+                project_id: id,
+                user_id: user.id
+            }).select().single();
+
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (data: any) => {
+            queryClient.invalidateQueries({ queryKey: ["project-inbox", id] });
+            toast({ title: "Captura realizada" });
+
+            if (sourceBlockId) {
+                editorRef.current?.insertItem('inbox', data.id, data.title || data.content?.substring(0, 20));
+                setSourceBlockId(null);
+            }
+        }
+    });
+
+
     // KPI Calculations
     const kpis = useMemo(() => {
         const nextDeadline = project?.deadline ? format(new Date(project.deadline), "dd/MM/yy", { locale: ptBR }) : null;
@@ -279,6 +383,12 @@ const ProjetoHub = () => {
                 onDelete={() => setIsDeleting(true)}
                 onToggleDock={() => setIsDockOpen(!isDockOpen)}
                 dockOpen={isDockOpen}
+                onCreateAction={(type) => {
+                    if (type === 'task') setIsAddTaskOpen(true);
+                    else if (type === 'inbox') setIsAddInboxOpen(true);
+                    else if (type === 'income' || type === 'expense') setIsAddCostOpen(true);
+                    else if (type === 'subpage') createPageMutation.mutate();
+                }}
             />
 
             <main className="flex-1 flex flex-col overflow-hidden relative">
@@ -320,22 +430,34 @@ const ProjetoHub = () => {
                         </div>
 
                         <BlockEditor
+                            ref={editorRef}
                             key={activePageId || 'main'}
                             content={activePageId ? (activePage?.content_blocks || []) : ((project as any).content_blocks || (project.description ? [{ type: 'paragraph', content: [{ type: 'text', text: project.description }] }] : []))}
                             onChange={(json) => updateContentMutation.mutate(json)}
+
                             onCommand={(cmd) => {
+                                // Record that this command was triggered from editor to insert reference later
+                                // For now, we use a simple flag. Tracking the exact block ID would require TipTap position tracking.
+                                setSourceBlockId('editor_trigger');
+
                                 if (cmd === 'task') {
-                                    toast({ title: "Modo Criar Tarefa", description: "Use o menu lateral contexto para criar." });
-                                    setIsDockOpen(true);
-                                } else if (cmd === 'page') {
+                                    setIsAddTaskOpen(true);
+                                } else if (cmd === 'inbox') {
+                                    setIsAddInboxOpen(true);
+                                } else if (cmd === 'page' || cmd === 'subpage') {
                                     createPageMutation.mutate();
+                                } else if (cmd === 'income' || cmd === 'expense') {
+                                    setIsAddCostOpen(true);
+                                } else if (['kanban', 'tasks', 'finance', 'inboxview'].includes(cmd)) {
+                                    // Handle view embedding placeholder
+                                    editorRef.current?.insertItem('view', cmd, cmd.toUpperCase());
+                                    setSourceBlockId(null);
                                 }
                             }}
                         />
                     </div>
                 </div>
 
-                {/* Sliding Context Dock */}
                 <ProjectDock
                     project={project}
                     tasks={tasks}
@@ -343,7 +465,11 @@ const ProjetoHub = () => {
                     finance={costs}
                     documents={documents}
                     pages={pages}
-                    activities={[]}
+                    activities={activities.map((a: any) => ({
+                        title: a.title,
+                        created_at: format(new Date(a.created_at), "dd MMM, HH:mm", { locale: ptBR }),
+                        type: a.type
+                    }))}
                     isOpen={isDockOpen}
                     onClose={() => setIsDockOpen(false)}
                     onSelectPage={(pageId) => setActivePageId(pageId)}
@@ -352,15 +478,25 @@ const ProjetoHub = () => {
                         if (type === 'doc') {
                             setSelectedDocCategory('briefing');
                             setIsAddingDoc(true);
-                        } else {
-                            toast({ title: "Criação Direta", description: `Ação para criar ${type} será implementada.` });
+                        } else if (type === 'task') {
+                            setIsAddTaskOpen(true);
+                        } else if (type === 'inbox') {
+                            setIsAddInboxOpen(true);
+                        } else if (type === 'finance') {
+                            setIsAddCostOpen(true);
                         }
                     }}
-                    onInsertReference={(type, id) => {
+                    onInsertReference={(type, itemId) => {
+                        let title = "";
+                        if (type === 'task') title = tasks.find((t: any) => t.id === itemId)?.title;
+                        if (type === 'inbox') title = (inboxItems.find((i: any) => i.id === itemId)?.title) || (inboxItems.find((i: any) => i.id === itemId)?.content?.substring(0, 20) + "...");
+                        if (type === 'page') title = pages.find((p: any) => p.id === itemId)?.title;
+
+                        editorRef.current?.insertItem(type, itemId, title);
                         toast({ title: "Referência Inserida", description: `Item [${type}] vinculado ao documento.` });
-                        console.log("Inserindo referência:", { type, id });
                     }}
                 />
+
             </main>
 
             {/* Dialogs */}
@@ -397,7 +533,35 @@ const ProjetoHub = () => {
                 }}
             />
 
+            <NewTaskDialog
+                open={isAddTaskOpen}
+                onOpenChange={setIsAddTaskOpen}
+                projects={[{ id: project.id, name: project.name }]}
+                onCreate={(values) => {
+                    createTaskMutation.mutate(values);
+                    setIsAddTaskOpen(false);
+                }}
+            />
+
+            <AddInboxDialog
+                open={isAddInboxOpen}
+                onOpenChange={setIsAddInboxOpen}
+                projectId={project.id}
+                onConfirm={(item) => {
+                    if (sourceBlockId) {
+                        editorRef.current?.insertItem('inbox', item.id, item.title || item.content?.substring(0, 20));
+                        setSourceBlockId(null);
+                    }
+                }}
+            />
+
+            <CostRegistrationDialog
+                open={isAddCostOpen}
+                onOpenChange={setIsAddCostOpen}
+            />
+
             <style>{`
+
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 4px;
                 }

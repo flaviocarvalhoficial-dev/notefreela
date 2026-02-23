@@ -192,56 +192,111 @@ export default function Financeiro() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/60">
-                <div>
-                    <h1 className="heading-1 mb-1">Financeiro</h1>
-                    <p className="text-muted-foreground text-sm">Gestão de pagamentos e fluxo de caixa por projeto</p>
+        <div className="space-y-10 pb-32 max-w-full overflow-x-hidden">
+            {/* Header - Cockpit Style */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-border/40">
+                <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                        <div className="h-1 w-8 bg-primary rounded-full" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Fluxo de Caixa</span>
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Gestão de Capital</h1>
+                        <p className="text-muted-foreground font-medium text-sm mt-1">Visão estratégica de liquidez e projeção de diretrizes financeiras.</p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center gap-3">
                     <Button
                         variant="outline"
-                        className="h-9 gap-2 text-xs font-semibold glass border-primary/20 hover:bg-primary/5"
+                        className="h-11 gap-2 text-xs font-bold rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-all active:scale-95 px-6"
                         onClick={() => setIsReportsModalOpen(true)}
                     >
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                        <TrendingUp className="h-4 w-4" />
                         Relatórios Mensais
                     </Button>
+                    <CostRegistrationDialog
+                        trigger={
+                            <Button variant="outline" className="h-11 border-red-500/20 text-red-500 hover:text-red-600 hover:bg-red-500/10 gap-2 text-xs font-bold rounded-xl px-6">
+                                <TrendingDown className="h-4 w-4" /> Registrar Custo
+                            </Button>
+                        }
+                    />
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-muted/5 p-4 rounded-xl border border-border/40 backdrop-blur-sm">
-                <div className="flex flex-1 items-center gap-3">
-                    <div className="relative flex-1 max-w-sm">
-                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40" />
+            {/* Metáfora Visual: Fluxo Financeiro Arthur Marques */}
+            <div className="relative w-full h-32 bg-card border border-border rounded-[24px] overflow-hidden group shadow-[var(--shadow-card)]">
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-2 relative z-10">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">Saldo em Fluxo</span>
+                        <div className="text-3xl font-black tabular-nums text-foreground">{formatCurrency(netProfit)}</div>
+                    </div>
+
+                    <svg width="100%" height="100%" viewBox="0 0 600 120" fill="none" className="absolute pointer-events-none opacity-20">
+                        {/* Converging Flows */}
+                        <path d="M50 60C150 60 200 20 300 60" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" className="text-emerald-500/40" />
+                        <path d="M550 60C450 60 400 100 300 60" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" className="text-red-500/40" />
+
+                        {/* Central Pulse */}
+                        <motion.circle
+                            cx="300" cy="60" r="8"
+                            stroke="hsl(var(--primary))" strokeWidth="2"
+                            animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.6, 0.3] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <circle cx="300" cy="60" r="4" fill="hsl(var(--primary))" />
+
+                        {/* Moving Nodes */}
+                        <motion.circle r="3" fill="currentColor" className="text-emerald-500"
+                            animate={{ offsetDistance: ["0%", "100%"] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            style={{ offsetPath: "path('M50 60C150 60 200 20 300 60')" }}
+                        />
+                        <motion.circle r="3" fill="currentColor" className="text-red-500"
+                            animate={{ offsetDistance: ["0%", "100%"] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear", delay: 2 }}
+                            style={{ offsetPath: "path('M550 60C450 60 400 100 300 60')" }}
+                        />
+                    </svg>
+                </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-muted/10 p-5 rounded-2xl border border-border/40">
+                <div className="flex flex-1 flex-wrap items-center gap-4">
+                    <div className="relative flex-1 min-w-[280px]">
+                        <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
                         <input
                             type="text"
-                            placeholder="Buscar projeto ou cliente..."
-                            className="w-full bg-background border border-border/50 rounded-md h-9 pl-10 pr-3 text-xs focus:ring-1 focus:ring-primary/20 outline-none transition-all"
+                            placeholder="Mapear projeto ou parceiro..."
+                            className="w-full bg-background border border-border/40 rounded-xl h-11 pl-12 pr-4 text-sm font-medium focus:border-primary/40 focus:ring-1 focus:ring-primary/10 outline-none transition-all"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
 
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="h-9 w-[180px] text-xs bg-background border-border/50">
+                        <SelectTrigger className="h-11 w-[180px] rounded-xl border-border/40 font-bold text-xs">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
-                        <SelectContent className="glass">
-                            <SelectItem value="all">Todos Pagamentos</SelectItem>
+                        <SelectContent>
+                            <SelectItem value="all">Linha do Tempo</SelectItem>
                             <SelectItem value="paid">Quitados</SelectItem>
-                            <SelectItem value="partial">Entrada Paga</SelectItem>
+                            <SelectItem value="partial">Aporte Inicial</SelectItem>
                             <SelectItem value="pending">Pendentes</SelectItem>
                         </SelectContent>
                     </Select>
 
                     <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                        <SelectTrigger className="h-9 w-[200px] text-xs bg-background border-border/50">
-                            <Calendar className="mr-2 h-3.5 w-3.5 text-muted-foreground/60" />
-                            <SelectValue placeholder="Filtrar Mês" />
+                        <SelectTrigger className="h-11 w-[200px] rounded-xl border-border/40 font-bold text-xs">
+                            <Calendar className="mr-2 h-4 w-4 text-primary/40" />
+                            <SelectValue placeholder="Período" />
                         </SelectTrigger>
-                        <SelectContent className="glass">
-                            <SelectItem value="all">Todo o Período</SelectItem>
+                        <SelectContent>
+                            <SelectItem value="all">Filtro Temporal Off</SelectItem>
                             {monthOptions.map(m => (
                                 <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                             ))}
@@ -249,14 +304,7 @@ export default function Financeiro() {
                     </Select>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <CostRegistrationDialog
-                        trigger={
-                            <Button variant="outline" className="h-9 border-red-500/20 text-red-500 hover:text-red-600 hover:bg-red-500/10 gap-2 text-xs font-medium">
-                                <TrendingDown className="h-3.5 w-3.5" /> Registrar Custo
-                            </Button>
-                        }
-                    />
+                <div className="flex items-center gap-3">
                     <Button
                         variant="ghost"
                         size="sm"
@@ -265,31 +313,30 @@ export default function Financeiro() {
                             setStatusFilter("all");
                             setSelectedMonth("all");
                         }}
-                        className="h-9 text-xs text-muted-foreground px-3"
+                        className="h-11 text-xs font-black uppercase tracking-widest text-muted-foreground px-4 hover:bg-muted/40 rounded-xl"
                     >
-                        Limpar
+                        Resetar
                     </Button>
-                    <Button className="h-9 bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-xs font-medium shadow-sm transition-all active:scale-[0.98]">
-                        <Download className="h-3.5 w-3.5" /> Exportar
+                    <Button className="h-11 bg-foreground text-background hover:opacity-90 gap-2 text-xs font-black uppercase tracking-widest rounded-xl px-6 transition-all active:scale-95 shadow-lg">
+                        <Download className="h-4 w-4" /> Exportar .CSV
                     </Button>
                 </div>
             </div>
 
             {/* KPI Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { id: 'income', label: "Total Recebido (Entradas)", value: formatCurrency(stats?.totalPaid || 0), icon: DollarSign, color: "hsl(158, 64%, 52%)" },
-                    { id: 'costs', label: "Custos Totais", value: formatCurrency(totalCosts), icon: TrendingDown, color: "#ef4444" },
-                    { id: 'profit', label: "Lucro Líquido", value: formatCurrency(netProfit), icon: Wallet, color: netProfit >= 0 ? "hsl(158, 64%, 52%)" : "#ef4444" },
-                    { id: 'future', label: "A Receber (Futuro)", value: formatCurrency(stats?.totalRemaining || 0), icon: Clock, color: "hsl(212, 52%, 52%)" }
+                    { id: 'income', label: "Injeção de Capital", value: formatCurrency(stats?.totalPaid || 0), icon: ArrowUpRight, color: "hsl(var(--primary))", bg: "bg-primary/5" },
+                    { id: 'costs', label: "Dreno Operacional", value: formatCurrency(totalCosts), icon: TrendingDown, color: "#ef4444", bg: "bg-red-500/5" },
+                    { id: 'profit', label: "Superávit Real", value: formatCurrency(netProfit), icon: Wallet, color: netProfit >= 0 ? "hsl(var(--primary))" : "#ef4444", bg: netProfit >= 0 ? "bg-primary/5" : "bg-red-500/5" },
+                    { id: 'future', label: "Orizonte de Crédito", value: formatCurrency(stats?.totalRemaining || 0), icon: Clock, color: "hsl(var(--muted-foreground))", bg: "bg-muted/20" }
                 ].map((kpi, i) => (
                     <motion.div
                         key={kpi.label}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        whileHover={{ y: -2 }}
-                        whileTap={{ scale: 0.98 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.1 }}
+                        whileHover={{ y: -4, boxShadow: "var(--shadow-hover)" }}
                         onClick={() => {
                             if (kpi.id === 'costs') {
                                 setIsCostsModalOpen(true);
@@ -298,18 +345,21 @@ export default function Financeiro() {
                                 setIsDetailedStatsOpen(true);
                             }
                         }}
-                        className="linear-card flex items-center gap-4 p-5 hover:bg-muted/5 group cursor-pointer border border-border/40 hover:border-primary/20 transition-all shadow-sm hover:shadow-glow-sm"
+                        className="relative p-6 rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)] group cursor-pointer overflow-hidden transition-all duration-300"
                     >
-                        <div className="p-3 rounded-md bg-secondary border border-border/40 group-hover:scale-105 transition-transform duration-300">
-                            <kpi.icon className="h-5 w-5" style={{ color: kpi.color }} />
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div className={cn("p-3 rounded-xl border border-border/10 group-hover:scale-110 transition-transform duration-300", kpi.bg)}>
+                                <kpi.icon className="h-5 w-5" style={{ color: kpi.color }} />
+                            </div>
+                            <span className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-widest">Live Feed</span>
                         </div>
-                        <div>
-                            <p className="label-text text-muted-foreground mb-1 flex items-center gap-2">
-                                {kpi.label}
-                                <ArrowUpRight className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </p>
-                            <h3 className="text-xl font-semibold tabular-nums tracking-tight">{kpi.value}</h3>
+                        <div className="relative z-10">
+                            <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest mb-1">{kpi.label}</p>
+                            <h3 className="text-2xl font-black tabular-nums tracking-tight text-foreground">{kpi.value}</h3>
                         </div>
+
+                        {/* Subtle Glow */}
+                        <div className="absolute -bottom-6 -right-6 w-16 h-16 blur-2xl opacity-0 group-hover:opacity-10 transition-opacity rounded-full" style={{ backgroundColor: kpi.color }} />
                     </motion.div>
                 ))}
             </div>

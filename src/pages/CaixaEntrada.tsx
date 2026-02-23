@@ -25,8 +25,12 @@ import {
     List,
     MoreHorizontal,
     Pencil,
-    GripVertical
+    GripVertical,
+    Clock,
+    Hash
 } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,6 +115,7 @@ const ItemCard = ({
     item,
     viewMode,
     isOverlay = false,
+    copiedId = null,
     onCopy,
     onEdit,
     onDelete
@@ -118,14 +123,15 @@ const ItemCard = ({
     item: InboxItem,
     viewMode: 'grid' | 'list',
     isOverlay?: boolean,
+    copiedId?: string | null,
     onCopy?: (e: React.MouseEvent, content: string) => void,
     onEdit?: (item: InboxItem) => void,
     onDelete?: (id: string) => void
 }) => {
     return (
         <div className={cn(
-            "bento-card group transition-all h-full bg-card border border-border/40 shadow-sm relative",
-            viewMode === 'grid' ? "p-4 flex flex-col justify-between gap-2" : "p-2 flex items-center justify-between",
+            "bento-card group transition-all bg-card border border-border/40 shadow-sm relative overflow-hidden",
+            viewMode === 'grid' ? "p-4 flex flex-col justify-between gap-2 h-[200px]" : "p-2 flex items-center justify-between",
             isOverlay ? "shadow-xl border-primary/50 scale-105 rotate-2 cursor-grabbing" : "hover:border-primary/30 cursor-grab active:cursor-grabbing"
         )}>
             {!isOverlay && (
@@ -133,10 +139,10 @@ const ItemCard = ({
                     {onCopy && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onCopy(e, item.content); }}
-                            className="p-1.5 rounded-md bg-background/80 hover:bg-background border border-border/50 shadow-sm"
+                            className="p-1.5 rounded-md bg-background/80 hover:bg-background border border-border/50 shadow-sm transition-all"
                             title="Copiar conteúdo"
                         >
-                            <Copy className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                            {copiedId === item.id ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3 text-muted-foreground hover:text-primary" />}
                         </button>
                     )}
                     {(onEdit || onDelete) && (
@@ -190,8 +196,12 @@ const ItemCard = ({
 
                 {viewMode === 'grid' && (
                     <>
-                        <div className="text-[10px] text-muted-foreground whitespace-pre-wrap line-clamp-3 leading-relaxed bg-muted/5 p-2 rounded-md border border-border/10">
-                            {item.content}
+                        <div className="flex-1 overflow-hidden">
+                            <div className="text-[10px] text-muted-foreground leading-relaxed bg-muted/5 p-2 rounded-md border border-border/10 line-clamp-4 prose prose-invert prose-xs">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {item.content}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                         {!isOverlay && (
                             <div className="flex flex-wrap gap-1 mt-1">
@@ -303,6 +313,7 @@ const CaixaEntrada = () => {
 
     // Drag State
     const [activeDragItem, setActiveDragItem] = useState<InboxItem | null>(null);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
 
     // Folder State
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
@@ -554,11 +565,14 @@ const CaixaEntrada = () => {
         try {
             if (navigator?.clipboard?.writeText) {
                 await navigator.clipboard.writeText(content);
+                const itemId = items.find(i => i.content === content)?.id;
+                if (itemId) setCopiedId(itemId);
                 toast({
                     title: "Copiado!",
                     description: "O conteúdo foi copiado para sua área de transferência.",
                     duration: 2000,
                 });
+                setTimeout(() => setCopiedId(null), 2000);
                 return;
             }
         } catch (err) {
@@ -684,16 +698,18 @@ const CaixaEntrada = () => {
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="h-full flex flex-col gap-6 pb-10 max-w-6xl mx-auto">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-semibold tracking-tight mb-1 flex items-center gap-2">
-                            <Inbox className="h-8 w-8 text-primary" />
-                            Caixa de Entrada
-                        </h1>
-                        <p className="text-muted-foreground text-sm">Capture ideias, prompts e fragmentos de conhecimento rapidamente.</p>
-                    </div>
+            <div className="h-full flex flex-col gap-10 pb-16 max-w-full overflow-x-hidden">
+                {/* Header - Cockpit Style */}
+                <section className="flex flex-col gap-3 py-8 border-b border-border/40">
                     <div className="flex items-center gap-3">
+                        <div className="h-1 w-8 bg-primary rounded-full" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Rede de Captura</span>
+                    </div>
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div>
+                            <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Caixa de Entrada</h1>
+                            <p className="text-muted-foreground font-medium text-sm mt-1">Fragmentos de conhecimento, prompts e diretrizes criativas em trânsito.</p>
+                        </div>
                         <Button onClick={() => {
                             const knownFolders = JSON.parse(localStorage.getItem("inbox_folders") || "[]");
                             const allCategories = Array.from(new Set([...knownFolders, ...items.map(i => i.category).filter(Boolean)]));
@@ -705,9 +721,45 @@ const CaixaEntrada = () => {
                                 setNewCategory("");
                             }
                             setIsAdding(true);
-                        }} className="btn-gradient h-10 px-6">
-                            <Plus className="h-4 w-4 mr-2" /> Novo Registro
+                        }} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-8 h-12 shadow-glow transition-all active:scale-95">
+                            <Plus className="h-5 w-5 mr-2" /> Novo Registro
                         </Button>
+                    </div>
+                </section>
+
+                {/* Arthur Marques Visual Metaphor: Inbox Networking */}
+                <div className="relative w-full h-32 bg-card border border-border rounded-[24px] overflow-hidden group shadow-[var(--shadow-card)]">
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                        style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+
+                    <div className="absolute inset-0 flex items-center justify-center gap-12">
+                        <div className="flex flex-col items-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity translate-x-4">
+                            <div className="w-10 h-8 rounded-t-full rounded-bl-full border border-border bg-muted/20" />
+                            <span className="text-[8px] font-black uppercase text-muted-foreground">Emissor</span>
+                        </div>
+
+                        <div className="relative w-48 h-px bg-border/20">
+                            <motion.div
+                                className="absolute top-1/2 left-0 w-2 h-2 rounded-full bg-primary/40 -translate-y-1/2 blur-[2px]"
+                                animate={{ left: ["0%", "100%"] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                            />
+                            <motion.div
+                                className="absolute top-1/2 left-0 w-1 h-1 rounded-full bg-primary -translate-y-1/2"
+                                animate={{ left: ["0%", "100%"] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
+                            />
+                        </div>
+
+                        <div className="flex flex-col items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity -translate-x-4">
+                            <div className="w-10 h-8 rounded-t-full rounded-br-full border border-primary/40 bg-primary/5" />
+                            <span className="text-[8px] font-black uppercase text-primary">Receptor</span>
+                        </div>
+                    </div>
+
+                    <div className="absolute bottom-4 left-6 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30">Fluxo de Dados Ativo</span>
                     </div>
                 </div>
 
@@ -990,6 +1042,7 @@ const CaixaEntrada = () => {
                                                 <ItemCard
                                                     item={item}
                                                     viewMode={viewMode}
+                                                    copiedId={copiedId}
                                                     onCopy={handleCopy}
                                                     onEdit={setEditingItem}
                                                     onDelete={(id) => deleteItemMutation.mutate(id)}

@@ -5,7 +5,7 @@ import {
     Heading1, Heading2, Heading3,
     List, ListOrdered, CheckSquare,
     Quote, Minus, Code2, Type,
-    Plus, MessageSquare, FilePlus
+    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox
 } from 'lucide-react';
 
 export interface SlashCommandItem {
@@ -123,34 +123,77 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
     },
     // --- AÇÕES ---
     {
-        id: 'page',
-        label: 'Nova Página',
-        description: 'Criar uma sub-página no projeto',
-        icon: <FilePlus className="w-4 h-4" />,
-        group: 'Ações',
-        action: () => {
-            // handled externally via onSelectCommand
-        },
-    },
-    {
         id: 'task',
         label: 'Criar Tarefa',
-        description: 'Criar nova tarefa vinculada',
-        icon: <Plus className="w-4 h-4" />,
-        group: 'Ações',
-        action: () => {
-            // handled externally via onSelectCommand
-        },
+        description: 'Vincular nova tarefa ao projeto',
+        icon: <CheckSquare className="w-4 h-4" />,
+        group: 'Ações de Projeto',
+        action: () => { },
     },
     {
-        id: 'note',
-        label: 'Nota Rápida',
-        description: 'Adicionar uma nota inline',
-        icon: <MessageSquare className="w-4 h-4" />,
-        group: 'Ações',
-        action: (editor) => {
-            editor.chain().focus().toggleBlockquote().run();
-        },
+        id: 'inbox',
+        label: 'Criar Inbox',
+        description: 'Vincular item de inbox',
+        icon: <Inbox className="w-4 h-4" />,
+        group: 'Ações de Projeto',
+        action: () => { },
+    },
+    {
+        id: 'income',
+        label: 'Registrar Receita',
+        description: 'Adicionar entrada financeira',
+        icon: <DollarSign className="w-4 h-4 text-emerald-500" />,
+        group: 'Ações de Projeto',
+        action: () => { },
+    },
+    {
+        id: 'expense',
+        label: 'Registrar Despesa',
+        description: 'Adicionar custo ou gasto',
+        icon: <DollarSign className="w-4 h-4 text-rose-500" />,
+        group: 'Ações de Projeto',
+        action: () => { },
+    },
+    {
+        id: 'subpage',
+        label: 'Subpágina',
+        description: 'Criar novo documento interno',
+        icon: <FilePlus className="w-4 h-4" />,
+        group: 'Ações de Projeto',
+        action: () => { },
+    },
+    // --- VISUALIZAÇÕES ---
+    {
+        id: 'kanban',
+        label: 'Quadro Kanban',
+        description: 'Inserir visão de quadro do projeto',
+        icon: <LayoutGrid className="w-4 h-4" />,
+        group: 'Visualizações',
+        action: () => { },
+    },
+    {
+        id: 'tasks',
+        label: 'Lista de Tarefas',
+        description: 'Inserir lista dinâmica de tarefas',
+        icon: <ListTodo className="w-4 h-4" />,
+        group: 'Visualizações',
+        action: () => { },
+    },
+    {
+        id: 'finance',
+        label: 'Resumo Financeiro',
+        description: 'Inserir view financeira filtrada',
+        icon: <Wallet className="w-4 h-4" />,
+        group: 'Visualizações',
+        action: () => { },
+    },
+    {
+        id: 'inboxview',
+        label: 'Inbox View',
+        description: 'Inserir view de capturas',
+        icon: <Inbox className="w-4 h-4 text-orange-500" />,
+        group: 'Visualizações',
+        action: () => { },
     },
 ];
 

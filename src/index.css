@@ -6,92 +6,107 @@
 
 @layer base {
   :root {
-    /* Premium Light Theme - Source: #FCFCFC */
-    --background: 0 0% 99%;
-    /* #FCFCFC */
-    --foreground: 220 10% 10%;
+    /* Identidade Arthur Marques — NoteFreela Revisitada (Minimalist) */
+    --background: 60 14% 96.3%;
+    /* #F7F7F5 - surface-page */
+    --foreground: 0 0% 12.2%;
+    /* #1F1F1F - text-primary */
 
     --card: 0 0% 100%;
-    --card-foreground: 220 10% 10%;
+    /* #FFFFFF - surface-card */
+    --card-foreground: 0 0% 12.2%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 10% 10%;
+    --popover-foreground: 0 0% 12.2%;
 
-    --primary: 220 10% 15%;
-    /* Elegant Dark Slate */
+    --primary: 0 0% 12.2%;
+    /* Cinza Escuro - accent-primary */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 10% 96%;
-    --secondary-foreground: 220 10% 20%;
+    --secondary: 60 11.1% 93.7%;
+    /* #F1F1EE - surface-elevated */
+    --secondary-foreground: 0 0% 29%;
+    /* #4A4A4A - text-secondary */
 
-    --muted: 220 10% 97%;
-    --muted-foreground: 220 5% 45%;
+    --muted: 60 11.1% 93.7%;
+    --muted-foreground: 0 0% 60.4%;
+    /* #9A9A9A - text-muted */
 
-    --accent: 220 10% 94%;
-    --accent-foreground: 220 10% 10%;
+    --accent: 0 0% 12.2% / 0.08;
+    --accent-foreground: 0 0% 12.2%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 220 10% 91%;
-    --input: 220 10% 91%;
-    --ring: 220 10% 15%;
+    --border: 60 4.8% 90.8%;
+    /* #E4E4E1 - border-default */
+    --input: 60 11.1% 93.7%;
+    /* surface-elevated */
+    --ring: 0 0% 12.2%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 220 5% 40%;
-    --sidebar-primary: 220 10% 15%;
+    --radius: 1rem;
+    /* 16px - radius-card */
+
+    /* Custom Shadows - Arthur Marques */
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.06);
+    --shadow-float: 0 12px 30px rgba(0, 0, 0, 0.08);
+
+    /* Sidebar - Arthur Marques identity */
+    --sidebar-background: 60 4.8% 95.8%;
+    --sidebar-foreground: 0 0% 29%;
+    --sidebar-primary: 0 0% 12.2%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 10% 93%;
-    --sidebar-accent-foreground: 220 10% 10%;
-    --sidebar-border: 220 10% 92%;
-    --sidebar-ring: 220 10% 15%;
+    --sidebar-accent: 0 0% 12.2% / 0.08;
+    --sidebar-accent-foreground: 0 0% 12.2%;
+    --sidebar-border: 60 4.8% 92.8%;
+    --sidebar-ring: 0 0% 12.2%;
 
-    --radius: 0.6rem;
-
-    /* Light Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-focus: 0 0 0 3px rgba(0, 0, 0, 0.05);
-    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-hover: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+    /* Glow Tokens — Arthur Marques */
+    --glow-primary: 0 0% 12.2% / 0.15;
   }
 
+  /* Versão Dark com Lógica Invertida — Arthur Marques Premium Dark */
   .dark {
-    --background: 220 10% 6.1%;
-    --foreground: 0 0% 100%;
-    --card: 210 10% 7.8%;
-    --card-foreground: 0 0% 100%;
-    --popover: 210 10% 9%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 90%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 210 10% 9%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 210 10% 8.5%;
-    --muted-foreground: 220 5% 65%;
-    --accent: 210 10% 11%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 10% 14%;
-    --input: 210 10% 14%;
-    --ring: 0 0% 90%;
-    --sidebar-background: 220 10% 5%;
-    --sidebar-foreground: 220 5% 65%;
-    --sidebar-primary: 0 0% 90%;
-    --sidebar-primary-foreground: 0 0% 9%;
-    --sidebar-accent: 210 10% 11%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 10% 14%;
-    --sidebar-ring: 0 0% 90%;
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
 
-    /* Dark Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-hover: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    /* Invertido: Branco/Cinza claro */
+    --primary-foreground: 0 0% 9%;
+
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+
+    --accent: 0 0% 98% / 0.1;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+
+    --sidebar-background: 0 0% 2%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 14.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 14.9%;
+    --sidebar-ring: 0 0% 83.1%;
+
+    --glow-primary: 0 0% 100% / 0.25;
   }
 
   * {
@@ -99,10 +114,35 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    @apply bg-background text-foreground transition-colors duration-300;
+    font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+
+  /* Grid Estrutural - Texture Ambiente - Arthur Marques (Blueprint Edition) */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.15) 1px, transparent 1px),
+      radial-gradient(circle at 2px 2px, hsl(var(--border) / 0.3) 1px, transparent 0);
+    background-size: 40px 40px, 40px 40px, 20px 20px;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 1;
+  }
+
+  /* Grid Layer Utility */
+  .grid-layer {
+    position: relative;
+    background-image: radial-gradient(circle at 1px 1px, hsl(var(--border) / 0.2) 1px, transparent 0);
+    background-size: 24px 24px;
   }
 }
 
@@ -141,13 +181,11 @@
   }
 
   .button-primary:hover {
-    background-color: #4F5BC4;
-    /* Manual override for exact hex match if needed, or stick to hsl adjustment */
+    @apply opacity-90;
   }
 
   .button-primary:active {
-    background-color: #424DB8;
-    transform: scale(0.98);
+    @apply scale-[0.98];
   }
 
   .button-primary:focus {
@@ -160,7 +198,7 @@
   }
 
   .button-secondary:hover {
-    @apply bg-accent border-[#3A3A3A];
+    @apply bg-accent border-primary/20;
   }
 
   .button-ghost {
@@ -177,7 +215,7 @@
   }
 
   .input-text:hover {
-    @apply border-[#3A3A3A];
+    @apply border-primary/20;
   }
 
   .input-text:focus {
@@ -191,7 +229,7 @@
   }
 
   .linear-card:hover {
-    @apply border-[#3A3A3A] shadow-md;
+    @apply border-primary/20 shadow-md;
   }
 
   /* Nav Items */
@@ -475,3 +513,30 @@
 .btn-gradient {
   @apply bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-glow text-primary-foreground;
 }
+
+/* Spacing & Layout Consistency  Arthur Marques */
+.page-container {
+  @apply w-full max-w-[1700px] mx-auto px-6 lg:px-12 py-10 flex flex-col gap-12 overflow-y-auto overflow-x-hidden custom-scrollbar pb-16 relative;
+}
+
+.section-container {
+  @apply flex flex-col gap-8;
+}
+
+.card-container {
+  @apply p-6 rounded-[24px] border border-border/40 bg-card/60 backdrop-blur-sm shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] transition-all;
+}
+
+.heading-container {
+  @apply flex flex-col gap-4 py-8 border-b border-border/40 mb-4;
+}
+
+
+/* Scrollbar Visibility Tokens  Arthur Marques */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.technical-scrollbar::-webkit-scrollbar { width: 6px !important; height: 6px !important; display: block !important; }
+.technical-scrollbar::-webkit-scrollbar-track { background: hsla(var(--muted), 0.1); border-radius: 10px; }
+.technical-scrollbar::-webkit-scrollbar-thumb { background: hsla(var(--primary), 0.6) !important; border-radius: 10px; }
+.technical-scrollbar::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary)) !important; }

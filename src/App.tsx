@@ -32,18 +32,12 @@ const AppLayout = () => {
   return (
     // When on the dashboard, the entire layout is fixed-height (h-screen).
     // No JS DOM manipulation needed — this is purely declarative CSS.
-    <div className={`flex w-full ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
+    <div className="flex w-full min-h-screen">
       <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <Header />
-        <main
-          className={
-            isDashboard
-              ? "h-[calc(100vh-64px)] overflow-hidden"
-              : "flex-1 pt-24 overflow-auto"
-          }
-        >
-          <div className="max-w-[1700px] mx-auto px-6 lg:px-10 w-full h-full transition-all duration-300">
+        <main className={`flex-1 overflow-x-hidden custom-scrollbar ${isDashboard ? "h-full overflow-hidden" : "overflow-y-auto"}`}>
+          <div className="w-full h-full">
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/projetos" element={<Projetos />} />

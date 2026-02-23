@@ -1,7 +1,7 @@
 import {
     ArrowLeft, MoreVertical, LayoutDashboard,
     CheckCircle2, Inbox, DollarSign, Calendar,
-    CheckSquare
+    CheckSquare, Plus, FilePlus, ArrowUpRight, ListTodo
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ interface ProjectHeaderProps {
     onDelete?: () => void;
     onToggleDock?: () => void;
     dockOpen?: boolean;
+    onCreateAction?: (type: 'task' | 'inbox' | 'income' | 'expense' | 'subpage') => void;
 }
 
 export const ProjectHeader = ({
@@ -34,7 +35,8 @@ export const ProjectHeader = ({
     onEdit,
     onDelete,
     onToggleDock,
-    dockOpen
+    dockOpen,
+    onCreateAction
 }: ProjectHeaderProps) => {
     const navigate = useNavigate();
 
@@ -55,13 +57,13 @@ export const ProjectHeader = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => navigate('/projetos')}
-                            className="h-8 text-muted-foreground hover:text-foreground gap-2 px-2"
+                            className="h-8 text-muted-foreground/60 hover:text-foreground hover:bg-transparent gap-2 px-0"
                         >
                             <ArrowLeft className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-bold tracking-widest uppercase">Workspaces</span>
+                            <span className="text-[10px] font-black tracking-[0.2em] uppercase">WORKSPACES</span>
                         </Button>
-                        <div className="h-3 w-px bg-border/40" />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Projeto</span>
+                        <div className="h-3 w-px bg-border/20" />
+                        <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">PROJETO</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -70,8 +72,8 @@ export const ProjectHeader = ({
                             size="sm"
                             onClick={onToggleDock}
                             className={cn(
-                                "h-8 rounded-full text-[10px] font-bold transition-all px-4",
-                                dockOpen ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground"
+                                "h-8 rounded-full text-[10px] font-black tracking-widest transition-all px-4",
+                                dockOpen ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground/60 border-border/40"
                             )}
                         >
                             {dockOpen ? 'FECHAR CONTEXTO' : 'ABRIR CONTEXTO'}
@@ -83,10 +85,10 @@ export const ProjectHeader = ({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-card border-border shadow-xl min-w-[160px]">
-                                <DropdownMenuItem className="gap-2 text-[11px] font-bold uppercase tracking-wider" onClick={onEdit}>
+                                <DropdownMenuItem className="gap-2 text-[11px] font-black uppercase tracking-widest" onClick={onEdit}>
                                     Editar Parâmetros
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 text-[11px] font-bold uppercase tracking-wider text-destructive" onClick={onDelete}>
+                                <DropdownMenuItem className="gap-2 text-[11px] font-black uppercase tracking-widest text-destructive" onClick={onDelete}>
                                     Remover Projeto
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -101,49 +103,111 @@ export const ProjectHeader = ({
                             🚀
                         </div>
                         <div className="space-y-1">
-                            <h1 className="text-2xl font-black tracking-tight text-foreground uppercase">{project?.name}</h1>
+                            <h1 className="text-3xl font-black tracking-tighter text-foreground uppercase">{project?.name}</h1>
                             <div className="flex items-center gap-2">
-                                <Badge variant="outline" className={cn("text-[9px] font-bold border rounded-md uppercase tracking-tighter", statusColors[project?.status] || statusColors.active)}>
+                                <Badge variant="outline" className={cn("text-[8px] font-black border-border/20 rounded-md uppercase tracking-[0.1em] px-1.5 h-4", statusColors[project?.status] || statusColors.active)}>
                                     {project?.status === 'active' ? 'Em Progresso' : project?.status}
                                 </Badge>
-                                <span className="text-[10px] text-muted-foreground/40 font-bold">•</span>
-                                <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">{project?.client_name || 'Sem cliente'}</span>
+                                <span className="text-[10px] text-muted-foreground/20 font-black">•</span>
+                                <span className="text-[10px] text-muted-foreground/40 font-black uppercase tracking-[0.2em]">{project?.client_name || 'Autoral'}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-                        <div className="px-4 py-2 bg-card border border-border/40 rounded-xl shadow-sm min-w-[120px]">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="px-4 py-3 bg-secondary/10 border border-border/5 rounded-2xl shadow-sm min-w-[120px] group hover:bg-secondary/20 transition-colors">
+                            <div className="flex items-center gap-2 mb-1.5">
                                 <CheckSquare className="w-3 h-3 text-emerald-500" />
-                                <span className="text-[8px] font-bold text-muted-foreground tracking-widest">TAREFAS</span>
+                                <span className="text-[9px] font-black text-muted-foreground/40 tracking-widest uppercase">TAREFAS</span>
                             </div>
-                            <p className="text-sm font-black tabular-nums">{kpis.openTasks}</p>
+                            <p className="text-base font-black tabular-nums tracking-tighter">{kpis.openTasks}</p>
                         </div>
-                        <div className="px-4 py-2 bg-card border border-border/40 rounded-xl shadow-sm min-w-[120px]">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="px-4 py-3 bg-secondary/10 border border-border/5 rounded-2xl shadow-sm min-w-[120px] group hover:bg-secondary/20 transition-colors">
+                            <div className="flex items-center gap-2 mb-1.5">
                                 <Inbox className="w-3 h-3 text-amber-500" />
-                                <span className="text-[8px] font-bold text-muted-foreground tracking-widest">INBOX</span>
+                                <span className="text-[9px] font-black text-muted-foreground/40 tracking-widest uppercase">INBOX</span>
                             </div>
-                            <p className="text-sm font-black tabular-nums">{kpis.pendingInbox}</p>
+                            <p className="text-base font-black tabular-nums tracking-tighter">{kpis.pendingInbox}</p>
                         </div>
-                        <div className="px-4 py-2 bg-card border border-border/40 rounded-xl shadow-sm min-w-[120px]">
-                            <div className="flex items-center gap-2 mb-1">
-                                <DollarSign className="w-3 h-3 text-blue-500" />
-                                <span className="text-[8px] font-bold text-muted-foreground tracking-widest">SALDO</span>
+                        <div className="px-4 py-3 bg-secondary/10 border border-border/5 rounded-2xl shadow-sm min-w-[120px] group hover:bg-secondary/20 transition-colors">
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <DollarSign className="w-3 h-3 text-sky-500" />
+                                <span className="text-[9px] font-black text-muted-foreground/40 tracking-widest uppercase">SALDO</span>
                             </div>
-                            <p className="text-sm font-black tabular-nums">
+                            <p className="text-base font-black tabular-nums tracking-tighter">
                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(kpis.financialBalance)}
                             </p>
                         </div>
-                        <div className="px-4 py-2 bg-card border border-border/40 rounded-xl shadow-sm min-w-[140px]">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div className="px-4 py-3 bg-secondary/10 border border-border/5 rounded-2xl shadow-sm min-w-[140px] group hover:bg-secondary/20 transition-colors">
+                            <div className="flex items-center gap-2 mb-1.5">
                                 <Calendar className="w-3 h-3 text-rose-500" />
-                                <span className="text-[8px] font-bold text-muted-foreground tracking-widest">PRÓX. PRAZO</span>
+                                <span className="text-[9px] font-black text-muted-foreground/40 tracking-widest uppercase">PRÓX. PRAZO</span>
                             </div>
-                            <p className="text-sm font-black truncate">{kpis.nextDeadline || 'S/ Prazo'}</p>
+                            <p className="text-base font-black truncate tracking-tighter uppercase">{kpis.nextDeadline || 'LIVRE'}</p>
                         </div>
                     </div>
+                </div>
+
+                {/* Quick Actions Bar - Unified HUB Experience */}
+                <div className="pb-6 flex flex-wrap items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 px-4 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 font-bold text-[10px] tracking-widest gap-2 border border-primary/10"
+                        onClick={() => onCreateAction?.('task')}
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        NOVA TAREFA
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 px-4 rounded-xl bg-orange-500/5 text-orange-600 hover:bg-orange-500/10 font-bold text-[10px] tracking-widest gap-2 border border-orange-500/10"
+                        onClick={() => onCreateAction?.('inbox')}
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        NOVO INBOX
+                    </Button>
+                    <div className="flex items-center gap-1 bg-muted/20 p-1 rounded-xl border border-border/40">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-3 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/5 font-bold text-[9px] tracking-widest gap-1.5"
+                            onClick={() => onCreateAction?.('income')}
+                        >
+                            <Plus className="w-3 h-3" /> RECEITA
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-3 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-500/5 font-bold text-[9px] tracking-widest gap-1.5"
+                            onClick={() => onCreateAction?.('expense')}
+                        >
+                            <Plus className="w-3 h-3" /> DESPESA
+                        </Button>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 px-4 rounded-xl text-muted-foreground/60 hover:text-foreground font-bold text-[10px] tracking-widest gap-2"
+                        onClick={() => onCreateAction?.('subpage')}
+                    >
+                        <FilePlus className="w-3.5 h-3.5" />
+                        SUBPÁGINA
+                    </Button>
+
+                    <div className="flex-1" />
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-4 rounded-xl border-primary/20 text-primary hover:bg-primary/5 font-bold text-[10px] tracking-widest gap-2 shadow-sm"
+                        onClick={() => navigate(`/tarefas?project=${project.id}`)}
+                    >
+                        <ListTodo className="w-3.5 h-3.5" />
+                        VER TODAS AS TAREFAS
+                        <ArrowUpRight className="w-3 h-3 opacity-40" />
+                    </Button>
                 </div>
             </div>
         </header>

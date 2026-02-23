@@ -72,7 +72,9 @@ export default function Tarefas() {
         scenarios,
         columns,
         tasks,
+        filteredTasks,
         projects,
+        costs,
         tasksByColumn,
         isLoading,
         mutations
@@ -83,13 +85,23 @@ export default function Tarefas() {
         billingPeriod: projectFilter !== 'all' ? selectedCycle : undefined
     });
 
+    const selectedProjectData = projects.find(p => p.id === projectFilter);
+    const isRecurring = selectedProjectData?.billing_type === 'recorrente';
+
+    const projectValue = selectedProjectData?.value || 0;
+    const projectCosts = useMemo(() => {
+        if (projectFilter === 'all') return 0;
+        return (costs as any[]).filter(c => c.project_id === projectFilter).reduce((acc, c) => acc + (c.amount || 0), 0);
+    }, [costs, projectFilter]);
+    const projectBalance = projectValue - projectCosts;
+
     // Full project data for the selection screen
     const { data: fullProjects = [] } = useQuery({
         queryKey: ["projects-index"],
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("projects")
-                .select("id, name, status, progress, client_name, avatar_emoji, billing_type")
+                .select("id, name, status, progress, client_name, avatar_emoji, billing_type, value")
                 .order("name");
             if (error) throw error;
             return data || [];
@@ -109,13 +121,11 @@ export default function Tarefas() {
         return counts;
     }, [tasks]);
 
-    const selectedProjectData = projects.find(p => p.id === projectFilter);
-    const isRecurring = selectedProjectData?.billing_type === 'recorrente';
 
-    const tasksTotal = tasks.length;
-    const tasksOpen = tasks.filter(t => t.column_id !== 'done').length;
-    const tasksOverdue = tasks.filter(t => t.column_id !== 'done' && t.due_date && isBefore(new Date(t.due_date), new Date())).length;
-    const projectProgress = tasksTotal > 0 ? Math.round((tasks.filter(t => t.column_id === 'done').length / tasksTotal) * 100) : 0;
+    const tasksTotal = filteredTasks.length;
+    const tasksOpen = filteredTasks.filter(t => t.column_id !== 'done').length;
+    const tasksOverdue = filteredTasks.filter(t => t.column_id !== 'done' && t.due_date && isBefore(new Date(t.due_date), new Date())).length;
+    const projectProgress = tasksTotal > 0 ? Math.round((filteredTasks.filter(t => t.column_id === 'done').length / tasksTotal) * 100) : 0;
 
     const availableCycles = useMemo(() => {
         const cycles = [];
@@ -161,12 +171,13 @@ export default function Tarefas() {
 
     const handleProjectFilterChange = (val: string) => {
         setProjectFilter(val);
+        const newParams = new URLSearchParams(searchParams);
         if (val === "all") {
-            searchParams.delete("project");
+            newParams.delete("project");
         } else {
-            searchParams.set("project", val);
+            newParams.set("project", val);
         }
-        setSearchParams(searchParams);
+        setSearchParams(newParams);
     };
 
     const activeTask = useMemo(() => tasks.find((t) => t.id === activeId) ?? null, [tasks, activeId]);
@@ -201,50 +212,38 @@ export default function Tarefas() {
     // ═══════ PROJECT SELECTION SCREEN ═══════
     if (projectFilter === "all") {
         const statusLabels: Record<string, string> = {
-            active: "Em Progresso",
-            planning: "Planejamento",
-            review: "Revisão",
+            active: "Em Execução",
+            planning: "Blueprint",
+            review: "Checkpoint",
             completed: "Concluído"
         };
         const statusColors: Record<string, string> = {
-            active: "bg-sky-500",
-            planning: "bg-amber-500",
-            review: "bg-indigo-500",
+            active: "bg-primary",
+            planning: "bg-muted-foreground/30",
+            review: "bg-primary/40",
             completed: "bg-emerald-500"
         };
 
         return (
-            <div className="space-y-8 max-w-full overflow-x-hidden pb-32">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-3xl font-semibold tracking-tight">Tarefas</h1>
-                    <p className="text-muted-foreground text-sm">Selecione um projeto para gerenciar suas tarefas e quadros Kanban.</p>
+            <div className="page-container">
+                <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="h-1 w-8 bg-primary rounded-full" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Workspace Central</span>
+                    </div>
+                    <h1 className="text-4xl font-bold tracking-tight text-foreground">Cockpit de Fluxo</h1>
+                    <p className="text-muted-foreground font-medium text-sm max-w-2xl leading-relaxed">
+                        Selecione a diretriz do projeto para ativar o workspace. Cada universo de trabalho possui seu próprio Kanban estruturado.
+                    </p>
                 </div>
 
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-32 gap-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground animate-pulse font-medium">Carregando projetos...</p>
-                    </div>
-                ) : fullProjects.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
-                        <div className="h-16 w-16 rounded-2xl bg-muted/20 flex items-center justify-center border border-dashed border-border/60">
-                            <FolderKanban className="h-8 w-8 text-muted-foreground/40" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-semibold mb-1">Nenhum projeto encontrado</h3>
-                            <p className="text-sm text-muted-foreground max-w-sm">
-                                Crie um projeto primeiro para começar a gerenciar suas tarefas aqui.
-                            </p>
-                        </div>
-                        <Button
-                            className="bg-primary hover:bg-primary/90"
-                            onClick={() => navigate("/projetos")}
-                        >
-                            <Plus className="h-4 w-4 mr-2" /> Criar Projeto
-                        </Button>
+                    <div className="flex flex-col items-center justify-center py-40 gap-6">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+                        <p className="text-muted-foreground animate-pulse font-bold tracking-widest uppercase text-[10px]">Sincronizando Fluxos...</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {(fullProjects as any[]).map((p) => {
                             const counts = taskCountsByProject[p.id] || { total: 0, open: 0 };
                             const progress = p.progress || 0;
@@ -253,78 +252,84 @@ export default function Tarefas() {
                             return (
                                 <motion.button
                                     key={p.id}
-                                    initial={{ opacity: 0, y: 12 }}
+                                    initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.25 }}
+                                    whileHover={{ y: -5, boxShadow: "var(--shadow-float)" }}
                                     onClick={() => handleProjectFilterChange(p.id)}
-                                    className="group relative text-left p-5 rounded-2xl border border-border/40 bg-card/40 hover:bg-card/80 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 cursor-pointer"
+                                    className="group relative text-left p-6 rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)] transition-all duration-300 cursor-pointer overflow-hidden"
                                 >
-                                    {/* Status dot */}
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-lg font-bold group-hover:bg-primary/20 transition-colors">
-                                                {p.avatar_emoji ? (
-                                                    <span className="text-base">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
-                                                ) : (
-                                                    <Briefcase className="h-5 w-5" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
-                                                <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
-                                                    {p.client_name || "Sem cliente"}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <div className={cn("w-1.5 h-1.5 rounded-full", statusColors[statusKey] || "bg-muted")} />
-                                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                                                {statusLabels[statusKey] || statusKey}
-                                            </span>
-                                        </div>
+                                    {/* Blueprint Texture */}
+                                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                                        style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+                                    {/* Roadmap SVG Metaphor */}
+                                    <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.05] group-hover:opacity-[0.08] transition-opacity -mr-8 -mt-8 rotate-12">
+                                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M10 20C40 20 60 80 90 80" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                                            <circle cx="10" cy="20" r="4" fill="currentColor" />
+                                            <circle cx="50" cy="50" r="4" fill="currentColor" />
+                                            <circle cx="90" cy="80" r="6" fill="hsl(var(--primary))" />
+                                        </svg>
                                     </div>
 
-                                    {/* Stats row */}
-                                    <div className="flex items-center gap-4 mb-3">
-                                        <div className="flex items-center gap-1.5">
-                                            <CheckSquare className="h-3 w-3 text-muted-foreground/60" />
-                                            <span className="text-[10px] font-semibold text-muted-foreground">
-                                                {counts.total} tarefa{counts.total !== 1 ? 's' : ''}
-                                            </span>
+                                    <div className="flex items-start gap-4 mb-6 relative z-10">
+                                        <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold shadow-sm border border-primary/20 group-hover:scale-110 transition-transform">
+                                            {p.avatar_emoji ? (
+                                                <span className="text-xl">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
+                                            ) : (
+                                                <Briefcase className="h-6 w-6" />
+                                            )}
                                         </div>
-                                        {counts.open > 0 && (
-                                            <div className="flex items-center gap-1.5">
-                                                <AlertCircle className="h-3 w-3 text-amber-500/60" />
-                                                <span className="text-[10px] font-semibold text-amber-500/80">
-                                                    {counts.open} em aberto
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <div className={cn("w-2 h-2 rounded-full", statusColors[statusKey] || "bg-muted")} />
+                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
+                                                    {statusLabels[statusKey] || statusKey}
                                                 </span>
                                             </div>
-                                        )}
-                                        {p.billing_type === "recorrente" && (
-                                            <div className="flex items-center gap-1">
-                                                <CalendarDays className="h-3 w-3 text-indigo-400/60" />
-                                                <span className="text-[9px] font-bold text-indigo-400/80 uppercase">Recorrente</span>
-                                            </div>
-                                        )}
+                                            <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
+                                            <p className="text-[11px] font-medium text-muted-foreground line-clamp-1 opacity-70">
+                                                {p.client_name || "Mapeamento Direto"}
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    {/* Progress bar */}
-                                    <div className="space-y-1">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider">Progresso</span>
-                                            <span className="text-[10px] font-bold text-primary/70">{progress}%</span>
+                                    {/* Stats Row */}
+                                    <div className="grid grid-cols-2 gap-3 mb-3 relative z-10">
+                                        <div className="bg-muted/30 p-2.5 rounded-xl border border-border/40">
+                                            <p className="text-[9px] font-bold text-muted-foreground/40 uppercase mb-1">Total</p>
+                                            <p className="text-sm font-bold">{counts.total} Itens</p>
                                         </div>
-                                        <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-primary/60 rounded-full transition-all duration-500"
-                                                style={{ width: `${progress}%` }}
+                                        <div className="bg-primary/5 p-2.5 rounded-xl border border-primary/10">
+                                            <p className="text-[9px] font-bold text-primary/40 uppercase mb-1">Ação</p>
+                                            <p className="text-sm font-bold text-primary">{counts.open} Pendentes</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Finance Row - Added for "numbers referente ao projeto" */}
+                                    <div className="mb-6 bg-secondary/10 p-2.5 rounded-xl border border-border/20 flex justify-between items-center relative z-10">
+                                        <div className="flex flex-col">
+                                            <p className="text-[8px] font-bold text-muted-foreground/40 uppercase leading-none">Investimento</p>
+                                            <p className="text-[11px] font-bold tracking-tight">{p.value ? `R$ ${p.value.toLocaleString()}` : 'Sob demanda'}</p>
+                                        </div>
+                                        <Badge variant="outline" className="h-5 text-[8px] bg-primary/10 text-primary font-bold border-primary/20">
+                                            ROI FOCUS
+                                        </Badge>
+                                    </div>
+
+                                    {/* Progress */}
+                                    <div className="space-y-2 relative z-10">
+                                        <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground/40 uppercase">
+                                            <span>Trajetória</span>
+                                            <span className="text-primary font-bold">{progress}%</span>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden border border-border/10">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${progress}%` }}
+                                                className="h-full bg-primary shadow-[0_0_8px_rgba(255,106,42,0.4)]"
                                             />
                                         </div>
-                                    </div>
-
-                                    {/* Hover indicator */}
-                                    <div className="absolute bottom-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <ChevronDown className="h-4 w-4 -rotate-90 text-primary" />
                                     </div>
                                 </motion.button>
                             );
@@ -337,72 +342,149 @@ export default function Tarefas() {
 
     // ═══════ KANBAN BOARD (project selected) ═══════
     return (
-        <div className="space-y-8 max-w-full overflow-x-hidden pb-32">
-            {/* Header Space */}
-            <div className="flex flex-col gap-6">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
+        <div className="page-container">
+            {/* Header Space - Arthur Marques "Esteira de Produção" */}
+            <div className="flex flex-col gap-8">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-border/50">
+                    <div className="flex items-center gap-5">
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-lg hover:bg-muted/40"
+                            className="h-10 w-10 rounded-xl bg-muted/40 hover:bg-primary/10 hover:text-primary transition-all border border-border/40"
                             onClick={() => handleProjectFilterChange("all")}
-                            title="Voltar para projetos"
                         >
-                            <ArrowLeft className="h-4 w-4" />
+                            <ArrowLeft className="h-5 w-5" />
                         </Button>
-                        <div>
-                            <h1 className="text-3xl font-semibold tracking-tight mb-1">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="h-1 w-6 bg-primary rounded-full" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Fluxo de Produção</span>
+                            </div>
+                            <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
                                 {selectedProjectData?.name || "Tarefas"}
+                                {projectFilter !== 'all' && (
+                                    <Badge variant="outline" className="text-[10px] font-bold bg-primary/5 text-primary border-primary/20 rounded-lg">
+                                        PROJETO: {selectedProjectData?.name?.toUpperCase()}
+                                    </Badge>
+                                )}
+                                {projectFilter === 'all' && (
+                                    <Badge variant="outline" className="text-[10px] font-bold bg-primary/5 text-primary border-primary/20 rounded-lg">GLOBAL</Badge>
+                                )}
                             </h1>
-                            <p className="text-muted-foreground text-sm">Gerencie o fluxo de trabalho</p>
+
+                            {projectFilter !== 'all' && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors"
+                                        onClick={() => navigate(`/projetos/${projectFilter}`)}
+                                    >
+                                        ← VOLTAR PARA HUB DO PROJETO
+                                    </Button>
+                                    <span className="text-muted-foreground/20">•</span>
+                                    <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-[10px] font-bold text-rose-500/60 hover:text-rose-500 transition-colors"
+                                        onClick={() => handleProjectFilterChange("all")}
+                                    >
+                                        REMOVER FILTRO
+                                    </Button>
+                                </div>
+                            )}
                         </div>
+                    </div>
+
+                    {/* Metáfora Visual: Esteira de Produção SVG */}
+                    <div className="hidden xl:flex items-center gap-4 bg-muted/20 p-4 rounded-2xl border border-border/40">
+                        <div className="flex flex-col gap-1 text-right pr-4 border-r border-border/40">
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-40">Linha de</span>
+                            <span className="text-xs font-bold uppercase text-foreground">Execução</span>
+                        </div>
+                        <svg width="180" height="40" viewBox="0 0 180 40" fill="none" className="opacity-60">
+                            {/* Columns */}
+                            <rect x="10" y="5" width="40" height="30" rx="4" fill="currentColor" className="text-muted-foreground/10" />
+                            <rect x="70" y="5" width="40" height="30" rx="4" fill="currentColor" className="text-muted-foreground/10" />
+                            <rect x="130" y="5" width="40" height="30" rx="4" fill="hsl(var(--primary))" className="opacity-40" />
+                            {/* Connector line */}
+                            <line x1="50" y1="20" x2="70" y2="20" stroke="currentColor" className="text-muted-foreground/20" strokeWidth="1" strokeDasharray="2 2" />
+                            <line x1="110" y1="20" x2="130" y2="20" stroke="currentColor" className="text-muted-foreground/20" strokeWidth="1" strokeDasharray="2 2" />
+                            {/* Moving dots */}
+                            <circle cx="55" cy="20" r="1.5" fill="currentColor" className="text-muted-foreground/40" />
+                            <circle cx="115" cy="20" r="1.5" fill="hsl(var(--primary))" />
+                            <circle cx="120" cy="20" r="1.5" fill="hsl(var(--primary))" className="opacity-30" />
+                        </svg>
                     </div>
                 </div>
 
-                {/* Indicators Row */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-card/40 border border-border/40 p-4 rounded-2xl flex items-center gap-4 hover:bg-card/60 transition-colors">
-                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                {/* Indicators Row - Refined with Financial Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
+                        <div className="h-10 w-10 rounded-xl bg-orange-500/5 flex items-center justify-center text-primary/40 group-hover:bg-primary/10 group-hover:text-primary transition-all shadow-sm shrink-0">
                             <LayoutGrid className="h-5 w-5" />
                         </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Tarefas</p>
-                            <p className="text-xl font-bold tabular-nums">{tasksTotal}</p>
+                        <div className="min-w-0">
+                            <p className="text-[8px] font-bold text-muted-foreground tracking-widest mb-0.5 opacity-50 truncate">Backlog Total</p>
+                            <p className="text-xl font-bold tabular-nums text-foreground">{tasksTotal}</p>
                         </div>
                     </div>
-                    <div className="bg-card/40 border border-border/40 p-4 rounded-2xl flex items-center gap-4 hover:bg-card/60 transition-colors">
-                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
+                        <div className="h-10 w-10 rounded-xl bg-orange-500/5 flex items-center justify-center text-primary/40 group-hover:bg-primary/10 group-hover:text-primary transition-all shadow-sm shrink-0">
                             <AlertCircle className="h-5 w-5" />
                         </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Em Aberto</p>
-                            <p className="text-xl font-bold tabular-nums">{tasksOpen}</p>
+                        <div className="min-w-0">
+                            <p className="text-[8px] font-bold text-muted-foreground tracking-widest mb-0.5 opacity-50 truncate">Sprint Ativa</p>
+                            <p className="text-xl font-bold tabular-nums text-foreground">{tasksOpen}</p>
                         </div>
                     </div>
-                    <div className="bg-card/40 border border-border/40 p-4 rounded-2xl flex items-center gap-4 hover:bg-card/60 transition-colors">
-                        <div className="h-10 w-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                    <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
+                        <div className="h-10 w-10 rounded-xl bg-orange-500/5 flex items-center justify-center text-primary/40 group-hover:bg-primary/10 group-hover:text-primary transition-all shadow-sm shrink-0">
                             <Zap className="h-5 w-5" />
                         </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Atrasadas</p>
-                            <p className="text-xl font-bold tabular-nums">{tasksOverdue}</p>
+                        <div className="min-w-0">
+                            <p className="text-[8px] font-bold text-muted-foreground tracking-widest mb-0.5 opacity-50 truncate">Gargalos</p>
+                            <p className="text-xl font-bold tabular-nums text-foreground">{tasksOverdue}</p>
                         </div>
                     </div>
-                    <div className="bg-card/40 border border-border/40 p-4 rounded-2xl flex items-center gap-4 hover:bg-card/60 transition-colors">
-                        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+
+                    {/* Financial Stats */}
+                    <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1 border-primary/10 bg-primary/[0.01]">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm shrink-0">
+                            <FolderKanban className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[8px] font-bold text-primary/60 tracking-widest mb-0.5 truncate">Valor Total</p>
+                            <p className="text-xl font-bold tabular-nums text-foreground tracking-tight">R$ {projectValue.toLocaleString()}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
+                        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm shrink-0">
                             <BarChart3 className="h-5 w-5" />
                         </div>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-baseline">
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Progresso</p>
-                                <span className="text-xs font-bold text-emerald-500">{projectProgress}%</span>
+                        <div className="min-w-0">
+                            <p className="text-[8px] font-bold text-emerald-500/60 tracking-widest mb-0.5 truncate">{projectBalance >= 0 ? 'Saldo Liq.' : 'Custo'}</p>
+                            <p className={cn("text-xl font-bold tabular-nums tracking-tight", projectBalance >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                                R$ {Math.abs(projectBalance).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
+                        <div className="h-10 w-10 rounded-xl bg-muted/20 flex items-center justify-center text-muted-foreground shadow-sm shrink-0">
+                            <Settings2 className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline mb-0.5">
+                                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest opacity-50 truncate">Trajetória</p>
+                                <span className="text-[10px] font-black text-primary">{projectProgress}%</span>
                             </div>
-                            <div className="h-1.5 w-full bg-muted/30 rounded-full mt-1.5 overflow-hidden">
+                            <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden border border-border/10 p-[0.5px]">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${projectProgress}%` }}
-                                    className="h-full bg-emerald-500"
+                                    className="h-full bg-primary rounded-full"
                                 />
                             </div>
                         </div>

@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
     CheckSquare, Inbox, DollarSign, FileText, Activity as ActivityIcon,
-    X, Plus, ChevronRight, Search, Filter, ArrowUpRight
+    X, Plus, ChevronRight, Search, Filter, ArrowUpRight, Clock, Hash,
+    Copy, Check
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProjectDockProps {
     project?: { value?: number | null; advance_payment?: number | null } | null;
@@ -42,6 +47,21 @@ export const ProjectDock = ({
     onClose
 }: ProjectDockProps) => {
     const [activeTab, setActiveTab] = useState<TabType>('tasks');
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+    const navigate = useNavigate();
+    const { toast } = useToast();
+
+    const handleCopy = async (e: React.MouseEvent, id: string, content: string) => {
+        e.stopPropagation();
+        try {
+            await navigator.clipboard.writeText(content);
+            setCopiedId(id);
+            toast({ title: "Copiado!", duration: 2000 });
+            setTimeout(() => setCopiedId(null), 2000);
+        } catch (err) {
+            console.error("Erro ao copiar:", err);
+        }
+    };
 
     const tabs = [
         { id: 'tasks', label: 'TAREFAS', icon: CheckSquare, count: tasks.length },
@@ -57,8 +77,8 @@ export const ProjectDock = ({
                 return (
                     <div className="space-y-2 p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xs font-bold text-muted-foreground tracking-widest text-[9px]">PENDENTES</h3>
-                            <Button variant="ghost" size="sm" className="h-6 gap-1 text-[10px]" onClick={() => onCreateItem?.('task')}>
+                            <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">PENDENTES</h3>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('task')}>
                                 <Plus className="w-3 h-3" /> CRIAR
                             </Button>
                         </div>
@@ -68,13 +88,15 @@ export const ProjectDock = ({
                             </div>
                         ) : (
                             tasks.map(task => (
-                                <div key={task.id} className="group p-3 bg-muted/30 hover:bg-muted/50 rounded-xl border border-transparent hover:border-border/60 transition-all cursor-default">
+                                <div key={task.id} className="group p-4 bg-secondary/10 hover:bg-secondary/20 rounded-2xl border border-border/5 transition-all cursor-default">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-semibold truncate group-hover:text-primary transition-colors">{task.title}</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <Badge variant="outline" className="text-[8px] h-3.5 px-1 py-0 border-border/40 font-bold uppercase tracking-tighter">{task.priority}</Badge>
-                                                {task.due_date && <span className="text-[8px] text-muted-foreground/60">{new Date(task.due_date).toLocaleDateString()}</span>}
+                                            <p className="text-sm font-bold truncate group-hover:text-primary transition-colors tracking-tight">{task.title}</p>
+                                            <div className="flex items-center gap-2 mt-1.5">
+                                                <Badge variant="outline" className="text-[8px] h-4 px-1.5 py-0 border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-widest">
+                                                    {task.priority || 'MEDIUM'}
+                                                </Badge>
+                                                {task.due_date && <span className="text-[9px] font-bold text-muted-foreground/40">{new Date(task.due_date).toLocaleDateString()}</span>}
                                             </div>
                                         </div>
                                         <button
@@ -92,21 +114,75 @@ export const ProjectDock = ({
                 );
             case 'inbox':
                 return (
-                    <div className="space-y-3 p-4">
+                    <div className="space-y-4 p-4">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-xs font-bold text-muted-foreground tracking-widest text-[9px]">CAPTURAS</h3>
-                            <Button variant="ghost" size="sm" className="h-6 gap-1 text-[10px]" onClick={() => onCreateItem?.('inbox')}>
+                            <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">CAPTURAS</h3>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('inbox')}>
                                 <Plus className="w-3 h-3" /> CAPTURAR
                             </Button>
                         </div>
                         {inbox.map(item => (
-                            <div key={item.id} className="p-3 bg-card/50 rounded-xl border border-border/40 hover:border-primary/20 transition-all cursor-default group">
-                                <div className="flex items-start justify-between">
-                                    <p className="text-xs font-medium leading-relaxed">{item.content}</p>
-                                    <button onClick={() => onInsertReference?.('inbox', item.id)} className="opacity-0 group-hover:opacity-100 ml-2">
-                                        <ArrowUpRight className="w-3.5 h-3.5 text-primary/60" />
-                                    </button>
+                            <div
+                                key={item.id}
+                                onClick={() => {
+                                    onClose();
+                                    navigate(`/caixa-entrada?id=${item.id}${item.project_id ? `&project=${item.project_id}` : ''}`);
+                                }}
+                                className="group relative p-5 bg-card border border-border/40 rounded-2xl hover:border-primary/30 hover:shadow-glow-sm transition-all duration-300 cursor-pointer h-[180px] flex flex-col"
+                            >
+                                <div className="flex items-center justify-between mb-3 border-b border-border/10 pb-2 shrink-0">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                                            <Inbox className="w-3 h-3 text-primary" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black tracking-widest text-foreground/80 uppercase">CAPTURA</span>
+                                            <div className="flex items-center gap-1.5 opacity-40">
+                                                <Clock className="w-2.5 h-2.5" />
+                                                <span className="text-[9px] font-bold uppercase">{new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={(e) => handleCopy(e, item.id, item.content)}
+                                            className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground/40 hover:text-primary transition-all"
+                                            title="Copiar conteúdo"
+                                        >
+                                            {copiedId === item.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onInsertReference?.('inbox', item.id);
+                                            }}
+                                            className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground/40 hover:text-primary transition-all"
+                                            title="Inserir referência"
+                                        >
+                                            <ArrowUpRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
+
+                                <div className="flex-1 overflow-hidden">
+                                    <div className="prose prose-invert prose-xs max-w-none text-foreground/80 text-xs leading-relaxed line-clamp-4">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {item.content}
+                                        </ReactMarkdown>
+                                    </div>
+                                </div>
+
+                                {(item.tags && item.tags.length > 0) && (
+                                    <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-border/5 shrink-0">
+                                        {item.tags.slice(0, 3).map((tag: string, idx: number) => (
+                                            <span key={idx} className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-muted-foreground/40 px-1.2 py-0.5 bg-muted/20 rounded">
+                                                <Hash className="w-2 h-2" />
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -121,23 +197,23 @@ export const ProjectDock = ({
                 return (
                     <div className="space-y-4 p-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-xs font-bold text-muted-foreground tracking-widest text-[9px]">RESUMO FINANCEIRO</h3>
-                            <Button variant="ghost" size="sm" className="h-6 gap-1 text-[10px]" onClick={() => onCreateItem?.('finance')}>
+                            <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">RESUMO FINANCEIRO</h3>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('finance')}>
                                 <Plus className="w-3 h-3" /> LANÇAR
                             </Button>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
-                            <div className="p-3 bg-sky-500/5 border border-sky-500/20 rounded-xl">
-                                <p className="text-[8px] font-bold text-sky-500 tracking-widest">VALOR TOTAL</p>
-                                <p className="text-sm font-bold text-sky-400 tabular-nums">{fmt(valorTotal)}</p>
+                            <div className="p-3 bg-secondary/10 border border-border/5 rounded-2xl">
+                                <p className="text-[9px] font-black text-muted-foreground/40 tracking-widest uppercase">VALOR</p>
+                                <p className="text-sm font-black text-foreground tabular-nums">{fmt(valorTotal)}</p>
                             </div>
-                            <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                                <p className="text-[8px] font-bold text-emerald-600 tracking-widest">RECEBIDO</p>
-                                <p className="text-sm font-bold text-emerald-500 tabular-nums">{fmt(recebido)}</p>
+                            <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+                                <p className="text-[9px] font-black text-emerald-600/60 tracking-widest uppercase">RECEBIDO</p>
+                                <p className="text-sm font-black text-emerald-500 tabular-nums">{fmt(recebido)}</p>
                             </div>
-                            <div className="p-3 bg-rose-500/5 border border-rose-500/20 rounded-xl">
-                                <p className="text-[8px] font-bold text-rose-600 tracking-widest">CUSTOS</p>
-                                <p className="text-sm font-bold text-rose-500 tabular-nums">{fmt(totalCustos)}</p>
+                            <div className="p-3 bg-rose-500/5 border border-rose-500/10 rounded-2xl">
+                                <p className="text-[9px] font-black text-rose-600/60 tracking-widest uppercase">CUSTOS</p>
+                                <p className="text-sm font-black text-rose-500 tabular-nums">{fmt(totalCustos)}</p>
                             </div>
                         </div>
 
@@ -157,8 +233,8 @@ export const ProjectDock = ({
                             </span>
                         </div>
 
-                        <div className="space-y-2 pt-2">
-                            <p className="text-[9px] font-bold text-muted-foreground tracking-widest px-1">LANÇAMENTOS</p>
+                        <div className="space-y-3 pt-2">
+                            <p className="text-[9px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase px-1">LANÇAMENTOS</p>
                             {finance.length === 0 && (
                                 <div className="text-center py-8 opacity-30">
                                     <p className="text-xs">Nenhum custo lançado.</p>
@@ -173,7 +249,7 @@ export const ProjectDock = ({
                                             <p className="text-[8px] text-muted-foreground">{new Date(entry.date).toLocaleDateString('pt-BR')}</p>
                                         </div>
                                     </div>
-                                    <p className="text-xs font-bold tabular-nums text-rose-500">
+                                    <p className="text-xs font-black tabular-nums text-rose-500">
                                         -{fmt(Math.abs(entry.amount))}
                                     </p>
                                 </div>
@@ -186,8 +262,8 @@ export const ProjectDock = ({
                 return (
                     <div className="space-y-4 p-4">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-xs font-bold text-muted-foreground tracking-widest text-[9px]">WORKSPACE</h3>
-                            <Button variant="ghost" size="sm" className="h-6 gap-1 text-[10px]" onClick={onAddPage}>
+                            <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">WORKSPACE</h3>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={onAddPage}>
                                 <Plus className="w-3 h-3" /> PÁGINA
                             </Button>
                         </div>
@@ -224,10 +300,10 @@ export const ProjectDock = ({
                             ))}
                         </div>
 
-                        <div className="pt-4 border-t border-border/20">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-xs font-bold text-muted-foreground tracking-widest text-[9px]">ANEXOS</h3>
-                                <Button variant="ghost" size="sm" className="h-6 gap-1 text-[10px]" onClick={() => onCreateItem?.('doc')}>
+                        <div className="pt-6 border-t border-border/10">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">ANEXOS</h3>
+                                <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('doc')}>
                                     <Plus className="w-3 h-3" /> SUBIR
                                 </Button>
                             </div>
@@ -248,7 +324,7 @@ export const ProjectDock = ({
             case 'activity':
                 return (
                     <div className="space-y-6 p-6">
-                        <h3 className="text-xs font-bold text-muted-foreground tracking-widest text-[9px]">HISTÓRICO</h3>
+                        <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">HISTÓRICO</h3>
                         {activities.length === 0 ? (
                             <div className="text-center py-20 opacity-20">
                                 <Search className="w-8 h-8 mx-auto mb-2" />
@@ -292,8 +368,8 @@ export const ProjectDock = ({
                     >
                         <div className="flex items-center justify-between px-4 py-4 border-b border-border/40">
                             <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                                <span className="text-[10px] font-bold tracking-widest uppercase">Project Context</span>
+                                <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]" />
+                                <span className="text-[11px] font-black tracking-[0.2em] uppercase text-foreground/90">PROJECT CONTEXT</span>
                             </div>
                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={onClose}>
                                 <X className="w-4 h-4" />
@@ -311,9 +387,14 @@ export const ProjectDock = ({
                                     )}
                                 >
                                     <tab.icon className={cn("w-4 h-4", activeTab === tab.id && "animate-in zoom-in-75")} />
-                                    <span className="text-[8px] font-bold tracking-tighter">{tab.label}</span>
+                                    <span className={cn(
+                                        "text-[9px] font-black tracking-widest",
+                                        activeTab === tab.id ? "opacity-100" : "opacity-40"
+                                    )}>
+                                        {tab.label}
+                                    </span>
                                     {tab.count > 0 && (
-                                        <span className="absolute top-2 right-4 w-4 h-4 bg-primary/10 text-primary text-[7px] flex items-center justify-center rounded-full font-bold">
+                                        <span className="absolute top-2 right-4 w-4 h-4 bg-primary text-primary-foreground text-[8px] flex items-center justify-center rounded-full font-black shadow-sm">
                                             {tab.count}
                                         </span>
                                     )}

@@ -7,7 +7,7 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useImperativeHandle } from 'react';
 import { cn } from '@/lib/utils';
 import {
     Heading1, Heading2, List,
@@ -24,268 +24,286 @@ interface BlockEditorProps {
     onCommand?: (command: string) => void;
 }
 
-export const BlockEditor = ({ content, onChange, editable = true, className, onCommand }: BlockEditorProps) => {
-    const [isFocused, setIsFocused] = useState(false);
+export interface BlockEditorRef {
+    insertItem: (type: string, id: string, title?: string) => void;
+}
 
-    // Slash command state
-    const [slashMenu, setSlashMenu] = useState<{
-        isOpen: boolean;
-        position: { top: number; left: number };
-        filterText: string;
-    }>({
-        isOpen: false,
-        position: { top: 0, left: 0 },
-        filterText: '',
-    });
+export const BlockEditor = React.forwardRef<BlockEditorRef, BlockEditorProps>(
+    ({ content, onChange, editable = true, className, onCommand }, ref) => {
+        const [isFocused, setIsFocused] = useState(false);
 
-    const slashStartPos = useRef<number | null>(null);
 
-    const editor = useEditor({
-        extensions: [
-            StarterKit.configure({
-                heading: {
-                    levels: [1, 2, 3],
-                },
-            }),
-            Link.configure({
-                openOnClick: false,
-                HTMLAttributes: {
-                    class: 'text-primary underline cursor-pointer',
-                },
-            }),
-            Placeholder.configure({
-                placeholder: ({ node }) => {
-                    if (node.type.name === 'heading') {
-                        return `Heading ${node.attrs.level}`;
-                    }
-                    return "Digite '/' para comandos...";
-                },
-            }),
-            TaskList,
-            TaskItem.configure({
-                nested: true,
-            }),
-            BubbleMenuExtension,
-            FloatingMenuExtension,
-        ],
-        content: content,
-        onUpdate: ({ editor: ed }) => {
-            onChange(ed.getJSON());
+        // Slash command state
+        const [slashMenu, setSlashMenu] = useState<{
+            isOpen: boolean;
+            position: { top: number; left: number };
+            filterText: string;
+        }>({
+            isOpen: false,
+            position: { top: 0, left: 0 },
+            filterText: '',
+        });
 
-            // Track slash command input for filtering
-            if (slashStartPos.current !== null) {
-                const currentPos = ed.state.selection.from;
+        const slashStartPos = useRef<number | null>(null);
 
-                // Safety: if cursor moved before the slash start, close menu
-                if (currentPos < slashStartPos.current) {
-                    setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
-                    slashStartPos.current = null;
-                    return;
-                }
-
-                const textBetween = ed.state.doc.textBetween(
-                    slashStartPos.current,
-                    currentPos,
-                    ''
-                );
-
-                // If still valid filter text (letters/numbers, max 20 chars)
-                if (textBetween.length <= 20 && /^[a-zA-Z0-9áàâãéèêíïóôõúüçÁÀÂÃÉÈÊÍÏÓÔÕÚÜÇ]*$/.test(textBetween)) {
-                    setSlashMenu((prev) => ({ ...prev, filterText: textBetween }));
-                } else {
-                    // Invalid filter — close menu
-                    setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
-                    slashStartPos.current = null;
-                }
-            }
-        },
-        onFocus: () => setIsFocused(true),
-        onBlur: () => setIsFocused(false),
-        editable,
-        editorProps: {
-            handleKeyDown: (_view, event) => {
-                // Detect '/' key to open slash menu
-                if (event.key === '/' && !slashMenu.isOpen) {
-                    // Use a small delay so the '/' character is inserted first
-                    setTimeout(() => {
-                        if (!_view.dom) return;
-                        const coords = _view.coordsAtPos(_view.state.selection.from);
-
-                        if (coords) {
-                            setSlashMenu({
-                                isOpen: true,
-                                position: {
-                                    top: coords.bottom + 4,
-                                    left: coords.left,
-                                },
-                                filterText: '',
-                            });
-                            slashStartPos.current = _view.state.selection.from;
+        const editor = useEditor({
+            extensions: [
+                StarterKit.configure({
+                    heading: {
+                        levels: [1, 2, 3],
+                    },
+                }),
+                Link.configure({
+                    openOnClick: false,
+                    HTMLAttributes: {
+                        class: 'text-primary underline cursor-pointer',
+                    },
+                }),
+                Placeholder.configure({
+                    placeholder: ({ node }) => {
+                        if (node.type.name === 'heading') {
+                            return `Heading ${node.attrs.level}`;
                         }
-                    }, 10);
-                    return false; // let TipTap insert the '/' character
-                }
+                        return "Digite '/' para comandos...";
+                    },
+                }),
+                TaskList,
+                TaskItem.configure({
+                    nested: true,
+                }),
+                BubbleMenuExtension,
+                FloatingMenuExtension,
+            ],
+            content: content,
+            onUpdate: ({ editor: ed }) => {
+                onChange(ed.getJSON());
 
-                // While slash menu is open, handle backspace to close if we go past '/'
-                if (slashMenu.isOpen && event.key === 'Backspace') {
-                    const currentPos = _view.state.selection.from;
-                    if (slashStartPos.current !== null && currentPos <= slashStartPos.current) {
+                // Track slash command input for filtering
+                if (slashStartPos.current !== null) {
+                    const currentPos = ed.state.selection.from;
+
+                    // Safety: if cursor moved before the slash start, close menu
+                    if (currentPos < slashStartPos.current) {
+                        setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
+                        slashStartPos.current = null;
+                        return;
+                    }
+
+                    const textBetween = ed.state.doc.textBetween(
+                        slashStartPos.current,
+                        currentPos,
+                        ''
+                    );
+
+                    // If still valid filter text (letters/numbers, max 20 chars)
+                    if (textBetween.length <= 20 && /^[a-zA-Z0-9áàâãéèêíïóôõúüçÁÀÂÃÉÈÊÍÏÓÔÕÚÜÇ]*$/.test(textBetween)) {
+                        setSlashMenu((prev) => ({ ...prev, filterText: textBetween }));
+                    } else {
+                        // Invalid filter — close menu
                         setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
                         slashStartPos.current = null;
                     }
-                    return false;
                 }
-
-                return false;
             },
-        },
-    });
+            onFocus: () => setIsFocused(true),
+            onBlur: () => setIsFocused(false),
+            editable,
+            editorProps: {
+                handleKeyDown: (_view, event) => {
+                    // Detect '/' key to open slash menu
+                    if (event.key === '/' && !slashMenu.isOpen) {
+                        // Use a small delay so the '/' character is inserted first
+                        setTimeout(() => {
+                            if (!_view.dom) return;
+                            const coords = _view.coordsAtPos(_view.state.selection.from);
 
-    // Sync content if it changes externally (e.g. loaded from DB)
-    useEffect(() => {
-        if (editor && content && editor.getHTML() === '') {
-            editor.commands.setContent(content);
-        }
-    }, [editor, content]);
+                            if (coords) {
+                                setSlashMenu({
+                                    isOpen: true,
+                                    position: {
+                                        top: coords.bottom + 4,
+                                        left: coords.left,
+                                    },
+                                    filterText: '',
+                                });
+                                slashStartPos.current = _view.state.selection.from;
+                            }
+                        }, 10);
+                        return false; // let TipTap insert the '/' character
+                    }
 
-    /**
-     * Called when the user selects a command from the slash menu.
-     * Flow: 1) Delete the "/" + filter text  →  2) Apply the command action
-     */
-    const handleSelectCommand = useCallback(
-        (cmd: SlashCommandItem) => {
-            if (!editor) return;
+                    // While slash menu is open, handle backspace to close if we go past '/'
+                    if (slashMenu.isOpen && event.key === 'Backspace') {
+                        const currentPos = _view.state.selection.from;
+                        if (slashStartPos.current !== null && currentPos <= slashStartPos.current) {
+                            setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
+                            slashStartPos.current = null;
+                        }
+                        return false;
+                    }
 
-            // Step 1: Delete the "/" character and any filter text
-            if (slashStartPos.current !== null) {
-                const currentPos = editor.state.selection.from;
-                const deleteFrom = slashStartPos.current - 1; // -1 to include the "/" itself
+                    return false;
+                },
+            },
+        });
 
-                if (deleteFrom >= 0 && deleteFrom < currentPos) {
-                    editor.chain().focus().deleteRange({ from: deleteFrom, to: currentPos }).run();
-                }
+        useImperativeHandle(ref, () => ({
+            insertItem: (type: string, id: string, title?: string) => {
+                if (!editor) return;
+
+                const label = title || id;
+                const emoji = type === 'task' ? '✅' : type === 'inbox' ? '📥' : type === 'doc' ? '📄' : '🔗';
+                const htmlValue = `<a href="/${type}/${id}" class="mention"> ${emoji} ${label}</a> `;
+
+                editor.chain().focus().insertContent(htmlValue).run();
             }
+        }), [editor]);
 
-            // Step 2: Close the menu UI
+        // Sync content if it changes externally (e.g. loaded from DB)
+        useEffect(() => {
+            if (editor && content && editor.getHTML() === '') {
+                editor.commands.setContent(content);
+            }
+        }, [editor, content]);
+
+        /**
+         * Called when the user selects a command from the slash menu.
+         * Flow: 1) Delete the "/" + filter text  →  2) Apply the command action
+         */
+        const handleSelectCommand = useCallback(
+            (cmd: SlashCommandItem) => {
+                if (!editor) return;
+
+                // Step 1: Delete the "/" character and any filter text
+                if (slashStartPos.current !== null) {
+                    const currentPos = editor.state.selection.from;
+                    const deleteFrom = slashStartPos.current - 1; // -1 to include the "/" itself
+
+                    if (deleteFrom >= 0 && deleteFrom < currentPos) {
+                        editor.chain().focus().deleteRange({ from: deleteFrom, to: currentPos }).run();
+                    }
+                }
+
+                // Step 2: Close the menu UI
+                setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
+                slashStartPos.current = null;
+
+                // Step 3: Apply the selected command
+                if (cmd.id === 'task' || cmd.id === 'page') {
+                    onCommand?.(cmd.id);
+                } else {
+                    // Use requestAnimationFrame to ensure the deletion is committed
+                    requestAnimationFrame(() => {
+                        cmd.action(editor);
+                    });
+                }
+            },
+            [editor, onCommand]
+        );
+
+        /**
+         * Called when the user presses Escape or clicks outside — just close, don't execute
+         */
+        const handleDismiss = useCallback(() => {
             setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
             slashStartPos.current = null;
+            editor?.chain().focus().run();
+        }, [editor]);
 
-            // Step 3: Apply the selected command
-            if (cmd.id === 'task' || cmd.id === 'page') {
-                onCommand?.(cmd.id);
-            } else {
-                // Use requestAnimationFrame to ensure the deletion is committed
-                requestAnimationFrame(() => {
-                    cmd.action(editor);
-                });
-            }
-        },
-        [editor, onCommand]
-    );
+        if (!editor) {
+            return null;
+        }
 
-    /**
-     * Called when the user presses Escape or clicks outside — just close, don't execute
-     */
-    const handleDismiss = useCallback(() => {
-        setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
-        slashStartPos.current = null;
-        editor?.chain().focus().run();
-    }, [editor]);
+        return (
+            <div className={cn("relative min-h-[500px] w-full px-4 sm:px-8 py-10", className)}>
+                {editor && editable && (
+                    <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex bg-card border border-border rounded-lg shadow-xl overflow-hidden divide-x divide-border">
+                        <button
+                            onClick={() => editor.chain().focus().toggleBold().run()}
+                            className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('bold') && "text-primary bg-primary/5")}
+                        >
+                            <span className="font-bold">B</span>
+                        </button>
+                        <button
+                            onClick={() => editor.chain().focus().toggleItalic().run()}
+                            className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('italic') && "text-primary bg-primary/5")}
+                        >
+                            <span className="italic">I</span>
+                        </button>
+                        <button
+                            onClick={() => editor.chain().focus().toggleStrike().run()}
+                            className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('strike') && "text-primary bg-primary/5")}
+                        >
+                            <span className="line-through">S</span>
+                        </button>
+                        <button
+                            onClick={() => editor.chain().focus().toggleCode().run()}
+                            className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('code') && "text-primary bg-primary/5")}
+                        >
+                            <Code className="w-4 h-4" />
+                        </button>
+                    </BubbleMenu>
+                )}
 
-    if (!editor) {
-        return null;
-    }
+                {editor && editable && (
+                    <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex items-center gap-1 p-1 bg-card border border-border rounded-full shadow-lg">
+                        <button
+                            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                            className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                            title="Heading 1"
+                        >
+                            <Heading1 className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                            className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                            title="Heading 2"
+                        >
+                            <Heading2 className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => editor.chain().focus().toggleBulletList().run()}
+                            className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                            title="Bullet List"
+                        >
+                            <List className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => editor.chain().focus().toggleTaskList().run()}
+                            className="p-1.5 hover:bg-muted rounded-full transition-colors"
+                            title="Checklist"
+                        >
+                            <CheckSquare className="w-4 h-4" />
+                        </button>
+                        <div className="w-px h-4 bg-border mx-1" />
+                        <button
+                            onClick={() => onCommand?.('task')}
+                            className="p-1.5 hover:bg-primary/10 text-primary rounded-full transition-colors flex items-center gap-1 px-2"
+                        >
+                            <Plus className="w-3 h-3" />
+                            <span className="text-[10px] font-bold">TAREFA</span>
+                        </button>
+                    </FloatingMenu>
+                )}
 
-    return (
-        <div className={cn("relative min-h-[500px] w-full px-4 sm:px-8 py-10", className)}>
-            {editor && editable && (
-                <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex bg-card border border-border rounded-lg shadow-xl overflow-hidden divide-x divide-border">
-                    <button
-                        onClick={() => editor.chain().focus().toggleBold().run()}
-                        className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('bold') && "text-primary bg-primary/5")}
-                    >
-                        <span className="font-bold">B</span>
-                    </button>
-                    <button
-                        onClick={() => editor.chain().focus().toggleItalic().run()}
-                        className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('italic') && "text-primary bg-primary/5")}
-                    >
-                        <span className="italic">I</span>
-                    </button>
-                    <button
-                        onClick={() => editor.chain().focus().toggleStrike().run()}
-                        className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('strike') && "text-primary bg-primary/5")}
-                    >
-                        <span className="line-through">S</span>
-                    </button>
-                    <button
-                        onClick={() => editor.chain().focus().toggleCode().run()}
-                        className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('code') && "text-primary bg-primary/5")}
-                    >
-                        <Code className="w-4 h-4" />
-                    </button>
-                </BubbleMenu>
-            )}
-
-            {editor && editable && (
-                <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex items-center gap-1 p-1 bg-card border border-border rounded-full shadow-lg">
-                    <button
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                        className="p-1.5 hover:bg-muted rounded-full transition-colors"
-                        title="Heading 1"
-                    >
-                        <Heading1 className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                        className="p-1.5 hover:bg-muted rounded-full transition-colors"
-                        title="Heading 2"
-                    >
-                        <Heading2 className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => editor.chain().focus().toggleBulletList().run()}
-                        className="p-1.5 hover:bg-muted rounded-full transition-colors"
-                        title="Bullet List"
-                    >
-                        <List className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => editor.chain().focus().toggleTaskList().run()}
-                        className="p-1.5 hover:bg-muted rounded-full transition-colors"
-                        title="Checklist"
-                    >
-                        <CheckSquare className="w-4 h-4" />
-                    </button>
-                    <div className="w-px h-4 bg-border mx-1" />
-                    <button
-                        onClick={() => onCommand?.('task')}
-                        className="p-1.5 hover:bg-primary/10 text-primary rounded-full transition-colors flex items-center gap-1 px-2"
-                    >
-                        <Plus className="w-3 h-3" />
-                        <span className="text-[10px] font-bold">TAREFA</span>
-                    </button>
-                </FloatingMenu>
-            )}
-
-            <EditorContent
-                editor={editor}
-                className="prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none"
-            />
-
-            {/* Slash Command Menu */}
-            {slashMenu.isOpen && (
-                <SlashCommandMenu
+                <EditorContent
                     editor={editor}
-                    isOpen={slashMenu.isOpen}
-                    onDismiss={handleDismiss}
-                    onSelectCommand={handleSelectCommand}
-                    position={slashMenu.position}
-                    filterText={slashMenu.filterText}
+                    className="prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none"
                 />
-            )}
 
-            <style>{`
+                {/* Slash Command Menu */}
+                {slashMenu.isOpen && (
+                    <SlashCommandMenu
+                        editor={editor}
+                        isOpen={slashMenu.isOpen}
+                        onDismiss={handleDismiss}
+                        onSelectCommand={handleSelectCommand}
+                        position={slashMenu.position}
+                        filterText={slashMenu.filterText}
+                    />
+                )}
+
+                <style>{`
         .ProseMirror {
           text-align: left;
         }
@@ -430,6 +448,9 @@ export const BlockEditor = ({ content, onChange, editable = true, className, onC
           padding: 0;
         }
       `}</style>
-        </div>
-    );
-};
+            </div>
+        );
+    }
+);
+
+BlockEditor.displayName = 'BlockEditor';

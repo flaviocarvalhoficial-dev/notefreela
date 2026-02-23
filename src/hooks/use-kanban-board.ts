@@ -52,12 +52,21 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
         }
     });
 
-    const { data: projects = [] } = useQuery<{ id: string, name: string, billing_type: string, created_at: string }[]>({
+    const { data: projects = [] } = useQuery<{ id: string, name: string, billing_type: string, created_at: string, value: number, advance_payment: number }[]>({
         queryKey: ["projects"],
         queryFn: async () => {
-            const { data, error } = await supabase.from("projects").select("id, name, billing_type, created_at");
+            const { data, error } = await supabase.from("projects").select("id, name, billing_type, created_at, value, advance_payment");
             if (error) throw error;
             return data as any;
+        }
+    });
+
+    const { data: costs = [] } = useQuery({
+        queryKey: ["all-project-costs"],
+        queryFn: async () => {
+            const { data, error } = await supabase.from("project_costs").select("*");
+            if (error) throw error;
+            return data || [];
         }
     });
 
@@ -66,7 +75,7 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("tasks")
-                .select(`*, projects (name)`)
+                .select(`*, projects (name, value, advance_payment)`)
                 .order("created_at", { ascending: true });
 
             if (error) throw error;
@@ -395,7 +404,9 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
         scenarios,
         columns,
         tasks,
+        filteredTasks,
         projects,
+        costs,
         tasksByColumn,
         isLoading: isLoadingScenarios || isLoadingCols || isLoadingTasks,
         mutations: {
