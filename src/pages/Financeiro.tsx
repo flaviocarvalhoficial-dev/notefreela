@@ -192,38 +192,38 @@ export default function Financeiro() {
     }
 
     return (
-        <div className="space-y-10 pb-32 max-w-full overflow-x-hidden">
+        <div className="page-container">
             {/* Header - Cockpit Style */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-border/40">
-                <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                        <div className="h-1 w-8 bg-primary rounded-full" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Fluxo de Caixa</span>
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Gestão de Capital</h1>
-                        <p className="text-muted-foreground font-medium text-sm mt-1">Visão estratégica de liquidez e projeção de diretrizes financeiras.</p>
-                    </div>
-                </div>
-
+            <header className="heading-container">
                 <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        className="h-11 gap-2 text-xs font-bold rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-all active:scale-95 px-6"
-                        onClick={() => setIsReportsModalOpen(true)}
-                    >
-                        <TrendingUp className="h-4 w-4" />
-                        Relatórios Mensais
-                    </Button>
-                    <CostRegistrationDialog
-                        trigger={
-                            <Button variant="outline" className="h-11 border-red-500/20 text-red-500 hover:text-red-600 hover:bg-red-500/10 gap-2 text-xs font-bold rounded-xl px-6">
-                                <TrendingDown className="h-4 w-4" /> Registrar Custo
-                            </Button>
-                        }
-                    />
+                    <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Gestão Capital</span>
                 </div>
-            </div>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="stack-gap-sm">
+                        <h1 className="text-3xl font-black tracking-tight text-foreground">Gestão de Capital</h1>
+                        <p className="text-muted-foreground font-medium text-sm leading-relaxed">Visão estratégica de liquidez e projeção de diretrizes financeiras.</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            className="h-11 gap-2 text-xs font-bold rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-all active:scale-95 px-6"
+                            onClick={() => setIsReportsModalOpen(true)}
+                        >
+                            <TrendingUp className="h-4 w-4" />
+                            Relatórios Mensais
+                        </Button>
+                        <CostRegistrationDialog
+                            trigger={
+                                <Button variant="outline" className="h-11 border-red-500/20 text-red-500 hover:text-red-600 hover:bg-red-500/10 gap-2 text-xs font-bold rounded-xl px-6">
+                                    <TrendingDown className="h-4 w-4" /> Registrar Custo
+                                </Button>
+                            }
+                        />
+                    </div>
+                </div>
+            </header>
 
             {/* Metáfora Visual: Fluxo Financeiro Arthur Marques */}
             <div className="relative w-full h-32 bg-card border border-border rounded-[24px] overflow-hidden group shadow-[var(--shadow-card)]">

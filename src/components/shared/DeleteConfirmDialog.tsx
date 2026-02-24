@@ -9,8 +9,9 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DeleteConfirmDialogProps {
     title: string;
@@ -58,7 +59,7 @@ export function DeleteConfirmDialog({
                             e.stopPropagation();
                             onConfirm();
                         }}
-                        className="rounded-md font-bold text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className={cn(buttonVariants({ variant: "destructive" }), "rounded-md font-bold text-xs h-9")}
                     >
                         Excluir
                     </AlertDialogAction>

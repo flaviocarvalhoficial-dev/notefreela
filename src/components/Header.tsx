@@ -91,7 +91,7 @@ export function Header() {
 
     return (
         <header className="sticky top-0 w-full h-16 border-b border-border/50 glass-light z-[40]">
-            <div className="max-w-[1700px] mx-auto h-full flex items-center justify-between px-6 lg:px-10 transition-all duration-300">
+            <div className="max-w-[1750px] mx-auto h-full flex items-center justify-between px-8 md:px-12 lg:px-20 transition-all duration-300">
 
                 {/* Left Area: Welcome Message (Photo and Name in Line) */}
                 <div className="flex items-center gap-4">

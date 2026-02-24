@@ -85,59 +85,54 @@ const Projetos = () => {
   ];
 
   return (
-    <div className="pb-10 min-h-screen bg-background">
-      {/* Notion-style Clean Header */}
-      {/* Minimalist 100px Header Strip */}
-      <section className="bg-card border-b border-border/60 sticky top-0 z-10 shadow-sm h-[100px] flex items-center">
-        <div className="w-full flex items-center justify-between gap-6 px-2">
+    <div className="page-container">
+      <header className="heading-container">
+        <div className="flex items-center gap-3">
+          <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Projetos</span>
+        </div>
 
-          {/* Left: Branding & Title */}
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center shrink-0">
-              <Briefcase className="h-5 w-5 text-foreground/80" />
-            </div>
-            <div className="flex flex-col justify-center">
-              <div className="flex items-center gap-2 text-muted-foreground/60 mb-0.5">
-                <LucideIcons.Layout className="h-3 w-3" />
-                <span className="text-[10px] font-semibold leading-none">Projetos</span>
-              </div>
-              <h1 className="text-xl font-semibold tracking-tight text-foreground leading-none">Workspace</h1>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Diretrizes de Produção</h1>
+            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Gerencie o ciclo de vida e a saúde estratégica de seus projetos.</p>
           </div>
 
-          {/* Center: Inline Stats */}
-          <div className="hidden xl:flex items-center gap-6 px-6 border-x border-border/30 h-10">
-            {stats.map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3 group cursor-default">
-                <div className={cn("p-1.5 rounded-md bg-muted/30 transition-colors group-hover:bg-muted/50", stat.color)}>
-                  <stat.icon className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-6">
+            {/* Center: Inline Stats */}
+            <div className="hidden xl:flex items-center gap-6 px-6 border-x border-border/30 h-10">
+              {stats.map((stat) => (
+                <div key={stat.label} className="flex items-center gap-3 group cursor-default">
+                  <div className={cn("p-1.5 rounded-md bg-muted/30 transition-colors group-hover:bg-muted/50", stat.color)}>
+                    <stat.icon className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-medium text-muted-foreground/40 leading-none mb-1">{stat.label}</p>
+                    <p className="text-sm font-semibold leading-none">{stat.value}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[9px] font-medium text-muted-foreground/40 leading-none mb-1">{stat.label}</p>
-                  <p className="text-sm font-semibold leading-none">{stat.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-3 shrink-0">
-            <NewProjectDialog
-              trigger={
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-md px-4 h-9 shadow-sm text-xs">
-                  <Plus className="h-3.5 w-3.5 mr-2" />
-                  Novo
-                </Button>
-              }
-            />
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md opacity-40 hover:opacity-100">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-3 shrink-0">
+              <NewProjectDialog
+                trigger={
+                  <Button className="border-primary font-bold shadow-md transition-all active:scale-95 px-6">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Projeto
+                  </Button>
+                }
+              />
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md opacity-40 hover:opacity-100">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <div className="page-container mt-[-100px] pt-[120px]">
+      <div className="flex flex-col gap-12">
         {/* Extended Filters Bar */}
         <div className="flex flex-wrap items-center gap-4 py-2">
           <div className="flex items-center gap-2">

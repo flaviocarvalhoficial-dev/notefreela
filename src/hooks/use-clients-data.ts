@@ -134,7 +134,10 @@ export function useClientsData() {
         projects.forEach(p => {
             if (p.created_at) years.add(getYear(parseISO(p.created_at)).toString());
             const pServices = (p.services as any[]) || [];
-            pServices.forEach(s => serviceTypes.add(s.name));
+            pServices.forEach(s => {
+                const sName = typeof s === 'string' ? s : s?.name;
+                if (sName) serviceTypes.add(sName);
+            });
         });
 
         return {

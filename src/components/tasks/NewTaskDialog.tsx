@@ -71,13 +71,15 @@ export function NewTaskDialog({
   onCreate,
   open: externalOpen,
   onOpenChange: setExternalOpen,
-  trigger
+  trigger,
+  defaultProjectId
 }: {
   projects: { id: string, name: string }[];
   onCreate: (values: NewTaskValues) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
+  defaultProjectId?: string;
 }) {
   const [internalOpen, setInternalOpen] = React.useState(false);
   const isControlled = externalOpen !== undefined;
@@ -88,7 +90,7 @@ export function NewTaskDialog({
     resolver: zodResolver(NewTaskSchema),
     defaultValues: {
       title: "",
-      project: projects[0]?.id ?? "",
+      project: defaultProjectId ?? projects[0]?.id ?? "",
       priority: "medium",
       due: undefined,
       assignee: "",
@@ -98,9 +100,13 @@ export function NewTaskDialog({
   });
 
   React.useEffect(() => {
-    const current = form.getValues("project");
-    if (!current && projects[0]) form.setValue("project", projects[0].id, { shouldValidate: true });
-  }, [projects, form]);
+    if (defaultProjectId) {
+      form.setValue("project", defaultProjectId, { shouldValidate: true });
+    } else {
+      const current = form.getValues("project");
+      if (!current && projects[0]) form.setValue("project", projects[0].id, { shouldValidate: true });
+    }
+  }, [projects, form, defaultProjectId]);
 
   function handleSubmit(values: NewTaskValues) {
     onCreate(values);
@@ -313,7 +319,7 @@ export function NewTaskDialog({
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90">
+              <Button type="submit" className="flex-1 border-primary transition-all active:scale-95 font-bold">
                 Criar Tarefa
               </Button>
             </div>

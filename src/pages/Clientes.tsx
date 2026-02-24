@@ -19,7 +19,8 @@ import {
     Filter,
     TrendingUp,
     CheckCircle2,
-    Clock
+    Clock,
+    Plus
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -86,21 +87,47 @@ const Clientes = () => {
     ];
 
     return (
-        <div className="flex flex-col gap-8 pb-10 pt-4">
-            <div>
-                <h1 className="text-3xl font-semibold tracking-tight mb-1">Clientes</h1>
-                <p className="text-muted-foreground text-sm">Gerencie sua carteira de clientes e negócios.</p>
-            </div>
+        <div className="page-container">
+            <header className="heading-container">
+                <div className="flex items-center gap-3">
+                    <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Clientes</span>
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-black tracking-tight text-foreground">Carteira de Clientes</h1>
+                        <p className="text-muted-foreground font-medium text-sm leading-relaxed">Gerencie sua rede de parceiros e o histórico de colaborações.</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            className="bg-primary/5 border-primary/20 hover:bg-primary/10 transition-all active:scale-95"
+                            onClick={() => {
+                                // Potencial ação de exportar ou filtros rápidos
+                            }}
+                        >
+                            Exportar Base
+                        </Button>
+                        <NewClientDialog trigger={
+                            <Button className="border-primary font-bold shadow-md transition-all active:scale-95 px-6">
+                                <Plus className="h-4 w-4 mr-2" /> Novo Cliente
+                            </Button>
+                        } />
+                    </div>
+                </div>
+            </header>
 
             {/* Quick Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {statsConfig.map((stat, i) => (
                     <motion.div
                         key={stat.title}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="bento-card bento-card--compact p-5 flex items-center gap-4 bg-card/40 border-border/40"
+                        className="bento-card bento-card--compact p-6 flex items-center gap-5 bg-card/40 border-border/40"
                     >
                         <div className={cn("p-2 rounded-lg", stat.bg)}>
                             <stat.icon className={cn("h-5 w-5", stat.color)} />
@@ -119,12 +146,12 @@ const Clientes = () => {
 
             {/* Filters Bar */}
             <motion.div
-                className="bento-card bento-card--compact p-4 flex flex-col lg:flex-row items-center justify-between gap-4 bg-card/30 border-border/30"
+                className="bento-card bento-card--compact p-6 flex flex-col lg:flex-row items-center justify-between gap-6 bg-card/30 border-border/30"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
             >
-                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
                     <div className="relative w-full sm:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                         <Input
@@ -284,7 +311,7 @@ function ClientCard({ client, onDelete, onClick, index }: { client: any, onDelet
             className="group relative h-full flex flex-col"
         >
             <div
-                className="bg-card/40 hover:bg-card border border-border/40 hover:border-primary/30 rounded-2xl p-6 transition-all h-full cursor-pointer flex flex-col shadow-sm group-hover:shadow-md"
+                className="bg-card/40 hover:bg-card border border-border/40 hover:border-primary/30 rounded-2xl p-8 transition-all h-full cursor-pointer flex flex-col shadow-sm group-hover:shadow-md"
                 onClick={onClick}
             >
                 <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">

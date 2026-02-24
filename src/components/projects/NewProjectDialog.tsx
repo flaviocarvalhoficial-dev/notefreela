@@ -377,7 +377,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
                                                 />
                                             </div>
-                                            <Button type="button" onClick={addService} size="sm" className="shrink-0 bg-primary/20 text-primary hover:bg-primary/30 h-9">
+                                            <Button type="button" onClick={addService} size="sm" className="shrink-0 h-9 border-primary transition-all active:scale-95">
                                                 <Plus className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -604,7 +604,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                 onKeyDown={(e) => e.key === 'Enter' && addTask()}
                                                 className="glass-light border-border/50 h-11"
                                             />
-                                            <Button type="button" onClick={addTask} size="icon" className="shrink-0 bg-primary/20 text-primary hover:bg-primary/30">
+                                            <Button type="button" onClick={addTask} size="icon" className="shrink-0 border-primary transition-all active:scale-95">
                                                 <Plus className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -665,14 +665,14 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
 
                         {step < 3 ? (
                             <Button
-                                className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                                className="flex-1 border-primary transition-all active:scale-95 font-bold"
                                 onClick={nextStep}
                             >
                                 Próximo <ChevronRight className="h-4 w-4 ml-2" />
                             </Button>
                         ) : (
                             <Button
-                                className="flex-1 bg-gradient-to-r from-primary/80 to-accent hover:from-primary hover:to-accent shadow-glow transition-all"
+                                className="flex-1 border-primary transition-all active:scale-95 font-bold"
                                 onClick={() => createProjectMutation.mutate()}
                                 disabled={createProjectMutation.isPending}
                             >

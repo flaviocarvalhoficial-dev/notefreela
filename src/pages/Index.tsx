@@ -74,29 +74,20 @@ const Index = () => {
   ];
 
   return (
-    <div className="page-container h-full overflow-hidden no-scrollbar flex flex-col gap-6 py-4">
-      {/* Cockpit Header - Minimalist & Powerful */}
-      <section className="heading-container py-2 mb-0 shrink-0">
+    <div className="page-container h-full overflow-hidden no-scrollbar">
+      <header className="heading-container shrink-0">
         <div className="flex items-center gap-3">
-          <div className="h-1 w-10 bg-primary rounded-full" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/70">Cockpit Operacional</span>
+          <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Dashboard / visão geral</span>
         </div>
+
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Visão de Comando</h1>
-            <p className="text-muted-foreground font-medium text-sm mt-1">Status em tempo real das diretrizes e fluxos de trabalho.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => setIsProjectModalOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-6 h-11 shadow-glow transition-all active:scale-95"
-            >
-              <Target className="h-4 w-4 mr-2" />
-              Novo Projeto
-            </Button>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Cockpit de Comando</h1>
+            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Sincronização em tempo real de seus projetos e fluxos de produção.</p>
           </div>
         </div>
-      </section>
+      </header>
 
       {isLoading ? (
         <div className="flex flex-col h-64 w-full items-center justify-center gap-4">
@@ -106,7 +97,7 @@ const Index = () => {
       ) : (
         <>
           {/* Main Command Grid */}
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-10 shrink-0">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-10 shrink-0">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.title}
@@ -120,15 +111,15 @@ const Index = () => {
                     setActiveStatModal(stat.id as any);
                     setIsStatModalOpen(true);
                   }}
-                  className="group relative h-[160px] p-6 rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] hover:border-primary/30 transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
+                  className="group relative h-[130px] p-4 rounded-[20px] border border-border bg-card shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] hover:border-primary/30 transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
                 >
                   {/* Blueprint Texture */}
                   <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
                     style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
                   <div className="flex items-center justify-between relative z-10">
-                    <div className="p-2.5 rounded-xl bg-primary/5 text-primary border border-primary/10 transition-all duration-300 group-hover:scale-110 shadow-sm">
-                      <stat.icon className="h-5 w-5" />
+                    <div className="p-2 rounded-lg bg-primary/5 text-primary border border-primary/10 transition-all duration-300 group-hover:scale-110 shadow-sm">
+                      <stat.icon className="h-4 w-4" />
                     </div>
                     <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-20 group-hover:opacity-100 transition-opacity" />
                   </div>
@@ -136,7 +127,7 @@ const Index = () => {
                   <div className="relative z-10">
                     <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-1">{stat.title}</p>
                     <div className="text-3xl font-black leading-none tracking-tight text-foreground">{stat.value}</div>
-                    <p className="text-[11px] font-semibold text-muted-foreground/70 mt-3 flex items-center gap-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground/70 mt-2 flex items-center gap-1.5">
                       <span className="w-1 h-1 rounded-full bg-primary/40" />
                       {stat.change}
                     </p>
@@ -151,7 +142,7 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="relative h-[160px] p-6 rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden flex flex-col justify-between">
+              <div className="relative h-[130px] p-4 rounded-[20px] border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden flex flex-col justify-between">
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
                   style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
@@ -163,22 +154,30 @@ const Index = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 relative z-10">
+                <div className="grid grid-cols-3 gap-2 relative z-10">
                   <Button
                     variant="ghost"
-                    className="justify-start gap-3 rounded-xl h-12 px-4 bg-muted/20 border border-border/40 hover:bg-primary/5 hover:border-primary/20 hover:text-primary transition-all group"
-                    onClick={() => setIsTaskModalOpen(true)}
+                    className="justify-start gap-2 rounded-lg h-9 px-3 bg-muted/20 border border-border/40 hover:bg-primary/5 hover:border-primary/20 hover:text-primary transition-all group"
+                    onClick={() => setIsProjectModalOpen(true)}
                   >
-                    <Zap className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="text-[11px] font-bold uppercase tracking-widest">Nova Tarefa</span>
+                    <Target className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Novo Projeto</span>
                   </Button>
                   <Button
                     variant="ghost"
-                    className="justify-start gap-3 rounded-xl h-12 px-4 bg-muted/20 border border-border/40 hover:bg-primary/5 hover:border-primary/20 hover:text-primary transition-all group"
+                    className="justify-start gap-2 rounded-lg h-9 px-3 bg-muted/20 border border-border/40 hover:bg-primary/5 hover:border-primary/20 hover:text-primary transition-all group"
+                    onClick={() => setIsTaskModalOpen(true)}
+                  >
+                    <Zap className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Nova Tarefa</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-2 rounded-lg h-9 px-3 bg-muted/20 border border-border/40 hover:bg-primary/5 hover:border-primary/20 hover:text-primary transition-all group"
                     onClick={() => navigate("/tarefas")}
                   >
-                    <Target className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="text-[11px] font-bold uppercase tracking-widest">Estratégia</span>
+                    <Target className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Workspace</span>
                   </Button>
                 </div>
 

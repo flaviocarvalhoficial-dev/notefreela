@@ -471,7 +471,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             Cancelar
                         </Button>
                         <Button
-                            className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-glow font-semibold"
+                            className="flex-1 border-primary transition-all active:scale-95 font-bold"
                             onClick={() => updateProjectMutation.mutate()}
                             disabled={updateProjectMutation.isPending || !newName}
                         >

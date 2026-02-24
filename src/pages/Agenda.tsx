@@ -4,7 +4,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Loader2 } fr
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths } from "date-fns";
+import { format, isSameDay, isToday, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
@@ -74,13 +74,13 @@ const Agenda = () => {
       if (tasksError) throw tasksError;
 
       // Unificar
-      const taskEvents = tasks.map((task: any) => ({
+      const taskEvents = (tasks || []).map((task) => ({
         id: task.id,
         title: task.title,
         type: "task" as EventType,
-        date: task.due_date,
-        start_time: task.start_time || "09:00",
-        end_time: task.end_time || "18:00",
+        date: task.due_date || "",
+        start_time: "09:00",
+        end_time: "18:00",
         participants: [],
         column_id: task.column_id,
       }));
@@ -135,59 +135,66 @@ const Agenda = () => {
   const hasEvents = (date: Date) => allEvents.some((event) => isSameDay(new Date(event.date + "T12:00:00"), date));
 
   return (
-    <div className="h-full flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight mb-1">Agenda</h1>
-          <p className="text-muted-foreground text-sm">Gerencie seus eventos e compromissos reais</p>
+    <div className="page-container">
+      <header className="heading-container">
+        <div className="flex items-center gap-3">
+          <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Agenda</span>
         </div>
 
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-glow">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Evento
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="glass border-border/50 max-w-sm">
-            <DialogHeader>
-              <DialogTitle>Novo Compromisso</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>Título</Label>
-                <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Call com Cliente" className="glass-light" />
-              </div>
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select value={newType} onValueChange={(v: any) => setNewType(v)}>
-                  <SelectTrigger className="glass-light">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="glass">
-                    <SelectItem value="project">Projeto</SelectItem>
-                    <SelectItem value="task">Tarefa</SelectItem>
-                    <SelectItem value="personal">Pessoal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Início</Label>
-                  <Input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} className="glass-light" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Fim</Label>
-                  <Input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} className="glass-light" />
-                </div>
-              </div>
-              <Button className="w-full bg-primary" onClick={() => createEventMutation.mutate()} disabled={!newTitle}>
-                Salvar Evento
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Agenda Estratégica</h1>
+            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Gerencie seus compromissos e marcos de execução temporal.</p>
+          </div>
+
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="border-primary transition-all active:scale-95">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Evento
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogTrigger>
+            <DialogContent className="glass border-border/50 max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Novo Compromisso</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>Título</Label>
+                  <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Call com Cliente" className="glass-light" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <Select value={newType} onValueChange={(v: EventType) => setNewType(v)}>
+                    <SelectTrigger className="glass-light">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="glass">
+                      <SelectItem value="project">Projeto</SelectItem>
+                      <SelectItem value="task">Tarefa</SelectItem>
+                      <SelectItem value="personal">Pessoal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Início</Label>
+                    <Input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} className="glass-light" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Fim</Label>
+                    <Input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} className="glass-light" />
+                  </div>
+                </div>
+                <Button className="w-full border-primary" onClick={() => createEventMutation.mutate()} disabled={!newTitle}>
+                  Salvar Evento
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </header>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Calendário Principal (Esquerda - 2 Colunas) - Agora com 2 calendários lado a lado */}
@@ -349,7 +356,7 @@ const Agenda = () => {
                     Nenhum evento neste dia
                   </div>
                 ) : (
-                  selectedEvents.map((event, index) => (
+                  selectedEvents.map((event) => (
                     <motion.div
                       key={event.id}
                       initial={{ opacity: 0, x: -10 }}

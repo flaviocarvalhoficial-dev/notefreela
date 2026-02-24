@@ -116,7 +116,7 @@ export function NewDocumentDialog({ open, onOpenChange, projects, onUpload, isUp
                         <Button
                             type="submit"
                             disabled={isUploading || !file || !projectId}
-                            className="w-full bg-gradient-to-r from-primary to-accent font-bold"
+                            className="w-full border-primary transition-all active:scale-95 font-bold"
                         >
                             {isUploading ? (
                                 <>

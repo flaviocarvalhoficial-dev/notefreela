@@ -177,11 +177,11 @@
 
   /* Buttons */
   .button-primary {
-    @apply bg-primary text-primary-foreground text-sm font-medium px-4 py-2 rounded-md transition-all duration-200 border-none cursor-pointer;
+    @apply border border-primary bg-transparent text-primary text-sm font-medium px-4 py-2 rounded-md transition-all duration-200 cursor-pointer;
   }
 
   .button-primary:hover {
-    @apply opacity-90;
+    @apply bg-primary/5;
   }
 
   .button-primary:active {
@@ -511,12 +511,12 @@
 }
 
 .btn-gradient {
-  @apply bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all shadow-glow text-primary-foreground;
+  @apply border border-primary bg-transparent text-primary hover:bg-primary/5 transition-all active:scale-95 font-bold;
 }
 
-/* Spacing & Layout Consistency  Arthur Marques */
+/* Spacing & Layout Consistency — Arthur Marques (4px Grid Standard) */
 .page-container {
-  @apply w-full max-w-[1700px] mx-auto px-6 lg:px-12 py-10 flex flex-col gap-12 overflow-y-auto overflow-x-hidden custom-scrollbar pb-16 relative;
+  @apply w-full max-w-[1750px] mx-auto px-8 md:px-12 lg:px-20 pt-12 pb-32 flex flex-col gap-12 relative;
 }
 
 .section-container {
@@ -524,19 +524,65 @@
 }
 
 .card-container {
-  @apply p-6 rounded-[24px] border border-border/40 bg-card/60 backdrop-blur-sm shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] transition-all;
+  @apply p-8 rounded-[24px] border border-border/40 bg-card/60 backdrop-blur-sm shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] transition-all;
 }
 
 .heading-container {
-  @apply flex flex-col gap-4 py-8 border-b border-border/40 mb-4;
+  @apply flex flex-col gap-6 pb-10 border-b border-border/40 mb-6;
+}
+
+/* Micro-spacing Utilities */
+.stack-gap-sm {
+  @apply flex flex-col gap-2;
+}
+
+.stack-gap-md {
+  @apply flex flex-col gap-4;
+}
+
+.stack-gap-lg {
+  @apply flex flex-col gap-6;
+}
+
+.inline-gap-sm {
+  @apply flex items-center gap-2;
+}
+
+.inline-gap-md {
+  @apply flex items-center gap-3;
+}
+
+.inline-gap-lg {
+  @apply flex items-center gap-4;
 }
 
 
 /* Scrollbar Visibility Tokens  Arthur Marques */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 
-.technical-scrollbar::-webkit-scrollbar { width: 6px !important; height: 6px !important; display: block !important; }
-.technical-scrollbar::-webkit-scrollbar-track { background: hsla(var(--muted), 0.1); border-radius: 10px; }
-.technical-scrollbar::-webkit-scrollbar-thumb { background: hsla(var(--primary), 0.6) !important; border-radius: 10px; }
-.technical-scrollbar::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary)) !important; }
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.technical-scrollbar::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+  display: block !important;
+}
+
+.technical-scrollbar::-webkit-scrollbar-track {
+  background: hsla(var(--muted), 0.1);
+  border-radius: 10px;
+}
+
+.technical-scrollbar::-webkit-scrollbar-thumb {
+  background: hsla(var(--primary), 0.6) !important;
+  border-radius: 10px;
+}
+
+.technical-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary)) !important;
+}

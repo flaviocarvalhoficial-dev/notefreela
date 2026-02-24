@@ -698,17 +698,18 @@ const CaixaEntrada = () => {
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="h-full flex flex-col gap-10 pb-16 max-w-full overflow-x-hidden">
+            <div className="page-container">
                 {/* Header - Cockpit Style */}
-                <section className="flex flex-col gap-3 py-8 border-b border-border/40">
+                <header className="heading-container">
                     <div className="flex items-center gap-3">
-                        <div className="h-1 w-8 bg-primary rounded-full" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Rede de Captura</span>
+                        <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Rede de Captura</span>
                     </div>
+
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div>
-                            <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Caixa de Entrada</h1>
-                            <p className="text-muted-foreground font-medium text-sm mt-1">Fragmentos de conhecimento, prompts e diretrizes criativas em trânsito.</p>
+                        <div className="space-y-2">
+                            <h1 className="text-3xl font-black tracking-tight text-foreground">Caixa de Entrada</h1>
+                            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Fragmentos de conhecimento, prompts e diretrizes criativas em trânsito.</p>
                         </div>
                         <Button onClick={() => {
                             const knownFolders = JSON.parse(localStorage.getItem("inbox_folders") || "[]");
@@ -721,13 +722,11 @@ const CaixaEntrada = () => {
                                 setNewCategory("");
                             }
                             setIsAdding(true);
-                        }} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-8 h-12 shadow-glow transition-all active:scale-95">
+                        }} className="font-bold rounded-xl px-8 h-12 border-primary transition-all active:scale-95">
                             <Plus className="h-5 w-5 mr-2" /> Novo Registro
                         </Button>
                     </div>
-                </section>
-
-                {/* Arthur Marques Visual Metaphor: Inbox Networking */}
+                </header>
                 <div className="relative w-full h-32 bg-card border border-border rounded-[24px] overflow-hidden group shadow-[var(--shadow-card)]">
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
                         style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
@@ -784,7 +783,7 @@ const CaixaEntrada = () => {
                                     </div>
                                 </div>
 
-                                {/* ... (Filtros existentes) ... */}
+
                                 <div className="flex items-center gap-1 bg-background/50 p-1 rounded-lg border border-border/20 ml-auto lg:ml-0">
                                     <Button
                                         variant="ghost"
@@ -815,7 +814,7 @@ const CaixaEntrada = () => {
                                     className="overflow-hidden"
                                 >
                                     <div className="bento-card p-6 space-y-4 border-primary/30 shadow-glow-sm">
-                                        {/* ... (Formulário de Adição Existente) ... */}
+
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label className="text-xs opacity-60">Título</Label>

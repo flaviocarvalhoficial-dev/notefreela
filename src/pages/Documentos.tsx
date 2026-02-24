@@ -58,30 +58,31 @@ const Documentos = () => {
     };
 
     return (
-        <div className="pb-10 min-h-screen">
+        <div className="page-container">
             {/* Header Area */}
-            <div className="pt-12 pb-8">
-                <div className="flex items-center gap-4 mb-4">
-                    <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-40">Workspace / Documentos</span>
+            <header className="heading-container">
+                <div className="flex items-center gap-3">
+                    <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Documentos</span>
                 </div>
 
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="space-y-4">
-                        <h1 className="text-4xl font-black tracking-tight text-foreground">Documentos</h1>
-                        <p className="text-muted-foreground text-sm max-w-md">Gerencie seus modelos de contratos, briefings e recibos.</p>
+                    <div className="stack-gap-sm">
+                        <h1 className="text-3xl font-black tracking-tight text-foreground">Documentos</h1>
+                        <p className="text-muted-foreground text-sm max-w-md leading-relaxed">Gerencie seus modelos de contratos, briefings e recibos.</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <Button
                             onClick={() => setIsDialogOpen(true)}
-                            className="bg-primary text-primary-foreground font-bold rounded-xl px-6 shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
+                            className="font-bold rounded-xl px-6 border-primary transition-all active:scale-95"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Novo Documento
                         </Button>
                     </div>
                 </div>
-            </div>
+            </header>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
