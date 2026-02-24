@@ -138,8 +138,8 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl border-border/40 bg-sidebar/95 backdrop-blur-xl h-[90vh] flex flex-col p-0 overflow-hidden">
-                <DialogHeader className="p-6 border-b border-border/10 flex flex-row items-center justify-between">
+            <DialogContent className="max-w-4xl border-border bg-sidebar/95 backdrop-blur-xl h-[90vh] flex flex-col p-0 overflow-hidden">
+                <DialogHeader className="p-6 border-b border-border flex flex-row items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
                             <TrendingUp className="h-5 w-5" />
@@ -151,13 +151,13 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-60">Intervalo:</span>
+                        <span className="text-[10px] font-medium text-muted-foreground  opacity-60">Intervalo:</span>
                         <Select value={timeRange} onValueChange={setTimeRange}>
                             <SelectTrigger className="h-9 w-[150px] text-xs glass border-primary/20 bg-background/50">
                                 <Calendar className="h-3.5 w-3.5 mr-2 text-primary" />
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="glass border-border/40">
+                            <SelectContent className="glass border-border">
                                 <SelectItem value="3">Últimos 3 meses</SelectItem>
                                 <SelectItem value="6">Últimos 6 meses</SelectItem>
                                 <SelectItem value="12">Últimos 12 meses</SelectItem>
@@ -181,29 +181,29 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
                                 <div className="linear-card p-4 border border-emerald-500/10 bg-emerald-500/[0.02]">
                                     <div className="flex items-center gap-2 text-emerald-500 mb-1">
                                         <TrendingUp className="h-3.5 w-3.5" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">Total Ganhos</span>
+                                        <span className="text-[10px] font-medium  tracking-tight">Total Ganhos</span>
                                     </div>
-                                    <p className="text-2xl font-bold tabular-nums">{formatCurrency(totals.gains)}</p>
+                                    <p className="text-2xl font-medium tabular-nums">{formatCurrency(totals.gains)}</p>
                                 </div>
                                 <div className="linear-card p-4 border border-rose-500/10 bg-rose-500/[0.02]">
                                     <div className="flex items-center gap-2 text-rose-500 mb-1">
                                         <TrendingDown className="h-3.5 w-3.5" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">Total Custos</span>
+                                        <span className="text-[10px] font-medium  tracking-tight">Total Custos</span>
                                     </div>
-                                    <p className="text-2xl font-bold tabular-nums">{formatCurrency(totals.costs)}</p>
+                                    <p className="text-2xl font-medium tabular-nums">{formatCurrency(totals.costs)}</p>
                                 </div>
                                 <div className="linear-card p-4 border border-primary/10 bg-primary/[0.02]">
                                     <div className="flex items-center gap-2 text-primary mb-1">
                                         <Wallet className="h-3.5 w-3.5" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">Lucro Acumulado</span>
+                                        <span className="text-[10px] font-medium  tracking-tight">Lucro Acumulado</span>
                                     </div>
-                                    <p className="text-2xl font-bold tabular-nums">{formatCurrency(totals.profit)}</p>
+                                    <p className="text-2xl font-medium tabular-nums">{formatCurrency(totals.profit)}</p>
                                 </div>
                             </div>
 
                             {/* Main Chart */}
                             <div className="bento-card p-6 h-[400px] flex flex-col">
-                                <h3 className="text-sm font-semibold mb-6 flex items-center gap-2">
+                                <h3 className="text-sm font-medium mb-6 flex items-center gap-2">
                                     <DollarSign className="h-4 w-4 text-primary" />
                                     Comparativo de Fluxo
                                 </h3>
@@ -245,20 +245,20 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
                             <div className="bento-card overflow-hidden">
                                 <table className="w-full text-left text-xs">
                                     <thead>
-                                        <tr className="bg-muted/30 border-b border-border/40">
-                                            <th className="p-4 font-bold uppercase tracking-wider text-muted-foreground/60">Mês</th>
-                                            <th className="p-4 font-bold uppercase tracking-wider text-muted-foreground/60">Ganhos</th>
-                                            <th className="p-4 font-bold uppercase tracking-wider text-muted-foreground/60">Custos</th>
-                                            <th className="p-4 font-bold uppercase tracking-wider text-muted-foreground/60">Resultado</th>
+                                        <tr className="bg-muted/30 border-b border-border">
+                                            <th className="p-4 font-medium  tracking-tight text-muted-foreground">Mês</th>
+                                            <th className="p-4 font-medium  tracking-tight text-muted-foreground">Ganhos</th>
+                                            <th className="p-4 font-medium  tracking-tight text-muted-foreground">Custos</th>
+                                            <th className="p-4 font-medium  tracking-tight text-muted-foreground">Resultado</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {reportData.slice().reverse().map((row, i) => (
-                                            <tr key={row.month} className={cn("border-b border-border/10", i % 2 === 0 ? "bg-transparent" : "bg-muted/5")}>
-                                                <td className="p-4 font-semibold">{row.month}</td>
+                                            <tr key={row.month} className={cn("border-b border-border", i % 2 === 0 ? "bg-transparent" : "bg-muted/5")}>
+                                                <td className="p-4 font-medium">{row.month}</td>
                                                 <td className="p-4 text-emerald-500 font-medium">{formatCurrency(row.gains)}</td>
                                                 <td className="p-4 text-rose-500 font-medium">{formatCurrency(row.costs)}</td>
-                                                <td className={cn("p-4 font-bold", row.profit >= 0 ? "text-primary" : "text-rose-600")}>
+                                                <td className={cn("p-4 font-medium", row.profit >= 0 ? "text-primary" : "text-rose-600")}>
                                                     {formatCurrency(row.profit)}
                                                 </td>
                                             </tr>
@@ -273,3 +273,6 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
         </Dialog>
     );
 }
+
+
+

@@ -314,7 +314,7 @@ export const SlashCommandMenu = ({
     return (
         <div
             ref={menuRef}
-            className="fixed z-[99999] w-[260px] max-h-[320px] overflow-y-auto bg-card border border-border/60 rounded-xl shadow-2xl shadow-black/20 p-1.5 animate-in fade-in slide-in-from-top-2 duration-150"
+            className="fixed z-[99999] w-[260px] max-h-[320px] overflow-y-auto bg-card border border-border rounded-xl shadow-2xl shadow-black/20 p-1.5 animate-in fade-in slide-in-from-top-2 duration-150"
             style={{
                 top: position.top,
                 left: position.left,
@@ -323,7 +323,7 @@ export const SlashCommandMenu = ({
             {Object.entries(groups).map(([groupName, items]) => (
                 <div key={groupName}>
                     <div className="px-2.5 pt-2 pb-1">
-                        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em]">
+                        <span className="text-[9px] font-medium text-muted-foreground  tracking-tight">
                             {groupName}
                         </span>
                     </div>
@@ -352,13 +352,13 @@ export const SlashCommandMenu = ({
                                         'h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors',
                                         currentIndex === selectedIndex
                                             ? 'bg-primary/15 border-primary/30 text-primary'
-                                            : 'bg-muted/30 border-border/30 text-muted-foreground'
+                                            : 'bg-muted border-border text-muted-foreground'
                                     )}
                                 >
                                     {cmd.icon}
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-xs font-semibold truncate">{cmd.label}</p>
+                                    <p className="text-xs font-medium truncate">{cmd.label}</p>
                                     <p className="text-[10px] text-muted-foreground truncate">
                                         {cmd.description}
                                     </p>
@@ -371,3 +371,4 @@ export const SlashCommandMenu = ({
         </div>
     );
 };
+

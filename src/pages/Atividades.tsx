@@ -64,7 +64,7 @@ const Atividades = () => {
   return (
     <div className="h-full flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight mb-1">Atividades</h1>
+        <h1 className="text-3xl font-medium tracking-tight mb-1">Atividades</h1>
         <p className="text-muted-foreground text-sm">Histórico de ações e atualizações reais</p>
       </div>
 
@@ -87,7 +87,7 @@ const Atividades = () => {
           </div>
 
           <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="shrink-0">
-            <TabsList className="glass-light border border-border/50">
+            <TabsList className="glass-light border border-border">
               <TabsTrigger value="all">Todas</TabsTrigger>
               <TabsTrigger value="project">Projetos</TabsTrigger>
               <TabsTrigger value="task">Tarefas</TabsTrigger>
@@ -161,9 +161,9 @@ const Atividades = () => {
                         {(activity.metadata as any)?.project && (
                           <>
                             <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground truncate">
+                            <Badge variant="outline" className="text-[9px] font-medium border border-border text-muted-foreground  tracking-tight h-5 px-1.5 bg-muted/20">
                               {(activity.metadata as any).project}
-                            </span>
+                            </Badge>
                           </>
                         )}
                       </div>
@@ -180,3 +180,4 @@ const Atividades = () => {
 };
 
 export default Atividades;
+

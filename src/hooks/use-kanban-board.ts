@@ -90,8 +90,42 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
 
     // --- COMPUTED ---
 
-    const scenarios = dbScenarios as Scenario[];
-    const columns = dbColumns as Column[];
+    const scenarios = useMemo(() => {
+        let base = [...dbScenarios] as Scenario[];
+
+        // Adiciona cenário virtual para tarefas sem projeto se estivermos no modo global
+        const hasOrphanTasks = tasks.some(t => !t.project_id);
+        if (projectFilter === 'all' && hasOrphanTasks) {
+            if (!base.some(s => s.id === "default-scenario")) {
+                base.unshift({
+                    id: "default-scenario",
+                    title: "Inbox / Avulsas",
+                    type: "kanban",
+                    position: -1,
+                    project_id: ""
+                } as any);
+            }
+        }
+
+        if (base.length === 0) return DEFAULT_SCENARIOS as Scenario[];
+        return base;
+    }, [dbScenarios, tasks, projectFilter]);
+
+    const columns = useMemo(() => {
+        let base = [...dbColumns] as Column[];
+
+        // Garante colunas padrão para o cenário virtual
+        if (scenarios.some(s => s.id === "default-scenario")) {
+            DEFAULT_COLUMNS.forEach(col => {
+                if (!base.some(c => c.id === col.id)) {
+                    base.push(col as any);
+                }
+            });
+        }
+
+        if (base.length === 0) return DEFAULT_COLUMNS as Column[];
+        return base;
+    }, [dbColumns, scenarios]);
 
     const filteredTasks = useMemo(() => {
         const q = searchQuery.trim().toLowerCase();
@@ -102,7 +136,7 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
             const matchesPeriod = !billingPeriod || (t as any).billing_period === billingPeriod;
             return matchesQ && matchesP && matchesProject && matchesPeriod;
         });
-    }, [tasks, searchQuery, priorityFilter, projectFilter]);
+    }, [tasks, searchQuery, priorityFilter, projectFilter, billingPeriod]);
 
     const tasksByColumn = useMemo(() => {
         const map: Record<string, Task[]> = {};
@@ -119,8 +153,12 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
             if (map[t.column_id]) {
                 map[t.column_id].push(t);
             } else {
-                // Fallback for tasks in orphaned columns or default todo
-                const fallbackId = columns[0]?.id || "todo";
+                // Fallback inteligente:
+                // Se tarefa tem projeto, tenta a primeira coluna dele.
+                // Se não tem ou falhou, usa 'todo' (inbox padrão).
+                const projectCol = t.project_id ? columns.find(c => c.project_id === t.project_id) : null;
+                const fallbackId = projectCol?.id || (t.project_id ? columns[0]?.id : "todo") || "todo";
+
                 if (!map[fallbackId]) map[fallbackId] = [];
                 map[fallbackId].push(t);
             }

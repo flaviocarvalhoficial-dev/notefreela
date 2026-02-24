@@ -31,7 +31,7 @@ export const PageNav = ({
     const activePage = pages.find((p) => p.id === activePageId);
 
     return (
-        <div className="w-full border-b border-border/30 bg-card/20 backdrop-blur-sm">
+        <div className="w-full border-b border-border bg-card/20 backdrop-blur-sm">
             <div className="max-w-4xl px-4 sm:px-8 py-0">
                 {/* Breadcrumb Row */}
                 <div className="flex items-center gap-1.5 py-2.5 text-[11px]">
@@ -50,7 +50,7 @@ export const PageNav = ({
 
                     {activePageId && activePage && (
                         <>
-                            <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                            <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
                             <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
                                 <FileText className="h-3 w-3" />
                                 <span className="max-w-[180px] truncate">
@@ -68,10 +68,10 @@ export const PageNav = ({
                         <button
                             onClick={() => onSelectPage(null)}
                             className={cn(
-                                "group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all shrink-0",
+                                "group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all shrink-0",
                                 !activePageId
                                     ? "bg-foreground/10 text-foreground"
-                                    : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/20"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
                             )}
                         >
                             <div className={cn(
@@ -82,22 +82,22 @@ export const PageNav = ({
                         </button>
 
                         {/* Connector line */}
-                        <div className="w-3 h-px bg-border/40 shrink-0" />
+                        <div className="w-3 h-px bg-border shrink-0" />
 
                         {/* Sub-pages */}
                         {pages.map((page, index) => (
                             <div key={page.id} className="flex items-center shrink-0">
                                 {index > 0 && (
-                                    <div className="w-1 h-px bg-border/30 shrink-0" />
+                                    <div className="w-1 h-px bg-border shrink-0" />
                                 )}
                                 <div className="group relative flex items-center">
                                     <button
                                         onClick={() => onSelectPage(page.id)}
                                         className={cn(
-                                            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all",
+                                            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all",
                                             activePageId === page.id
                                                 ? "bg-primary/10 text-primary"
-                                                : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/20"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
                                         )}
                                     >
                                         <div className={cn(
@@ -135,10 +135,10 @@ export const PageNav = ({
                         ))}
 
                         {/* Add page button */}
-                        <div className="w-2 h-px bg-border/20 shrink-0" />
+                        <div className="w-2 h-px bg-border shrink-0" />
                         <button
                             onClick={onAddPage}
-                            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-all shrink-0"
+                            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all shrink-0"
                             title="Nova página"
                         >
                             <FilePlus className="h-3 w-3" />
@@ -152,11 +152,11 @@ export const PageNav = ({
                         <div className={cn(
                             "w-1.5 h-1.5 rounded-full bg-primary"
                         )} />
-                        <span className="text-[10px] font-semibold text-foreground/60">Página Principal</span>
-                        <div className="w-3 h-px bg-border/30" />
+                        <span className="text-[10px] font-semibold text-foreground">Página Principal</span>
+                        <div className="w-3 h-px bg-border" />
                         <button
                             onClick={onAddPage}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-all"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
                         >
                             <FilePlus className="h-3 w-3" />
                             <span>Adicionar Página</span>
@@ -167,3 +167,4 @@ export const PageNav = ({
         </div>
     );
 };
+

@@ -144,7 +144,7 @@ export function CostRegistrationDialog({
             if (!val) resetForm();
         }}>
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-            <DialogContent className="border-border/50 max-w-md">
+            <DialogContent className="border-border max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <div className={cn("p-2 rounded-lg", costToEdit ? "bg-amber-500/10 text-amber-500" : "bg-red-500/10 text-red-500")}>
@@ -161,7 +161,7 @@ export function CostRegistrationDialog({
                             placeholder="Ex: Assinatura Vercel, Freelancer Design..."
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="glass-light border-border/50"
+                            className="glass-light border-border"
                         />
                     </div>
 
@@ -172,10 +172,10 @@ export function CostRegistrationDialog({
                                 setCategory(v);
                                 if (v === 'hourly') setShowCalculator(true);
                             }}>
-                                <SelectTrigger className="glass-light border-border/50">
+                                <SelectTrigger className="glass-light border-border">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="glass border-border/50">
+                                <SelectContent className="glass border-border">
                                     {categories.map(c => (
                                         <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                                     ))}
@@ -189,7 +189,7 @@ export function CostRegistrationDialog({
                                 type="date"
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
-                                className="glass-light border-border/50 [color-scheme:dark]"
+                                className="glass-light border-border [color-scheme:dark]"
                             />
                         </div>
                     </div>
@@ -197,7 +197,7 @@ export function CostRegistrationDialog({
                     <div className="space-y-2">
                         <Label>Vincular a Projeto (Opcional)</Label>
                         <Select value={projectId} onValueChange={setProjectId}>
-                            <SelectTrigger className="glass-light border-border/50">
+                            <SelectTrigger className="glass-light border-border">
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                     <Briefcase className="h-3.5 w-3.5" />
                                     <span className="truncate">
@@ -205,7 +205,7 @@ export function CostRegistrationDialog({
                                     </span>
                                 </div>
                             </SelectTrigger>
-                            <SelectContent className="glass border-border/50 max-h-[200px]">
+                            <SelectContent className="glass border-border max-h-[200px]">
                                 <SelectItem value="general">Geral (Sem Projeto)</SelectItem>
                                 {projects.map(p => (
                                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -230,7 +230,7 @@ export function CostRegistrationDialog({
                         </div>
 
                         {showCalculator && (
-                            <div className="grid grid-cols-2 gap-3 p-3 bg-muted/20 rounded-md border border-border/20 mb-2 animate-in slide-in-from-top-2">
+                            <div className="grid grid-cols-2 gap-3 p-3 bg-muted/20 rounded-md border border-border mb-2 animate-in slide-in-from-top-2">
                                 <div className="space-y-1">
                                     <Label className="text-[10px]">Qtd. Horas</Label>
                                     <Input
@@ -255,11 +255,11 @@ export function CostRegistrationDialog({
                         )}
 
                         <div className="relative">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-semibold">R$</div>
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">R$</div>
                             <Input
                                 type="number"
                                 placeholder="0,00"
-                                className="glass-light border-border/50 pl-10 text-lg font-bold text-red-500"
+                                className="glass-light border-border pl-10 text-lg font-medium text-red-500"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value ? Number(e.target.value) : "")}
                             />
@@ -281,3 +281,4 @@ export function CostRegistrationDialog({
         </Dialog>
     );
 }
+

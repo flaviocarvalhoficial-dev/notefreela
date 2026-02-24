@@ -89,7 +89,7 @@ export default function Auth() {
             >
                 <div className="text-center mb-10">
                     <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-14 h-14 mx-auto mb-4" />
-                    <h1 className="text-2xl font-bold">{isSignUp ? "Criar conta" : "Bem-vindo de volta"}</h1>
+                    <h1 className="text-2xl font-medium tracking-tight">{isSignUp ? "Criar conta" : "Bem-vindo de volta"}</h1>
                     <p className="text-muted-foreground text-sm mt-2">
                         {isSignUp
                             ? "Comece a organizar seus freelas hoje"
@@ -138,7 +138,7 @@ export default function Auth() {
 
                     <Button
                         type="submit"
-                        className="w-full bg-slate-900 dark:bg-slate-50 text-white dark:text-slate-900 hover:opacity-90 transition-all font-semibold py-6 mt-4"
+                        className="w-full bg-slate-900 dark:bg-slate-50 text-white dark:text-slate-900 hover:opacity-90 transition-all font-medium py-6 mt-4"
                         disabled={isLoading}
                     >
                         {isLoading ? "Aguarde..." : isSignUp ? "Registrar" : "Entrar"}
@@ -157,7 +157,7 @@ export default function Auth() {
 
                     <Button
                         variant="outline"
-                        className="w-full py-6 flex items-center justify-center gap-3 border-border/50 hover:bg-muted transition-all"
+                        className="w-full py-6 flex items-center justify-center gap-3 border-border hover:bg-muted transition-all"
                         onClick={handleGoogleLogin}
                         disabled={isLoading}
                     >
@@ -195,3 +195,4 @@ export default function Auth() {
         </div>
     );
 }
+

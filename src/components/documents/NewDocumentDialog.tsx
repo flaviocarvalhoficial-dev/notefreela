@@ -33,15 +33,15 @@ export function NewDocumentDialog({ open, onOpenChange, projects, onUpload, isUp
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-xl border-border/40 shadow-glass">
+            <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-xl border-border shadow-glass">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-bold">Novo Documento</DialogTitle>
+                    <DialogTitle className="text-xl font-medium tracking-tight">Novo Documento</DialogTitle>
                     <DialogDescription>Suba um arquivo e vincule a um projeto.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="file" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Arquivo</Label>
+                            <Label htmlFor="file" className="text-xs font-medium  tracking-tight text-muted-foreground">Arquivo</Label>
                             <div className="flex items-center gap-3">
                                 <Button
                                     type="button"
@@ -68,7 +68,7 @@ export function NewDocumentDialog({ open, onOpenChange, projects, onUpload, isUp
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="title" className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Nome do Documento</Label>
+                            <Label htmlFor="title" className="text-xs font-medium  tracking-tight text-muted-foreground">Nome do Documento</Label>
                             <Input
                                 id="title"
                                 value={name}
@@ -81,7 +81,7 @@ export function NewDocumentDialog({ open, onOpenChange, projects, onUpload, isUp
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Categoria</Label>
+                                <Label className="text-xs font-medium  tracking-tight text-muted-foreground">Categoria</Label>
                                 <Select value={category} onValueChange={setCategory}>
                                     <SelectTrigger className="glass-light">
                                         <SelectValue placeholder="Tipo" />
@@ -97,7 +97,7 @@ export function NewDocumentDialog({ open, onOpenChange, projects, onUpload, isUp
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Projeto</Label>
+                                <Label className="text-xs font-medium  tracking-tight text-muted-foreground">Projeto</Label>
                                 <Select value={projectId} onValueChange={setProjectId} required>
                                     <SelectTrigger className="glass-light">
                                         <SelectValue placeholder="Selecione" />
@@ -116,7 +116,7 @@ export function NewDocumentDialog({ open, onOpenChange, projects, onUpload, isUp
                         <Button
                             type="submit"
                             disabled={isUploading || !file || !projectId}
-                            className="w-full border-primary transition-all active:scale-95 font-bold"
+                            className="w-full border-primary transition-all active:scale-95 font-medium"
                         >
                             {isUploading ? (
                                 <>
@@ -133,3 +133,6 @@ export function NewDocumentDialog({ open, onOpenChange, projects, onUpload, isUp
         </Dialog>
     );
 }
+
+
+

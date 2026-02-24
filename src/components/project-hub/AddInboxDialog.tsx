@@ -56,7 +56,7 @@ export function AddInboxDialog({ open, onOpenChange, projectId, onConfirm }: Add
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="border-border/50 max-w-md">
+            <DialogContent className="border-border max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <div className="p-2 bg-primary/10 text-primary rounded-lg">
@@ -73,17 +73,17 @@ export function AddInboxDialog({ open, onOpenChange, projectId, onConfirm }: Add
                             placeholder="Dê um nome curto para a ideia..."
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="glass-light border-border/50"
+                            className="glass-light border-border"
                         />
                     </div>
 
                     <div className="space-y-2">
                         <Label>Tipo</Label>
                         <Select value={type} onValueChange={setType}>
-                            <SelectTrigger className="glass-light border-border/50">
+                            <SelectTrigger className="glass-light border-border">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="glass border-border/50">
+                            <SelectContent className="glass border-border">
                                 <SelectItem value="note">Nota / Texto</SelectItem>
                                 <SelectItem value="idea">Ideia / Insight</SelectItem>
                                 <SelectItem value="prompt">Prompt de IA</SelectItem>
@@ -98,7 +98,7 @@ export function AddInboxDialog({ open, onOpenChange, projectId, onConfirm }: Add
                             placeholder="O que você está pensando?"
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            className="min-h-[120px] glass-light border-border/50 resize-none"
+                            className="min-h-[120px] glass-light border-border resize-none"
                         />
                     </div>
 
@@ -117,3 +117,4 @@ export function AddInboxDialog({ open, onOpenChange, projectId, onConfirm }: Add
         </Dialog>
     );
 }
+

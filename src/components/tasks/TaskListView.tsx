@@ -80,12 +80,12 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
 
     if (tasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-40 gap-6 glass border-border/40 rounded-3xl mt-4">
+            <div className="flex flex-col items-center justify-center py-40 gap-6 glass border-border rounded-2xl mt-4">
                 <div className="h-20 w-20 rounded-full bg-muted/20 flex items-center justify-center">
-                    <AlertCircle className="h-10 w-10 text-muted-foreground/20" />
+                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
                 </div>
                 <div className="text-center space-y-2">
-                    <p className="text-xl font-bold text-foreground">Silêncio Absoluto</p>
+                    <p className="text-xl font-medium text-foreground tracking-tight">Silêncio Absoluto</p>
                     <p className="text-sm font-medium text-muted-foreground max-w-xs mx-auto">Sua rede de captura e execução está vazia. Comece a traçar o plano.</p>
                 </div>
             </div>
@@ -98,15 +98,15 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
                 <div key={groupKey} className="space-y-4">
                     <div className="flex items-center gap-3 px-2">
                         <div className="h-1 w-4 bg-primary/40 rounded-full" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{getGroupHeader(groupKey)}</h3>
-                        <Badge variant="outline" className="text-[10px] bg-muted/20 border-border/40 text-muted-foreground font-bold">
+                        <h3 className="text-[10px] font-medium  tracking-tight text-muted-foreground">{getGroupHeader(groupKey)}</h3>
+                        <Badge variant="outline" className="text-[10px] bg-muted/20 border-border text-muted-foreground font-medium rounded-md">
                             {sortedGrouped[groupKey].length}
                         </Badge>
                     </div>
 
-                    <div className="glass border-border/40 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="glass border-border rounded-xl overflow-hidden shadow-sm">
                         <table className="w-full text-left">
-                            <tbody className="divide-y divide-border/10">
+                            <tbody className="divide-y divide-border">
                                 {sortedGrouped[groupKey].map(task => (
                                     <tr key={task.id} className="hover:bg-primary/[0.02] transition-colors group cursor-pointer">
                                         <td className="pl-6 py-4 w-[60%]">
@@ -115,19 +115,19 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
                                                     "h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all",
                                                     task.column_id === 'done'
                                                         ? "bg-emerald-500 border-emerald-500 text-white"
-                                                        : "border-border/60 hover:border-primary/60"
+                                                        : "border-border hover:border-primary/60"
                                                 )}>
                                                     {task.column_id === 'done' && <CheckCircle2 className="h-3.5 w-3.5" />}
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span className={cn(
-                                                        "text-sm font-bold tracking-tight transition-colors",
+                                                        "text-sm font-medium tracking-tight transition-colors",
                                                         task.column_id === 'done' ? "text-muted-foreground line-through" : "text-foreground group-hover:text-primary"
                                                     )}>
                                                         {task.title}
                                                     </span>
                                                     {options.visibleProperties.includes('project') && task.project_id && (
-                                                        <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mt-0.5">
+                                                        <span className="text-[9px] font-medium text-muted-foreground  tracking-tight mt-0.5">
                                                             {projects.find(p => p.id === task.project_id)?.name}
                                                         </span>
                                                     )}
@@ -137,7 +137,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
 
                                         {options.visibleProperties.includes('status') && (
                                             <td className="px-4 py-4 w-[12%]">
-                                                <Badge variant="outline" className="text-[9px] font-bold bg-muted/20 border-border/40 text-muted-foreground/60 rounded-md uppercase tracking-tighter">
+                                                <Badge variant="outline" className="text-[9px] font-medium bg-muted/20 border-border text-muted-foreground rounded-md  tracking-tight">
                                                     {task.column_id || 'no-status'}
                                                 </Badge>
                                             </td>
@@ -145,7 +145,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
 
                                         {options.visibleProperties.includes('assignee') && (
                                             <td className="px-4 py-4 w-[5%]">
-                                                <div className="h-6 w-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                                                <div className="h-6 w-6 rounded-full bg-primary/10 border border-border flex items-center justify-center text-[10px] font-medium text-primary">
                                                     {task.assignee_id ? task.assignee_id.substring(0, 1).toUpperCase() : '?'}
                                                 </div>
                                             </td>
@@ -157,9 +157,9 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
                                                     <Zap className={cn(
                                                         "h-3 w-3",
                                                         task.priority === 'high' ? "text-orange-500 fill-orange-500" :
-                                                            task.priority === 'medium' ? "text-blue-500" : "text-muted-foreground/30"
+                                                            task.priority === 'medium' ? "text-blue-500" : "text-muted-foreground"
                                                     )} />
-                                                    <span className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-wider">
+                                                    <span className="text-[10px] font-medium  text-muted-foreground tracking-tight">
                                                         {task.priority || 'no-priority'}
                                                     </span>
                                                 </div>
@@ -169,8 +169,8 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
                                         {options.visibleProperties.includes('due_date') && (
                                             <td className="px-4 py-4 w-[12%] text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Clock className="h-3 w-3 text-muted-foreground/40" />
-                                                    <span className="text-[10px] font-bold text-muted-foreground tracking-tighter uppercase whitespace-nowrap">
+                                                    <Clock className="h-3 w-3 text-muted-foreground" />
+                                                    <span className="text-[10px] font-medium text-muted-foreground tracking-tight  whitespace-nowrap">
                                                         {task.due_date ? format(new Date(task.due_date), "dd MMM", { locale: ptBR }) : '-'}
                                                     </span>
                                                 </div>
@@ -192,3 +192,5 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
         </div>
     );
 };
+
+

@@ -74,17 +74,17 @@ const Index = () => {
   ];
 
   return (
-    <div className="page-container h-full overflow-hidden no-scrollbar">
+    <div className="w-full h-full max-w-[1750px] mx-auto px-6 md:px-10 lg:px-16 pt-6 pb-6 flex flex-col gap-6 overflow-hidden no-scrollbar">
       <header className="heading-container shrink-0">
         <div className="flex items-center gap-3">
           <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Dashboard / visão geral</span>
+          <span className="text-[10px] font-medium  tracking-tight text-primary/60">Dashboard / visão geral</span>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-black tracking-tight text-foreground">Cockpit de Comando</h1>
-            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Sincronização em tempo real de seus projetos e fluxos de produção.</p>
+            <h1 className="text-3xl font-medium tracking-tight text-foreground">Cockpit de Comando</h1>
+            <p className="text-muted-foreground font-normal text-sm leading-relaxed">Sincronização em tempo real de seus projetos e fluxos de produção.</p>
           </div>
         </div>
       </header>
@@ -92,7 +92,7 @@ const Index = () => {
       {isLoading ? (
         <div className="flex flex-col h-64 w-full items-center justify-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando Workspace...</p>
+          <p className="text-[10px] font-medium  tracking-tight text-muted-foreground animate-pulse">Sincronizando Workspace...</p>
         </div>
       ) : (
         <>
@@ -111,23 +111,19 @@ const Index = () => {
                     setActiveStatModal(stat.id as any);
                     setIsStatModalOpen(true);
                   }}
-                  className="group relative h-[130px] p-4 rounded-[20px] border border-border bg-card shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hover)] hover:border-primary/30 transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
+                  className="group relative h-[110px] p-4 rounded-lg border border-border bg-card shadow-sm hover:border-border transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
                 >
-                  {/* Blueprint Texture */}
-                  <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-
                   <div className="flex items-center justify-between relative z-10">
-                    <div className="p-2 rounded-lg bg-primary/5 text-primary border border-primary/10 transition-all duration-300 group-hover:scale-110 shadow-sm">
-                      <stat.icon className="h-4 w-4" />
+                    <div className="text-primary transition-all duration-300 group-hover:scale-110">
+                      <stat.icon className="h-5 w-5" />
                     </div>
                     <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-20 group-hover:opacity-100 transition-opacity" />
                   </div>
 
                   <div className="relative z-10">
-                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-1">{stat.title}</p>
-                    <div className="text-3xl font-black leading-none tracking-tight text-foreground">{stat.value}</div>
-                    <p className="text-[10px] font-semibold text-muted-foreground/70 mt-2 flex items-center gap-1.5">
+                    <p className="text-[10px] font-medium text-muted-foreground  tracking-tight mb-1">{stat.title}</p>
+                    <div className="text-3xl font-medium leading-none tracking-tight text-foreground">{stat.value}</div>
+                    <p className="text-[10px] font-normal text-muted-foreground mt-2 flex items-center gap-1.5">
                       <span className="w-1 h-1 rounded-full bg-primary/40" />
                       {stat.change}
                     </p>
@@ -142,14 +138,11 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="relative h-[130px] p-4 rounded-[20px] border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden flex flex-col justify-between">
-                <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
-                  style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-
+              <div className="relative h-[110px] p-4 rounded-lg border border-border bg-card shadow-sm overflow-hidden flex flex-col justify-between">
                 <div className="flex items-center justify-between relative z-10">
-                  <h2 className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-widest">Trajetória Global</h2>
+                  <h2 className="text-[11px] font-medium text-muted-foreground  tracking-tight">Trajetória Global</h2>
                   <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-primary tabular-nums">{completionRate}%</span>
+                    <span className="text-xl font-medium text-primary tabular-nums">{completionRate}%</span>
                     <TrendingUp className="h-4 w-4 text-primary opacity-40" />
                   </div>
                 </div>
@@ -157,35 +150,35 @@ const Index = () => {
                 <div className="grid grid-cols-3 gap-2 relative z-10">
                   <Button
                     variant="ghost"
-                    className="justify-start gap-2 rounded-lg h-9 px-3 bg-muted/20 border border-border/40 hover:bg-primary/5 hover:border-primary/20 hover:text-primary transition-all group"
+                    className="justify-start gap-2 rounded-md h-9 px-3 bg-secondary/50 border border-border hover:bg-secondary hover:text-foreground transition-all group"
                     onClick={() => setIsProjectModalOpen(true)}
                   >
                     <Target className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Novo Projeto</span>
+                    <span className="text-[10px] font-medium  tracking-tight">Novo Projeto</span>
                   </Button>
                   <Button
                     variant="ghost"
-                    className="justify-start gap-2 rounded-lg h-9 px-3 bg-muted/20 border border-border/40 hover:bg-primary/5 hover:border-primary/20 hover:text-primary transition-all group"
+                    className="justify-start gap-2 rounded-md h-9 px-3 bg-secondary/50 border border-border hover:bg-secondary hover:text-foreground transition-all group"
                     onClick={() => setIsTaskModalOpen(true)}
                   >
                     <Zap className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Nova Tarefa</span>
+                    <span className="text-[10px] font-medium  tracking-tight">Nova Tarefa</span>
                   </Button>
                   <Button
                     variant="ghost"
-                    className="justify-start gap-2 rounded-lg h-9 px-3 bg-muted/20 border border-border/40 hover:bg-primary/5 hover:border-primary/20 hover:text-primary transition-all group"
+                    className="justify-start gap-2 rounded-md h-9 px-3 bg-secondary/50 border border-border hover:bg-secondary hover:text-foreground transition-all group"
                     onClick={() => navigate("/tarefas")}
                   >
                     <Target className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Workspace</span>
+                    <span className="text-[10px] font-medium  tracking-tight">Workspace</span>
                   </Button>
                 </div>
 
-                <div className="h-2 w-full bg-muted/40 rounded-full overflow-hidden border border-border/10 p-[1px] relative z-10">
+                <div className="h-2 w-full bg-secondary rounded-full overflow-hidden border border-border relative z-10">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${completionRate}%` }}
-                    className="h-full bg-primary rounded-full shadow-[0_0_12px_rgba(255,106,42,0.3)]"
+                    className="h-full bg-muted-foreground/30 rounded-full"
                   />
                 </div>
               </div>
@@ -193,7 +186,7 @@ const Index = () => {
           </div>
 
           <motion.div
-            className="flex-1 min-h-[400px] overflow-hidden"
+            className="flex-1 min-h-0 overflow-hidden"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -212,19 +205,16 @@ const Index = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <div className="bg-card border border-border rounded-[24px] p-6 shadow-[var(--shadow-card)] overflow-hidden relative">
-                  <div className="absolute inset-0 opacity-[0.01] pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-
+                <div className="bg-card border border-border rounded-lg p-6 shadow-sm overflow-hidden relative">
                   <div className="flex items-center justify-between gap-3 mb-6 relative z-10">
                     <div className="flex items-center gap-3">
                       <div className="h-1 w-6 bg-primary rounded-full" />
-                      <h2 className="text-base font-black tracking-tight text-foreground uppercase tracking-widest text-xs">Acesso Direto</h2>
+                      <h2 className="text-base font-medium tracking-tight text-foreground  tracking-tight text-xs">Acesso Direto</h2>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                      className="text-[10px] font-medium  tracking-tight text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
                       onClick={() => navigate("/projetos")}
                     >
                       Workspace Completo
@@ -233,7 +223,7 @@ const Index = () => {
                   </div>
 
                   {projects.length === 0 ? (
-                    <div className="py-12 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 border border-dashed border-border/60 rounded-2xl bg-muted/5">
+                    <div className="py-12 text-center text-[11px] font-medium  tracking-tight text-muted-foreground border border-dashed border-border rounded-md bg-muted/5">
                       Nenhuma diretriz mapeada.
                     </div>
                   ) : (
@@ -242,29 +232,25 @@ const Index = () => {
                         {projects.map((project: any) => (
                           <CarouselItem key={project.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                             <motion.div
-                              whileHover={{ y: -4 }}
+                              whileHover={{ y: -2 }}
                               onClick={() => navigate(`/projeto/${project.id}`)}
-                              className="group h-[160px] bg-card border border-border/40 rounded-[20px] p-5 cursor-pointer hover:border-primary/30 transition-all shadow-[var(--shadow-card)] relative overflow-hidden flex flex-col justify-between"
+                              className="group h-[160px] bg-card border border-border rounded-lg p-5 cursor-pointer hover:border-border transition-all shadow-sm relative overflow-hidden flex flex-col justify-between"
                             >
-                              {/* Blueprint Texture - Arthur Marques */}
-                              <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                                style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-
                               <div className="flex items-start justify-between relative z-10 w-full mb-2">
                                 <div className="flex items-center gap-3 overflow-hidden">
-                                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                                  <div className="w-10 h-10 flex items-center justify-center shrink-0">
                                     {(() => {
                                       const Icon = (LucideIcons as any)[project.avatar_emoji];
-                                      return Icon ? <Icon className="h-5 w-5 text-primary" /> : <Briefcase className="h-5 w-5 text-primary" />;
+                                      return Icon ? <Icon className="h-6 w-6 text-primary" /> : <Briefcase className="h-6 w-6 text-primary" />;
                                     })()}
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <h3 className="text-sm font-bold truncate group-hover:text-primary transition-colors text-foreground">{project.name}</h3>
-                                    <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest truncate">{project.client_name || "Mapeamento"}</p>
+                                    <h3 className="text-sm font-medium truncate group-hover:text-primary transition-colors text-foreground">{project.name}</h3>
+                                    <p className="text-[10px] font-medium text-muted-foreground  tracking-tight truncate">{project.client_name || "Mapeamento"}</p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <div className="h-6 w-px bg-border/40 mx-1" />
+                                  <div className="h-6 w-px bg-border mx-1" />
                                   <DeleteConfirmDialog
                                     title="Excluir"
                                     description="Confirmar exclusão definitiva?"
@@ -273,7 +259,7 @@ const Index = () => {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 rounded-lg group-hover:opacity-100 opacity-20 transition-opacity"
+                                        className="h-8 w-8 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 rounded-md group-hover:opacity-100 opacity-20 transition-opacity"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         <Trash2 className="h-4 w-4" />
@@ -283,13 +269,13 @@ const Index = () => {
                                 </div>
                               </div>
                               <div className="space-y-2">
-                                <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">
+                                <div className="flex justify-between items-center text-[9px] font-medium  tracking-tight text-muted-foreground">
                                   <span>Checkpoints</span>
                                   <span className="text-primary">{project.progress || 0}%</span>
                                 </div>
-                                <div className="h-1.5 w-full bg-muted/40 rounded-full overflow-hidden border border-border/10">
+                                <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden border border-border">
                                   <div
-                                    className="h-full bg-primary/60"
+                                    className="h-full bg-muted-foreground/30"
                                     style={{ width: `${project.progress || 0}%` }}
                                   />
                                 </div>
@@ -336,3 +322,5 @@ const Index = () => {
 };
 
 export default Index;
+
+

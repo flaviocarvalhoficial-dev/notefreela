@@ -68,7 +68,7 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                     <h3 className="text-lg font-semibold tracking-tight">Fluxo Financeiro</h3>
                     <p className="text-sm text-muted-foreground">Evolução de faturamento e recebimentos</p>
                 </div>
-                <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border/40">
+                <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border">
                     <Button
                         variant="ghost"
                         size="sm"
@@ -221,13 +221,15 @@ export function FinancialChart({ projects }: FinancialChartProps) {
             <div className="flex justify-center gap-6 mt-4">
                 <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-[hsl(212,52%,52%)]"></div>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total Contratado</span>
+                    <span className="text-[10px] text-muted-foreground  tracking-wider font-semibold">Total Contratado</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-[hsl(158,64%,52%)]"></div>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Recebido</span>
+                    <span className="text-[10px] text-muted-foreground  tracking-wider font-semibold">Recebido</span>
                 </div>
             </div>
         </div>
     );
 }
+
+

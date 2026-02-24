@@ -63,19 +63,19 @@ const Documentos = () => {
             <header className="heading-container">
                 <div className="flex items-center gap-3">
                     <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Documentos</span>
+                    <span className="text-[10px] font-medium  tracking-tight text-primary/60">Workspace / Documentos</span>
                 </div>
 
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="stack-gap-sm">
-                        <h1 className="text-3xl font-black tracking-tight text-foreground">Documentos</h1>
-                        <p className="text-muted-foreground text-sm max-w-md leading-relaxed">Gerencie seus modelos de contratos, briefings e recibos.</p>
+                        <h1 className="text-3xl font-medium tracking-tight text-foreground">Documentos</h1>
+                        <p className="text-muted-foreground font-normal text-sm max-w-md leading-relaxed">Gerencie seus modelos de contratos, briefings e recibos.</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <Button
                             onClick={() => setIsDialogOpen(true)}
-                            className="font-bold rounded-xl px-6 border-primary transition-all active:scale-95"
+                            className="font-medium rounded-md px-6 border-primary transition-all active:scale-95 shadow-sm"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Novo Documento
@@ -94,42 +94,42 @@ const Documentos = () => {
                         transition={{ delay: idx * 0.1 }}
                         onClick={() => setActiveCategory(cat.name)}
                         className={cn(
-                            "bento-card cursor-pointer group p-5 transition-all duration-300",
+                            "bg-card border border-border rounded-lg cursor-pointer group p-5 transition-all duration-300 shadow-sm",
                             activeCategory === cat.name
-                                ? "bg-primary/10 border-primary/30 shadow-lg shadow-primary/5"
-                                : "hover:bg-card/60"
+                                ? "bg-primary/5 border-primary/30"
+                                : "hover:bg-muted/50"
                         )}
                     >
                         <div className="flex items-start justify-between">
                             <div className={cn(
-                                "p-2 rounded-lg transition-colors",
-                                activeCategory === cat.name ? "bg-primary text-white" : "bg-muted/60 text-foreground"
+                                "p-2 rounded-md transition-colors",
+                                activeCategory === cat.name ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                             )}>
                                 <cat.icon className="h-5 w-5" />
                             </div>
-                            <span className="text-xs font-bold tabular-nums text-muted-foreground/60">{cat.count}</span>
+                            <span className="text-[10px] font-medium tabular-nums text-muted-foreground  tracking-tight">{cat.count}</span>
                         </div>
                         <div className="mt-4">
-                            <h3 className="text-sm font-bold">{cat.name}</h3>
-                            <p className="text-[10px] text-muted-foreground/40 font-black mt-1 uppercase tracking-widest">Registros</p>
+                            <h3 className="text-sm font-medium tracking-tight text-foreground">{cat.name}</h3>
+                            <p className="text-[10px] text-muted-foreground font-medium mt-1  tracking-tight">Arquivos</p>
                         </div>
                     </motion.div>
                 ))}
             </div>
 
             {/* List Area */}
-            <div className="bento-card mt-12 overflow-hidden border-border/20 bg-card/30">
-                <div className="p-4 border-b border-border/10 flex flex-col md:flex-row gap-4 items-center justify-between bg-card/40">
+            <div className="bg-card border border-border rounded-lg mt-12 overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-border flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="relative w-full md:w-96">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Buscar documentos ou projetos..."
-                            className="pl-10 glass-light border-0 focus-visible:ring-0 h-10 text-sm placeholder:text-muted-foreground/40"
+                            placeholder="Buscar documentos..."
+                            className="pl-10 bg-muted/5 border-border rounded-md h-10 text-sm placeholder:text-muted-foreground"
                         />
                     </div>
-                    <Button variant="ghost" size="sm" className="h-10 text-[10px] font-bold text-muted-foreground/60 hover:text-foreground hover:bg-white/5 uppercase tracking-widest px-4">
+                    <Button variant="ghost" size="sm" className="h-10 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50  tracking-tight px-4">
                         <Filter className="h-3.5 w-3.5 mr-2" />
                         Filtros Avançados
                     </Button>
@@ -145,22 +145,22 @@ const Documentos = () => {
                         <div className="p-0">
                             {filtered.length === 0 ? (
                                 <div className="py-24 text-center">
-                                    <FileText className="h-12 w-12 text-muted-foreground/10 mx-auto mb-4" />
+                                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                                     <p className="text-sm text-muted-foreground font-medium">Nenhum documento encontrado.</p>
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="text-[10px] font-black text-muted-foreground/30 border-b border-border/5 uppercase tracking-widest">
-                                                <th className="px-6 py-5">Nome do Arquivo / Projeto</th>
+                                            <tr className="text-[10px] font-medium text-muted-foreground border-b border-border  tracking-tight">
+                                                <th className="px-6 py-5">Arquivo / Projeto</th>
                                                 <th className="px-6 py-5">Categoria</th>
                                                 <th className="px-6 py-5">Modificado</th>
                                                 <th className="px-6 py-5">Tipo</th>
                                                 <th className="px-6 py-5 text-right">Ações</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-border/5">
+                                        <tbody className="divide-y divide-border">
                                             {filtered.map((doc) => (
                                                 <motion.tr
                                                     key={doc.id}
@@ -170,30 +170,30 @@ const Documentos = () => {
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-4">
-                                                            <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                            <div className="h-10 w-10 rounded-md bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors border border-border">
                                                                 <FileText className="h-5 w-5" />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-bold text-foreground truncate">{doc.title}</p>
-                                                                <p className="text-[10px] font-black text-primary/60 uppercase tracking-tighter truncate">{doc.projectName}</p>
+                                                                <p className="text-sm font-medium text-foreground truncate tracking-tight">{doc.title}</p>
+                                                                <p className="text-[10px] font-medium text-primary/60  tracking-tight truncate">{doc.projectName}</p>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-2 h-5">
+                                                        <Badge variant="outline" className="bg-primary/5 text-primary border-border text-[10px] font-medium px-2 h-5 tracking-tight">
                                                             {doc.category}
                                                         </Badge>
                                                     </td>
-                                                    <td className="px-6 py-4 text-[11px] font-bold text-muted-foreground/60">{doc.lastModified}</td>
+                                                    <td className="px-6 py-4 text-[11px] font-medium text-muted-foreground tabular-nums ">{doc.lastModified}</td>
                                                     <td className="px-6 py-4">
-                                                        <span className="text-[10px] font-black text-muted-foreground/30 bg-muted/20 px-2 py-1 rounded-md">{doc.type}</span>
+                                                        <span className="text-[10px] font-medium text-muted-foreground bg-muted/20 px-2 py-1 rounded-md  tracking-tight">{doc.type}</span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
+                                                                className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md"
                                                                 onClick={() => handleDownload(doc)}
                                                             >
                                                                 <Download className="h-4 w-4" />
@@ -201,19 +201,19 @@ const Documentos = () => {
 
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-white/5 rounded-lg">
+                                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-muted/50 rounded-md">
                                                                         <MoreVertical className="h-4 w-4" />
                                                                     </Button>
                                                                 </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="bg-[#141414] border-border/20">
-                                                                    <DropdownMenuItem className="text-xs font-bold gap-2 cursor-pointer">
+                                                                <DropdownMenuContent align="end" className="bg-card border-border shadow-xl">
+                                                                    <DropdownMenuItem className="text-xs font-medium gap-2 cursor-pointer">
                                                                         Renomear
                                                                     </DropdownMenuItem>
-                                                                    <DropdownMenuItem className="text-xs font-bold gap-2 cursor-pointer">
+                                                                    <DropdownMenuItem className="text-xs font-medium gap-2 cursor-pointer">
                                                                         Mover pasta
                                                                     </DropdownMenuItem>
                                                                     <DropdownMenuItem
-                                                                        className="text-xs font-bold gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                                                                        className="text-xs font-medium gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                                                                         onClick={() => deleteDoc(doc.id)}
                                                                     >
                                                                         <Trash2 className="h-3.5 w-3.5" />
@@ -246,3 +246,5 @@ const Documentos = () => {
 };
 
 export default Documentos;
+
+

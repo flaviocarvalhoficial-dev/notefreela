@@ -90,7 +90,7 @@ export function Header() {
     const userName = profile?.full_name || user?.email?.split("@")[0] || "Usuário";
 
     return (
-        <header className="sticky top-0 w-full h-16 border-b border-border/50 glass-light z-[40]">
+        <header className="sticky top-0 w-full h-16 border-b border-border glass-light z-[40]">
             <div className="max-w-[1750px] mx-auto h-full flex items-center justify-between px-8 md:px-12 lg:px-20 transition-all duration-300">
 
                 {/* Left Area: Welcome Message (Photo and Name in Line) */}
@@ -98,7 +98,7 @@ export function Header() {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-10 gap-2.5 hover:bg-muted/20 transition-all pl-0 pr-3 rounded-xl group flex items-center">
-                                <Avatar className="h-8 w-8 border border-border/50 shadow-sm shrink-0">
+                                <Avatar className="h-8 w-8 border border-border shadow-sm shrink-0">
                                     <AvatarImage src={profile?.avatar_url} className="object-cover" />
                                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-[10px] font-semibold text-white">
                                         {userInitial}
@@ -107,11 +107,11 @@ export function Header() {
                                 <div className="h-full flex items-center gap-2 whitespace-nowrap">
                                     <span className="text-xs text-muted-foreground hidden lg:inline">Bem-vindo(a),</span>
                                     <span className="text-sm font-semibold truncate max-w-[150px]">{userName.split(' ')[0]}</span>
-                                    <ChevronDown className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+                                    <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
                                 </div>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="glass border-border/50 w-56 z-[60] mt-1">
+                        <DropdownMenuContent align="start" className="glass border-border w-56 z-[60] mt-1">
                             <DropdownMenuLabel className="font-normal">
                                 <div className="flex flex-col space-y-1">
                                     <p className="text-sm font-medium leading-none">{profile?.full_name || userName}</p>
@@ -139,7 +139,7 @@ export function Header() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
                             placeholder="Pesquisar..."
-                            className="w-full pl-10 h-10 glass-light border-border/50 focus:border-primary/50 transition-all rounded-full bg-background/20"
+                            className="w-full pl-10 h-10 glass-light border-border focus:border-primary/50 transition-all rounded-full bg-background/20"
                         />
                     </div>
                 </div>
@@ -174,3 +174,5 @@ export function Header() {
         </header>
     );
 }
+
+

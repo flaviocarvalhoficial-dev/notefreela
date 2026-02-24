@@ -139,38 +139,38 @@ const Agenda = () => {
       <header className="heading-container">
         <div className="flex items-center gap-3">
           <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Agenda</span>
+          <span className="text-[10px] font-medium  tracking-tight text-primary/60">Workspace / Agenda</span>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-black tracking-tight text-foreground">Agenda Estratégica</h1>
-            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Gerencie seus compromissos e marcos de execução temporal.</p>
+            <h1 className="text-3xl font-medium tracking-tight text-foreground">Agenda Estratégica</h1>
+            <p className="text-muted-foreground font-normal text-sm leading-relaxed">Gerencie seus compromissos e marcos de execução temporal.</p>
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button className="border-primary transition-all active:scale-95">
+              <Button className="border-primary transition-all active:scale-95 font-medium rounded-md shadow-sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Evento
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass border-border/50 max-w-sm">
+            <DialogContent className="bg-card border-border max-w-sm rounded-lg shadow-xl">
               <DialogHeader>
-                <DialogTitle>Novo Compromisso</DialogTitle>
+                <DialogTitle className="text-lg font-medium">Novo Compromisso</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label>Título</Label>
-                  <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Call com Cliente" className="glass-light" />
+                  <Label className="text-xs font-medium text-muted-foreground">Título</Label>
+                  <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Call com Cliente" className="bg-muted/5 border-border rounded-md" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Tipo</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">Tipo</Label>
                   <Select value={newType} onValueChange={(v: EventType) => setNewType(v)}>
-                    <SelectTrigger className="glass-light">
+                    <SelectTrigger className="bg-muted/5 border-border rounded-md">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="glass">
+                    <SelectContent className="bg-card border-border">
                       <SelectItem value="project">Projeto</SelectItem>
                       <SelectItem value="task">Tarefa</SelectItem>
                       <SelectItem value="personal">Pessoal</SelectItem>
@@ -179,15 +179,15 @@ const Agenda = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Início</Label>
-                    <Input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} className="glass-light" />
+                    <Label className="text-xs font-medium text-muted-foreground">Início</Label>
+                    <Input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} className="bg-muted/5 border-border rounded-md" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Fim</Label>
-                    <Input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} className="glass-light" />
+                    <Label className="text-xs font-medium text-muted-foreground">Fim</Label>
+                    <Input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} className="bg-muted/5 border-border rounded-md" />
                   </div>
                 </div>
-                <Button className="w-full border-primary" onClick={() => createEventMutation.mutate()} disabled={!newTitle}>
+                <Button className="w-full border-primary font-medium rounded-md shadow-sm" onClick={() => createEventMutation.mutate()} disabled={!newTitle}>
                   Salvar Evento
                 </Button>
               </div>
@@ -203,16 +203,16 @@ const Agenda = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="bento-card">
+          <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-lg font-medium tracking-tight">
                 Agenda
               </h2>
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 glass-light"
+                  className="h-8 w-8 bg-muted/5 hover:bg-muted/10 border border-border"
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -220,7 +220,7 @@ const Agenda = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="glass-light"
+                  className="bg-muted/5 hover:bg-muted/10 border border-border font-medium text-xs rounded-md"
                   onClick={() => {
                     const today = new Date();
                     setCurrentMonth(today);
@@ -232,7 +232,7 @@ const Agenda = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 glass-light"
+                  className="h-8 w-8 bg-muted/5 hover:bg-muted/10 border border-border"
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -242,7 +242,7 @@ const Agenda = () => {
 
             <div className="grid md:grid-cols-2 gap-8 items-start">
               <div className="space-y-4">
-                <h3 className="font-medium text-muted-foreground ml-2 capitalize">
+                <h3 className="font-medium text-[10px]  tracking-tight text-muted-foreground ml-2">
                   {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                 </h3>
                 <Calendar
@@ -263,7 +263,7 @@ const Agenda = () => {
                       const dayEvents = allEvents.filter((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
                       return (
                         <div className="flex flex-col items-center justify-start h-full w-full pt-1 relative z-10">
-                          <span className="text-sm font-normal mb-1">{date.getDate()}</span>
+                          <span className="text-sm font-normal mb-1 tabular-nums">{date.getDate()}</span>
                           <div className="flex items-center justify-center gap-1 w-full px-0.5 mt-1">
                             {dayEvents.slice(0, 4).map((ev) => (
                               <div
@@ -290,8 +290,8 @@ const Agenda = () => {
                 />
               </div>
 
-              <div className="hidden md:block space-y-4 border-l border-border/30 pl-8">
-                <h3 className="font-medium text-muted-foreground ml-2 capitalize">
+              <div className="hidden md:block space-y-4 border-l border-border pl-8">
+                <h3 className="font-medium text-[10px]  tracking-tight text-muted-foreground ml-2">
                   {format(nextMonth, "MMMM yyyy", { locale: ptBR })}
                 </h3>
                 <Calendar
@@ -317,9 +317,9 @@ const Agenda = () => {
                     DayContent: ({ date }) => {
                       const hasEvent = allEvents.some((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
                       return (
-                        <div className="relative w-full h-full flex items-center justify-center p-2">
+                        <div className="relative w-full h-full flex items-center justify-center p-2 tabular-nums">
                           {date.getDate()}
-                          {hasEvent && <div className="absolute bottom-1 w-1 h-1 bg-primary rounded-full" />}
+                          {hasEvent && <div className="absolute bottom-1.5 w-1 h-1 bg-primary/40 rounded-full" />}
                         </div>
                       )
                     }
@@ -335,10 +335,10 @@ const Agenda = () => {
           <div className="bento-card h-fit min-h-[300px]">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-lg font-medium tracking-tight">
                   {isToday(selectedDate) ? "Hoje" : format(selectedDate, "dd MMM", { locale: ptBR })}
                 </h2>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] font-medium  tracking-tight text-muted-foreground">
                   {selectedEvents.length} {selectedEvents.length === 1 ? "evento" : "eventos"}
                 </p>
               </div>
@@ -361,7 +361,7 @@ const Agenda = () => {
                       key={event.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="glass-light p-3 rounded-lg group relative"
+                      className="bg-muted/5 border border-border p-3 rounded-md group relative"
                     >
                       <div className="flex items-start gap-3">
                         <div
@@ -369,8 +369,8 @@ const Agenda = () => {
                           style={{ backgroundColor: getEventColor(event) }}
                         />
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-medium truncate">{event.title}</h3>
-                          <p className="text-xs text-muted-foreground">
+                          <h3 className="text-sm font-medium truncate tracking-tight">{event.title}</h3>
+                          <p className="text-[10px] font-medium text-muted-foreground tabular-nums  tracking-tight">
                             {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
                           </p>
                         </div>
@@ -396,3 +396,5 @@ const Agenda = () => {
 };
 
 export default Agenda;
+
+

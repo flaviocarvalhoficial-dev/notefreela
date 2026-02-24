@@ -92,7 +92,7 @@ export function DroppableColumn({
         <div ref={setNodeRef} className={cn("transition-all", isOver ? "ring-2 ring-primary/20 scale-[1.01] rounded-2xl" : "")}>
             <section className={cn(
                 "p-4 md:p-5 h-full min-h-[460px] group relative overflow-visible",
-                variant === 'card' ? "bento-card border-border/40" : "bg-transparent border-none p-0 md:p-0 min-h-0"
+                variant === 'card' ? "bento-card border-border" : "bg-transparent border-none p-0 md:p-0 min-h-0"
             )}>
                 {variant === 'card' && (
                     <div
@@ -103,7 +103,7 @@ export function DroppableColumn({
 
                 <header className={cn(
                     "flex items-start justify-between gap-4 mb-5 pb-3 pt-2",
-                    variant === 'card' ? "border-b border-border/10" : "mb-3"
+                    variant === 'card' ? "border-b border-border" : "mb-3"
                 )}>
                     <div className="flex-1">
                         <div className="flex items-center gap-2 group/title">
@@ -114,13 +114,13 @@ export function DroppableColumn({
                                     onChange={(e) => setValue(e.target.value)}
                                     onBlur={handleBlur}
                                     onKeyDown={handleKeyDown}
-                                    className="bg-transparent border-none p-0 m-0 text-sm font-semibold tracking-tight focus:ring-0 w-full outline-none"
+                                    className="bg-transparent border-none p-0 m-0 text-sm font-medium tracking-tight focus:ring-0 w-full outline-none"
                                 />
                             ) : (
                                 <h2
                                     className={cn(
-                                        "text-sm font-semibold tracking-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-2",
-                                        variant === 'minimal' && "text-muted-foreground/60 text-[11px] uppercase tracking-wider"
+                                        "text-sm font-medium tracking-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-2",
+                                        variant === 'minimal' && "text-muted-foreground text-[11px]  tracking-tight"
                                     )}
                                     onClick={() => setIsEditing(true)}
                                 >
@@ -139,15 +139,15 @@ export function DroppableColumn({
                                 <MoreVertical className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass border-border/50">
+                        <DropdownMenuContent align="end" className="glass border-border">
                             <DropdownMenuItem onClick={() => setIsEditing(true)}>
                                 Renomear Etapa
                             </DropdownMenuItem>
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger>Escolher Cor</DropdownMenuSubTrigger>
                                 <DropdownMenuPortal>
-                                    <DropdownMenuSubContent className="glass border-border/50 p-3 min-w-[200px] shadow-2xl">
-                                        <div className="text-[10px] font-semibold text-muted-foreground/60 mb-2">Cores Pastel</div>
+                                    <DropdownMenuSubContent className="glass border-border p-3 min-w-[200px] shadow-2xl">
+                                        <div className="text-[10px] font-medium text-muted-foreground mb-2  tracking-tight">Cores Pastel</div>
                                         <div className="grid grid-cols-4 gap-2 mb-3">
                                             {PASTEL_COLORS.map((c) => (
                                                 <button
@@ -174,7 +174,7 @@ export function DroppableColumn({
                                                     <Settings2 className="h-3.5 w-3.5" /> Personalizar Textos
                                                 </DropdownMenuItem>
                                             </DialogTrigger>
-                                            <DialogContent className="glass border-border/50 max-w-sm">
+                                            <DialogContent className="glass border-border max-w-sm">
                                                 <DialogHeader>
                                                     <DialogTitle>Personalizar Etapa</DialogTitle>
                                                 </DialogHeader>
@@ -184,7 +184,7 @@ export function DroppableColumn({
                                                         <Input
                                                             value={value}
                                                             onChange={(e) => setValue(e.target.value)}
-                                                            className="glass-light border-border/50"
+                                                            className="glass-light border-border"
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
@@ -192,7 +192,7 @@ export function DroppableColumn({
                                                         <Input
                                                             value={hintValue}
                                                             onChange={(e) => setHintValue(e.target.value)}
-                                                            className="glass-light border-border/50"
+                                                            className="glass-light border-border"
                                                             placeholder="Ex: Foco no que está em execução"
                                                         />
                                                     </div>
@@ -214,7 +214,7 @@ export function DroppableColumn({
                             </DropdownMenuSub>
                             <DropdownMenuSeparator className="bg-border/20" />
                             <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
+                                className="text-orange-500 focus:text-orange-600 focus:bg-orange-500/10"
                                 onClick={onDelete}
                             >
                                 Excluir Coluna
@@ -229,7 +229,7 @@ export function DroppableColumn({
                     size="sm"
                     className={cn(
                         "w-full mt-4 justify-start gap-2 h-9 text-muted-foreground hover:text-primary transition-colors",
-                        variant === 'card' ? "border-t border-border/5 pt-4" : "mt-2 opacity-50 hover:opacity-100"
+                        variant === 'card' ? "border-t border-border pt-4" : "mt-2 opacity-50 hover:opacity-100"
                     )}
                     onClick={onAddTask}
                 >
@@ -240,3 +240,6 @@ export function DroppableColumn({
         </div>
     );
 }
+
+
+

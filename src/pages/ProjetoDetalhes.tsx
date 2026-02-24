@@ -360,7 +360,7 @@ const ProjetoHub = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-background">
                 <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground animate-pulse uppercase">Sincronizando Workspace Hub...</p>
+                <p className="text-[10px] font-medium tracking-tight text-muted-foreground animate-pulse ">Sincronizando Workspace Hub...</p>
             </div>
         );
     }
@@ -368,8 +368,8 @@ const ProjetoHub = () => {
     if (!project) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen text-center p-4">
-                <h2 className="text-xl font-black uppercase tracking-widest">Projeto não encontrado</h2>
-                <button onClick={() => navigate("/projetos")} className="mt-4 text-xs font-bold text-primary underline">VOLTAR AOS WORKSPACES</button>
+                <h2 className="text-xl font-medium  tracking-tight">Projeto não encontrado</h2>
+                <button onClick={() => navigate("/projetos")} className="mt-4 text-xs font-medium text-primary underline">Voltar aos workspaces</button>
             </div>
         );
     }
@@ -422,7 +422,7 @@ const ProjetoHub = () => {
                                                 updatePageTitleMutation.mutate({ pageId: activePageId, title: pageTitleLocal });
                                             }
                                         }}
-                                        className="text-3xl font-bold bg-transparent border-none outline-none focus:ring-0 p-0 w-full placeholder:opacity-20 text-foreground"
+                                        className="text-3xl font-medium bg-transparent border-none outline-none focus:ring-0 p-0 w-full placeholder:opacity-20 text-foreground tracking-tight"
                                         placeholder="Título da página..."
                                     />
                                 </div>
@@ -450,7 +450,7 @@ const ProjetoHub = () => {
                                     setIsAddCostOpen(true);
                                 } else if (['kanban', 'tasks', 'finance', 'inboxview'].includes(cmd)) {
                                     // Handle view embedding placeholder
-                                    editorRef.current?.insertItem('view', cmd, cmd.toUpperCase());
+                                    editorRef.current?.insertItem('view', cmd, cmd);
                                     setSourceBlockId(null);
                                 }
                             }}
@@ -569,11 +569,11 @@ const ProjetoHub = () => {
                     background: transparent;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: hsl(var(--border) / 0.4);
+                    background: hsl(var(--border));
                     border-radius: 10px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: hsl(var(--border) / 0.8);
+                    background: hsl(var(--border));
                 }
             `}</style>
         </div>
@@ -581,3 +581,4 @@ const ProjetoHub = () => {
 };
 
 export default ProjetoHub;
+

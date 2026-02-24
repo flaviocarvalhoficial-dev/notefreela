@@ -34,24 +34,24 @@ export function DeleteConfirmDialog({
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogTrigger asChild>
                 {trigger || (
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-600 hover:bg-orange-500/10">
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 )}
             </AlertDialogTrigger>
             <AlertDialogContent
-                className="bg-card border border-border/40 max-w-[400px]"
+                className="bg-card border border-border max-w-[400px]"
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
             >
                 <AlertDialogHeader>
-                    <AlertDialogTitle className="text-lg font-bold">{title}</AlertDialogTitle>
+                    <AlertDialogTitle className="text-lg font-medium tracking-tight">{title}</AlertDialogTitle>
                     <AlertDialogDescription className="text-sm text-muted-foreground">
                         {description}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="mt-6">
-                    <AlertDialogCancel className="rounded-md font-bold text-xs border-border/60">
+                    <AlertDialogCancel className="rounded-md font-medium text-xs border-border">
                         Cancelar
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -59,7 +59,7 @@ export function DeleteConfirmDialog({
                             e.stopPropagation();
                             onConfirm();
                         }}
-                        className={cn(buttonVariants({ variant: "destructive" }), "rounded-md font-bold text-xs h-9")}
+                        className={cn(buttonVariants({ variant: "default" }), "rounded-md font-medium text-xs h-9 bg-orange-500 hover:bg-orange-600 text-white")}
                     >
                         Excluir
                     </AlertDialogAction>
@@ -68,3 +68,4 @@ export function DeleteConfirmDialog({
         </AlertDialog>
     );
 }
+

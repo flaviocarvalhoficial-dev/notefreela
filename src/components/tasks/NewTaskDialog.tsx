@@ -126,9 +126,9 @@ export function NewTaskDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
-      <DialogContent className="border-border/50 max-w-lg">
+      <DialogContent className="border-border max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Criar Nova Tarefa</DialogTitle>
+          <DialogTitle className="text-xl font-medium tracking-tight">Criar Nova Tarefa</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -143,7 +143,7 @@ export function NewTaskDialog({
                     <Input
                       {...field}
                       placeholder="Ex: Revisar layout do dashboard"
-                      className="glass-light border-border/50"
+                      className="glass-light border-border"
                       autoFocus
                     />
                   </FormControl>
@@ -161,11 +161,11 @@ export function NewTaskDialog({
                     <FormLabel>Projeto</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="glass-light border-border/50">
+                        <SelectTrigger className="glass-light border-border">
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-popover text-popover-foreground border-border/50 z-[200] shadow-xl">
+                      <SelectContent className="bg-popover text-popover-foreground border-border z-[200] shadow-xl">
                         {projects.map((p) => (
                           <SelectItem key={p.id} value={p.id}>
                             {p.name}
@@ -186,11 +186,11 @@ export function NewTaskDialog({
                     <FormLabel>Prioridade</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="glass-light border-border/50">
+                        <SelectTrigger className="glass-light border-border">
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-popover text-popover-foreground border-border/50 z-[200] shadow-xl">
+                      <SelectContent className="bg-popover text-popover-foreground border-border z-[200] shadow-xl">
                         {priorities.map((p) => (
                           <SelectItem key={p.value} value={p.value}>
                             {p.label}
@@ -218,7 +218,7 @@ export function NewTaskDialog({
                             type="button"
                             variant="outline"
                             className={cn(
-                              "justify-start text-left font-normal glass-light border-border/50",
+                              "justify-start text-left font-normal glass-light border-border",
                               !field.value && "text-muted-foreground",
                             )}
                           >
@@ -227,7 +227,7 @@ export function NewTaskDialog({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="bg-popover text-popover-foreground border-border/50 w-auto p-0 shadow-xl z-[200]" align="start">
+                      <PopoverContent className="bg-popover text-popover-foreground border-border w-auto p-0 shadow-xl z-[200]" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value}
@@ -260,7 +260,7 @@ export function NewTaskDialog({
                   <FormItem>
                     <FormLabel>Responsável</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Ex: Ana" className="glass-light border-border/50" />
+                      <Input {...field} placeholder="Ex: Ana" className="glass-light border-border" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -279,7 +279,7 @@ export function NewTaskDialog({
                       <Input
                         {...field}
                         type="time"
-                        className="glass-light border-border/50 block w-full"
+                        className="glass-light border-border block w-full"
                         step="600"
                       />
                     </FormControl>
@@ -299,7 +299,7 @@ export function NewTaskDialog({
                       <Input
                         {...field}
                         type="time"
-                        className="glass-light border-border/50 block w-full"
+                        className="glass-light border-border block w-full"
                         step="600"
                       />
                     </FormControl>
@@ -314,12 +314,12 @@ export function NewTaskDialog({
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 glass-light border-border/50"
+                className="flex-1 glass-light border-border"
                 onClick={() => setOpen(false)}
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="flex-1 border-primary transition-all active:scale-95 font-bold">
+              <Button type="submit" className="flex-1 border-primary transition-all active:scale-95 font-medium">
                 Criar Tarefa
               </Button>
             </div>
@@ -329,3 +329,4 @@ export function NewTaskDialog({
     </Dialog>
   );
 }
+

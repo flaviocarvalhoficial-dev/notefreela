@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { IconPicker } from "./IconPicker";
 
 type ProjectStatus = "active" | "planning" | "review" | "completed";
@@ -58,6 +59,11 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [billingCycle, setBillingCycle] = useState<string>("mensal");
     const [nextBillingDate, setNextBillingDate] = useState("");
 
+    // Parcelamento status
+    const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
+    const [installments, setInstallments] = useState<{ amount: number; date: string }[]>([]);
+    const [installmentCount, setInstallmentCount] = useState<number>(1);
+
     // Step 3: Tarefas
     const [tasks, setTasks] = useState<{ id: string, title: string }[]>([]);
     const [taskInput, setTaskInput] = useState("");
@@ -85,6 +91,28 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setContractStatus("active");
         setBillingCycle("mensal");
         setNextBillingDate("");
+        setIsInstallmentEnabled(false);
+        setInstallments([]);
+        setInstallmentCount(1);
+    };
+
+    const generateInstallments = () => {
+        const remaining = (Number(newValue) || 0) - (Number(newAdvance) || 0);
+        if (remaining <= 0) return;
+
+        const amountPerParcel = Math.round((remaining / installmentCount) * 100) / 100;
+        const newParcels = [];
+        const baseDate = new Date();
+
+        for (let i = 0; i < installmentCount; i++) {
+            const d = new Date(baseDate);
+            d.setMonth(d.getMonth() + i + 1);
+            newParcels.push({
+                amount: amountPerParcel,
+                date: d.toISOString().split('T')[0]
+            });
+        }
+        setInstallments(newParcels);
     };
 
     // Auto-calculate global project value
@@ -192,11 +220,28 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     user_id: user.id,
                     column_id: todoColId,
                     progress: 0,
-                    priority: "medium"
+                    priority: "medium",
+                    // @ts-ignore
+                    billing_period: format(new Date(), "MMM yyyy", { locale: ptBR })
                 }));
 
                 const { error: tError } = await (supabase as any).from("tasks").insert(tasksToInsert);
                 if (tError) throw tError;
+            }
+
+            // 5. Create Installments as Costs if enabled
+            if (isInstallmentEnabled && installments.length > 0) {
+                const costsToInsert = installments.map((p, idx) => ({
+                    title: `Parcela ${idx + 1}/${installments.length} - ${newName}`,
+                    amount: p.amount,
+                    date: p.date,
+                    category: "receita_parcela",
+                    project_id: project.id,
+                    user_id: user.id
+                }));
+
+                const { error: costError } = await supabase.from("project_costs").insert(costsToInsert);
+                if (costError) throw costError;
             }
 
             return project;
@@ -210,8 +255,8 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             });
             setOpen(false);
             resetForm();
-            // Redirect to the new project's view (assuming we have a project detail page or go to tasks)
-            navigate(`/projetos/${project.id}`);
+            // Redirect to the new project's Kanban
+            navigate(`/tarefas?project=${project.id}`);
         },
         onError: (error: any) => {
             toast({
@@ -238,7 +283,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             if (!val) resetForm();
         }}>
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-            <DialogContent className="border-border/50 max-w-xl p-0 overflow-hidden">
+            <DialogContent className="border-border max-w-xl p-0 overflow-hidden">
                 {/* Header with Progress Bar */}
                 <div className="relative h-1.5 w-full bg-muted/20">
                     <motion.div
@@ -281,7 +326,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         <Input
                                             id="project-name"
                                             placeholder="Ex: Identidade Visual NoteFreela"
-                                            className="glass-light border-border/50 h-12 text-lg focus:ring-primary/20"
+                                            className="glass-light border-border h-12 text-lg focus:ring-primary/20"
                                             value={newName}
                                             onChange={(e) => setNewName(e.target.value)}
                                             autoFocus
@@ -306,10 +351,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                         size="sm"
                                                         onClick={() => setBillingType(t)}
                                                         className={cn(
-                                                            "h-9 text-[10px] font-bold uppercase tracking-wider",
+                                                            "h-9 text-[10px] font-bold  tracking-wider",
                                                             billingType === t
                                                                 ? "bg-primary/20 text-primary border-primary/50"
-                                                                : "glass-light border-border/50"
+                                                                : "glass-light border-border"
                                                         )}
                                                     >
                                                         {t}
@@ -320,10 +365,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         <div className="space-y-2">
                                             <Label htmlFor="service-type" className="text-xs opacity-60">Tipo de Serviço</Label>
                                             <Select value={serviceType} onValueChange={setServiceType}>
-                                                <SelectTrigger className="glass-light border-border/50 h-9 text-xs">
+                                                <SelectTrigger className="glass-light border-border h-9 text-xs">
                                                     <SelectValue placeholder="Selecione..." />
                                                 </SelectTrigger>
-                                                <SelectContent className="glass border-border/50">
+                                                <SelectContent className="glass border-border">
                                                     <SelectItem value="design">Design</SelectItem>
                                                     <SelectItem value="dev">Desenvolvimento</SelectItem>
                                                     <SelectItem value="social_media">Social Media</SelectItem>
@@ -341,7 +386,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         <Input
                                             id="project-client"
                                             placeholder="Ex: Startup X ou Nome do Cliente"
-                                            className="glass-light border-border/50"
+                                            className="glass-light border-border"
                                             value={newClient}
                                             onChange={(e) => setNewClient(e.target.value)}
                                         />
@@ -351,8 +396,9 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         <Input
                                             id="project-desc"
                                             placeholder="Do que se trata o projeto?"
-                                            className="glass-light border-border/50"
+                                            className="glass-light border-border"
                                             value={newDesc}
+                                            onChange={(e) => setNewDesc(e.target.value)}
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -361,7 +407,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <div className="flex-1">
                                                 <Input
                                                     placeholder="Serviço (ex: Website)"
-                                                    className="glass-light border-border/50 h-9 text-xs"
+                                                    className="glass-light border-border h-9 text-xs"
                                                     value={serviceInput}
                                                     onChange={(e) => setServiceInput(e.target.value)}
                                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
@@ -371,7 +417,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                 <Input
                                                     type="number"
                                                     placeholder="R$ 0,00"
-                                                    className="glass-light border-border/50 h-9 text-xs"
+                                                    className="glass-light border-border h-9 text-xs"
                                                     value={servicePriceInput}
                                                     onChange={(e) => setServicePriceInput(e.target.value ? Number(e.target.value) : "")}
                                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
@@ -383,7 +429,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                         </div>
                                         <div className="flex flex-col gap-1.5 mt-3">
                                             {services.map((svc, i) => (
-                                                <div key={i} className="flex items-center justify-between bg-secondary/10 px-3 py-1.5 rounded-md border border-border/20 text-xs group">
+                                                <div key={i} className="flex items-center justify-between bg-secondary/10 px-3 py-1.5 rounded-md border border-border text-xs group">
                                                     <div className="flex items-center gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
                                                         <span className="font-medium">{svc.name}</span>
@@ -413,7 +459,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <Input
                                                 id="project-start"
                                                 type="date"
-                                                className="glass-light border-border/50 h-11 [color-scheme:dark]"
+                                                className="glass-light border-border h-11 [color-scheme:dark]"
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
                                             />
@@ -425,7 +471,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <Input
                                                 id="project-deadline"
                                                 type="date"
-                                                className="glass-light border-border/50 h-11 [color-scheme:dark]"
+                                                className="glass-light border-border h-11 [color-scheme:dark]"
                                                 value={newDeadline}
                                                 onChange={(e) => setNewDeadline(e.target.value)}
                                             />
@@ -440,7 +486,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <Input
                                                 id="project-manager"
                                                 placeholder="Nome do responsável"
-                                                className="glass-light border-border/50 h-11"
+                                                className="glass-light border-border h-11"
                                                 value={newManager}
                                                 onChange={(e) => setNewManager(e.target.value)}
                                             />
@@ -459,7 +505,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                         id="project-value"
                                                         type="number"
                                                         placeholder="0,00"
-                                                        className="glass-light border-border/50 h-11 pl-10 bg-muted/20 cursor-default opacity-80 font-semibold text-primary"
+                                                        className="glass-light border-border h-11 pl-10 bg-muted/20 cursor-default opacity-80 font-semibold text-primary"
                                                         value={newValue}
                                                         readOnly
                                                     />
@@ -476,7 +522,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                         id="project-advance"
                                                         type="number"
                                                         placeholder="0,00"
-                                                        className="glass-light border-border/50 h-11 pl-10"
+                                                        className="glass-light border-border h-11 pl-10"
                                                         value={newAdvance}
                                                         onChange={(e) => setNewAdvance(Number(e.target.value))}
                                                     />
@@ -488,10 +534,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <div className="space-y-2">
                                                 <Label className="text-xs opacity-60">Status Financeiro</Label>
                                                 <Select value={newPaymentStatus} onValueChange={setNewPaymentStatus}>
-                                                    <SelectTrigger className="glass-light border-border/50 h-11">
+                                                    <SelectTrigger className="glass-light border-border h-11">
                                                         <SelectValue placeholder="Status" />
                                                     </SelectTrigger>
-                                                    <SelectContent className="glass border-border/50">
+                                                    <SelectContent className="glass border-border">
                                                         <SelectItem value="pending">Pendente</SelectItem>
                                                         <SelectItem value="partial">Parcial / Entrada</SelectItem>
                                                         <SelectItem value="paid">Quitado / Pago</SelectItem>
@@ -502,10 +548,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <div className="space-y-2">
                                                 <Label className="text-xs opacity-60">Meio de Pagamento</Label>
                                                 <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
-                                                    <SelectTrigger className="glass-light border-border/50 h-11">
+                                                    <SelectTrigger className="glass-light border-border h-11">
                                                         <SelectValue placeholder="Metodo" />
                                                     </SelectTrigger>
-                                                    <SelectContent className="glass border-border/50">
+                                                    <SelectContent className="glass border-border">
                                                         <SelectItem value="pix">PIX</SelectItem>
                                                         <SelectItem value="boleto">Boleto</SelectItem>
                                                         <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
@@ -520,10 +566,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <div className="space-y-2">
                                                 <Label className="text-xs opacity-60">Status do Contrato</Label>
                                                 <Select value={contractStatus} onValueChange={setContractStatus as any}>
-                                                    <SelectTrigger className="glass-light border-border/50 h-11">
+                                                    <SelectTrigger className="glass-light border-border h-11">
                                                         <SelectValue placeholder="Status" />
                                                     </SelectTrigger>
-                                                    <SelectContent className="glass border-border/50">
+                                                    <SelectContent className="glass border-border">
                                                         <SelectItem value="active">Ativo</SelectItem>
                                                         <SelectItem value="pending">Aguardando Assinatura</SelectItem>
                                                         <SelectItem value="expired">Expirado / Finalizado</SelectItem>
@@ -542,8 +588,8 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                             size="sm"
                                                             onClick={() => setNewPriority(p)}
                                                             className={cn(
-                                                                "h-full text-[10px] font-bold uppercase",
-                                                                newPriority === p ? "bg-primary/20 text-primary border-primary/50" : "glass-light border-border/50"
+                                                                "h-full text-[10px] font-bold ",
+                                                                newPriority === p ? "bg-primary/20 text-primary border-primary/50" : "glass-light border-border"
                                                             )}
                                                         >
                                                             {p === 'low' ? 'Baixa' : p === 'medium' ? 'Méd' : 'Alt'}
@@ -562,10 +608,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                 <div className="space-y-2">
                                                     <Label className="text-xs opacity-60">Ciclo de Cobrança</Label>
                                                     <Select value={billingCycle} onValueChange={setBillingCycle}>
-                                                        <SelectTrigger className="glass-light border-border/50 h-11">
+                                                        <SelectTrigger className="glass-light border-border h-11">
                                                             <SelectValue placeholder="Ciclo" />
                                                         </SelectTrigger>
-                                                        <SelectContent className="glass border-border/50">
+                                                        <SelectContent className="glass border-border">
                                                             <SelectItem value="semanal">Semanal</SelectItem>
                                                             <SelectItem value="quinzenal">Quinzenal</SelectItem>
                                                             <SelectItem value="mensal">Mensal</SelectItem>
@@ -582,13 +628,115 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     <Input
                                                         id="next-billing"
                                                         type="date"
-                                                        className="glass-light border-border/50 h-11 [color-scheme:dark]"
+                                                        className="glass-light border-border h-11 [color-scheme:dark]"
                                                         value={nextBillingDate}
                                                         onChange={(e) => setNextBillingDate(e.target.value)}
                                                     />
                                                 </div>
                                             </motion.div>
                                         )}
+
+                                        {/* Installment Section - Arthur Marques Sign */}
+                                        <div className="space-y-4 pt-4 border-t border-border/50">
+                                            <div className="flex items-center justify-between">
+                                                <div className="space-y-0.5">
+                                                    <Label className="text-xs font-medium text-foreground">Houve parcelamento do saldo?</Label>
+                                                    <p className="text-[10px] text-muted-foreground">O saldo remanescente será dividido em parcelas.</p>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setIsInstallmentEnabled(!isInstallmentEnabled)}
+                                                    className={cn(
+                                                        "h-8 px-3 text-[10px] font-bold  tracking-tight transition-all",
+                                                        isInstallmentEnabled ? "bg-primary/20 text-primary border border-primary/30" : "bg-muted/30 border border-transparent"
+                                                    )}
+                                                >
+                                                    {isInstallmentEnabled ? "Desativar" : "Sim, configurar"}
+                                                </Button>
+                                            </div>
+
+                                            {isInstallmentEnabled && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    className="space-y-4 overflow-hidden"
+                                                >
+                                                    <div className="flex gap-2 items-end">
+                                                        <div className="flex-1 space-y-2">
+                                                            <Label className="text-[10px] opacity-60">Número de Parcelas</Label>
+                                                            <Input
+                                                                type="number"
+                                                                min={1}
+                                                                max={24}
+                                                                value={installmentCount}
+                                                                onChange={(e) => setInstallmentCount(Number(e.target.value))}
+                                                                className="h-10 text-xs glass-light border-border"
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={generateInstallments}
+                                                            className="h-10 border-primary/50 text-primary hover:bg-primary/5 text-[10px] font-bold"
+                                                        >
+                                                            Gerar Cronograma
+                                                        </Button>
+                                                    </div>
+
+                                                    <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+                                                        {installments.map((p, idx) => (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, x: -10 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                key={idx}
+                                                                className="flex gap-2 items-center bg-muted/5 p-2 rounded-md border border-border group"
+                                                            >
+                                                                <span className="text-[10px] font-bold text-muted-foreground w-8 text-center">{idx + 1}ª</span>
+                                                                <div className="relative flex-1">
+                                                                    <div className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-bold">R$</div>
+                                                                    <Input
+                                                                        type="number"
+                                                                        value={p.amount}
+                                                                        onChange={(e) => {
+                                                                            const next = [...installments];
+                                                                            next[idx].amount = Number(e.target.value);
+                                                                            setInstallments(next);
+                                                                        }}
+                                                                        className="h-9 pl-7 text-[11px] glass-light border-border focus:border-primary/40"
+                                                                    />
+                                                                </div>
+                                                                <Input
+                                                                    type="date"
+                                                                    value={p.date}
+                                                                    onChange={(e) => {
+                                                                        const next = [...installments];
+                                                                        next[idx].date = e.target.value;
+                                                                        setInstallments(next);
+                                                                    }}
+                                                                    className="h-9 text-[11px] glass-light border-border w-36 [color-scheme:dark]"
+                                                                />
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
+
+                                                    {installments.length > 0 && (
+                                                        <div className="p-3 bg-primary/5 rounded-md border border-primary/10">
+                                                            <div className="flex justify-between items-center text-[10px]">
+                                                                <span className="text-muted-foreground">Total Parcelado:</span>
+                                                                <span className="font-bold text-primary">
+                                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                                                        installments.reduce((acc, curr) => acc + curr.amount, 0)
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </div>
                                     </div>
                                 </>
                             )}
@@ -602,7 +750,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                 value={taskInput}
                                                 onChange={(e) => setTaskInput(e.target.value)}
                                                 onKeyDown={(e) => e.key === 'Enter' && addTask()}
-                                                className="glass-light border-border/50 h-11"
+                                                className="glass-light border-border h-11"
                                             />
                                             <Button type="button" onClick={addTask} size="icon" className="shrink-0 border-primary transition-all active:scale-95">
                                                 <Plus className="h-4 w-4" />
@@ -615,7 +763,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     initial={{ opacity: 0, y: 5 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     key={task.id}
-                                                    className="flex items-center justify-between p-3 rounded-lg bg-muted/5 border border-border/20 group hover:border-primary/30 transition-colors"
+                                                    className="flex items-center justify-between p-3 rounded-lg bg-muted/5 border border-border group hover:border-primary/30 transition-colors"
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary" />
@@ -632,7 +780,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                 </motion.div>
                                             ))}
                                             {tasks.length === 0 && (
-                                                <div className="text-center py-8 border-2 border-dashed border-border/50 rounded-xl">
+                                                <div className="text-center py-8 border-2 border-dashed border-border rounded-xl">
                                                     <ListTodo className="h-8 w-8 mx-auto opacity-10 mb-2" />
                                                     <p className="text-xs text-muted-foreground">Adicione tarefas iniciais para o projeto.</p>
                                                 </div>
@@ -644,11 +792,11 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                         </motion.div>
                     </AnimatePresence>
 
-                    <div className="flex gap-3 pt-8 mt-4 border-t border-border/10">
+                    <div className="flex gap-3 pt-8 mt-4 border-t border-border">
                         {step > 1 ? (
                             <Button
                                 variant="outline"
-                                className="flex-1 glass-light border-border/50 hover:bg-muted/30"
+                                className="flex-1 glass-light border-border hover:bg-muted/30"
                                 onClick={prevStep}
                             >
                                 <ChevronLeft className="h-4 w-4 mr-2" /> Voltar
@@ -656,7 +804,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                         ) : (
                             <Button
                                 variant="ghost"
-                                className="flex-1 border border-transparent hover:border-border/50"
+                                className="flex-1 border border-transparent hover:border-border"
                                 onClick={() => setOpen(false)}
                             >
                                 Cancelar
@@ -691,3 +839,5 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         </Dialog>
     );
 }
+
+

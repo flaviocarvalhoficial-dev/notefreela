@@ -221,7 +221,7 @@ export function TimelineSection({
   if (isLoading) {
     return (
       <div className="h-[300px] flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/20" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -233,15 +233,15 @@ export function TimelineSection({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      <header className="p-4 border-b border-border/40 flex items-center justify-between shrink-0">
+      <header className="p-4 border-b border-border flex items-center justify-between shrink-0">
         {/* ... (Existing header content) ... */}
         <div className="flex items-center gap-4">
-          <h2 className="text-[10px] font-bold text-muted-foreground/30 leading-none">Cronograma</h2>
+          <h2 className="text-[10px] font-medium text-muted-foreground leading-none  tracking-tight">Cronograma</h2>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger className="h-7 w-[160px] bg-muted/30 border-none text-[10px] font-semibold rounded-md focus:ring-0">
+            <SelectTrigger className="h-7 w-[160px] bg-muted/30 border-none text-[10px] font-medium rounded-md focus:ring-0">
               <SelectValue placeholder="Projeto" />
             </SelectTrigger>
-            <SelectContent className="notion-card border-border/40">
+            <SelectContent className="notion-card border-border">
               <SelectItem value="all">Todos os Projetos</SelectItem>
               {projects.map(p => (
                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -255,7 +255,7 @@ export function TimelineSection({
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(d => {
               const n = new Date(d); n.setDate(n.getDate() - 7); return n;
             })}><ChevronLeft className="h-3 w-3" /></Button>
-            <Button variant="ghost" size="sm" className="text-[10px] font-semibold px-3 h-6" onClick={() => setCurrentDate(new Date())}>Hoje</Button>
+            <Button variant="ghost" size="sm" className="text-[10px] font-medium px-3 h-6" onClick={() => setCurrentDate(new Date())}>Hoje</Button>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(d => {
               const n = new Date(d); n.setDate(n.getDate() + 7); return n;
             })}><ChevronRight className="h-3 w-3" /></Button>
@@ -267,7 +267,7 @@ export function TimelineSection({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground/40 hover:text-foreground"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
               onClick={onToggleProjects}
             >
               {projectsCollapsed ? <Maximize2 className="h-3.5 w-3.5" /> : <Minimize2 className="h-3.5 w-3.5" />}
@@ -286,12 +286,12 @@ export function TimelineSection({
           onPointerLeave={endDrag}>
           <div className="min-w-max relative flex flex-col bg-background/50" style={{ height: totalHeight + 100 }}>
             {/* Header X-Axis */}
-            <div className="sticky top-0 z-50 bg-background border-b border-border/20 shadow-sm">
+            <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
               {/* Months Row */}
               <div className="flex">
                 {monthsInTrack.map((m, idx) => (
-                  <div key={idx} className="h-7 flex items-center px-4 border-r border-border/10 overflow-hidden" style={{ width: m.width }}>
-                    <span className="text-[9px] font-bold text-muted-foreground/10 whitespace-nowrap">
+                  <div key={idx} className="h-7 flex items-center px-4 border-r border-border overflow-hidden" style={{ width: m.width }}>
+                    <span className="text-[9px] font-medium text-muted-foreground whitespace-nowrap  tracking-tight">
                       {m.label}
                     </span>
                   </div>
@@ -301,12 +301,12 @@ export function TimelineSection({
               <div className="flex">
                 {daysInRange.map((d, idx) => (
                   <div key={idx} className={cn(
-                    "shrink-0 flex items-center justify-center border-r border-border/5 h-8",
+                    "shrink-0 flex items-center justify-center border-r border-border h-8",
                     isToday(d) && "bg-primary/5 shadow-[inset_0_0_0_1px_rgba(var(--primary),0.1)]"
                   )} style={{ width: slotPx }}>
                     <span className={cn(
-                      "text-[10px] font-semibold tabular-nums",
-                      isToday(d) ? "text-primary" : "text-muted-foreground/20"
+                      "text-[10px] font-medium tabular-nums",
+                      isToday(d) ? "text-foreground font-semibold" : "text-muted-foreground"
                     )}>
                       {d.getDate()}
                     </span>
@@ -316,7 +316,7 @@ export function TimelineSection({
             </div>
 
             {/* Grid Area */}
-            <div className="relative flex-1 min-h-[300px]" style={{ width: daysInRange.length * slotPx }}>
+            <div className="relative flex-1 min-h-[200px]" style={{ width: daysInRange.length * slotPx }}>
               {/* Vertical Grid Lines */}
               <div className="absolute inset-y-0 left-0 right-0 flex pointer-events-none">
                 {daysInRange.map((d, idx) => (
@@ -382,14 +382,14 @@ export function TimelineSection({
                               {/* Gradient Overlay */}
                               <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
 
-                              <p className="text-[10px] font-semibold leading-none relative z-10 text-zinc-900 group-hover:text-black whitespace-nowrap drop-shadow-sm">
+                              <p className="text-[10px] font-medium leading-none relative z-10 text-zinc-900 group-hover:text-black whitespace-nowrap drop-shadow-sm">
                                 {a.title}
                               </p>
                             </div>
                           </ContextMenuTrigger>
                           <ContextMenuContent className="w-48">
                             <ContextMenuItem
-                              className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-medium"
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-normal"
                               onClick={() => handleDelete(a.id, a.type)}
                             >
                               Excluir {a.type === 'task' ? 'Tarefa' : 'Evento'}
@@ -398,9 +398,9 @@ export function TimelineSection({
                         </ContextMenu>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent className="notion-card border-border/40 px-3 py-2">
-                      <p className="text-xs font-semibold mb-0.5">{a.title}</p>
-                      <p className="text-[9px] font-bold text-muted-foreground/40">
+                    <TooltipContent className="notion-card border-border px-3 py-2">
+                      <p className="text-xs font-medium mb-0.5">{a.title}</p>
+                      <p className="text-[9px] font-medium text-muted-foreground  tracking-tight">
                         {a.projectName ? `${a.meta} • ${a.projectName}` : a.meta}
                       </p>
                     </TooltipContent>
@@ -426,3 +426,6 @@ export function TimelineSection({
     </motion.section >
   );
 }
+
+
+

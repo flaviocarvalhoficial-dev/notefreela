@@ -35,7 +35,7 @@ export function ActivityDetailsDrawer({
 }) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="glass border-border/50">
+      <DrawerContent className="glass border-border">
         <DrawerHeader className="text-left">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -59,7 +59,7 @@ export function ActivityDetailsDrawer({
                     </Button>
                   }
                 />
-                <Badge variant="secondary" className="glass-light border-border/50">
+                <Badge variant="secondary" className="glass-light border-border">
                   {typeLabel(activity.type)}
                 </Badge>
               </div>
@@ -68,7 +68,7 @@ export function ActivityDetailsDrawer({
         </DrawerHeader>
 
         <div className="px-4 pb-5">
-          <div className="glass-light rounded-2xl border border-border/50 p-4">
+          <div className="glass-light rounded-2xl border border-border p-4">
             <div className="grid gap-3">
               <div className="flex items-center justify-between gap-4">
                 <span className="text-xs text-muted-foreground">Participantes</span>
@@ -82,7 +82,7 @@ export function ActivityDetailsDrawer({
                   {activity.avatars.map((it) => (
                     <div
                       key={it}
-                      className="h-8 w-8 rounded-full glass-light border border-border/60 flex items-center justify-center text-[11px] font-semibold"
+                      className="h-8 w-8 rounded-full glass-light border border-border flex items-center justify-center text-[11px] font-semibold"
                       aria-label={`Participante ${it}`}
                       title={it}
                     >
@@ -90,7 +90,7 @@ export function ActivityDetailsDrawer({
                     </div>
                   ))}
                   {activity.extraCount ? (
-                    <div className="h-8 px-3 rounded-full glass-light border border-border/60 flex items-center text-[11px] font-semibold">
+                    <div className="h-8 px-3 rounded-full glass-light border border-border flex items-center text-[11px] font-semibold">
                       +{activity.extraCount}
                     </div>
                   ) : null}
@@ -119,3 +119,4 @@ export function ActivityDetailsDrawer({
     </Drawer>
   );
 }
+

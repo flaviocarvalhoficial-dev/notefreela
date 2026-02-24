@@ -174,19 +174,19 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
         <Dialog open={open} onOpenChange={setOpen}>
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
             <DialogContent
-                className="border-border/50 max-w-lg max-h-[90vh] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%]"
+                className="border-border max-w-lg max-h-[90vh] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%]"
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
             >
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-semibold">Editar Projeto</DialogTitle>
+                    <DialogTitle className="text-xl font-medium tracking-tight">Editar Projeto</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
                     <div className="space-y-2">
                         <Label htmlFor="edit-project-name">Nome do Projeto</Label>
                         <Input
                             id="edit-project-name"
-                            className="glass-light border-border/50"
+                            className="glass-light border-border"
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                         />
@@ -204,7 +204,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <Label htmlFor="edit-project-desc">Descrição</Label>
                         <Input
                             id="edit-project-desc"
-                            className="glass-light border-border/50"
+                            className="glass-light border-border"
                             value={newDesc}
                             onChange={(e) => setNewDesc(e.target.value)}
                         />
@@ -216,7 +216,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             <div className="flex-1">
                                 <Input
                                     placeholder="Serviço (ex: Website)"
-                                    className="glass-light border-border/50 h-9 text-xs"
+                                    className="glass-light border-border h-9 text-xs"
                                     value={serviceInput}
                                     onChange={(e) => setServiceInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
@@ -226,7 +226,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                                 <Input
                                     type="number"
                                     placeholder="R$ 0,00"
-                                    className="glass-light border-border/50 h-9 text-xs"
+                                    className="glass-light border-border h-9 text-xs"
                                     value={servicePriceInput}
                                     onChange={(e) => setServicePriceInput(e.target.value ? Number(e.target.value) : "")}
                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
@@ -243,13 +243,13 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         </div>
                         <div className="flex flex-col gap-1.5 mt-3">
                             {services.map((svc, i) => (
-                                <div key={i} className="flex items-center justify-between bg-secondary/10 px-3 py-1.5 rounded-md border border-border/20 text-xs group">
+                                <div key={i} className="flex items-center justify-between bg-secondary/10 px-3 py-1.5 rounded-md border border-border text-xs group">
                                     <div className="flex items-center gap-2">
                                         <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
                                         <span className="font-medium">{svc.name}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-primary font-semibold">
+                                        <span className="text-primary font-medium">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price)}
                                         </span>
                                         <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
@@ -268,10 +268,10 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label className="text-xs opacity-60">Faturamento</Label>
                             <Select value={billingType} onValueChange={(v: any) => setBillingType(v)}>
-                                <SelectTrigger className="glass-light border-border/50 h-10">
+                                <SelectTrigger className="glass-light border-border h-10">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="glass border-border/50 z-50">
+                                <SelectContent className="glass border-border z-50">
                                     <SelectItem value="pontual">Pontual</SelectItem>
                                     <SelectItem value="recorrente">Recorrente</SelectItem>
                                 </SelectContent>
@@ -280,10 +280,10 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label className="text-xs opacity-60">Tipo de Serviço</Label>
                             <Select value={serviceType} onValueChange={setServiceType}>
-                                <SelectTrigger className="glass-light border-border/50 h-10">
+                                <SelectTrigger className="glass-light border-border h-10">
                                     <SelectValue placeholder="Selecione..." />
                                 </SelectTrigger>
-                                <SelectContent className="glass border-border/50 z-50">
+                                <SelectContent className="glass border-border z-50">
                                     <SelectItem value="design">Design</SelectItem>
                                     <SelectItem value="dev">Desenvolvimento</SelectItem>
                                     <SelectItem value="social_media">Social Media</SelectItem>
@@ -300,7 +300,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             <Label htmlFor="edit-project-client">Cliente</Label>
                             <Input
                                 id="edit-project-client"
-                                className="glass-light border-border/50 h-10"
+                                className="glass-light border-border h-10"
                                 value={newClient}
                                 onChange={(e) => setNewClient(e.target.value)}
                             />
@@ -309,7 +309,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             <Label htmlFor="edit-project-manager">Responsável</Label>
                             <Input
                                 id="edit-project-manager"
-                                className="glass-light border-border/50 h-10"
+                                className="glass-light border-border h-10"
                                 value={newManager}
                                 onChange={(e) => setNewManager(e.target.value)}
                             />
@@ -321,10 +321,10 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             <div className="space-y-2">
                                 <Label className="text-xs opacity-60">Ciclo</Label>
                                 <Select value={billingCycle} onValueChange={setBillingCycle}>
-                                    <SelectTrigger className="glass-light border-border/50 h-10">
+                                    <SelectTrigger className="glass-light border-border h-10">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="glass border-border/50 z-50">
+                                    <SelectContent className="glass border-border z-50">
                                         <SelectItem value="semanal">Semanal</SelectItem>
                                         <SelectItem value="quinzenal">Quinzenal</SelectItem>
                                         <SelectItem value="mensal">Mensal</SelectItem>
@@ -337,7 +337,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                                 <Label className="text-xs opacity-60">Próxima Cobrança</Label>
                                 <Input
                                     type="date"
-                                    className="glass-light border-border/50 h-10 [color-scheme:dark]"
+                                    className="glass-light border-border h-10 [color-scheme:dark]"
                                     value={nextBillingDate}
                                     onChange={(e) => setNextBillingDate(e.target.value)}
                                 />
@@ -349,11 +349,11 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label htmlFor="edit-project-value">Valor Total (R$)</Label>
                             <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-semibold">R$</div>
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium">R$</div>
                                 <Input
                                     id="edit-project-value"
                                     type="number"
-                                    className="glass-light border-border/50 pl-10 bg-muted/20 cursor-default opacity-80 font-semibold text-primary/80"
+                                    className="glass-light border-border pl-10 bg-muted/20 cursor-default opacity-80 font-medium text-primary/80"
                                     value={newValue}
                                     readOnly
                                 />
@@ -363,11 +363,11 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label htmlFor="edit-project-advance">Valor de Entrada (R$)</Label>
                             <div className="relative">
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-semibold">R$</div>
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium">R$</div>
                                 <Input
                                     id="edit-project-advance"
                                     type="number"
-                                    className="glass-light border-border/50 pl-10"
+                                    className="glass-light border-border pl-10"
                                     value={newAdvance}
                                     onChange={(e) => setNewAdvance(Number(e.target.value))}
                                 />
@@ -379,10 +379,10 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label>Status Projeto</Label>
                             <Select value={newStatus} onValueChange={(v: any) => setNewStatus(v)}>
-                                <SelectTrigger className="glass-light border-border/50 h-10">
+                                <SelectTrigger className="glass-light border-border h-10">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="glass border-border/50 z-50">
+                                <SelectContent className="glass border-border z-50">
                                     <SelectItem value="planning">Planejamento</SelectItem>
                                     <SelectItem value="active">Em Progresso</SelectItem>
                                     <SelectItem value="review">Em Revisão</SelectItem>
@@ -394,10 +394,10 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label>Status Contrato</Label>
                             <Select value={contractStatus} onValueChange={(v: any) => setContractStatus(v)}>
-                                <SelectTrigger className="glass-light border-border/50 h-10">
+                                <SelectTrigger className="glass-light border-border h-10">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="glass border-border/50 z-50">
+                                <SelectContent className="glass border-border z-50">
                                     <SelectItem value="active">Ativo</SelectItem>
                                     <SelectItem value="pending">Pendente</SelectItem>
                                     <SelectItem value="expired">Expirado</SelectItem>
@@ -410,10 +410,10 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label className="text-xs opacity-60">Status Financeiro</Label>
                             <Select value={newPaymentStatus} onValueChange={setNewPaymentStatus}>
-                                <SelectTrigger className="glass-light border-border/50 h-10">
+                                <SelectTrigger className="glass-light border-border h-10">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
-                                <SelectContent className="glass border-border/50 z-50">
+                                <SelectContent className="glass border-border z-50">
                                     <SelectItem value="pending">Pendente</SelectItem>
                                     <SelectItem value="partial">Parcial / Entrada</SelectItem>
                                     <SelectItem value="paid">Quitado / Pago</SelectItem>
@@ -424,10 +424,10 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                         <div className="space-y-2">
                             <Label className="text-xs opacity-60">Meio de Pagamento</Label>
                             <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
-                                <SelectTrigger className="glass-light border-border/50 h-10">
+                                <SelectTrigger className="glass-light border-border h-10">
                                     <SelectValue placeholder="Metodo" />
                                 </SelectTrigger>
-                                <SelectContent className="glass border-border/50 z-50">
+                                <SelectContent className="glass border-border z-50">
                                     <SelectItem value="pix">PIX</SelectItem>
                                     <SelectItem value="boleto">Boleto</SelectItem>
                                     <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
@@ -444,7 +444,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             <Input
                                 id="edit-project-start"
                                 type="date"
-                                className="glass-light border-border/50 [color-scheme:dark]"
+                                className="glass-light border-border [color-scheme:dark]"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
                             />
@@ -455,7 +455,7 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                             <Input
                                 id="edit-project-deadline"
                                 type="date"
-                                className="glass-light border-border/50 [color-scheme:dark]"
+                                className="glass-light border-border [color-scheme:dark]"
                                 value={newDeadline}
                                 onChange={(e) => setNewDeadline(e.target.value)}
                             />
@@ -465,13 +465,13 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
                     <div className="flex gap-3 pt-4">
                         <Button
                             variant="outline"
-                            className="flex-1 glass-light border-border/50"
+                            className="flex-1 glass-light border-border"
                             onClick={() => setOpen(false)}
                         >
                             Cancelar
                         </Button>
                         <Button
-                            className="flex-1 border-primary transition-all active:scale-95 font-bold"
+                            className="flex-1 border-primary transition-all active:scale-95 font-medium"
                             onClick={() => updateProjectMutation.mutate()}
                             disabled={updateProjectMutation.isPending || !newName}
                         >
@@ -485,3 +485,4 @@ export function EditProjectDialog({ project, open: externalOpen, onOpenChange: s
         </Dialog>
     );
 }
+

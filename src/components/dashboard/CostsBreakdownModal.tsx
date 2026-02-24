@@ -101,8 +101,8 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl border-border/40 bg-sidebar/95 backdrop-blur-xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-                <DialogHeader className="p-6 border-b border-border/10">
+            <DialogContent className="max-w-2xl border-border bg-sidebar/95 backdrop-blur-xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+                <DialogHeader className="p-6 border-b border-border">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
@@ -116,17 +116,17 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                     </div>
                 </DialogHeader>
 
-                <div className="flex items-center gap-2 px-6 py-3 bg-muted/5 border-b border-border/10 overflow-x-auto custom-scrollbar">
-                    <Filter className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+                <div className="flex items-center gap-2 px-6 py-3 bg-muted/5 border-b border-border overflow-x-auto custom-scrollbar">
+                    <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     {categories.map(cat => (
                         <button
                             key={cat.value}
                             onClick={() => setFilterCategory(cat.value)}
                             className={cn(
-                                "text-[10px] font-semibold px-3 py-1 rounded-full transition-all border whitespace-nowrap",
+                                "text-[10px] font-medium px-3 py-1 rounded-full transition-all border whitespace-nowrap",
                                 filterCategory === cat.value
                                     ? "bg-primary/20 border-primary/30 text-primary"
-                                    : "bg-background/20 border-border/30 text-muted-foreground hover:bg-background/40"
+                                    : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
                             )}
                         >
                             {cat.label}
@@ -143,7 +143,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                     ) : filteredCosts.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="h-12 w-12 rounded-full bg-muted/10 flex items-center justify-center mx-auto mb-3">
-                                <TrendingDown className="h-6 w-6 text-muted-foreground/20" />
+                                <TrendingDown className="h-6 w-6 text-muted-foreground" />
                             </div>
                             <p className="text-sm text-muted-foreground font-medium">Nenhum custo encontrado neste filtro.</p>
                         </div>
@@ -152,14 +152,14 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                             {filteredCosts.map((cost) => (
                                 <div
                                     key={cost.id}
-                                    className="group flex items-center justify-between p-3 rounded-xl border border-border/30 bg-card/40 hover:bg-muted/10 transition-all"
+                                    className="group flex items-center justify-between p-3 rounded-xl border border-border bg-card/40 hover:bg-muted/10 transition-all"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
                                         <div className="p-2 rounded-lg bg-muted/10 text-muted-foreground group-hover:scale-110 transition-transform">
                                             <Tag className="h-3.5 w-3.5" />
                                         </div>
                                         <div className="min-w-0">
-                                            <h4 className="text-sm font-semibold truncate text-foreground/90">{cost.title}</h4>
+                                            <h4 className="text-sm font-medium truncate text-foreground">{cost.title}</h4>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                                     <Calendar className="h-2.5 w-2.5" />
@@ -167,7 +167,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                                                 </span>
                                                 {cost.projects?.name && (
                                                     <>
-                                                        <span className="text-[10px] text-muted-foreground/30">•</span>
+                                                        <span className="text-[10px] text-muted-foreground">•</span>
                                                         <span className="text-[10px] text-primary/70 font-medium flex items-center gap-1">
                                                             <Briefcase className="h-2.5 w-2.5" />
                                                             {cost.projects.name}
@@ -179,7 +179,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                                     </div>
 
                                     <div className="flex items-center gap-2 shrink-0">
-                                        <span className="text-sm font-bold text-red-500/90 tabular-nums">
+                                        <span className="text-sm font-medium text-red-500/90 tabular-nums">
                                             {formatCurrency(cost.amount)}
                                         </span>
                                         <div className="flex items-center gap-1">
@@ -188,7 +188,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                                                     setEditingCost(cost);
                                                     setIsEditOpen(true);
                                                 }}
-                                                className="p-1.5 rounded-md hover:bg-amber-500/10 text-muted-foreground/40 hover:text-amber-500 transition-colors"
+                                                className="p-1.5 rounded-md hover:bg-amber-500/10 text-muted-foreground hover:text-amber-500 transition-colors"
                                                 title="Editar"
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
@@ -200,7 +200,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                                                     }
                                                 }}
                                                 disabled={deleteCostMutation.isPending}
-                                                className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground/40 hover:text-red-500 transition-colors disabled:opacity-50"
+                                                className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
                                                 title="Excluir"
                                             >
                                                 {deleteCostMutation.isPending && deleteCostMutation.variables === cost.id ? (
@@ -217,10 +217,10 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                     )}
                 </div>
 
-                <div className="p-6 border-t border-border/10 bg-muted/5 flex items-center justify-between mt-auto">
+                <div className="p-6 border-t border-border bg-muted/5 flex items-center justify-between mt-auto">
                     <div>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Acumulado</p>
-                        <p className="text-lg font-bold text-red-500">
+                        <p className="text-[10px] text-muted-foreground  font-medium tracking-tight">Total Acumulado</p>
+                        <p className="text-lg font-medium text-red-500">
                             {formatCurrency(filteredCosts.reduce((acc, c) => acc + c.amount, 0))}
                         </p>
                     </div>
@@ -238,3 +238,6 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
         </Dialog>
     );
 }
+
+
+

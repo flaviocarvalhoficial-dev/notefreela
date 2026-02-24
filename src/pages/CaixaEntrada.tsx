@@ -102,11 +102,11 @@ const getTypeIcon = (type: string) => {
 
 const getTypeColor = (type: string) => {
     switch (type) {
-        case 'idea': return "text-amber-500 bg-amber-500/10";
-        case 'prompt': return "text-emerald-500 bg-emerald-500/10";
-        case 'snippet': return "text-blue-500 bg-blue-500/10";
-        case 'note': return "text-indigo-500 bg-indigo-500/10";
-        default: return "text-muted-foreground bg-muted";
+        case 'idea': return "text-primary";
+        case 'prompt': return "text-primary";
+        case 'snippet': return "text-primary";
+        case 'note': return "text-primary";
+        default: return "text-muted-foreground";
     }
 };
 
@@ -130,7 +130,7 @@ const ItemCard = ({
 }) => {
     return (
         <div className={cn(
-            "bento-card group transition-all bg-card border border-border/40 shadow-sm relative overflow-hidden",
+            "bento-card group transition-all bg-card border border-border shadow-sm relative overflow-hidden",
             viewMode === 'grid' ? "p-4 flex flex-col justify-between gap-2 h-[200px]" : "p-2 flex items-center justify-between",
             isOverlay ? "shadow-xl border-primary/50 scale-105 rotate-2 cursor-grabbing" : "hover:border-primary/30 cursor-grab active:cursor-grabbing"
         )}>
@@ -139,7 +139,7 @@ const ItemCard = ({
                     {onCopy && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onCopy(e, item.content); }}
-                            className="p-1.5 rounded-md bg-background/80 hover:bg-background border border-border/50 shadow-sm transition-all"
+                            className="p-1.5 rounded-md bg-background/80 hover:bg-background border border-border shadow-sm transition-all"
                             title="Copiar conteúdo"
                         >
                             {copiedId === item.id ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3 text-muted-foreground hover:text-primary" />}
@@ -148,11 +148,11 @@ const ItemCard = ({
                     {(onEdit || onDelete) && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <button className="p-1.5 rounded-md bg-background/80 hover:bg-background border border-border/50 shadow-sm text-muted-foreground hover:text-foreground">
+                                <button className="p-1.5 rounded-md bg-background/80 hover:bg-background border border-border shadow-sm text-muted-foreground hover:text-foreground">
                                     <MoreHorizontal className="h-3 w-3" />
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="glass border-border/50">
+                            <DropdownMenuContent align="end" className="glass border-border">
                                 {onEdit && (
                                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="gap-2 cursor-pointer">
                                         <Edit className="h-3.5 w-3.5" /> Editar
@@ -175,7 +175,7 @@ const ItemCard = ({
                         {getTypeIcon(item.type)}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-foreground tracking-tight text-xs truncate max-w-[140px] pr-2">
+                        <h3 className="font-medium text-foreground tracking-tight text-xs truncate max-w-[140px] pr-2">
                             {item.title || "Captura"}
                         </h3>
                         {/* Meta info hidden in overlay minimal view or adjust as needed */}
@@ -197,7 +197,7 @@ const ItemCard = ({
                 {viewMode === 'grid' && (
                     <>
                         <div className="flex-1 overflow-hidden">
-                            <div className="text-[10px] text-muted-foreground leading-relaxed bg-muted/5 p-2 rounded-md border border-border/10 line-clamp-4 prose prose-invert prose-xs">
+                            <div className="text-[10px] text-muted-foreground leading-relaxed bg-muted/5 p-2 rounded-md border border-border line-clamp-4 prose prose-invert prose-xs">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {item.content}
                                 </ReactMarkdown>
@@ -206,7 +206,7 @@ const ItemCard = ({
                         {!isOverlay && (
                             <div className="flex flex-wrap gap-1 mt-1">
                                 {(item.tags || []).slice(0, 3).map((tag, idx) => (
-                                    <Badge key={idx} variant="outline" className="text-[8px] px-1 py-0 h-3.5 bg-background/50 border-border/50 text-muted-foreground">
+                                    <Badge key={idx} variant="outline" className="text-[8px] px-1 py-0 h-3.5 bg-background/50 border-border text-muted-foreground">
                                         #{tag}
                                     </Badge>
                                 ))}
@@ -216,7 +216,7 @@ const ItemCard = ({
                 )}
 
                 {viewMode === 'list' && (
-                    <p className="text-[11px] text-muted-foreground/60 line-clamp-1 flex-1 px-4 border-l border-border/10">
+                    <p className="text-[11px] text-muted-foreground line-clamp-1 flex-1 px-4 border-l border-border">
                         {item.content}
                     </p>
                 )}
@@ -249,13 +249,13 @@ const DroppableFolder = ({ folder, count, isActive, onClick, onRename, onDelete,
     return (
         <motion.div
             ref={setNodeRef}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={onClick}
             className={cn(
-                "cursor-pointer p-3 rounded-xl border transition-all flex flex-col gap-2 relative overflow-hidden group",
-                isActive ? "bg-primary/20 border-primary/40 shadow-sm" : "bg-card hover:bg-muted/50 border-border/40",
-                isOver ? "ring-2 ring-primary ring-offset-2 bg-primary/30 scale-105 z-10" : ""
+                "cursor-pointer p-3 rounded-lg border transition-all flex flex-col gap-2 relative overflow-hidden group",
+                isActive ? "bg-primary/5 border-primary/20 shadow-sm" : "bg-card hover:bg-muted/50 border-border",
+                isOver ? "ring-2 ring-primary bg-primary/10 z-10" : ""
             )}
         >
             {children}
@@ -703,13 +703,13 @@ const CaixaEntrada = () => {
                 <header className="heading-container">
                     <div className="flex items-center gap-3">
                         <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Rede de Captura</span>
+                        <span className="text-[10px] font-medium  tracking-tight text-primary/60">Workspace / Rede de Captura</span>
                     </div>
 
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-2">
-                            <h1 className="text-3xl font-black tracking-tight text-foreground">Caixa de Entrada</h1>
-                            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Fragmentos de conhecimento, prompts e diretrizes criativas em trânsito.</p>
+                            <h1 className="text-3xl font-medium tracking-tight text-foreground">Caixa de Entrada</h1>
+                            <p className="text-muted-foreground font-normal text-sm leading-relaxed">Fragmentos de conhecimento, prompts e diretrizes criativas em trânsito.</p>
                         </div>
                         <Button onClick={() => {
                             const knownFolders = JSON.parse(localStorage.getItem("inbox_folders") || "[]");
@@ -722,73 +722,72 @@ const CaixaEntrada = () => {
                                 setNewCategory("");
                             }
                             setIsAdding(true);
-                        }} className="font-bold rounded-xl px-8 h-12 border-primary transition-all active:scale-95">
+                        }} className="font-medium rounded-md px-8 h-12 border-primary transition-all active:scale-95">
                             <Plus className="h-5 w-5 mr-2" /> Novo Registro
                         </Button>
                     </div>
                 </header>
-                <div className="relative w-full h-32 bg-card border border-border rounded-[24px] overflow-hidden group shadow-[var(--shadow-card)]">
-                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                        style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+                <div className="relative w-full h-32 bg-card border border-border rounded-lg overflow-hidden group shadow-sm">
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" />
 
                     <div className="absolute inset-0 flex items-center justify-center gap-12">
                         <div className="flex flex-col items-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity translate-x-4">
                             <div className="w-10 h-8 rounded-t-full rounded-bl-full border border-border bg-muted/20" />
-                            <span className="text-[8px] font-black uppercase text-muted-foreground">Emissor</span>
+                            <span className="text-[8px] font-medium  text-muted-foreground">Emissor</span>
                         </div>
 
                         <div className="relative w-48 h-px bg-border/20">
                             <motion.div
-                                className="absolute top-1/2 left-0 w-2 h-2 rounded-full bg-primary/40 -translate-y-1/2 blur-[2px]"
+                                className="absolute top-1/2 left-0 w-2 h-2 rounded-full bg-primary/20 -translate-y-1/2"
                                 animate={{ left: ["0%", "100%"] }}
                                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                             />
                             <motion.div
-                                className="absolute top-1/2 left-0 w-1 h-1 rounded-full bg-primary -translate-y-1/2"
+                                className="absolute top-1/2 left-0 w-1 h-1 rounded-full bg-primary/40 -translate-y-1/2"
                                 animate={{ left: ["0%", "100%"] }}
                                 transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
                             />
                         </div>
 
                         <div className="flex flex-col items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity -translate-x-4">
-                            <div className="w-10 h-8 rounded-t-full rounded-br-full border border-primary/40 bg-primary/5" />
-                            <span className="text-[8px] font-black uppercase text-primary">Receptor</span>
+                            <div className="w-10 h-8 rounded-t-full rounded-br-full border border-primary/20 bg-primary/5" />
+                            <span className="text-[8px] font-medium  text-primary">Receptor</span>
                         </div>
                     </div>
 
                     <div className="absolute bottom-4 left-6 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30">Fluxo de Dados Ativo</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
+                        <span className="text-[10px] font-medium  tracking-tight text-muted-foreground">Fluxo de Dados Ativo</span>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-6">
                     <div className="space-y-6">
-                        <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-muted/5 p-4 rounded-2xl border border-border/20 backdrop-blur-sm">
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-muted/5 p-4 rounded-2xl border border-border backdrop-blur-sm">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Pesquisar em suas capturas..."
-                                    className="pl-10 glass-light border-border/40 focus:border-primary/40 h-10 w-full"
+                                    className="pl-10 glass-light border-border focus:border-primary/40 h-10 w-full"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
 
                             <div className="flex flex-wrap items-center gap-4">
-                                <div className="hidden xl:flex items-center gap-4 pr-4 border-r border-border/20">
+                                <div className="hidden xl:flex items-center gap-4 pr-4 border-r border-border">
                                     <div className="flex flex-col">
-                                        <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">Capturas</span>
-                                        <span className="text-xs font-semibold">{filteredItems.length}</span>
+                                        <span className="text-[8px] font-medium text-muted-foreground  tracking-tight">Capturas</span>
+                                        <span className="text-xs font-medium">{filteredItems.length}</span>
                                     </div>
                                 </div>
 
 
-                                <div className="flex items-center gap-1 bg-background/50 p-1 rounded-lg border border-border/20 ml-auto lg:ml-0">
+                                <div className="flex items-center gap-1 bg-background/50 p-1 rounded-md border border-border ml-auto lg:ml-0">
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className={cn("h-8 w-8 rounded-md transition-all", viewMode === 'grid' ? "bg-primary/20 text-primary shadow-sm" : "text-muted-foreground")}
+                                        className={cn("h-8 w-8 rounded-md transition-all", viewMode === 'grid' ? "bg-primary/5 text-primary shadow-sm" : "text-muted-foreground")}
                                         onClick={() => setViewMode('grid')}
                                     >
                                         <LayoutGrid className="h-3.5 w-3.5" />
@@ -836,7 +835,7 @@ const CaixaEntrada = () => {
                                                                 "p-2 rounded-md transition-all border",
                                                                 newType === t
                                                                     ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
-                                                                    : "border-border/50 hover:border-border text-muted-foreground"
+                                                                    : "border-border hover:border-border text-muted-foreground"
                                                             )}
                                                             title={t}
                                                         >
@@ -876,22 +875,22 @@ const CaixaEntrada = () => {
                         {/* Seção de Caixas */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <h2 className="text-[10px] font-medium text-muted-foreground  tracking-tight flex items-center gap-2">
                                     <Inbox className="h-3 w-3" /> Caixas / Projetos
                                 </h2>
                                 <div className="flex items-center gap-3">
                                     <div className="relative group/boxsearch">
-                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 group-focus-within/boxsearch:text-primary/50 transition-colors" />
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground group-focus-within/boxsearch:text-primary/50 transition-colors" />
                                         <Input
                                             placeholder="Localizar caixa..."
-                                            className="h-8 w-32 md:w-48 pl-8 text-[11px] glass-light border-border/30 focus:border-primary/40 transition-all rounded-lg"
+                                            className="h-8 w-32 md:w-48 pl-8 text-[11px] glass-light border-border focus:border-primary/40 transition-all rounded-lg"
                                             value={boxSearchQuery}
                                             onChange={(e) => setBoxSearchQuery(e.target.value)}
                                         />
                                         {boxSearchQuery && (
                                             <button
                                                 onClick={() => setBoxSearchQuery("")}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-foreground transition-colors"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                             >
                                                 <X className="h-3 w-3" />
                                             </button>
@@ -910,7 +909,7 @@ const CaixaEntrada = () => {
                                                 setSearchParams(prev => { prev.set("refresh", Date.now().toString()); return prev; });
                                             }
                                         }}
-                                        className="h-8 text-[10px] font-semibold text-muted-foreground/50 hover:text-foreground"
+                                        className="h-8 text-[10px] font-medium text-muted-foreground hover:text-foreground"
                                     >
                                         Reset
                                     </Button>
@@ -921,7 +920,7 @@ const CaixaEntrada = () => {
                                             setNewFolderName("");
                                             setIsCreatingFolder(true);
                                         }}
-                                        className="h-8 text-[11px] font-semibold border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/40 gap-2 whitespace-nowrap"
+                                        className="h-8 text-[11px] font-medium border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/40 gap-2 whitespace-nowrap rounded-md"
                                     >
                                         <Plus className="h-3 w-3" /> Nova Caixa
                                     </Button>
@@ -952,9 +951,9 @@ const CaixaEntrada = () => {
 
                                     if (sortedFolders.length === 0) {
                                         return (
-                                            <div className="col-span-full py-12 text-center border-2 border-dashed border-border/20 rounded-2xl bg-muted/5 flex flex-col items-center justify-center gap-3">
-                                                <Search className="h-8 w-8 text-muted-foreground/10" />
-                                                <p className="text-sm text-muted-foreground/40 font-medium">
+                                            <div className="col-span-full py-12 text-center border-2 border-dashed border-border rounded-2xl bg-muted/5 flex flex-col items-center justify-center gap-3">
+                                                <Search className="h-8 w-8 text-muted-foreground" />
+                                                <p className="text-sm text-muted-foreground font-medium">
                                                     {boxSearchQuery ? `Nenhuma caixa chamada "${boxSearchQuery}"` : "Nenhuma caixa criada"}
                                                 </p>
                                                 {boxSearchQuery && (
@@ -995,10 +994,10 @@ const CaixaEntrada = () => {
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
                                                     <span className={cn(
-                                                        "text-[11px] font-bold truncate pr-6",
-                                                        isActive ? "text-primary" : "text-foreground/80"
+                                                        "text-[11px] font-medium truncate pr-6 tracking-tight",
+                                                        isActive ? "text-primary" : "text-foreground"
                                                     )}>{folder}</span>
-                                                    <span className="text-[9px] text-muted-foreground/60 font-medium">{count} {count === 1 ? 'item' : 'itens'}</span>
+                                                    <span className="text-[9px] text-muted-foreground font-medium">{count} {count === 1 ? 'item' : 'itens'}</span>
                                                 </div>
                                                 {isPinned && !isActive && (
                                                     <div className="absolute bottom-0 right-0 p-1 opacity-20">
@@ -1019,12 +1018,12 @@ const CaixaEntrada = () => {
                                     <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
                                 </div>
                             ) : filteredItems.length === 0 ? (
-                                <div className="text-center py-20 border-2 border-dashed border-border/50 rounded-2xl bg-muted/5">
+                                <div className="text-center py-20 border-2 border-dashed border-border rounded-2xl bg-muted/5">
                                     <Inbox className="h-12 w-12 mx-auto opacity-10 mb-4" />
                                     <h3 className="text-lg font-medium text-muted-foreground">
                                         {(searchQuery && searchQuery !== 'uncategorized') || (JSON.parse(localStorage.getItem("inbox_folders") || "[]").includes(searchQuery)) ? `Caixa "${searchQuery}" vazia` : "Caixa de entrada vazia"}
                                     </h3>
-                                    <p className="text-sm text-muted-foreground/60">
+                                    <p className="text-sm text-muted-foreground">
                                         {searchQuery ? "Arraste itens para cá ou crie novos." : "Sua caixa de entrada está limpa. Comece a capturar ideias!"}
                                     </p>
                                 </div>
@@ -1066,7 +1065,7 @@ const CaixaEntrada = () => {
 
                 {/* Edit Item Modal */}
                 <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
-                    <DialogContent className="border-border/50 max-w-xl">
+                    <DialogContent className="border-border max-w-xl">
                         <DialogHeader>
                             <DialogTitle>Editar Registro</DialogTitle>
                         </DialogHeader>
@@ -1093,7 +1092,7 @@ const CaixaEntrada = () => {
                                                         "p-2 rounded-md transition-all border",
                                                         editingItem.type === t
                                                             ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
-                                                            : "border-border/50 hover:border-border text-muted-foreground"
+                                                            : "border-border hover:border-border text-muted-foreground"
                                                     )}
                                                 >
                                                     {getTypeIcon(t)}
@@ -1233,7 +1232,7 @@ const CaixaEntrada = () => {
 
                 {/* View Item Details Modal */}
                 <Dialog open={!!viewingItem} onOpenChange={(open) => !open && setViewingItem(null)}>
-                    <DialogContent className="border-border/50 max-w-2xl bg-sidebar/95 backdrop-blur-xl">
+                    <DialogContent className="border-border max-w-2xl bg-sidebar/95 backdrop-blur-xl">
                         <DialogHeader>
                             <div className="flex items-center gap-3 mb-2">
                                 {viewingItem && (
@@ -1242,10 +1241,10 @@ const CaixaEntrada = () => {
                                     </div>
                                 )}
                                 <div>
-                                    <DialogTitle className="text-xl flex items-center gap-2">
+                                    <DialogTitle className="text-xl flex items-center gap-2 font-medium tracking-tight">
                                         {viewingItem?.title || "Detalhes do Registro"}
                                         {viewingItem?.category && (
-                                            <Badge variant="secondary" className="text-[9px] font-semibold bg-primary/10 text-primary border-none">
+                                            <Badge variant="secondary" className="text-[9px] font-medium bg-primary/10 text-primary border-none rounded-md">
                                                 {viewingItem.category}
                                             </Badge>
                                         )}
@@ -1256,7 +1255,7 @@ const CaixaEntrada = () => {
 
                         {viewingItem && (
                             <div className="space-y-6">
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground border-b border-border/20 pb-4">
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground border-b border-border pb-4">
                                     <span>{format(new Date(viewingItem.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}</span>
                                     {viewingItem.projects?.name && (
                                         <>
@@ -1283,7 +1282,7 @@ const CaixaEntrada = () => {
                                     </div>
                                 )}
 
-                                <div className="flex justify-end gap-2 pt-4 border-t border-border/20">
+                                <div className="flex justify-end gap-2 pt-4 border-t border-border">
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -1324,3 +1323,6 @@ const CaixaEntrada = () => {
 };
 
 export default CaixaEntrada;
+
+
+

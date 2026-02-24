@@ -97,6 +97,20 @@ export default function Tarefas() {
         localStorage.setItem("task_display_options", JSON.stringify(displayOptions));
     }, [displayOptions]);
 
+    // Fetch project list first to determine project type (recurring or not)
+    // React Query will deduplicate this call with the one inside useKanbanBoard
+    const { data: projectsData = [] } = useQuery<{ id: string, name: string, billing_type: string, created_at: string, value: number, advance_payment: number }[]>({
+        queryKey: ["projects"],
+        queryFn: async () => {
+            const { data, error } = await supabase.from("projects").select("id, name, billing_type, created_at, value, advance_payment");
+            if (error) throw error;
+            return data as any;
+        }
+    });
+
+    const selectedProjectData = projectsData.find(p => p.id === projectFilter);
+    const isRecurring = selectedProjectData?.billing_type === 'recorrente';
+
     const {
         scenarios,
         columns,
@@ -111,11 +125,10 @@ export default function Tarefas() {
         projectFilter,
         searchQuery: query,
         priorityFilter,
-        billingPeriod: projectFilter !== 'all' ? selectedCycle : undefined
+        billingPeriod: (projectFilter !== 'all' && isRecurring) ? selectedCycle : undefined
     });
 
-    const selectedProjectData = projects.find(p => p.id === projectFilter);
-    const isRecurring = selectedProjectData?.billing_type === 'recorrente';
+
 
     const projectValue = selectedProjectData?.value || 0;
     const projectCosts = useMemo(() => {
@@ -257,12 +270,12 @@ export default function Tarefas() {
             <div className="page-container">
                 <header className="heading-container">
                     <div className="flex items-center gap-3">
-                        <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Kanban central</span>
+                        <div className="h-1 w-6 bg-primary rounded-full" />
+                        <span className="text-[10px] font-medium  tracking-tight text-primary">Workspace / Kanban central</span>
                     </div>
                     <div className="space-y-2">
-                        <h1 className="text-3xl font-black tracking-tight text-foreground">Cockpit de Fluxo</h1>
-                        <p className="text-muted-foreground font-medium text-sm max-w-2xl leading-relaxed">
+                        <h1 className="text-3xl font-medium tracking-tight text-foreground">Cockpit de Fluxo</h1>
+                        <p className="text-muted-foreground font-normal text-sm max-w-2xl leading-relaxed">
                             Selecione a diretriz do projeto para ativar o workspace. Cada universo de trabalho possui seu próprio Kanban estruturado.
                         </p>
                     </div>
@@ -271,7 +284,7 @@ export default function Tarefas() {
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-40 gap-6">
                         <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                        <p className="text-muted-foreground animate-pulse font-bold tracking-widest uppercase text-[10px]">Sincronizando Fluxos...</p>
+                        <p className="text-muted-foreground animate-pulse font-medium tracking-tight  text-[10px]">Sincronizando Fluxos...</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -285,16 +298,12 @@ export default function Tarefas() {
                                     key={p.id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    whileHover={{ y: -5, boxShadow: "var(--shadow-float)" }}
+                                    whileHover={{ y: -2, boxShadow: "var(--shadow-hover)" }}
                                     onClick={() => handleProjectFilterChange(p.id)}
-                                    className="group relative text-left p-6 rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)] transition-all duration-300 cursor-pointer overflow-hidden"
+                                    className="group relative text-left p-6 rounded-lg border border-border bg-card shadow-sm transition-all duration-300 cursor-pointer overflow-hidden"
                                 >
-                                    {/* Blueprint Texture */}
-                                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                                        style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-
                                     {/* Roadmap SVG Metaphor */}
-                                    <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.05] group-hover:opacity-[0.08] transition-opacity -mr-8 -mt-8 rotate-12">
+                                    <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -mr-8 -mt-8 rotate-12">
                                         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M10 20C40 20 60 80 90 80" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
                                             <circle cx="10" cy="20" r="4" fill="currentColor" />
@@ -304,7 +313,7 @@ export default function Tarefas() {
                                     </div>
 
                                     <div className="flex items-start gap-4 mb-6 relative z-10">
-                                        <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold shadow-sm border border-primary/20 group-hover:scale-110 transition-transform">
+                                        <div className="h-14 w-14 rounded-md bg-primary/5 flex items-center justify-center text-primary text-2xl font-medium border border-border transition-transform">
                                             {p.avatar_emoji ? (
                                                 <span className="text-xl">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
                                             ) : (
@@ -314,12 +323,12 @@ export default function Tarefas() {
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2 mb-1.5">
                                                 <div className={cn("w-2 h-2 rounded-full", statusColors[statusKey] || "bg-muted")} />
-                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
+                                                <span className="text-[9px] font-medium text-muted-foreground  tracking-tight">
                                                     {statusLabels[statusKey] || statusKey}
                                                 </span>
                                             </div>
-                                            <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
-                                            <p className="text-[11px] font-medium text-muted-foreground line-clamp-1 opacity-70">
+                                            <h3 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
+                                            <p className="text-[11px] font-normal text-muted-foreground line-clamp-1 opacity-70">
                                                 {p.client_name || "Mapeamento Direto"}
                                             </p>
                                         </div>
@@ -327,38 +336,38 @@ export default function Tarefas() {
 
                                     {/* Stats Row */}
                                     <div className="grid grid-cols-2 gap-3 mb-3 relative z-10">
-                                        <div className="bg-muted/30 p-2.5 rounded-xl border border-border/40">
-                                            <p className="text-[9px] font-bold text-muted-foreground/40 uppercase mb-1">Total</p>
-                                            <p className="text-sm font-bold">{counts.total} Itens</p>
+                                        <div className="bg-muted/10 p-2.5 rounded-md border border-border">
+                                            <p className="text-[9px] font-medium text-muted-foreground  mb-1">Total</p>
+                                            <p className="text-sm font-medium">{counts.total} Itens</p>
                                         </div>
-                                        <div className="bg-primary/5 p-2.5 rounded-xl border border-primary/10">
-                                            <p className="text-[9px] font-bold text-primary/40 uppercase mb-1">Ação</p>
-                                            <p className="text-sm font-bold text-primary">{counts.open} Pendentes</p>
+                                        <div className="bg-primary/5 p-2.5 rounded-md border border-border">
+                                            <p className="text-[9px] font-medium text-primary/40  mb-1">Ação</p>
+                                            <p className="text-sm font-medium text-primary">{counts.open} Pendentes</p>
                                         </div>
                                     </div>
 
                                     {/* Finance Row - Added for "numbers referente ao projeto" */}
-                                    <div className="mb-6 bg-secondary/10 p-2.5 rounded-xl border border-border/20 flex justify-between items-center relative z-10">
+                                    <div className="mb-6 bg-secondary/30 p-2.5 rounded-md border border-border flex justify-between items-center relative z-10">
                                         <div className="flex flex-col">
-                                            <p className="text-[8px] font-bold text-muted-foreground/40 uppercase leading-none">Investimento</p>
-                                            <p className="text-[11px] font-bold tracking-tight">{p.value ? `R$ ${p.value.toLocaleString()}` : 'Sob demanda'}</p>
+                                            <p className="text-[8px] font-medium text-muted-foreground  leading-none">Investimento</p>
+                                            <p className="text-[11px] font-medium tracking-tight">{p.value ? `R$ ${p.value.toLocaleString()}` : 'Sob demanda'}</p>
                                         </div>
-                                        <Badge variant="outline" className="h-5 text-[8px] bg-primary/10 text-primary font-bold border-primary/20">
-                                            ROI FOCUS
+                                        <Badge variant="outline" className="h-5 text-[8px] bg-primary/5 text-primary font-medium border-primary">
+                                            ROI Focus
                                         </Badge>
                                     </div>
 
                                     {/* Progress */}
                                     <div className="space-y-2 relative z-10">
-                                        <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground/40 uppercase">
+                                        <div className="flex justify-between items-center text-[10px] font-medium text-muted-foreground ">
                                             <span>Trajetória</span>
-                                            <span className="text-primary font-bold">{progress}%</span>
+                                            <span className="text-primary font-medium">{progress}%</span>
                                         </div>
-                                        <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden border border-border/10">
+                                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border">
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${progress}%` }}
-                                                className="h-full bg-primary shadow-[0_0_8px_rgba(255,106,42,0.4)]"
+                                                className="h-full bg-muted-foreground/30"
                                             />
                                         </div>
                                     </div>
@@ -376,8 +385,8 @@ export default function Tarefas() {
         <div className="page-container">
             <header className="heading-container">
                 <div className="flex items-center gap-3">
-                    <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Kanban estruturado</span>
+                    <div className="h-1 w-6 bg-primary rounded-full" />
+                    <span className="text-[10px] font-medium  tracking-tight text-primary">Workspace / Kanban estruturado</span>
                 </div>
 
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -385,36 +394,36 @@ export default function Tarefas() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-12 w-12 rounded-xl bg-muted/40 hover:bg-primary/10 hover:text-primary transition-all border border-border/40 shrink-0 shadow-sm"
+                            className="h-12 w-12 rounded-md bg-muted hover:bg-primary/5 hover:text-primary transition-all border border-border shrink-0 shadow-sm"
                             onClick={() => handleProjectFilterChange("all")}
                         >
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <div className="space-y-1">
-                            <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-4">
+                            <h1 className="text-3xl font-medium tracking-tight text-foreground flex items-center gap-4">
                                 {selectedProjectData?.name || "Tarefas"}
                                 {projectFilter !== 'all' && (
-                                    <Badge variant="outline" className="text-[10px] font-bold bg-primary/5 text-primary border-primary/20 rounded-lg">
-                                        PROJETO: {selectedProjectData?.name?.toUpperCase()}
+                                    <Badge variant="outline" className="text-[10px] font-medium bg-primary/5 text-primary border-border rounded-md">
+                                        Projeto: {selectedProjectData?.name}
                                     </Badge>
                                 )}
                                 {projectFilter === 'all' && (
-                                    <Badge variant="outline" className="text-[10px] font-bold bg-primary/5 text-primary border-primary/20 rounded-lg uppercase">Global</Badge>
+                                    <Badge variant="outline" className="text-[10px] font-medium bg-primary/5 text-primary border-border rounded-md ">Global</Badge>
                                 )}
                             </h1>
-                            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Esteira de produção modular para execução de metas e prazos.</p>
+                            <p className="text-muted-foreground font-normal text-sm leading-relaxed">Esteira de produção modular para execução de metas e prazos.</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
                         {/* Metáfora Visual: Esteira de Produção SVG */}
-                        <div className="hidden xl:flex items-center gap-4 bg-muted/20 p-3 rounded-2xl border border-border/40">
+                        <div className="hidden xl:flex items-center gap-4 bg-muted p-3 rounded-2xl border border-border">
                             <svg width="120" height="30" viewBox="0 0 120 30" fill="none" className="opacity-40">
-                                <rect x="5" y="5" width="25" height="20" rx="3" fill="currentColor" className="text-muted-foreground/10" />
-                                <rect x="45" y="5" width="25" height="20" rx="3" fill="currentColor" className="text-muted-foreground/10" />
+                                <rect x="5" y="5" width="25" height="20" rx="3" fill="currentColor" className="text-muted-foreground" />
+                                <rect x="45" y="5" width="25" height="20" rx="3" fill="currentColor" className="text-muted-foreground" />
                                 <rect x="85" y="5" width="25" height="20" rx="3" fill="hsl(var(--primary))" className="opacity-40" />
-                                <line x1="30" y1="15" x2="45" y2="15" stroke="currentColor" className="text-muted-foreground/20" strokeWidth="1" strokeDasharray="2 2" />
-                                <line x1="70" y1="15" x2="85" y2="15" stroke="currentColor" className="text-muted-foreground/20" strokeWidth="1" strokeDasharray="2 2" />
+                                <line x1="30" y1="15" x2="45" y2="15" stroke="currentColor" className="text-muted-foreground" strokeWidth="1" strokeDasharray="2 2" />
+                                <line x1="70" y1="15" x2="85" y2="15" stroke="currentColor" className="text-muted-foreground" strokeWidth="1" strokeDasharray="2 2" />
                             </svg>
                         </div>
 
@@ -431,12 +440,12 @@ export default function Tarefas() {
                                     priority: values.priority,
                                     due: values.due,
                                     assignee: values.assignee,
-                                    project_id: values.project === 'none' ? undefined : (values.project || undefined)
+                                    project: values.project === 'none' ? undefined : (values.project || undefined)
                                 });
                             }}
                             defaultProjectId={projectFilter !== 'all' ? projectFilter : undefined}
                             trigger={
-                                <Button className="font-bold border-primary transition-all active:scale-95 px-6">
+                                <Button className="font-medium px-6">
                                     <Plus className="h-4 w-4 mr-2" />
                                     Nova Tarefa
                                 </Button>
@@ -451,90 +460,90 @@ export default function Tarefas() {
                     <Button
                         variant="link"
                         size="sm"
-                        className="h-auto p-0 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors"
+                        className="h-auto p-0 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors tracking-tight"
                         onClick={() => navigate(`/projetos/${projectFilter}`)}
                     >
-                        ← VOLTAR PARA HUB DO PROJETO
+                        ← Voltar para hub do projeto
                     </Button>
-                    <span className="text-muted-foreground/20">•</span>
+                    <span className="text-muted-foreground">•</span>
                     <Button
                         variant="link"
                         size="sm"
-                        className="h-auto p-0 text-[10px] font-bold text-rose-500/60 hover:text-rose-500 transition-colors"
+                        className="h-auto p-0 text-[10px] font-medium text-orange-400/60 hover:text-orange-400 transition-colors tracking-tight"
                         onClick={() => handleProjectFilterChange("all")}
                     >
-                        REMOVER FILTRO
+                        Remover filtro
                     </Button>
                 </div>
             )}
 
             {/* Indicators Row - Refined with Financial Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 rounded-xl bg-orange-500/5 flex items-center justify-center text-primary/40 group-hover:bg-primary/10 group-hover:text-primary transition-all shadow-sm shrink-0">
+                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
+                    <div className="h-10 w-10 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shrink-0">
                         <LayoutGrid className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[8px] font-bold text-muted-foreground tracking-widest mb-0.5 opacity-50 truncate">Backlog Total</p>
-                        <p className="text-xl font-bold tabular-nums text-foreground">{tasksTotal}</p>
+                        <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 opacity-50 truncate">Backlog Total</p>
+                        <p className="text-xl font-medium tabular-nums text-foreground">{tasksTotal}</p>
                     </div>
                 </div>
-                <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 rounded-xl bg-orange-500/5 flex items-center justify-center text-primary/40 group-hover:bg-primary/10 group-hover:text-primary transition-all shadow-sm shrink-0">
+                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
+                    <div className="h-10 w-10 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shrink-0">
                         <AlertCircle className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[8px] font-bold text-muted-foreground tracking-widest mb-0.5 opacity-50 truncate">Sprint Ativa</p>
-                        <p className="text-xl font-bold tabular-nums text-foreground">{tasksOpen}</p>
+                        <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 opacity-50 truncate">Sprint Ativa</p>
+                        <p className="text-xl font-medium tabular-nums text-foreground">{tasksOpen}</p>
                     </div>
                 </div>
-                <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 rounded-xl bg-orange-500/5 flex items-center justify-center text-primary/40 group-hover:bg-primary/10 group-hover:text-primary transition-all shadow-sm shrink-0">
+                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
+                    <div className="h-10 w-10 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shrink-0">
                         <Zap className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[8px] font-bold text-muted-foreground tracking-widest mb-0.5 opacity-50 truncate">Gargalos</p>
-                        <p className="text-xl font-bold tabular-nums text-foreground">{tasksOverdue}</p>
+                        <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 opacity-50 truncate">Gargalos</p>
+                        <p className="text-xl font-medium tabular-nums text-foreground">{tasksOverdue}</p>
                     </div>
                 </div>
 
                 {/* Financial Stats */}
-                <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1 border-primary/10 bg-primary/[0.01]">
-                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm shrink-0">
+                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
+                    <div className="h-10 w-10 flex items-center justify-center text-primary shrink-0">
                         <FolderKanban className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[8px] font-bold text-primary/60 tracking-widest mb-0.5 truncate">Valor Total</p>
-                        <p className="text-xl font-bold tabular-nums text-foreground tracking-tight">R$ {projectValue.toLocaleString()}</p>
+                        <p className="text-[8px] font-medium text-primary/60 tracking-tight mb-0.5 truncate">Valor Total</p>
+                        <p className="text-xl font-medium tabular-nums text-foreground tracking-tight">R$ {projectValue.toLocaleString()}</p>
                     </div>
                 </div>
 
-                <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm shrink-0">
+                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
+                    <div className="h-10 w-10 flex items-center justify-center text-foreground group-hover:text-primary transition-all shrink-0">
                         <BarChart3 className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[8px] font-bold text-emerald-500/60 tracking-widest mb-0.5 truncate">{projectBalance >= 0 ? 'Saldo Liq.' : 'Custo'}</p>
-                        <p className={cn("text-xl font-bold tabular-nums tracking-tight", projectBalance >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                        <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 truncate">{projectBalance >= 0 ? 'Saldo Liq.' : 'Custo'}</p>
+                        <p className={cn("text-xl font-medium tabular-nums tracking-tight", projectBalance >= 0 ? "text-foreground" : "text-orange-500/80")}>
                             R$ {Math.abs(projectBalance).toLocaleString()}
                         </p>
                     </div>
                 </div>
 
-                <div className="bg-card border border-border p-4 rounded-2xl flex items-center gap-3 hover:shadow-soft transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 rounded-xl bg-muted/20 flex items-center justify-center text-muted-foreground shadow-sm shrink-0">
+                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
+                    <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center text-muted-foreground shadow-sm shrink-0">
                         <Settings2 className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline mb-0.5">
-                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest opacity-50 truncate">Trajetória</p>
-                            <span className="text-[10px] font-black text-primary">{projectProgress}%</span>
+                            <p className="text-[8px] font-medium text-muted-foreground  tracking-tight opacity-50 truncate">Trajetória</p>
+                            <span className="text-[10px] font-medium text-primary">{projectProgress}%</span>
                         </div>
-                        <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden border border-border/10 p-[0.5px]">
+                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${projectProgress}%` }}
-                                className="h-full bg-primary rounded-full"
+                                className="h-full bg-muted-foreground/30"
                             />
                         </div>
                     </div>
@@ -542,20 +551,20 @@ export default function Tarefas() {
             </div >
             {/* Filters Bar with Cycle Selector */}
             < div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center" >
-                <div className="flex-1 flex items-center bg-card/30 p-1 rounded-xl border border-border/40">
+                <div className="flex-1 flex items-center bg-card p-1 rounded-xl border border-border">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Buscar tarefa..."
-                            className="pl-10 bg-transparent border-none focus-visible:ring-0 w-full hover:bg-muted/20 transition-colors h-9"
+                            className="pl-10 bg-transparent border-none focus-visible:ring-0 w-full hover:bg-muted transition-colors h-9"
                         />
                     </div>
-                    <div className="h-6 w-px bg-border/40 hidden lg:block" />
+                    <div className="h-6 w-px bg-border hidden lg:block" />
                     <div className="flex gap-2 p-1">
                         <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
-                            <SelectTrigger className="h-8 w-[180px] bg-background/50 border-border/30 rounded-lg text-xs font-medium">
+                            <SelectTrigger className="h-8 w-[180px] bg-background/50 border-border rounded-lg text-xs font-medium">
                                 <SelectValue placeholder="Projeto" />
                             </SelectTrigger>
                             <SelectContent>
@@ -566,7 +575,7 @@ export default function Tarefas() {
                             </SelectContent>
                         </Select>
                         <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as any)}>
-                            <SelectTrigger className="h-8 w-[110px] bg-background/50 border-border/30 rounded-lg text-xs font-medium">
+                            <SelectTrigger className="h-8 w-[110px] bg-background/50 border-border rounded-lg text-xs font-medium">
                                 <SelectValue placeholder="Prioridade" />
                             </SelectTrigger>
                             <SelectContent>
@@ -581,16 +590,16 @@ export default function Tarefas() {
 
                 {
                     isRecurring && (
-                        <div className="flex items-center gap-2 bg-indigo-500/5 border border-indigo-500/20 p-1 rounded-xl">
+                        <div className="flex items-center gap-2 bg-secondary border border-border p-1 rounded-md">
                             <div className="flex items-center gap-2 pl-3 py-1">
-                                <CalendarDays className="h-4 w-4 text-indigo-400" />
-                                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest pr-2 border-r border-indigo-500/20">Ciclo</span>
+                                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-[10px] font-medium text-muted-foreground  tracking-tight pr-2 border-r border-border">Ciclo</span>
                             </div>
                             <Select value={selectedCycle} onValueChange={setSelectedCycle}>
-                                <SelectTrigger className="h-8 w-[130px] bg-transparent border-none focus:ring-0 text-xs font-bold text-indigo-300">
+                                <SelectTrigger className="h-8 w-[130px] bg-transparent border-none focus:ring-0 text-xs font-medium text-foreground">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="glass border-indigo-500/20">
+                                <SelectContent className="border-border">
                                     {availableCycles.map(cycle => (
                                         <SelectItem key={cycle} value={cycle} className="capitalize text-xs font-medium">{cycle}</SelectItem>
                                     ))}
@@ -616,12 +625,12 @@ export default function Tarefas() {
                                     return (
                                         <div key={scenario.id} className="space-y-4">
                                             {/* Premium Scenario Toolbar */}
-                                            <div className="group flex items-center justify-between p-2 pl-4 pr-2 bg-gradient-to-r from-muted/30 to-card border border-border/40 rounded-xl hover:shadow-sm transition-all hover:border-border/60">
+                                            <div className="group flex items-center justify-between p-2 pl-4 pr-2 bg-card border border-border rounded-lg hover:shadow-sm transition-all">
                                                 <div className="flex items-center gap-3">
                                                     <div
                                                         className={cn(
-                                                            "w-1.5 h-6 rounded-full shadow-[0_0_8px]",
-                                                            scenario.type === 'kanban' ? "bg-blue-500 shadow-blue-500/40" : "bg-emerald-500 shadow-emerald-500/40"
+                                                            "w-1 h-5 rounded-full",
+                                                            scenario.type === 'kanban' ? "bg-primary/20" : "bg-primary/10"
                                                         )}
                                                     />
                                                     <div className="flex items-baseline gap-2 group/title">
@@ -647,7 +656,7 @@ export default function Tarefas() {
                                                                     }
                                                                     if (e.key === 'Escape') setEditingScenarioId(null);
                                                                 }}
-                                                                className="h-7 w-auto min-w-[200px] font-bold text-base px-1 py-0 bg-background/50 border-primary/20"
+                                                                className="h-7 w-auto min-w-[200px] font-bold text-base px-1 py-0 bg-background/50 border-border"
                                                             />
                                                         ) : (
                                                             <h2
@@ -655,13 +664,13 @@ export default function Tarefas() {
                                                                     setEditingScenarioId(scenario.id);
                                                                     setEditingScenarioTitle(scenario.title);
                                                                 }}
-                                                                className="text-base font-bold tracking-tight text-foreground cursor-pointer hover:underline hover:text-primary transition-colors decoration-dotted underline-offset-4"
+                                                                className="text-base font-medium tracking-tight text-foreground cursor-pointer hover:underline hover:text-primary transition-colors decoration-dotted underline-offset-4"
                                                                 title="Clique para renomear"
                                                             >
                                                                 {scenario.title}
                                                             </h2>
                                                         )}
-                                                        <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider hidden sm:inline-block border-l border-border/30 pl-2">
+                                                        <span className="text-[10px] font-medium text-muted-foreground  tracking-tight hidden sm:inline-block border-l border-border pl-2">
                                                             {scenario.type === 'kanban' ? 'Fluxo' : 'Lista'}
                                                         </span>
                                                     </div>
@@ -673,7 +682,7 @@ export default function Tarefas() {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors relative z-20 cursor-pointer"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-colors relative z-20 cursor-pointer"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 e.preventDefault();
@@ -696,25 +705,25 @@ export default function Tarefas() {
                                                         </Button>
                                                     </div>
 
-                                                    <div className="h-4 w-px bg-border/40 mx-1 hidden sm:block" />
+                                                    <div className="h-4 w-px bg-border mx-1 hidden sm:block" />
 
                                                     {/* Main Action Component */}
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button className="h-8 pl-3 pr-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm gap-1.5 text-xs font-semibold rounded-lg transition-all active:scale-95">
+                                                            <Button className="h-8 pl-3 pr-2 bg-primary text-primary-foreground shadow-sm gap-1.5 text-xs font-medium rounded-md transition-all">
                                                                 Nova <ChevronDown className="h-3.5 w-3.5 opacity-70" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="w-48">
-                                                            <DropdownMenuLabel>Adicionar em {scenario.title}</DropdownMenuLabel>
+                                                            <DropdownMenuLabel className="font-medium">Adicionar em {scenario.title}</DropdownMenuLabel>
                                                             <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => {
+                                                            <DropdownMenuItem className="font-medium" onClick={() => {
                                                                 const firstCol = columns.find(c => c.scenario_id === scenario.id || (!c.scenario_id && scenario.id === 'default-scenario'));
                                                                 if (firstCol) setQuickAddColumn(firstCol.id);
                                                             }}>
                                                                 <Plus className="h-4 w-4 mr-2" /> Tarefa Rápida
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => mutations.createColumn({ title: "Nova Coluna", scenario_id: scenario.id })}>
+                                                            <DropdownMenuItem className="font-medium" onClick={() => mutations.createColumn({ title: "Nova Coluna", scenario_id: scenario.id })}>
                                                                 <LayoutGrid className="h-4 w-4 mr-2" /> Nova Coluna
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>
@@ -775,15 +784,15 @@ export default function Tarefas() {
                                                                                                 <div className={cn(
                                                                                                     "animate-in fade-in slide-in-from-top-2 duration-300",
                                                                                                     scenario.type === 'kanban'
-                                                                                                        ? "glass-light rounded-2xl p-3 border-2 border-primary/20"
-                                                                                                        : "bg-transparent border-b-2 border-primary/20 pb-3 mb-2"
+                                                                                                        ? "bg-secondary rounded-md p-3 border border-border"
+                                                                                                        : "bg-transparent border-b-2 border-primary/10 pb-3 mb-2"
                                                                                                 )}>
                                                                                                     <Input
                                                                                                         autoFocus
                                                                                                         placeholder="O que precisa ser feito?"
                                                                                                         value={quickAddTitle}
                                                                                                         onChange={(e) => setQuickAddTitle(e.target.value)}
-                                                                                                        className="bg-transparent border-0 border-b border-primary/10 rounded-none px-0 h-8 text-xs font-semibold focus-visible:ring-0 mb-3"
+                                                                                                        className="bg-transparent border-0 border-b border-primary/5 rounded-none px-0 h-8 text-xs font-medium focus-visible:ring-0 mb-3"
                                                                                                         onKeyDown={(e) => {
                                                                                                             if (e.key === 'Enter' && quickAddTitle.trim()) {
                                                                                                                 mutations.createTask({
@@ -805,7 +814,7 @@ export default function Tarefas() {
                                                                                                         <Button
                                                                                                             variant="ghost"
                                                                                                             size="sm"
-                                                                                                            className="h-7 px-2 text-[10px] font-bold"
+                                                                                                            className="h-7 px-2 text-[10px] font-medium"
                                                                                                             onClick={() => {
                                                                                                                 setQuickAddColumn(null);
                                                                                                                 setQuickAddTitle("");
@@ -815,7 +824,7 @@ export default function Tarefas() {
                                                                                                         </Button>
                                                                                                         <Button
                                                                                                             size="sm"
-                                                                                                            className="h-7 px-3 text-[10px] font-bold bg-primary text-primary-foreground"
+                                                                                                            className="h-7 px-3 text-[10px] font-medium bg-primary text-primary-foreground"
                                                                                                             onClick={() => {
                                                                                                                 if (quickAddTitle.trim()) {
                                                                                                                     mutations.createTask({
@@ -843,7 +852,7 @@ export default function Tarefas() {
                                                                                                                 "mt-1 w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0",
                                                                                                                 t.progress === 100
                                                                                                                     ? "bg-primary border-primary text-primary-foreground"
-                                                                                                                    : "border-border/60 hover:border-primary/60"
+                                                                                                                    : "border-border hover:border-primary/60"
                                                                                                             )}
                                                                                                         >
                                                                                                             {t.progress === 100 && <Check className="h-3 w-3" />}
@@ -881,7 +890,7 @@ export default function Tarefas() {
                                                                                                 </div>
                                                                                             ))}
                                                                                             {colTasks.length === 0 && !quickAddColumn && (
-                                                                                                <div className="glass-light rounded-2xl p-6 border border-dashed border-border/50 text-center flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                                                                                                <div className="glass-light rounded-2xl p-6 border border-dashed border-border text-center flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
                                                                                                     <p className="text-[10px] text-muted-foreground">Vazio</p>
                                                                                                 </div>
                                                                                             )}
@@ -902,15 +911,15 @@ export default function Tarefas() {
                                                                             className={cn(
                                                                                 "w-full flex items-center gap-2 transition-all",
                                                                                 scenario.type === 'checklist'
-                                                                                    ? "h-8 px-0 text-muted-foreground/60 hover:text-primary hover:bg-transparent"
-                                                                                    : "glass-light border border-dashed border-border/50 rounded-2xl h-12 hover:bg-muted/10 group"
+                                                                                    ? "h-8 px-0 text-muted-foreground hover:text-primary hover:bg-transparent"
+                                                                                    : "bg-secondary/50 border border-dashed border-border rounded-md h-12 hover:bg-secondary group"
                                                                             )}
                                                                             onClick={() => {
                                                                                 mutations.createColumn({ title: "Nova Coluna", scenario_id: scenario.id });
                                                                             }}
                                                                         >
                                                                             <Plus className={cn("h-4 w-4", scenario.type === 'kanban' && "text-muted-foreground group-hover:text-primary")} />
-                                                                            <span className={cn("text-xs font-semibold", scenario.type === 'kanban' ? "text-muted-foreground group-hover:text-primary" : "uppercase tracking-widest text-[10px]")}>
+                                                                            <span className={cn("text-xs font-medium", scenario.type === 'kanban' ? "text-muted-foreground group-hover:text-primary" : " tracking-tight text-[10px]")}>
                                                                                 {scenario.type === 'checklist' ? "Nova Lista de Tarefas" : "Adicionar Lista"}
                                                                             </span>
                                                                         </Button>
@@ -941,7 +950,7 @@ export default function Tarefas() {
                                 })}
 
                                 {/* Botões Globais de Cenário - No final da lista */}
-                                <div className="flex gap-4 border-t border-border/10 pt-8 mt-4 opacity-60 hover:opacity-100 transition-opacity justify-center">
+                                <div className="flex gap-4 border-t border-border pt-8 mt-4 opacity-60 hover:opacity-100 transition-opacity justify-center">
                                     <Button
                                         variant="outline"
                                         className="border-dashed h-9"
@@ -971,3 +980,6 @@ export default function Tarefas() {
         </div >
     );
 }
+
+
+

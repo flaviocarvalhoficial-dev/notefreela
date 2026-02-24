@@ -78,28 +78,28 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 gap-2 bg-muted/20 border-border/40 hover:bg-muted/40 transition-all font-semibold rounded-xl">
+                <Button variant="outline" size="sm" className="h-9 gap-2 bg-muted/20 border-border hover:bg-muted/40 transition-all font-medium rounded-lg">
                     <Settings2 className="h-4 w-4" />
                     Display
                     <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 overflow-hidden glass border-border/50 shadow-2xl rounded-2xl" align="end">
+            <PopoverContent className="w-80 p-0 overflow-hidden glass border-border shadow-2xl rounded-xl" align="end">
                 <div className="p-4 space-y-4">
                     {/* View Switcher */}
                     <ToggleGroup
                         type="single"
                         value={options.viewMode}
                         onValueChange={(v) => v && updateOption('viewMode', v as TaskViewMode)}
-                        className="grid grid-cols-2 p-1 bg-muted/40 rounded-xl"
+                        className="grid grid-cols-2 p-1 bg-muted/40 rounded-lg"
                     >
-                        <ToggleGroupItem value="list" className="rounded-lg gap-2 data-[state=on]:bg-card data-[state=on]:shadow-sm">
+                        <ToggleGroupItem value="list" className="rounded-md gap-2 data-[state=on]:bg-card data-[state=on]:shadow-sm">
                             <LayoutList className="h-4 w-4" />
-                            <span className="text-xs font-bold">List</span>
+                            <span className="text-xs font-medium">List</span>
                         </ToggleGroupItem>
-                        <ToggleGroupItem value="board" className="rounded-lg gap-2 data-[state=on]:bg-card data-[state=on]:shadow-sm">
+                        <ToggleGroupItem value="board" className="rounded-md gap-2 data-[state=on]:bg-card data-[state=on]:shadow-sm">
                             <LayoutGrid className="h-4 w-4" />
-                            <span className="text-xs font-bold">Board</span>
+                            <span className="text-xs font-medium">Board</span>
                         </ToggleGroupItem>
                     </ToggleGroup>
 
@@ -108,7 +108,7 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <LayoutList className="h-4 w-4" />
-                                <Label className="text-xs font-bold">Grouping</Label>
+                                <Label className="text-xs font-medium tracking-tight">Grouping</Label>
                             </div>
                             <Select value={options.grouping} onValueChange={(v) => updateOption('grouping', v as TaskGrouping)}>
                                 <SelectTrigger className="w-32 h-8 text-xs bg-muted/20 border-transparent rounded-lg">
@@ -126,7 +126,7 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <LayoutGrid className="h-4 w-4" />
-                                <Label className="text-xs font-bold">Sub-grouping</Label>
+                                <Label className="text-xs font-medium tracking-tight">Sub-grouping</Label>
                             </div>
                             <Select value={options.subGrouping} onValueChange={(v) => updateOption('subGrouping', v as TaskGrouping)}>
                                 <SelectTrigger className="w-32 h-8 text-xs bg-muted/20 border-transparent rounded-lg">
@@ -143,7 +143,7 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <ArrowUpDown className="h-4 w-4" />
-                                <Label className="text-xs font-bold">Ordering</Label>
+                                <Label className="text-xs font-medium tracking-tight">Ordering</Label>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Select value={options.ordering} onValueChange={(v) => updateOption('ordering', v as TaskOrdering)}>
@@ -171,44 +171,44 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
 
                     <div className="space-y-4 pt-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Order completed by recency</Label>
+                            <Label className="text-[10px]  tracking-tight text-muted-foreground font-medium">Order completed by recency</Label>
                             <Switch checked={options.orderCompletedByRecency} onCheckedChange={(v) => updateOption('orderCompletedByRecency', v)} />
                         </div>
                         <Separator className="bg-border/30" />
                         <div className="flex items-center justify-between">
-                            <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Show sub-tasks</Label>
+                            <Label className="text-[10px]  tracking-tight text-muted-foreground font-medium">Show sub-tasks</Label>
                             <Switch checked={options.showSubTasks} onCheckedChange={(v) => updateOption('showSubTasks', v)} />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-muted/30 p-4 border-t border-border/40 space-y-4">
+                <div className="bg-muted/30 p-4 border-t border-border space-y-4">
                     <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-3">List Options</h4>
+                        <h4 className="text-[10px] font-medium  tracking-tight text-muted-foreground mb-3">List Options</h4>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <Label className="text-xs font-bold text-foreground/80">Nested sub-issues</Label>
+                                <Label className="text-xs font-medium text-foreground tracking-tight">Nested sub-issues</Label>
                                 <Switch className="scale-75" checked={options.nestedSubTasks} onCheckedChange={(v) => updateOption('nestedSubTasks', v)} />
                             </div>
                             <div className="flex items-center justify-between">
-                                <Label className="text-xs font-bold text-foreground/80">Show empty groups</Label>
+                                <Label className="text-xs font-medium text-foreground tracking-tight">Show empty groups</Label>
                                 <Switch className="scale-75" checked={options.showEmptyGroups} onCheckedChange={(v) => updateOption('showEmptyGroups', v)} />
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-3">Display Properties</h4>
+                        <h4 className="text-[10px] font-medium  tracking-tight text-muted-foreground mb-3">Display Properties</h4>
                         <div className="flex flex-wrap gap-1.5">
                             {properties.map(prop => (
                                 <button
                                     key={prop.id}
                                     onClick={() => toggleProperty(prop.id)}
                                     className={cn(
-                                        "px-2.5 py-1 text-[10px] font-bold rounded-md border transition-all",
+                                        "px-2.5 py-1 text-[10px] font-medium rounded-md border transition-all",
                                         options.visibleProperties.includes(prop.id)
                                             ? "bg-primary/10 border-primary/30 text-primary"
-                                            : "bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/30"
+                                            : "bg-muted/10 border-border text-muted-foreground hover:bg-muted/30"
                                     )}
                                 >
                                     {prop.label}
@@ -221,3 +221,6 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
         </Popover>
     );
 };
+
+
+

@@ -88,27 +88,27 @@ const Projetos = () => {
     <div className="page-container">
       <header className="heading-container">
         <div className="flex items-center gap-3">
-          <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Workspace / Projetos</span>
+          <div className="h-1 w-6 bg-primary rounded-full" />
+          <span className="text-[10px] font-medium  tracking-tight text-primary">Workspace / Projetos</span>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-black tracking-tight text-foreground">Diretrizes de Produção</h1>
-            <p className="text-muted-foreground font-medium text-sm leading-relaxed">Gerencie o ciclo de vida e a saúde estratégica de seus projetos.</p>
+            <h1 className="text-3xl font-medium tracking-tight text-foreground">Diretrizes de Produção</h1>
+            <p className="text-muted-foreground font-normal text-sm leading-relaxed">Gerencie o ciclo de vida e a saúde estratégica de seus projetos.</p>
           </div>
 
           <div className="flex items-center gap-6">
             {/* Center: Inline Stats */}
-            <div className="hidden xl:flex items-center gap-6 px-6 border-x border-border/30 h-10">
+            <div className="hidden xl:flex items-center gap-6 px-6 border-x border-border h-10">
               {stats.map((stat) => (
                 <div key={stat.label} className="flex items-center gap-3 group cursor-default">
-                  <div className={cn("p-1.5 rounded-md bg-muted/30 transition-colors group-hover:bg-muted/50", stat.color)}>
+                  <div className={cn("p-1.5 rounded-md bg-muted transition-colors group-hover:bg-accent", "text-primary")}>
                     <stat.icon className="h-3.5 w-3.5" />
                   </div>
                   <div>
-                    <p className="text-[9px] font-medium text-muted-foreground/40 leading-none mb-1">{stat.label}</p>
-                    <p className="text-sm font-semibold leading-none">{stat.value}</p>
+                    <p className="text-[9px] font-medium text-muted-foreground leading-none mb-1">{stat.label}</p>
+                    <p className="text-sm font-medium leading-none tabular-nums">{stat.value}</p>
                   </div>
                 </div>
               ))}
@@ -118,7 +118,7 @@ const Projetos = () => {
             <div className="flex items-center gap-3 shrink-0">
               <NewProjectDialog
                 trigger={
-                  <Button className="border-primary font-bold shadow-md transition-all active:scale-95 px-6">
+                  <Button className="border-border font-medium rounded-md shadow-sm transition-all active:scale-95 px-6">
                     <Plus className="h-4 w-4 mr-2" />
                     Novo Projeto
                   </Button>
@@ -136,27 +136,27 @@ const Projetos = () => {
         {/* Extended Filters Bar */}
         <div className="flex flex-wrap items-center gap-4 py-2">
           <div className="flex items-center gap-2">
-            <Filter className="h-3.5 w-3.5 text-muted-foreground/40" />
-            <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground/40">Filtros Avançados:</span>
+            <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[10px] font-medium  tracking-tight text-muted-foreground">Filtros Avançados:</span>
           </div>
 
           <Select value={filterBilling} onValueChange={(v: any) => setFilterBilling(v)}>
-            <SelectTrigger className="h-8 w-[140px] text-[10px] font-semibold bg-card border-border/40">
+            <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
               <SelectValue placeholder="Faturamento" />
             </SelectTrigger>
-            <SelectContent className="glass border-border/50">
-              <SelectItem value="all">Todos Faturamentos</SelectItem>
+            <SelectContent className="glass border-border">
+              <SelectItem value="all">Faturamento</SelectItem>
               <SelectItem value="pontual">Pontual</SelectItem>
               <SelectItem value="recorrente">Recorrente</SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={filterService} onValueChange={setFilterService}>
-            <SelectTrigger className="h-8 w-[140px] text-[10px] font-semibold bg-card border-border/40">
+            <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
               <SelectValue placeholder="Serviço" />
             </SelectTrigger>
-            <SelectContent className="glass border-border/50">
-              <SelectItem value="all">Todos Serviços</SelectItem>
+            <SelectContent className="glass border-border">
+              <SelectItem value="all">Serviço</SelectItem>
               {uniqueServiceTypes.map((type: any) => (
                 <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
               ))}
@@ -164,11 +164,11 @@ const Projetos = () => {
           </Select>
 
           <Select value={filterClient} onValueChange={setFilterClient}>
-            <SelectTrigger className="h-8 w-[180px] text-[10px] font-semibold bg-card border-border/40">
+            <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-border rounded-md">
               <SelectValue placeholder="Cliente" />
             </SelectTrigger>
-            <SelectContent className="glass border-border/50">
-              <SelectItem value="all">Todos Clientes</SelectItem>
+            <SelectContent className="glass border-border">
+              <SelectItem value="all">Cliente</SelectItem>
               {uniqueClients.map((client: any) => (
                 <SelectItem key={client} value={client}>{client}</SelectItem>
               ))}
@@ -178,7 +178,7 @@ const Projetos = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-3 text-[10px] font-bold text-muted-foreground/60 hover:text-foreground"
+            className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
             onClick={() => {
               setFilterBilling("all");
               setFilterService("all");
@@ -244,14 +244,14 @@ const Projetos = () => {
             animate={{ opacity: 1 }}
             className="text-center py-24 flex flex-col items-center"
           >
-            <div className="w-20 h-20 bg-muted/10 rounded-3xl flex items-center justify-center mb-6 border-2 border-dashed border-border/40">
-              <Briefcase className="text-muted-foreground/30 h-8 w-8" />
+            <div className="w-20 h-20 bg-muted/10 rounded-3xl flex items-center justify-center mb-6 border-2 border-dashed border-border">
+              <Briefcase className="text-muted-foreground h-8 w-8" />
             </div>
             <h3 className="text-lg font-semibold mb-2">Parece que ainda não há projetos aqui</h3>
             <p className="text-muted-foreground text-sm max-w-xs mb-8">Comece criando um novo projeto para gerenciar suas tarefas e workflow.</p>
             <NewProjectDialog
               trigger={
-                <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-md px-6 shadow-sm">
+                <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md px-6 shadow-sm">
                   Começar Agora
                 </Button>
               }
@@ -268,45 +268,43 @@ const Projetos = () => {
 function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: () => void, onClick: () => void }) {
   return (
     <motion.div
-      whileHover={{ y: -4, boxShadow: "var(--shadow-hover)" }}
-      className="group flex flex-col bg-card border border-border shadow-[var(--shadow-card)] rounded-[var(--radius)] h-full min-h-[340px] cursor-pointer relative overflow-hidden transition-all duration-300"
+      whileHover={{ y: -2 }}
+      className="group flex flex-col bg-card border border-border shadow-sm rounded-lg h-full min-h-[260px] cursor-pointer relative overflow-hidden transition-all duration-300"
       onClick={onClick}
     >
-      {/* Background Texture - Arthur Marques Blueprint */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+
 
       {/* Visual Metaphor: Roadmap Route - Arthur Marques */}
-      <div className="h-24 w-full relative overflow-hidden bg-muted/5 border-b border-border/30 flex items-center justify-center">
+      <div className="h-12 w-full relative overflow-hidden bg-muted/5 border-b border-border flex items-center justify-center">
         <svg width="100%" height="60" viewBox="0 0 300 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-20 group-hover:opacity-40 transition-opacity duration-500">
           <path d="M10 30C50 30 70 10 110 10C150 10 170 50 210 50C250 50 270 30 290 30" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
           <circle cx="40" cy="30" r="3" fill="currentColor" />
           <circle cx="110" cy="10" r="3" fill="currentColor" />
           <circle cx="180" cy="30" r="3" fill="currentColor" />
-          <g>
-            <circle cx="240" cy="45" r="5" fill="hsl(var(--primary))" />
-            <path d="M255 45L262 45M262 45L258 41M262 45L258 49" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <g className="text-primary/20">
+            <circle cx="240" cy="45" r="4" fill="currentColor" />
+            <path d="M255 45L260 45M260 45L257 42M260 45L257 48" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
           </g>
         </svg>
       </div>
 
-      <div className="p-6 flex flex-col flex-1 justify-between relative z-10">
+      <div className="p-4 flex flex-col flex-1 justify-between relative z-10">
         <div>
           <div className="flex items-start justify-between gap-3 mb-5">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/20">
+              <div className="h-12 w-12 flex items-center justify-center text-primary transition-transform group-hover:scale-105">
                 {(() => {
                   const Icon = (LucideIcons as any)[project.avatar_emoji];
-                  return Icon ? <Icon className="h-6 w-6" /> : <Briefcase className="h-6 w-6" />;
+                  return Icon ? <Icon className="h-8 w-8" /> : <Briefcase className="h-8 w-8" />;
                 })()}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-widest h-4 bg-muted/50 text-muted-foreground border-border/50">
+                  <Badge variant="outline" className="text-[8px] font-medium  tracking-tight h-4 bg-primary/10 text-primary border-border">
                     {project.status || 'planning'}
                   </Badge>
                 </div>
-                <h3 className="font-bold text-lg leading-none tracking-tight text-foreground group-hover:text-primary transition-colors truncate max-w-[160px]">
+                <h3 className="font-medium text-base leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors">
                   {project.name}
                 </h3>
               </div>
@@ -318,7 +316,7 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass border-border/50">
+              <DropdownMenuContent align="end" className="glass border-border">
                 <EditProjectDialog
                   project={project}
                   trigger={
@@ -334,7 +332,7 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
                   trigger={
                     <div onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuItem
-                        className="text-destructive font-bold focus:bg-destructive/10"
+                        className="text-destructive font-medium focus:bg-destructive/10"
                         onSelect={(e) => e.preventDefault()}
                       >
                         Excluir
@@ -346,37 +344,37 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
             </DropdownMenu>
           </div>
 
-          <p className="text-xs text-muted-foreground/80 line-clamp-2 mb-6 font-medium leading-relaxed">
+          <p className="text-xs text-muted-foreground line-clamp-2 mb-6 font-normal leading-relaxed">
             {project.description || "Mapeamento estratégico e execução criativa em andamento."}
           </p>
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-border/40">
+        <div className="space-y-3 pt-3 border-t border-border">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-1">Faturamento</span>
-              <span className="text-sm font-bold text-foreground tabular-nums">
+              <span className="text-[9px] font-medium text-muted-foreground  tracking-tight mb-1">Faturamento</span>
+              <span className="text-sm font-medium text-foreground tabular-nums">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value || 0)}
               </span>
             </div>
             <div className="flex flex-col text-right">
-              <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-1">Prazo</span>
-              <span className="text-sm font-bold text-foreground/80 tabular-nums">
+              <span className="text-[9px] font-medium text-muted-foreground  tracking-tight mb-1">Prazo</span>
+              <span className="text-sm font-medium text-foreground tabular-nums">
                 {project.deadline ? format(new Date(project.deadline), "dd/MM/yy") : "--/--/--"}
               </span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">
+            <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground  tracking-tight">
               <span>{project.progress}% Evolução</span>
-              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_hsl(var(--primary))]" />
+              <div className="h-1 w-1 rounded-full bg-primary" />
             </div>
-            <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden border border-border/20">
+            <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden border border-border">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${project.progress}%` }}
-                className="h-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.3)] transition-all duration-1000"
+                className="h-full bg-primary"
               />
             </div>
           </div>
@@ -390,33 +388,33 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
   return (
     <motion.div
       whileHover={{ x: 4 }}
-      className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-lg hover:bg-muted/10 cursor-pointer group transition-all"
+      className="flex items-center justify-between p-4 bg-card border border-border rounded-lg hover:bg-muted/10 cursor-pointer group transition-all"
       onClick={onClick}
     >
       <div className="flex items-center gap-4 flex-1 min-w-0">
-        <div className="h-8 w-8 rounded-md bg-muted/30 flex items-center justify-center text-primary/60 shrink-0">
+        <div className="h-8 w-8 flex items-center justify-center text-primary shrink-0 transition-transform group-hover:scale-105">
           {(() => {
             const Icon = (LucideIcons as any)[project.avatar_emoji];
-            return Icon ? <Icon className="h-4 w-4" /> : <Briefcase className="h-4 w-4" />;
+            return Icon ? <Icon className="h-5 w-5" /> : <Briefcase className="h-5 w-5" />;
           })()}
         </div>
         <div className="min-w-0 flex-1 pr-6">
-          <h3 className="font-semibold text-sm truncate text-foreground group-hover:text-primary transition-colors underline-offset-4 hover:underline">{project.name}</h3>
-          <p className="text-[10px] text-muted-foreground/40 font-medium truncate">{project.client_name || "Sem cliente"}</p>
+          <h3 className="font-medium text-sm truncate text-foreground group-hover:text-primary transition-colors underline-offset-4 hover:underline">{project.name}</h3>
+          <p className="text-[10px] text-muted-foreground font-medium truncate">{project.client_name || "Sem cliente"}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-8 px-6">
         <div className="hidden lg:flex flex-col w-32">
           <Badge variant="outline" className={cn(
-            "text-[8px] font-bold uppercase tracking-wider h-4 w-fit mb-1",
+            "text-[8px] font-medium  tracking-tight h-4 w-fit mb-1",
             project.billing_type === 'recorrente'
               ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
               : "bg-amber-500/10 text-amber-500 border-amber-500/20"
           )}>
             {project.billing_type || 'pontual'}
           </Badge>
-          <div className="flex items-center gap-1.5 text-[9px] font-medium text-muted-foreground/40">
+          <div className="flex items-center gap-1.5 text-[9px] font-medium text-muted-foreground">
             <div className={cn("h-1 w-1 rounded-full",
               project.contract_status === 'active' ? 'bg-emerald-500' :
                 project.contract_status === 'pending' ? 'bg-amber-500' : 'bg-slate-400')} />
@@ -424,14 +422,14 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
           </div>
         </div>
         <div className="hidden sm:flex flex-col text-right w-24">
-          <span className="text-[9px] font-medium text-muted-foreground/60 capitalize">{project.service_type || "Outro"}</span>
-          <span className="text-[8px] text-muted-foreground/30 uppercase font-bold tracking-tighter">Serviço</span>
+          <span className="text-[9px] font-medium text-muted-foreground capitalize">{project.service_type || "Outro"}</span>
+          <span className="text-[8px] text-muted-foreground  font-medium tracking-tight">Serviço</span>
         </div>
         <div className="hidden xl:flex flex-col text-right w-24 opacity-60">
-          <span className="text-xs font-semibold tabular-nums">
+          <span className="text-xs font-medium tabular-nums">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
           </span>
-          <span className="text-[8px] text-muted-foreground/40 uppercase font-bold tracking-tighter">
+          <span className="text-[8px] text-muted-foreground  font-medium tracking-tight">
             {project.billing_type === 'recorrente' ? 'Mensal' : 'Total'}
           </span>
         </div>
@@ -444,7 +442,7 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass border-border/50 text-foreground">
+          <DropdownMenuContent align="end" className="glass border-border text-foreground">
             <EditProjectDialog
               project={project}
               trigger={
@@ -460,7 +458,7 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
               trigger={
                 <div onClick={(e) => e.stopPropagation()}>
                   <DropdownMenuItem
-                    className="text-destructive font-bold focus:bg-destructive/10 focus:text-destructive"
+                    className="text-destructive font-medium focus:bg-destructive/10 focus:text-destructive"
                     onSelect={(e) => e.preventDefault()}
                   >
                     Excluir
@@ -477,3 +475,5 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
 }
 
 export default Projetos;
+
+

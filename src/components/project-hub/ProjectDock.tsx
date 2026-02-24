@@ -77,8 +77,8 @@ export const ProjectDock = ({
                 return (
                     <div className="space-y-2 p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">PENDENTES</h3>
-                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('task')}>
+                            <h3 className="text-[10px] font-medium text-muted-foreground tracking-tight ">PENDENTES</h3>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('task')}>
                                 <Plus className="w-3 h-3" /> CRIAR
                             </Button>
                         </div>
@@ -88,15 +88,15 @@ export const ProjectDock = ({
                             </div>
                         ) : (
                             tasks.map(task => (
-                                <div key={task.id} className="group p-4 bg-secondary/10 hover:bg-secondary/20 rounded-2xl border border-border/5 transition-all cursor-default">
+                                <div key={task.id} className="group p-4 bg-secondary/10 hover:bg-secondary/20 rounded-2xl border border-border transition-all cursor-default">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold truncate group-hover:text-primary transition-colors tracking-tight">{task.title}</p>
+                                            <p className="text-sm font-medium truncate group-hover:text-primary transition-colors tracking-tight">{task.title}</p>
                                             <div className="flex items-center gap-2 mt-1.5">
-                                                <Badge variant="outline" className="text-[8px] h-4 px-1.5 py-0 border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-widest">
+                                                <Badge variant="outline" className="text-[8px] h-4 px-1.5 py-0 border-border bg-primary/5 text-primary font-medium  tracking-tight">
                                                     {task.priority || 'MEDIUM'}
                                                 </Badge>
-                                                {task.due_date && <span className="text-[9px] font-bold text-muted-foreground/40">{new Date(task.due_date).toLocaleDateString()}</span>}
+                                                {task.due_date && <span className="text-[9px] font-medium text-muted-foreground">{new Date(task.due_date).toLocaleDateString()}</span>}
                                             </div>
                                         </div>
                                         <button
@@ -116,8 +116,8 @@ export const ProjectDock = ({
                 return (
                     <div className="space-y-4 p-4">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">CAPTURAS</h3>
-                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('inbox')}>
+                            <h3 className="text-[10px] font-medium text-muted-foreground tracking-tight ">CAPTURAS</h3>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('inbox')}>
                                 <Plus className="w-3 h-3" /> CAPTURAR
                             </Button>
                         </div>
@@ -128,18 +128,18 @@ export const ProjectDock = ({
                                     onClose();
                                     navigate(`/caixa-entrada?id=${item.id}${item.project_id ? `&project=${item.project_id}` : ''}`);
                                 }}
-                                className="group relative p-5 bg-card border border-border/40 rounded-2xl hover:border-primary/30 hover:shadow-glow-sm transition-all duration-300 cursor-pointer h-[180px] flex flex-col"
+                                className="group relative p-5 bg-card border border-border rounded-2xl hover:border-border hover:shadow-glow-sm transition-all duration-300 cursor-pointer h-[180px] flex flex-col"
                             >
-                                <div className="flex items-center justify-between mb-3 border-b border-border/10 pb-2 shrink-0">
+                                <div className="flex items-center justify-between mb-3 border-b border-border pb-2 shrink-0">
                                     <div className="flex items-center gap-2">
-                                        <div className="p-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                                        <div className="p-1.5 rounded-lg bg-primary/5 border border-border">
                                             <Inbox className="w-3 h-3 text-primary" />
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-black tracking-widest text-foreground/80 uppercase">CAPTURA</span>
+                                            <span className="text-[10px] font-medium tracking-tight text-foreground ">CAPTURA</span>
                                             <div className="flex items-center gap-1.5 opacity-40">
                                                 <Clock className="w-2.5 h-2.5" />
-                                                <span className="text-[9px] font-bold uppercase">{new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
+                                                <span className="text-[9px] font-medium ">{new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -147,7 +147,7 @@ export const ProjectDock = ({
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={(e) => handleCopy(e, item.id, item.content)}
-                                            className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground/40 hover:text-primary transition-all"
+                                            className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
                                             title="Copiar conteúdo"
                                         >
                                             {copiedId === item.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -157,7 +157,7 @@ export const ProjectDock = ({
                                                 e.stopPropagation();
                                                 onInsertReference?.('inbox', item.id);
                                             }}
-                                            className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground/40 hover:text-primary transition-all"
+                                            className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
                                             title="Inserir referência"
                                         >
                                             <ArrowUpRight className="w-4 h-4" />
@@ -166,7 +166,7 @@ export const ProjectDock = ({
                                 </div>
 
                                 <div className="flex-1 overflow-hidden">
-                                    <div className="prose prose-invert prose-xs max-w-none text-foreground/80 text-xs leading-relaxed line-clamp-4">
+                                    <div className="prose prose-invert prose-xs max-w-none text-foreground text-xs leading-relaxed line-clamp-4">
                                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                             {item.content}
                                         </ReactMarkdown>
@@ -174,9 +174,9 @@ export const ProjectDock = ({
                                 </div>
 
                                 {(item.tags && item.tags.length > 0) && (
-                                    <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-border/5 shrink-0">
+                                    <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-border shrink-0">
                                         {item.tags.slice(0, 3).map((tag: string, idx: number) => (
-                                            <span key={idx} className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-muted-foreground/40 px-1.2 py-0.5 bg-muted/20 rounded">
+                                            <span key={idx} className="flex items-center gap-1 text-[8px] font-medium  tracking-tight text-muted-foreground px-1.2 py-0.5 bg-muted/20 rounded">
                                                 <Hash className="w-2 h-2" />
                                                 {tag}
                                             </span>
@@ -197,23 +197,23 @@ export const ProjectDock = ({
                 return (
                     <div className="space-y-4 p-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">RESUMO FINANCEIRO</h3>
-                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('finance')}>
+                            <h3 className="text-[10px] font-medium text-muted-foreground tracking-tight ">RESUMO FINANCEIRO</h3>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('finance')}>
                                 <Plus className="w-3 h-3" /> LANÇAR
                             </Button>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
-                            <div className="p-3 bg-secondary/10 border border-border/5 rounded-2xl">
-                                <p className="text-[9px] font-black text-muted-foreground/40 tracking-widest uppercase">VALOR</p>
-                                <p className="text-sm font-black text-foreground tabular-nums">{fmt(valorTotal)}</p>
+                            <div className="p-3 bg-secondary/10 border border-border rounded-lg">
+                                <p className="text-[9px] font-medium text-muted-foreground tracking-tight ">VALOR</p>
+                                <p className="text-sm font-medium text-foreground tabular-nums">{fmt(valorTotal)}</p>
                             </div>
-                            <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
-                                <p className="text-[9px] font-black text-emerald-600/60 tracking-widest uppercase">RECEBIDO</p>
-                                <p className="text-sm font-black text-emerald-500 tabular-nums">{fmt(recebido)}</p>
+                            <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-lg">
+                                <p className="text-[9px] font-medium text-emerald-600/60 tracking-tight ">RECEBIDO</p>
+                                <p className="text-sm font-medium text-emerald-500 tabular-nums">{fmt(recebido)}</p>
                             </div>
-                            <div className="p-3 bg-rose-500/5 border border-rose-500/10 rounded-2xl">
-                                <p className="text-[9px] font-black text-rose-600/60 tracking-widest uppercase">CUSTOS</p>
-                                <p className="text-sm font-black text-rose-500 tabular-nums">{fmt(totalCustos)}</p>
+                            <div className="p-3 bg-rose-500/5 border border-rose-500/10 rounded-lg">
+                                <p className="text-[9px] font-medium text-rose-600/60 tracking-tight ">CUSTOS</p>
+                                <p className="text-sm font-medium text-rose-500 tabular-nums">{fmt(totalCustos)}</p>
                             </div>
                         </div>
 
@@ -224,7 +224,7 @@ export const ProjectDock = ({
                                 ? "bg-emerald-500/5 border-emerald-500/15"
                                 : "bg-rose-500/5 border-rose-500/15"
                         )}>
-                            <span className="text-[9px] font-bold tracking-widest text-muted-foreground">LUCRO / SALDO</span>
+                            <span className="text-[9px] font-medium tracking-tight text-muted-foreground ">LUCRO / SALDO</span>
                             <span className={cn(
                                 "text-xs font-bold tabular-nums",
                                 lucro >= 0 ? "text-emerald-500" : "text-rose-500"
@@ -234,7 +234,7 @@ export const ProjectDock = ({
                         </div>
 
                         <div className="space-y-3 pt-2">
-                            <p className="text-[9px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase px-1">LANÇAMENTOS</p>
+                            <p className="text-[9px] font-medium text-muted-foreground tracking-tight  px-1">LANÇAMENTOS</p>
                             {finance.length === 0 && (
                                 <div className="text-center py-8 opacity-30">
                                     <p className="text-xs">Nenhum custo lançado.</p>
@@ -249,7 +249,7 @@ export const ProjectDock = ({
                                             <p className="text-[8px] text-muted-foreground">{new Date(entry.date).toLocaleDateString('pt-BR')}</p>
                                         </div>
                                     </div>
-                                    <p className="text-xs font-black tabular-nums text-rose-500">
+                                    <p className="text-xs font-medium tabular-nums text-rose-500">
                                         -{fmt(Math.abs(entry.amount))}
                                     </p>
                                 </div>
@@ -262,8 +262,8 @@ export const ProjectDock = ({
                 return (
                     <div className="space-y-4 p-4">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">WORKSPACE</h3>
-                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={onAddPage}>
+                            <h3 className="text-[10px] font-medium text-muted-foreground tracking-tight ">WORKSPACE</h3>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors" onClick={onAddPage}>
                                 <Plus className="w-3 h-3" /> PÁGINA
                             </Button>
                         </div>
@@ -276,7 +276,7 @@ export const ProjectDock = ({
                                 <div className="p-1 bg-primary/10 rounded">
                                     <ActivityIcon className="w-3 h-3 text-primary" />
                                 </div>
-                                <span className="text-xs font-bold">Página Principal</span>
+                                <span className="text-xs font-medium">Página Principal</span>
                             </button>
 
                             {pages?.map(page => (
@@ -300,17 +300,17 @@ export const ProjectDock = ({
                             ))}
                         </div>
 
-                        <div className="pt-6 border-t border-border/10">
+                        <div className="pt-6 border-t border-border">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">ANEXOS</h3>
-                                <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('doc')}>
+                                <h3 className="text-[10px] font-medium text-muted-foreground tracking-tight ">ANEXOS</h3>
+                                <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors" onClick={() => onCreateItem?.('doc')}>
                                     <Plus className="w-3 h-3" /> SUBIR
                                 </Button>
                             </div>
                             {documents.map(doc => (
                                 <div key={doc.id} className="flex items-center justify-between p-2 hover:bg-muted/40 rounded-lg group transition-colors">
                                     <div className="flex items-center gap-2 overflow-hidden">
-                                        <FileText className="w-3.5 h-3.5 text-muted-foreground/60" />
+                                        <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                                         <span className="text-xs font-medium truncate">{doc.name}</span>
                                     </div>
                                     <button onClick={() => onInsertReference?.('doc', doc.id)} className="opacity-0 group-hover:opacity-100">
@@ -324,19 +324,19 @@ export const ProjectDock = ({
             case 'activity':
                 return (
                     <div className="space-y-6 p-6">
-                        <h3 className="text-[10px] font-black text-muted-foreground/40 tracking-[0.2em] uppercase">HISTÓRICO</h3>
+                        <h3 className="text-[10px] font-medium text-muted-foreground tracking-tight ">HISTÓRICO</h3>
                         {activities.length === 0 ? (
                             <div className="text-center py-20 opacity-20">
                                 <Search className="w-8 h-8 mx-auto mb-2" />
                                 <p className="text-[10px]">Nenhuma atividade.</p>
                             </div>
                         ) : (
-                            <div className="relative space-y-6 before:absolute before:inset-0 before:ml-1.5 before:w-px before:-translate-x-1/2 before:bg-gradient-to-b before:from-border/60 before:to-transparent">
+                            <div className="relative space-y-6 before:absolute before:inset-0 before:ml-1.5 before:w-px before:-translate-x-1/2 before:bg-gradient-to-b before:from-border before:to-transparent">
                                 {activities.map((activity, idx) => (
                                     <div key={idx} className="relative flex items-start gap-4 pl-6">
                                         <div className="absolute left-0 w-3 h-3 rounded-full bg-background border-2 border-primary -translate-x-1/2 mt-1" />
                                         <div>
-                                            <p className="text-xs font-medium text-foreground/90">{activity.title}</p>
+                                            <p className="text-xs font-medium text-foreground">{activity.title}</p>
                                             <p className="text-[9px] text-muted-foreground mt-0.5">{activity.created_at}</p>
                                         </div>
                                     </div>
@@ -364,37 +364,37 @@ export const ProjectDock = ({
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed right-0 top-0 bottom-0 w-80 sm:w-96 bg-card border-l border-border/60 shadow-2xl z-50 flex flex-col"
+                        className="fixed right-0 top-0 bottom-0 w-80 sm:w-96 bg-card border-l border-border shadow-2xl z-50 flex flex-col"
                     >
-                        <div className="flex items-center justify-between px-4 py-4 border-b border-border/40">
+                        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]" />
-                                <span className="text-[11px] font-black tracking-[0.2em] uppercase text-foreground/90">PROJECT CONTEXT</span>
+                                <span className="text-[11px] font-medium tracking-tight  text-foreground">PROJECT CONTEXT</span>
                             </div>
                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={onClose}>
                                 <X className="w-4 h-4" />
                             </Button>
                         </div>
 
-                        <div className="flex border-b border-border/20 overflow-x-auto scrollbar-hide">
+                        <div className="flex border-b border-border overflow-x-auto scrollbar-hide">
                             {tabs.map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as TabType)}
                                     className={cn(
                                         "flex-1 flex flex-col items-center gap-1.5 py-4 px-2 transition-all relative min-w-[70px]",
-                                        activeTab === tab.id ? "text-primary" : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/20"
+                                        activeTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
                                     )}
                                 >
                                     <tab.icon className={cn("w-4 h-4", activeTab === tab.id && "animate-in zoom-in-75")} />
                                     <span className={cn(
-                                        "text-[9px] font-black tracking-widest",
+                                        "text-[9px] font-medium tracking-tight",
                                         activeTab === tab.id ? "opacity-100" : "opacity-40"
                                     )}>
                                         {tab.label}
                                     </span>
                                     {tab.count > 0 && (
-                                        <span className="absolute top-2 right-4 w-4 h-4 bg-primary text-primary-foreground text-[8px] flex items-center justify-center rounded-full font-black shadow-sm">
+                                        <span className="absolute top-2 right-4 w-4 h-4 bg-primary text-primary-foreground text-[8px] flex items-center justify-center rounded-full font-medium shadow-sm">
                                             {tab.count}
                                         </span>
                                     )}
@@ -414,3 +414,5 @@ export const ProjectDock = ({
         </AnimatePresence>
     );
 };
+
+

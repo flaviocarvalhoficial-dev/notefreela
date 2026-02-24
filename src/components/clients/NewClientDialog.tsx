@@ -126,7 +126,7 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="border-border/50 max-w-lg">
+            <DialogContent className="border-border max-w-lg">
                 <DialogHeader>
                     <DialogTitle>{client ? "Editar Cliente" : "Novo Cliente"}</DialogTitle>
                 </DialogHeader>
@@ -136,7 +136,7 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                         <div className="space-y-2">
                             <Label>Nome do Contato</Label>
                             <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Ex: Ana Silva"
                                     className="pl-9 glass-light text-foreground"
@@ -148,7 +148,7 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                         <div className="space-y-2">
                             <Label>Empresa</Label>
                             <div className="relative">
-                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Ex: Tech Solutions"
                                     className="pl-9 glass-light text-foreground"
@@ -163,7 +163,7 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                         <div className="space-y-2">
                             <Label>Email</Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="contato@empresa.com"
                                     className="pl-9 glass-light text-foreground"
@@ -175,7 +175,7 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                         <div className="space-y-2">
                             <Label>Telefone</Label>
                             <div className="relative">
-                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="(00) 00000-0000"
                                     className="pl-9 glass-light text-foreground"
@@ -190,7 +190,7 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                         <div className="space-y-2">
                             <Label>Cidade</Label>
                             <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="São Paulo, SP"
                                     className="pl-9 glass-light text-foreground"
@@ -202,7 +202,7 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
                         <div className="space-y-2">
                             <Label>Ramo de Negócio</Label>
                             <div className="relative">
-                                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Ex: Tecnologia"
                                     className="pl-9 glass-light text-foreground"
@@ -245,3 +245,5 @@ export function NewClientDialog({ trigger, client }: { trigger?: React.ReactNode
         </Dialog>
     );
 }
+
+

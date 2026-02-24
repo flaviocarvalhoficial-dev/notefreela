@@ -43,24 +43,24 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
                         onOpenChange(false);
                         navigate(`/projetos/${p.id}`);
                     }}
-                    className="p-4 rounded-xl border border-border/40 bg-card/40 hover:bg-muted/10 transition-all cursor-pointer group"
+                    className="p-4 rounded-lg border border-border bg-card/40 hover:bg-muted/10 transition-all cursor-pointer group"
                 >
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
                                 <TrendingUp className="h-4 w-4 text-primary" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black group-hover:text-primary transition-colors tracking-tight">{p.name}</h4>
-                                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{p.client_name || "PROJETO AUTORAL"}</p>
+                                <h4 className="text-sm font-medium group-hover:text-primary transition-colors tracking-tight">{p.name}</h4>
+                                <p className="text-[10px] font-medium text-muted-foreground  tracking-tight">{p.client_name || "PROJETO AUTORAL"}</p>
                             </div>
                         </div>
-                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest h-5 border-primary/20 bg-primary/5 text-primary">
+                        <Badge variant="outline" className="text-[9px] font-medium  tracking-tight h-5 border-primary/20 bg-primary/5 text-primary rounded-md">
                             {p.status}
                         </Badge>
                     </div>
                     <div className="space-y-2">
-                        <div className="flex justify-between text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">
+                        <div className="flex justify-between text-[9px] font-medium text-muted-foreground  tracking-tight">
                             <span>PROCESSO OPERACIONAL</span>
                             <span className="text-foreground">{p.progress || 0}%</span>
                         </div>
@@ -74,33 +74,33 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
     const renderTasks = () => (
         <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4 mb-2">
-                <div className="p-4 rounded-2xl border border-border/5 bg-secondary/10 flex flex-col items-center text-center">
-                    <p className="text-[9px] text-muted-foreground/40 uppercase font-black tracking-[0.2em] mb-2">CONCLUÍDAS</p>
-                    <p className="text-3xl font-black text-primary tabular-nums">{data.tasksStats?.completed || 0}</p>
+                <div className="p-4 rounded-lg border border-border bg-secondary/10 flex flex-col items-center text-center">
+                    <p className="text-[9px] text-muted-foreground  font-medium tracking-tight mb-2">CONCLUÍDAS</p>
+                    <p className="text-3xl font-medium text-primary tabular-nums">{data.tasksStats?.completed || 0}</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/5 bg-secondary/10 flex flex-col items-center text-center">
-                    <p className="text-[9px] text-muted-foreground/40 uppercase font-black tracking-[0.2em] mb-2">TOTAL</p>
-                    <p className="text-3xl font-black text-foreground tabular-nums">{data.tasksStats?.total || 0}</p>
+                <div className="p-4 rounded-lg border border-border bg-secondary/10 flex flex-col items-center text-center">
+                    <p className="text-[9px] text-muted-foreground  font-medium tracking-tight mb-2">TOTAL</p>
+                    <p className="text-3xl font-medium text-foreground tabular-nums">{data.tasksStats?.total || 0}</p>
                 </div>
             </div>
 
             <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
-                <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] px-1 mb-2">RESUMO DE PERFORMANCE</p>
-                <div className="p-4 rounded-2xl border border-border/5 bg-secondary/5 flex items-center justify-between">
+                <p className="text-[9px] font-medium text-muted-foreground  tracking-tight px-1 mb-2">RESUMO DE PERFORMANCE</p>
+                <div className="p-4 rounded-lg border border-border bg-secondary/5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-emerald-500" />
-                        <span className="text-xs font-bold text-foreground/70">Taxa de Eficiência</span>
+                        <span className="text-xs font-medium text-foreground">Taxa de Eficiência</span>
                     </div>
-                    <span className="text-sm font-black tabular-nums">
+                    <span className="text-sm font-medium tabular-nums">
                         {data.tasksStats?.total ? Math.round((data.tasksStats.completed / data.tasksStats.total) * 100) : 0}%
                     </span>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/5 bg-secondary/5 flex items-center justify-between">
+                <div className="p-4 rounded-lg border border-border bg-secondary/5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-amber-500" />
-                        <span className="text-xs font-bold text-foreground/70">Carga Pendente</span>
+                        <span className="text-xs font-medium text-foreground">Carga Pendente</span>
                     </div>
-                    <span className="text-sm font-black tabular-nums">
+                    <span className="text-sm font-medium tabular-nums">
                         {(data.tasksStats?.total || 0) - (data.tasksStats?.completed || 0)}
                     </span>
                 </div>
@@ -119,20 +119,20 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
                 return (
                     <div
                         key={idx}
-                        className="p-4 rounded-2xl border border-border/5 bg-secondary/10 hover:bg-secondary/20 transition-all flex items-center justify-between"
+                        className="p-4 rounded-lg border border-border bg-secondary/10 hover:bg-secondary/20 transition-all flex items-center justify-between"
                     >
                         <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/10 capitalize font-black text-primary">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/10 capitalize font-medium text-primary">
                                 {client.charAt(0) || "?"}
                             </div>
                             <div>
-                                <h4 className="text-sm font-black capitalize tracking-tight">{client}</h4>
-                                <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">CLIENTE CATALOGADO</p>
+                                <h4 className="text-sm font-medium capitalize tracking-tight">{client}</h4>
+                                <p className="text-[9px] font-medium text-muted-foreground  tracking-tight">CLIENTE CATALOGADO</p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-base font-black text-primary tabular-nums">{projectsCount}</p>
-                            <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">PROJETOS</p>
+                            <p className="text-base font-medium text-primary tabular-nums">{projectsCount}</p>
+                            <p className="text-[9px] font-medium text-muted-foreground  tracking-tight">PROJETOS</p>
                         </div>
                     </div>
                 );
@@ -169,15 +169,15 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md border-border/40 bg-sidebar/95 backdrop-blur-xl">
-                <DialogHeader className="pb-6 border-b border-border/10">
+            <DialogContent className="max-w-md border-border bg-sidebar/95 backdrop-blur-xl">
+                <DialogHeader className="pb-6 border-b border-border">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-primary/10 shadow-inner">
+                        <div className="p-3 rounded-lg bg-primary/10 shadow-inner">
                             {getIcon()}
                         </div>
                         <div>
-                            <DialogTitle className="text-2xl font-black tracking-tight uppercase">{getTitle()}</DialogTitle>
-                            <DialogDescription className="text-xs font-bold text-muted-foreground/60 mt-0.5">{getDescription()}</DialogDescription>
+                            <DialogTitle className="text-2xl font-medium tracking-tight ">{getTitle()}</DialogTitle>
+                            <DialogDescription className="text-xs font-medium text-muted-foreground mt-0.5">{getDescription()}</DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
@@ -189,3 +189,6 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
         </Dialog>
     );
 }
+
+
+

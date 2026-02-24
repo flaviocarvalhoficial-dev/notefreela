@@ -222,7 +222,7 @@ export const BlockEditor = React.forwardRef<BlockEditorRef, BlockEditorProps>(
                             onClick={() => editor.chain().focus().toggleBold().run()}
                             className={cn("p-2 hover:bg-muted transition-colors", editor.isActive('bold') && "text-primary bg-primary/5")}
                         >
-                            <span className="font-bold">B</span>
+                            <span className="font-medium">B</span>
                         </button>
                         <button
                             onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -281,7 +281,7 @@ export const BlockEditor = React.forwardRef<BlockEditorRef, BlockEditorProps>(
                             className="p-1.5 hover:bg-primary/10 text-primary rounded-full transition-colors flex items-center gap-1 px-2"
                         >
                             <Plus className="w-3 h-3" />
-                            <span className="text-[10px] font-bold">TAREFA</span>
+                            <span className="text-[10px] font-medium">TAREFA</span>
                         </button>
                     </FloatingMenu>
                 )}
@@ -321,29 +321,30 @@ export const BlockEditor = React.forwardRef<BlockEditorRef, BlockEditorProps>(
         /* ── Headings ── */
         .ProseMirror h1 {
           font-size: 2em;
-          font-weight: 700;
+          font-weight: 600;
           line-height: 1.2;
           margin-top: 1.5rem;
           margin-bottom: 0.75rem;
           color: hsl(var(--foreground));
-          letter-spacing: -0.02em;
+          letter-spacing: -0.025em;
         }
         .ProseMirror h2 {
           font-size: 1.5em;
-          font-weight: 600;
+          font-weight: 500;
           line-height: 1.3;
           margin-top: 1.25rem;
           margin-bottom: 0.5rem;
           color: hsl(var(--foreground));
-          letter-spacing: -0.01em;
+          letter-spacing: -0.02em;
         }
         .ProseMirror h3 {
           font-size: 1.17em;
-          font-weight: 600;
+          font-weight: 500;
           line-height: 1.4;
           margin-top: 1rem;
           margin-bottom: 0.4rem;
-          color: hsl(var(--foreground) / 0.9);
+          color: hsl(var(--foreground));
+          letter-spacing: -0.01em;
         }
 
         /* ── Paragraph ── */
@@ -351,7 +352,7 @@ export const BlockEditor = React.forwardRef<BlockEditorRef, BlockEditorProps>(
           font-size: 0.95em;
           line-height: 1.7;
           margin-bottom: 0.5rem;
-          color: hsl(var(--foreground) / 0.85);
+          color: hsl(var(--foreground));
         }
 
         /* ── Lists ── */
@@ -426,7 +427,7 @@ export const BlockEditor = React.forwardRef<BlockEditorRef, BlockEditorProps>(
         /* ── Code Block ── */
         .ProseMirror pre {
           background: hsl(var(--muted) / 0.3);
-          border: 1px solid hsl(var(--border) / 0.5);
+          border: 1px solid hsl(var(--border));
           border-radius: 0.5rem;
           padding: 0.75rem 1rem;
           font-family: 'JetBrains Mono', monospace;
