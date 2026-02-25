@@ -876,7 +876,7 @@ const CaixaEntrada = () => {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-[10px] font-medium text-muted-foreground  tracking-tight flex items-center gap-2">
-                                    <Inbox className="h-3 w-3" /> Caixas / Projetos
+                                    <Briefcase className="h-3 w-3" /> Caixas / Projetos
                                 </h2>
                                 <div className="flex items-center gap-3">
                                     <div className="relative group/boxsearch">
@@ -988,9 +988,9 @@ const CaixaEntrada = () => {
                                             >
                                                 <div className={cn(
                                                     "h-8 w-8 rounded-lg flex items-center justify-center transition-colors shadow-sm border border-primary/10",
-                                                    isActive ? "bg-primary text-primary-foreground" : "bg-primary/5 text-primary"
+                                                    isActive ? "bg-primary text-primary-foreground" : "bg-muted/40 text-primary"
                                                 )}>
-                                                    <Inbox className="h-4 w-4" />
+                                                    <Briefcase className="h-4 w-4" />
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
                                                     <span className={cn(

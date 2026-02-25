@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { IconPicker } from "./IconPicker";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { logActivity } from "@/utils/activities";
 
 type ProjectStatus = "active" | "planning" | "review" | "completed";
 type TabId = "geral" | "financeiro" | "tarefas" | "configuracoes";
@@ -247,6 +248,14 @@ export function EditProjectDialog({
             queryClient.invalidateQueries({ queryKey: ["project", project.id] });
             queryClient.invalidateQueries({ queryKey: ["projects-index"] });
             queryClient.invalidateQueries({ queryKey: ["clients"] });
+
+            logActivity({
+                title: "Projeto Atualizado",
+                description: `As informações do projeto "${newName}" foram atualizadas.`,
+                type: "project",
+                metadata: { project_id: project.id }
+            });
+
             toast({ title: "Sucesso!", description: "Projeto atualizado com sucesso." });
             setOpen(false);
         },

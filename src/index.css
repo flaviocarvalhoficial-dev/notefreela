@@ -188,6 +188,14 @@
     @apply shadow-[var(--shadow-hover)] border-border/80;
   }
 
+  .bento-card {
+    @apply bg-card rounded-xl border border-border shadow-[var(--shadow-card)] transition-all duration-300 overflow-hidden;
+  }
+
+  .bento-card:hover {
+    @apply shadow-[var(--shadow-hover)] border-border/80;
+  }
+
   /* Navigation Items */
   .nav-item {
     @apply flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground text-sm font-normal cursor-pointer transition-all duration-150;

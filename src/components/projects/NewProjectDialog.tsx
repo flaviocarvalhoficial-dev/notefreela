@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { logActivity } from "@/utils/activities";
 import { IconPicker } from "./IconPicker";
 
 type ProjectStatus = "active" | "planning" | "review" | "completed";
@@ -246,6 +247,14 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         onSuccess: (project) => {
             queryClient.invalidateQueries({ queryKey: ["projects"] });
             queryClient.invalidateQueries({ queryKey: ["clients"] });
+
+            logActivity({
+                title: "Projeto Criado",
+                description: `O projeto "${project.name}" foi iniciado.`,
+                type: "project",
+                metadata: { project_id: project.id }
+            });
+
             toast({
                 title: "🔥 Projeto Criado!",
                 description: `O projeto "${project.name}" foi configurado com sucesso.`,

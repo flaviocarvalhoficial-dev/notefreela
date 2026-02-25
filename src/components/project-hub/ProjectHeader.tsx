@@ -1,9 +1,11 @@
 import {
     ArrowLeft, MoreVertical, LayoutDashboard,
     CheckCircle2, Inbox, DollarSign, Calendar,
-    CheckSquare, Plus, FilePlus, ArrowUpRight, ListTodo
+    CheckSquare, Plus, FilePlus, ArrowUpRight, ListTodo, Briefcase
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { IconPicker } from '@/components/projects/IconPicker';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -27,6 +29,7 @@ interface ProjectHeaderProps {
     onToggleDock?: () => void;
     dockOpen?: boolean;
     onCreateAction?: (type: 'task' | 'inbox' | 'income' | 'expense' | 'subpage') => void;
+    onIconChange?: (icon: string) => void;
 }
 
 export const ProjectHeader = ({
@@ -36,7 +39,8 @@ export const ProjectHeader = ({
     onDelete,
     onToggleDock,
     dockOpen,
-    onCreateAction
+    onCreateAction,
+    onIconChange
 }: ProjectHeaderProps) => {
     const navigate = useNavigate();
 
@@ -46,6 +50,8 @@ export const ProjectHeader = ({
         review: "bg-amber-500/10 text-amber-600 border-amber-500/20",
         completed: "bg-slate-500/10 text-slate-600 border-slate-500/20",
     };
+
+    const ProjectIcon = (LucideIcons as any)[project?.avatar_emoji] || Briefcase;
 
     return (
         <header className="w-full bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-30">
@@ -99,9 +105,18 @@ export const ProjectHeader = ({
                 {/* Project Branding & KPIs */}
                 <div className="py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-lg bg-muted/10 border border-border flex items-center justify-center text-3xl shadow-sm">
-                            🚀
-                        </div>
+                        <IconPicker
+                            value={project?.avatar_emoji || "Briefcase"}
+                            onChange={(icon) => onIconChange?.(icon)}
+                            trigger={
+                                <div className="w-16 h-16 rounded-lg bg-muted/10 border border-border flex items-center justify-center text-3xl shadow-sm cursor-pointer hover:bg-muted/20 transition-all active:scale-95 group relative overflow-hidden">
+                                    <ProjectIcon className="w-8 h-8 text-primary/60 group-hover:text-primary transition-colors" />
+                                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <Plus className="w-4 h-4 text-primary" />
+                                    </div>
+                                </div>
+                            }
+                        />
                         <div className="space-y-0.5">
                             <h1 className="text-3xl font-medium tracking-tight text-foreground ">{project?.name}</h1>
                             <div className="flex items-center gap-2">

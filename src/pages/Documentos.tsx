@@ -50,6 +50,7 @@ const Documentos = () => {
             { name: "Contratos", icon: FileSignature, count: getCount("Contrato") },
             { name: "Briefings", icon: ClipboardCheck, count: getCount("Briefing") },
             { name: "Recibos", icon: Receipt, count: getCount("Recibo") },
+            { name: "NFe", icon: Receipt, count: getCount("NFe") },
         ];
     }, [documents]);
 
@@ -69,7 +70,7 @@ const Documentos = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="stack-gap-sm">
                         <h1 className="text-3xl font-medium tracking-tight text-foreground">Documentos</h1>
-                        <p className="text-muted-foreground font-normal text-sm max-w-md leading-relaxed">Gerencie seus modelos de contratos, briefings e recibos.</p>
+                        <p className="text-muted-foreground font-normal text-sm max-w-md leading-relaxed">Gerencie seus modelos de contratos, briefings, recibos e notas fiscais (NFe).</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -85,7 +86,7 @@ const Documentos = () => {
             </header>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-8">
                 {categories.map((cat, idx) => (
                     <motion.div
                         key={cat.name}

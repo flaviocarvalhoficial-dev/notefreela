@@ -342,6 +342,20 @@ const ProjetoHub = () => {
         }
     });
 
+    const updateIconMutation = useMutation({
+        mutationFn: async (icon: string) => {
+            const { error } = await supabase
+                .from("projects")
+                .update({ avatar_emoji: icon })
+                .eq("id", id as string);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", id] });
+            toast({ title: "Ícone atualizado" });
+        }
+    });
+
 
     // KPI Calculations
     const kpis = useMemo(() => {
@@ -389,6 +403,7 @@ const ProjetoHub = () => {
                     else if (type === 'income' || type === 'expense') setIsAddCostOpen(true);
                     else if (type === 'subpage') createPageMutation.mutate();
                 }}
+                onIconChange={(icon) => updateIconMutation.mutate(icon)}
             />
 
             <main className="flex-1 flex flex-col overflow-hidden relative">

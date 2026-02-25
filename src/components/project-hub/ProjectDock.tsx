@@ -357,7 +357,7 @@ export const ProjectDock = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-background/20 backdrop-blur-[2px] z-40 lg:hidden"
+                        className="fixed inset-0 bg-background/5 backdrop-blur-[1px] z-40"
                     />
                     <motion.div
                         initial={{ x: '100%' }}

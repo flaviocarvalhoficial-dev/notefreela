@@ -16,8 +16,10 @@ import Clientes from "./pages/Clientes";
 import CaixaEntrada from "./pages/CaixaEntrada";
 import Documentos from "./pages/Documentos";
 import Financeiro from "./pages/Financeiro";
-import Configuracoes from "./pages/Configuracoes";
 import Auth from "./pages/Auth";
+import Atividades from "./pages/Atividades";
+import Configuracoes from "./pages/Configuracoes";
+import Assinaturas from "./pages/Assinaturas";
 import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase";
 import { Session } from "@supabase/supabase-js";
@@ -48,7 +50,9 @@ const AppLayout = () => {
               <Route path="/caixa-entrada" element={<CaixaEntrada />} />
               <Route path="/documentos" element={<Documentos />} />
               <Route path="/financeiro" element={<Financeiro />} />
+              <Route path="/atividades" element={<Atividades />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="/assinaturas" element={<Assinaturas />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

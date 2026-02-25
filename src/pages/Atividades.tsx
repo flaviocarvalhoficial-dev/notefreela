@@ -70,34 +70,35 @@ const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
         </div>
       )}
 
-      {/* Filtros */}
-      <motion.div
-        className="bento-card bento-card--compact"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar atividades..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 glass-light"
-            />
-          </div>
+      {!hideHeader && (
+        <motion.div
+          className="bento-card bento-card--compact"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar atividades..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 glass-light"
+              />
+            </div>
 
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="shrink-0">
-            <TabsList className="glass-light border border-border">
-              <TabsTrigger value="all">Todas</TabsTrigger>
-              <TabsTrigger value="project">Projetos</TabsTrigger>
-              <TabsTrigger value="task">Tarefas</TabsTrigger>
-              <TabsTrigger value="comment">Comentários</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </motion.div>
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="shrink-0">
+              <TabsList className="glass-light border border-border">
+                <TabsTrigger value="all">Todas</TabsTrigger>
+                <TabsTrigger value="project">Projetos</TabsTrigger>
+                <TabsTrigger value="task">Tarefas</TabsTrigger>
+                <TabsTrigger value="comment">Comentários</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </motion.div>
+      )}
 
       {/* Lista de Atividades */}
       <motion.div

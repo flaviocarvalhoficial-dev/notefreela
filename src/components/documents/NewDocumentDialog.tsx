@@ -90,6 +90,7 @@ export function NewDocumentDialog({ open, onOpenChange, projects, onUpload, isUp
                                         <SelectItem value="Contrato">Contrato</SelectItem>
                                         <SelectItem value="Briefing">Briefing</SelectItem>
                                         <SelectItem value="Recibo">Recibo</SelectItem>
+                                        <SelectItem value="NFe">NFe</SelectItem>
                                         <SelectItem value="Proposta">Proposta</SelectItem>
                                         <SelectItem value="Outros">Outros</SelectItem>
                                     </SelectContent>

@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000,
-        navigateFallbackAllowlist: [/^\/(tarefas|projetos|agenda|financeiro|clientes|caixa-entrada|documentos|configuracoes)(\/.*|\?.*)?$/]
+        navigateFallbackAllowlist: [/^\/(tarefas|projetos|agenda|financeiro|clientes|caixa-entrada|documentos|configuracoes|atividades|assinaturas)(\/.*|\?.*)?$/]
       },
       manifest: {
         name: 'NoteFreela',

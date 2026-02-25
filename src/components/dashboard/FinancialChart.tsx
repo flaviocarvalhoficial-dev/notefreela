@@ -25,7 +25,7 @@ interface FinancialChartProps {
 }
 
 export function FinancialChart({ projects }: FinancialChartProps) {
-    const [chartType, setChartType] = useState<"bar" | "line">("bar");
+    const [chartType, setChartType] = useState<"bar" | "line">("line");
 
     // Process data: Aggregate by month
     const data = useMemo(() => {
@@ -192,7 +192,7 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                                 formatter={(value: number) => [formatCurrency(value), ""]}
                             />
                             <Area
-                                type="monotone"
+                                type="natural"
                                 dataKey="total"
                                 name="Total Contratado"
                                 stroke="hsl(212, 52%, 52%)"
@@ -203,7 +203,7 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                                 animationEasing="ease-in-out"
                             />
                             <Area
-                                type="monotone"
+                                type="natural"
                                 dataKey="received"
                                 name="Recebido"
                                 stroke="hsl(158, 64%, 52%)"

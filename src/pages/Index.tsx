@@ -168,20 +168,24 @@ const Index = () => {
                 </div>
 
                 {/* Financial Chart */}
-                <div className="lg:col-span-1 h-[500px]">
+                <div className="lg:col-span-1 h-[500px] pt-[60px]">
                     <FinancialChart projects={projects} />
                 </div>
             </div>
 
             {/* Recent Activities Section */}
-            <div className="mt-4">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold tracking-tight">Atividades Recentes</h3>
-                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground h-7" onClick={() => navigate('/atividades')}>
+            <div className="mt-8 pb-12">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="h-1 w-4 bg-primary/40 rounded-full" />
+                        <h3 className="text-lg font-semibold tracking-tight">Atividades Recentes</h3>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground h-7 gap-2" onClick={() => navigate('/atividades')}>
+                        <Activity className="h-3 w-3" />
                         Ver todas
                     </Button>
                 </div>
-                <div className="h-[400px] overflow-hidden">
+                <div className="min-h-[200px]">
                     <Atividades hideHeader={true} />
                 </div>
             </div>

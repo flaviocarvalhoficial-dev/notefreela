@@ -15,6 +15,7 @@ import {
   Circle,
   Rocket,
   DollarSign,
+  CreditCard,
   Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,7 @@ const navItems = [
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Documentos", url: "/documentos", icon: FileText },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
+  { title: "Assinaturas", url: "/assinaturas", icon: CreditCard },
 ];
 
 const APP_VERSION = "V1.1.0";
