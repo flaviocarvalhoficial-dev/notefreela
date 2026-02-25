@@ -127,14 +127,14 @@ const Clientes = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="p-6 rounded-lg flex items-center gap-5 bg-card border border-border shadow-sm"
+                        className="p-6 rounded-lg flex flex-col items-start justify-center text-left gap-3 bg-card border border-border shadow-sm h-[110px]"
                     >
-                        <div className="text-primary pr-2">
-                            <stat.icon className="h-6 w-6" />
+                        <div className="text-primary">
+                            <stat.icon className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-medium text-muted-foreground  tracking-tight">{stat.title}</p>
-                            <p className="text-xl font-medium tracking-tight tabular-nums">
+                            <p className="text-[10px] font-medium text-muted-foreground tracking-tight mb-0.5">{stat.title}</p>
+                            <p className="text-xl font-medium tracking-tight tabular-nums text-foreground">
                                 {typeof stat.value === 'number' && stat.title.includes("Total")
                                     ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stat.value)
                                     : stat.value}

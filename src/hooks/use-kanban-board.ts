@@ -133,7 +133,9 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
             const matchesQ = !q || t.title.toLowerCase().includes(q) || t.project_name?.toLowerCase().includes(q);
             const matchesP = priorityFilter === "all" || t.priority === priorityFilter;
             const matchesProject = projectFilter === "all" || String(t.project_id) === String(projectFilter);
-            const matchesPeriod = !billingPeriod || (t as any).billing_period === billingPeriod;
+            // Only filter by billing period if the task HAS a billing_period set
+            // Tasks without billing_period (e.g. created via EditProjectDialog) are always shown
+            const matchesPeriod = !billingPeriod || !(t as any).billing_period || (t as any).billing_period === billingPeriod;
             return matchesQ && matchesP && matchesProject && matchesPeriod;
         });
     }, [tasks, searchQuery, priorityFilter, projectFilter, billingPeriod]);
@@ -228,9 +230,9 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
                 column_id: defaultColId as any,
                 project_id: values.project || null,
                 progress: values.progress || 0,
-                start_time: values.startTime || "09:00",
-                end_time: values.endTime || "10:00",
-                billing_period: billingPeriod
+                start_time: (values as any).startTime || "09:00",
+                end_time: (values as any).endTime || "10:00",
+                billing_period: billingPeriod || null
             });
             if (error) throw error;
         },

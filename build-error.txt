@@ -1,0 +1,49 @@
+﻿[36mvite v5.4.19 [32mbuilding for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 6 modules transformed.
+node.exe : [31mx[39m Build 
+failed in 1.07s
+No C:\Program 
+Files\nodejs\npx.ps1:29 
+caractere:3
++   & $NODE_EXE $NPX_CLI_JS 
+$args
++   
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: ([31mx  
+  [39m Build failed in 1.0   
+ 7s:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+[31merror during build:
+[31m[vite-plugin-pwa:build] 
+Could not resolve 
+"./pages/Index" from 
+"src/App.tsx"[31m
+file: [36mY:/CRIA├ç├âO DE 
+MICRO SAAS/NoteFreela/src/App
+.tsx[31m
+    at getRollupError (file:/
+//Y:/CRIA%C3%87%C3%83O%20DE%2
+0MICRO%20SAAS/NoteFreela/node
+_modules/rollup/dist/es/share
+d/parseAst.js:395:41)
+    at error (file:///Y:/CRIA
+%C3%87%C3%83O%20DE%20MICRO%20
+SAAS/NoteFreela/node_modules/
+rollup/dist/es/shared/parseAs
+t.js:391:42)
+    at ModuleLoader.handleInv
+alidResolvedId (file:///Y:/CR
+IA%C3%87%C3%83O%20DE%20MICRO%
+20SAAS/NoteFreela/node_module
+s/rollup/dist/es/shared/node-
+entry.js:20006:24)
+    at file:///Y:/CRIA%C3%87%
+C3%83O%20DE%20MICRO%20SAAS/No
+teFreela/node_modules/rollup/
+dist/es/shared/node-entry.js:
+19966:26[39m

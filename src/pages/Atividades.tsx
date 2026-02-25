@@ -35,7 +35,7 @@ const activityColors: Record<ActivityType, string> = {
   assignment: "hsl(340, 75%, 60%)",
 };
 
-const Atividades = () => {
+const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
   const [filter, setFilter] = useState<"all" | ActivityType>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -63,10 +63,12 @@ const Atividades = () => {
 
   return (
     <div className="h-full flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-medium tracking-tight mb-1">Atividades</h1>
-        <p className="text-muted-foreground text-sm">Histórico de ações e atualizações reais</p>
-      </div>
+      {!hideHeader && (
+        <div>
+          <h1 className="text-3xl font-medium tracking-tight mb-1">Atividades</h1>
+          <p className="text-muted-foreground text-sm">Histórico de ações e atualizações reais</p>
+        </div>
+      )}
 
       {/* Filtros */}
       <motion.div

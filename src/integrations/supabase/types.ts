@@ -120,6 +120,8 @@ export type Database = {
                     advance_payment: number | null
                     payment_method: string | null
                     payment_status: string | null
+                    avatar_emoji: string | null
+                    manager_name: string | null
                 }
                 Insert: {
                     created_at?: string
@@ -144,6 +146,8 @@ export type Database = {
                     advance_payment?: number | null
                     payment_method?: string | null
                     payment_status?: string | null
+                    avatar_emoji?: string | null
+                    manager_name?: string | null
                 }
                 Update: {
                     created_at?: string
@@ -168,6 +172,8 @@ export type Database = {
                     advance_payment?: number | null
                     payment_method?: string | null
                     payment_status?: string | null
+                    avatar_emoji?: string | null
+                    manager_name?: string | null
                 }
                 Relationships: [
                     {
@@ -360,6 +366,9 @@ export type Database = {
                     project_id: string | null
                     title: string
                     user_id: string
+                    billing_period: string | null
+                    start_time: string | null
+                    end_time: string | null
                 }
                 Insert: {
                     assignee?: string | null
@@ -372,6 +381,9 @@ export type Database = {
                     project_id?: string | null
                     title: string
                     user_id: string
+                    billing_period?: string | null
+                    start_time?: string | null
+                    end_time?: string | null
                 }
                 Update: {
                     assignee?: string | null
@@ -384,6 +396,9 @@ export type Database = {
                     project_id?: string | null
                     title?: string
                     user_id?: string
+                    billing_period?: string | null
+                    start_time?: string | null
+                    end_time?: string | null
                 }
                 Relationships: [
                     {

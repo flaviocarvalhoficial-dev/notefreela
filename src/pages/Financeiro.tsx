@@ -339,15 +339,15 @@ export default function Financeiro() {
                                 setIsDetailedStatsOpen(true);
                             }
                         }}
-                        className="relative p-6 rounded-lg border border-border bg-card shadow-sm group cursor-pointer overflow-hidden transition-all duration-300"
+                        className="relative p-6 rounded-lg border border-border bg-card shadow-sm group cursor-pointer overflow-hidden transition-all duration-300 flex flex-col items-start justify-center text-left h-[130px]"
                     >
-                        <div className="flex items-center justify-between mb-4 relative z-10">
-                            <div className={cn("p-3 rounded-md border border-border", kpi.bg)}>
-                                <kpi.icon className="h-5 w-5 opacity-60" style={{ color: kpi.color }} />
+                        <div className="flex items-center justify-start mb-4 relative z-10 w-full">
+                            <div className={cn("p-3 rounded-md border border-border transition-all duration-300 group-hover:scale-110", kpi.bg)}>
+                                <kpi.icon className="h-5 w-5" style={{ color: kpi.color }} />
                             </div>
                         </div>
                         <div className="relative z-10">
-                            <p className="text-[10px] font-medium text-muted-foreground  tracking-tight mb-1">{kpi.label}</p>
+                            <p className="text-[10px] font-medium text-muted-foreground tracking-tight mb-0.5">{kpi.label}</p>
                             <h3 className="text-2xl font-medium tabular-nums tracking-tight text-foreground">{kpi.value}</h3>
                         </div>
                     </motion.div>

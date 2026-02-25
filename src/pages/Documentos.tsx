@@ -94,24 +94,25 @@ const Documentos = () => {
                         transition={{ delay: idx * 0.1 }}
                         onClick={() => setActiveCategory(cat.name)}
                         className={cn(
-                            "bg-card border border-border rounded-lg cursor-pointer group p-5 transition-all duration-300 shadow-sm",
+                            "bg-card border border-border rounded-lg cursor-pointer group p-5 transition-all duration-300 shadow-sm flex flex-col items-start justify-center text-left",
                             activeCategory === cat.name
                                 ? "bg-primary/5 border-primary/30"
                                 : "hover:bg-muted/50"
                         )}
                     >
-                        <div className="flex items-start justify-between">
-                            <div className={cn(
-                                "p-2 rounded-md transition-colors",
-                                activeCategory === cat.name ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                            )}>
-                                <cat.icon className="h-5 w-5" />
-                            </div>
-                            <span className="text-[10px] font-medium tabular-nums text-muted-foreground  tracking-tight">{cat.count}</span>
+                        <div className={cn(
+                            "p-2 rounded-md transition-colors mb-3",
+                            activeCategory === cat.name ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        )}>
+                            <cat.icon className="h-5 w-5" />
                         </div>
-                        <div className="mt-4">
+
+                        <div className="flex flex-col items-start">
                             <h3 className="text-sm font-medium tracking-tight text-foreground">{cat.name}</h3>
-                            <p className="text-[10px] text-muted-foreground font-medium mt-1  tracking-tight">Arquivos</p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                                <span className="text-[10px] font-medium tabular-nums text-primary underline underline-offset-4 decoration-primary/30">{cat.count}</span>
+                                <p className="text-[10px] text-muted-foreground font-medium tracking-tight">Arquivos</p>
+                            </div>
                         </div>
                     </motion.div>
                 ))}

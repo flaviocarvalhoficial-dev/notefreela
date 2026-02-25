@@ -157,7 +157,6 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     name: newName,
                     description: newDesc,
                     client_name: newClient,
-                    manager_name: newManager,
                     status: "planning",
                     priority: newPriority,
                     deadline: newDeadline || null,
@@ -168,7 +167,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     payment_method: newPaymentMethod,
                     payment_status: newPaymentStatus,
                     avatar_emoji: newIcon,
-                    services: services, // Assumes column 'services' exists (jsonb or text[])
+                    services: services,
                     billing_type: billingType,
                     service_type: serviceType,
                     contract_status: contractStatus,
@@ -220,9 +219,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     user_id: user.id,
                     column_id: todoColId,
                     progress: 0,
-                    priority: "medium",
-                    // @ts-ignore
-                    billing_period: format(new Date(), "MMM yyyy", { locale: ptBR })
+                    priority: "medium"
                 }));
 
                 const { error: tError } = await (supabase as any).from("tasks").insert(tasksToInsert);

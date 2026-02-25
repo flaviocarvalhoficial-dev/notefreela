@@ -150,24 +150,43 @@ export default function Tarefas() {
         }
     });
 
+    // Detect the "done" column(s) dynamically — last column by position per scenario
+    const doneColumnIds = useMemo(() => {
+        if (columns.length === 0) return new Set(['done']);
+        // Group columns by scenario_id, take the last (highest position) of each
+        const byScenario: Record<string, typeof columns> = {};
+        for (const col of columns) {
+            const sid = col.scenario_id || '__default';
+            if (!byScenario[sid]) byScenario[sid] = [];
+            byScenario[sid].push(col);
+        }
+        const done = new Set<string>();
+        for (const cols of Object.values(byScenario)) {
+            const sorted = [...cols].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+            if (sorted.length > 0) done.add(sorted[sorted.length - 1].id);
+        }
+        // Also include the legacy enum value
+        done.add('done');
+        return done;
+    }, [columns]);
+
     // Task counts per project for the selection cards
     const taskCountsByProject = useMemo(() => {
-        const allTasks = tasks; // tasks from useKanbanBoard is unfiltered when projectFilter=all
+        const allTasks = tasks;
         const counts: Record<string, { total: number; open: number }> = {};
         for (const t of allTasks) {
             const pid = t.project_id || "__none__";
             if (!counts[pid]) counts[pid] = { total: 0, open: 0 };
             counts[pid].total++;
-            if (t.column_id !== 'done') counts[pid].open++;
+            if (!doneColumnIds.has(t.column_id)) counts[pid].open++;
         }
         return counts;
-    }, [tasks]);
-
+    }, [tasks, doneColumnIds]);
 
     const tasksTotal = filteredTasks.length;
-    const tasksOpen = filteredTasks.filter(t => t.column_id !== 'done').length;
-    const tasksOverdue = filteredTasks.filter(t => t.column_id !== 'done' && t.due_date && isBefore(new Date(t.due_date), new Date())).length;
-    const projectProgress = tasksTotal > 0 ? Math.round((filteredTasks.filter(t => t.column_id === 'done').length / tasksTotal) * 100) : 0;
+    const tasksOpen = filteredTasks.filter(t => !doneColumnIds.has(t.column_id)).length;
+    const tasksOverdue = filteredTasks.filter(t => !doneColumnIds.has(t.column_id) && t.due_date && isBefore(new Date(t.due_date), new Date())).length;
+    const projectProgress = tasksTotal > 0 ? Math.round((filteredTasks.filter(t => doneColumnIds.has(t.column_id)).length / tasksTotal) * 100) : 0;
 
     const availableCycles = useMemo(() => {
         const cycles = [];
