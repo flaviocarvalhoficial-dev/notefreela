@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, parseISO } from "date-fns";
@@ -27,6 +28,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useFinancialData } from "@/hooks/use-financial-data";
+import { toValidDate, safeToISOString, isInSelectedMonth } from "@/utils/date";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -82,40 +85,35 @@ export default function Financeiro() {
         );
     };
 
-    const { data: projects = [], isLoading } = useQuery({
-        queryKey: ["finance_projects"],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("projects")
-                .select("*, project_costs(*)")
-                .order("created_at", { ascending: false });
-
-            if (error) throw error;
-            return (data as any) as (Project & { project_costs: any[] })[];
-        }
-    });
+    const {
+        projects: allProjects,
+        subscriptions,
+        stats: financialStats,
+        isLoading: isFinancialLoading
+    } = useFinancialData(selectedMonth);
 
     const monthOptions = useMemo(() => {
         const months = new Set<string>();
-        months.add(new Date().toISOString().substring(0, 7));
+        const currentMonth = new Date().toISOString().substring(0, 7);
+        months.add(currentMonth);
 
-        projects.forEach(p => {
+        allProjects.forEach(p => {
             if (p.created_at) months.add(p.created_at.substring(0, 7));
             if (p.deadline) months.add(p.deadline.substring(0, 7));
         });
 
         return Array.from(months).sort().reverse().map(m => {
-            const [year, month] = m.split("-");
-            const date = new Date(parseInt(year), parseInt(month) - 1);
+            const [year, month] = m.split("-").map(Number);
+            const date = new Date(year, month - 1);
             return {
                 value: m,
                 label: format(date, "MMMM 'de' yyyy", { locale: ptBR })
             };
         });
-    }, [projects]);
+    }, [allProjects]);
 
     const filteredProjects = useMemo(() => {
-        return projects.filter(p => {
+        return allProjects.filter(p => {
             const remaining = (p.value || 0) - (p.advance_payment || 0);
             const isPaid = remaining <= 0 && (p.value || 0) > 0;
             const hasAdvance = (p.advance_payment || 0) > 0;
@@ -126,71 +124,81 @@ export default function Financeiro() {
 
             const matchesStatus = statusFilter === "all" || payStatus === statusFilter;
 
-            const projectMonth = p.created_at ? p.created_at.substring(0, 7) : "";
-            const deadlineMonth = p.deadline ? p.deadline.substring(0, 7) : "";
-            const matchesMonth = selectedMonth === "all" || projectMonth === selectedMonth || deadlineMonth === selectedMonth;
+            const matchesMonth = selectedMonth === "all" ||
+                isInSelectedMonth(p.created_at, selectedMonth) ||
+                isInSelectedMonth(p.deadline, selectedMonth);
 
             return matchesSearch && matchesStatus && matchesMonth;
         });
-    }, [projects, searchQuery, statusFilter, selectedMonth]);
+    }, [allProjects, searchQuery, statusFilter, selectedMonth]);
 
     const stats = useMemo(() => {
         let gains = 0;
-        let future = 0;
+        let futureValue = 0;
         let total = 0;
+        const today = new Date().toISOString().split('T')[0];
+        const validToday = toValidDate(today);
 
         filteredProjects.forEach(p => {
-            const projectIncomesFromInstallments = (p as any).project_costs
-                ?.filter((c: any) => c.category === "receita_parcela")
-                .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
+            const installments = (p as any).project_costs?.filter((c: any) => c.category === "receita_parcela") || [];
 
-            const paidTotal = (p.advance_payment || 0) + projectIncomesFromInstallments;
+            const advanceDate = (p.created_at || "").split('T')[0];
+            const advanceAmt = Number(p.advance_payment) || 0;
 
-            const projectMonth = (p.created_at || "").substring(0, 7);
-            const deadlineMonth = (p.deadline || "").substring(0, 7);
+            const advancePaid = advanceDate <= today ? advanceAmt : 0;
+            const advanceProv = advanceDate > today ? advanceAmt : 0;
+
+            const installmentsPaid = installments
+                .filter((c: any) => c.date <= today)
+                .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
+
+            const installmentsProv = installments
+                .filter((c: any) => c.date > today)
+                .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
+
+            const paidTotal = advancePaid + installmentsPaid;
+            const provisionedTotal = advanceProv + installmentsProv;
 
             if (selectedMonth === "all") {
                 gains += paidTotal;
-                future += Math.max(0, (p.value || 0) - paidTotal);
+                futureValue += provisionedTotal + Math.max(0, (p.value || 0) - (paidTotal + provisionedTotal));
                 total += (p.value || 0);
             } else {
-                if (projectMonth === selectedMonth) {
-                    gains += paidTotal;
+                if (isInSelectedMonth(advanceDate, selectedMonth)) {
+                    gains += advancePaid;
                 }
-                if (deadlineMonth === selectedMonth) {
-                    future += Math.max(0, (p.value || 0) - paidTotal);
-                }
-                total = gains + future;
+
+                installments.forEach((c: any) => {
+                    if (isInSelectedMonth(c.date, selectedMonth)) {
+                        const validDate = toValidDate(c.date);
+                        if (validDate && validToday) {
+                            gains += validDate <= validToday ? Number(c.amount) : 0;
+                            futureValue += validDate > validToday ? Number(c.amount) : 0;
+                        }
+                    }
+                });
+
+                total = gains + futureValue;
             }
         });
 
         return {
             totalValue: total,
             totalPaid: gains,
-            totalRemaining: future,
+            totalRemaining: futureValue,
             projects: filteredProjects,
             projectCount: filteredProjects.length
         };
     }, [filteredProjects, selectedMonth]);
 
-    const { data: costStats } = useQuery({
-        queryKey: ["finance_costs"],
-        queryFn: async () => {
-            const { data } = await (supabase as any).from("project_costs").select("amount, category");
-            const totalCosts = data?.filter((c: any) => c.category !== "receita_parcela").reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
-            const totalInstallments = data?.filter((c: any) => c.category === "receita_parcela").reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
-            return { totalCosts, totalInstallments };
-        }
-    });
-
-    const totalCosts = costStats?.totalCosts || 0;
-    const netProfit = (stats?.totalPaid || 0) - totalCosts;
+    const totalCosts = financialStats.totalCosts;
+    const netProfit = financialStats.netProfit;
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
     };
 
-    if (isLoading) {
+    if (isFinancialLoading) {
         return (
             <div className="h-full flex items-center justify-center py-24">
                 <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
@@ -238,7 +246,7 @@ export default function Financeiro() {
 
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-2 relative z-10">
-                        <span className="text-[10px] font-medium  tracking-tight text-muted-foreground">Saldo em Fluxo</span>
+                        <span className="text-[10px] font-medium  tracking-tight text-muted-foreground">Lucro Consolidado</span>
                         <div className="text-3xl font-medium tabular-nums text-foreground tracking-tight">{formatCurrency(netProfit)}</div>
                     </div>
 
@@ -318,12 +326,22 @@ export default function Financeiro() {
             </div>
 
             {/* KPI Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { id: 'income', label: "Injeção de Capital", value: formatCurrency(stats?.totalPaid || 0), icon: ArrowUpRight, color: "hsl(var(--primary))", bg: "bg-primary/5" },
-                    { id: 'costs', label: "Dreno Operacional", value: formatCurrency(totalCosts), icon: TrendingDown, color: "hsl(var(--foreground))", bg: "bg-secondary" },
-                    { id: 'profit', label: "Superávit Real", value: formatCurrency(netProfit), icon: Wallet, color: netProfit >= 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))", bg: "bg-primary/5" },
-                    { id: 'future', label: "Orizonte de Crédito", value: formatCurrency(stats?.totalRemaining || 0), icon: Clock, color: "hsl(var(--muted-foreground))", bg: "bg-muted/10" }
+                    {
+                        id: 'income',
+                        label: "Total Recebido",
+                        value: formatCurrency(financialStats.totalIncome || 0),
+                        icon: ArrowUpRight,
+                        color: "hsl(var(--primary))",
+                        bg: "bg-primary/5",
+                        badge: financialStats.totalProvisioned > 0 ? {
+                            label: "Provisionado",
+                            value: formatCurrency(financialStats.totalProvisioned)
+                        } : null
+                    },
+                    { id: 'costs', label: "Custos Totais", value: formatCurrency(financialStats.totalCosts), icon: TrendingDown, color: "hsl(var(--foreground))", bg: "bg-secondary" },
+                    { id: 'profit', label: "Lucro Líquido", value: formatCurrency(financialStats.netProfit), icon: Wallet, color: financialStats.netProfit >= 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))", bg: "bg-primary/5" },
                 ].map((kpi, i) => (
                     <motion.div
                         key={kpi.label}
@@ -341,10 +359,23 @@ export default function Financeiro() {
                         }}
                         className="relative p-6 rounded-lg border border-border bg-card shadow-sm group cursor-pointer overflow-hidden transition-all duration-300 flex flex-col items-start justify-center text-left h-[130px]"
                     >
-                        <div className="flex items-center justify-start mb-4 relative z-10 w-full">
+                        <div className="flex items-center justify-between mb-4 relative z-10 w-full">
                             <div className={cn("p-3 rounded-md border border-border transition-all duration-300 group-hover:scale-110", kpi.bg)}>
                                 <kpi.icon className="h-5 w-5" style={{ color: kpi.color }} />
                             </div>
+                            {kpi.badge && (
+                                <div
+                                    className="flex flex-col items-end cursor-pointer hover:opacity-80 transition-opacity bg-primary/5 p-1.5 rounded-md border border-primary/10"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveStatDetail('provisioned');
+                                        setIsDetailedStatsOpen(true);
+                                    }}
+                                >
+                                    <span className="text-[9px] font-bold text-primary tracking-tighter uppercase mb-0.5">{kpi.badge.label}</span>
+                                    <span className="text-[11px] font-semibold text-foreground tabular-nums">{kpi.badge.value}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="relative z-10">
                             <p className="text-[10px] font-medium text-muted-foreground tracking-tight mb-0.5">{kpi.label}</p>
@@ -428,42 +459,53 @@ export default function Financeiro() {
                                             </td>
                                             <td className="p-4 font-medium text-emerald-500/90">
                                                 {formatCurrency(
-                                                    (p.advance_payment || 0) +
-                                                    ((p as any).project_costs
-                                                        ?.filter((c: any) => c.category === "receita_parcela")
-                                                        .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0)
+                                                    (() => {
+                                                        const todayStr = new Date().toISOString().split('T')[0];
+                                                        const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
+                                                        const installmentsPaid = (p as any).project_costs
+                                                            ?.filter((c: any) => c.category === "receita_parcela" && c.date <= todayStr)
+                                                            .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
+                                                        return advancePaid + installmentsPaid;
+                                                    })()
                                                 )}
                                             </td>
                                             <td className="p-4 font-medium text-amber-500/90">
                                                 {formatCurrency(
-                                                    (p.value || 0) -
-                                                    ((p.advance_payment || 0) +
-                                                        ((p as any).project_costs
-                                                            ?.filter((c: any) => c.category === "receita_parcela")
-                                                            .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0))
+                                                    (() => {
+                                                        const todayStr = new Date().toISOString().split('T')[0];
+                                                        const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
+                                                        const installmentsPaid = (p as any).project_costs
+                                                            ?.filter((c: any) => c.category === "receita_parcela" && c.date <= todayStr)
+                                                            .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
+                                                        return (p.value || 0) - (advancePaid + installmentsPaid);
+                                                    })()
                                                 )}
                                             </td>
                                             <td className="p-4 text-center">
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "text-[9px] font-medium border-none",
-                                                        (p.value || 0) -
-                                                            ((p.advance_payment || 0) +
-                                                                ((p as any).project_costs
-                                                                    ?.filter((c: any) => c.category === "receita_parcela")
-                                                                    .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0)) <= 0 && (p.value || 0) > 0 ? "bg-primary/10 text-primary" :
-                                                            (p.advance_payment || 0) > 0 || ((p as any).project_costs?.some((c: any) => c.category === "receita_parcela")) ? "bg-secondary text-foreground" :
-                                                                "bg-muted/20 text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {(p.value || 0) -
-                                                        ((p.advance_payment || 0) +
-                                                            ((p as any).project_costs
-                                                                ?.filter((c: any) => c.category === "receita_parcela")
-                                                                .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0)) <= 0 && (p.value || 0) > 0 ? "Quitado" :
-                                                        (p.advance_payment || 0) > 0 || ((p as any).project_costs?.some((c: any) => c.category === "receita_parcela")) ? "Parcial" : "Pendente"}
-                                                </Badge>
+                                                {(() => {
+                                                    const todayStr = new Date().toISOString().split('T')[0];
+                                                    const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
+                                                    const installmentsPaid = (p as any).project_costs
+                                                        ?.filter((c: any) => c.category === "receita_parcela" && c.date <= todayStr)
+                                                        .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
+                                                    const paidTotal = advancePaid + installmentsPaid;
+                                                    const remaining = (p.value || 0) - paidTotal;
+
+                                                    return (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={cn(
+                                                                "text-[9px] font-medium border-none",
+                                                                remaining <= 0 && (p.value || 0) > 0 ? "bg-primary/10 text-primary" :
+                                                                    paidTotal > 0 ? "bg-secondary text-foreground" :
+                                                                        "bg-muted/20 text-muted-foreground"
+                                                            )}
+                                                        >
+                                                            {remaining <= 0 && (p.value || 0) > 0 ? "Quitado" :
+                                                                paidTotal > 0 ? "Parcial" : "Pendente"}
+                                                        </Badge>
+                                                    );
+                                                })()}
                                             </td>
                                         </tr>
                                         <AnimatePresence>
@@ -584,6 +626,7 @@ export default function Financeiro() {
                             {activeStatDetail === 'income' && "Detalhamento de Entradas"}
                             {activeStatDetail === 'profit' && "Visão de Lucratividade"}
                             {activeStatDetail === 'future' && "Projeção de Recebíveis"}
+                            {activeStatDetail === 'provisioned' && "Cronograma de Provisão"}
                         </DialogTitle>
                         <DialogDescription>
                             Análise por projeto baseada nos filtros atuais.
@@ -595,6 +638,8 @@ export default function Financeiro() {
                             const val = activeStatDetail === 'income' ? p.advance_payment :
                                 activeStatDetail === 'future' ? ((p.value || 0) - (p.advance_payment || 0)) :
                                     0;
+
+                            if (activeStatDetail === 'provisioned') return null; // Handled separately below
 
                             if (activeStatDetail === 'profit') {
                                 return (
@@ -633,6 +678,30 @@ export default function Financeiro() {
                                 </div>
                             );
                         })}
+
+                        {activeStatDetail === 'provisioned' && financialStats.provisionedItems?.map(item => (
+                            <div key={item.id} className="p-3 rounded-md bg-muted/5 border border-border flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Badge variant="outline" className={cn(
+                                            "text-[8px] uppercase px-1 h-3.5",
+                                            item.type === 'recorrente' ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground"
+                                        )}>
+                                            {item.type}
+                                        </Badge>
+                                        <p className="text-[10px] font-medium text-foreground truncate">{item.projectName}</p>
+                                    </div>
+                                    <p className="text-[11px] font-medium text-muted-foreground leading-tight">{item.title}</p>
+                                    <p className="text-[9px] text-muted-foreground/60 mt-1">Data prevista: {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-medium tabular-nums text-primary">
+                                        {formatCurrency(item.amount)}
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground">A receber</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </DialogContent>
             </Dialog>
@@ -640,6 +709,6 @@ export default function Financeiro() {
     );
 }
 
-import * as React from "react";
+
 
 

@@ -88,7 +88,7 @@ const MOCK_DATA: Subscription[] = [
     {
         id: "2",
         name: "Adobe Creative Cloud",
-        icon: "Image",
+        icon: "si:adobecreativecloud",
         price: 185.0,
         currency: "BRL",
         billing_cycle: "mensal",
@@ -101,6 +101,48 @@ const MOCK_DATA: Subscription[] = [
     },
     {
         id: "3",
+        name: "CapCut Pro",
+        icon: "si:capcut",
+        price: 40.0,
+        currency: "BRL",
+        billing_cycle: "mensal",
+        next_payment_date: "2026-03-10",
+        status: "active",
+        category: "Vídeo",
+        description: "Edição de vídeo profissional e efeitos avançados.",
+        payment_method: "Cartão de Crédito",
+        link: "https://capcut.com",
+    },
+    {
+        id: "4",
+        name: "Suno AI",
+        icon: "si:suno",
+        price: 10.0,
+        currency: "USD",
+        billing_cycle: "mensal",
+        next_payment_date: "2026-03-15",
+        status: "active",
+        category: "Música",
+        description: "Geração de músicas com IA.",
+        payment_method: "Cartão Virtual",
+        link: "https://suno.com",
+    },
+    {
+        id: "5",
+        name: "Canva Pro",
+        icon: "si:canva",
+        price: 35.0,
+        currency: "BRL",
+        billing_cycle: "mensal",
+        next_payment_date: "2026-03-20",
+        status: "active",
+        category: "Design",
+        description: "Design gráfico simplificado para redes sociais.",
+        payment_method: "Cartão de Crédito",
+        link: "https://canva.com",
+    },
+    {
+        id: "6",
         name: "Google Workspace",
         icon: "Mail",
         price: 35.0,
@@ -114,9 +156,9 @@ const MOCK_DATA: Subscription[] = [
         link: "https://workspace.google.com",
     },
     {
-        id: "4",
+        id: "7",
         name: "ChatGPT Plus",
-        icon: "Cpu",
+        icon: "si:openai",
         price: 20.0,
         currency: "USD",
         billing_cycle: "mensal",
@@ -133,6 +175,7 @@ export default function Assinaturas() {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
     const [filterCategory, setFilterCategory] = useState("all");
+    const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
     const [isAddOpen, setIsAddOpen] = useState(false);
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -193,6 +236,26 @@ export default function Assinaturas() {
         }
     });
 
+    const updateMutation = useMutation({
+        mutationFn: async (updatedSub: any) => {
+            const { error } = await (supabase as any)
+                .from("tool_subscriptions")
+                .update(updatedSub)
+                .eq("id", updatedSub.id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["tool-subscriptions"] });
+            queryClient.invalidateQueries({ queryKey: ["finance_projects"] });
+            toast({ title: "Assinatura atualizada!" });
+            setEditingSubscription(null);
+            setIsAddOpen(false);
+        },
+        onError: (err: any) => {
+            toast({ title: "Erro ao atualizar", description: err.message, variant: "destructive" });
+        }
+    });
+
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
             const { error } = await (supabase as any).from("tool_subscriptions").delete().eq("id", id);
@@ -200,6 +263,7 @@ export default function Assinaturas() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tool-subscriptions"] });
+            queryClient.invalidateQueries({ queryKey: ["finance_projects"] });
             toast({ title: "Assinatura removida." });
         }
     });
@@ -276,7 +340,10 @@ export default function Assinaturas() {
                         </Button>
                     </div>
                     <Button
-                        onClick={() => setIsAddOpen(true)}
+                        onClick={() => {
+                            setEditingSubscription(null);
+                            setIsAddOpen(true);
+                        }}
                         className="gap-2 h-9 px-4 font-medium text-sm rounded-lg bg-primary text-primary-foreground shadow-sm transition-all active:scale-95 group"
                     >
                         <CreditCard className="h-3.5 w-3.5" />
@@ -413,28 +480,76 @@ export default function Assinaturas() {
                     >
                         {filteredSubscriptions.map((sub) => (
                             viewMode === "grid" ? (
-                                <SubscriptionCard key={sub.id} subscription={sub} onDelete={() => deleteMutation.mutate(sub.id)} />
+                                <SubscriptionCard
+                                    key={sub.id}
+                                    subscription={sub}
+                                    onDelete={() => deleteMutation.mutate(sub.id)}
+                                    onEdit={() => {
+                                        setEditingSubscription(sub);
+                                        setIsAddOpen(true);
+                                    }}
+                                />
                             ) : (
-                                <SubscriptionListItem key={sub.id} subscription={sub} onDelete={() => deleteMutation.mutate(sub.id)} />
+                                <SubscriptionListItem
+                                    key={sub.id}
+                                    subscription={sub}
+                                    onDelete={() => deleteMutation.mutate(sub.id)}
+                                    onEdit={() => {
+                                        setEditingSubscription(sub);
+                                        setIsAddOpen(true);
+                                    }}
+                                />
                             )
                         ))}
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Add Dialog */}
-            <AddSubscriptionDialog
+            {/* Form Dialog (Handles Add and Edit) */}
+            <SubscriptionFormDialog
                 open={isAddOpen}
                 onOpenChange={setIsAddOpen}
-                onSubmit={(values) => addMutation.mutateAsync(values)}
-                isSubmitting={addMutation.isPending}
+                onSubmit={async (values) => {
+                    if (editingSubscription) {
+                        await updateMutation.mutateAsync({ ...values, id: editingSubscription.id });
+                    } else {
+                        await addMutation.mutateAsync(values);
+                    }
+                }}
+                isSubmitting={addMutation.isPending || updateMutation.isPending}
+                subscription={editingSubscription}
             />
         </div>
     );
 }
 
-function SubscriptionCard({ subscription, onDelete }: { subscription: Subscription; onDelete: () => void }) {
-    const Icon = (LucideIcons as any)[subscription.icon] || CreditCard;
+
+
+function SubscriptionIcon({ iconName, className }: { iconName: string; className?: string }) {
+    const [imgError, setImgError] = React.useState(false);
+
+    if (iconName.startsWith("si:") && !imgError) {
+        const slug = iconName.split(":")[1];
+        // Scale up brand logos slightly since they are often more complex than strokes
+        return (
+            <img
+                src={`https://api.iconify.design/simple-icons:${slug}.svg?color=white`}
+                className={cn(
+                    "w-full h-full object-contain p-0.5 transition-all opacity-80 brightness-90",
+                    "group-hover:opacity-100 group-hover:brightness-110",
+                    // We extract the container size or pass it implicitly
+                    className.includes("h-24") ? "h-24 w-24" : "h-11 w-11" // If it's the background icon use full size, else use larger default
+                )}
+                alt="Icon"
+                onError={() => setImgError(true)}
+            />
+        );
+    }
+    const Icon = (LucideIcons as any)[iconName] || LucideIcons.CreditCard || CreditCard;
+    return <Icon className={className} />;
+}
+
+function SubscriptionCard({ subscription, onDelete, onEdit }: { subscription: Subscription; onDelete: () => void; onEdit: () => void }) {
     const isOverdue = isAfter(new Date(), parseISO(subscription.next_payment_date));
 
     return (
@@ -442,14 +557,14 @@ function SubscriptionCard({ subscription, onDelete }: { subscription: Subscripti
             whileHover={{ y: -4 }}
             className="group bento-card p-6 flex flex-col justify-between hover:shadow-glow-sm transition-all duration-300 relative overflow-hidden"
         >
-            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-125 transition-transform">
-                <Icon className="h-20 w-20 text-foreground" />
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-125 transition-transform pointer-events-none">
+                <SubscriptionIcon iconName={subscription.icon} className="h-24 w-24 text-foreground brightness-0 invert opacity-10" />
             </div>
 
             <div className="space-y-4 relative">
                 <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 shadow-sm">
-                        <Icon className="h-6 w-6" />
+                    <div className="w-12 h-12 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 shadow-sm overflow-hidden">
+                        <SubscriptionIcon iconName={subscription.icon} className="h-6 w-6" />
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -458,7 +573,7 @@ function SubscriptionCard({ subscription, onDelete }: { subscription: Subscripti
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="glass border-border">
-                            <DropdownMenuItem className="gap-2 text-xs font-medium"> <Edit2 className="h-3.5 w-3.5" /> Editar</DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 text-xs font-medium" onClick={onEdit}> <Edit2 className="h-3.5 w-3.5" /> Editar</DropdownMenuItem>
                             <DropdownMenuItem className="gap-2 text-xs font-medium text-destructive" onClick={onDelete}>
                                 <Trash2 className="h-3.5 w-3.5" /> Remover
                             </DropdownMenuItem>
@@ -508,8 +623,7 @@ function SubscriptionCard({ subscription, onDelete }: { subscription: Subscripti
     );
 }
 
-function SubscriptionListItem({ subscription, onDelete }: { subscription: Subscription; onDelete: () => void }) {
-    const Icon = (LucideIcons as any)[subscription.icon] || CreditCard;
+function SubscriptionListItem({ subscription, onDelete, onEdit }: { subscription: Subscription; onDelete: () => void; onEdit: () => void }) {
 
     return (
         <motion.div
@@ -517,8 +631,8 @@ function SubscriptionListItem({ subscription, onDelete }: { subscription: Subscr
             className="group flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:bg-muted/10 cursor-pointer transition-all shadow-sm"
         >
             <div className="flex items-center gap-4 flex-1 min-w-0 pr-8">
-                <div className="h-10 w-10 flex items-center justify-center bg-primary/5 text-primary rounded-lg shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    <Icon className="h-5 w-5" />
+                <div className="h-10 w-10 flex items-center justify-center bg-primary/5 text-primary rounded-lg shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-all overflow-hidden">
+                    <SubscriptionIcon iconName={subscription.icon} className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -550,7 +664,7 @@ function SubscriptionListItem({ subscription, onDelete }: { subscription: Subscr
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="glass border-border">
-                        <DropdownMenuItem className="gap-2 text-xs font-medium"> <Edit2 className="h-3.5 w-3.5" /> Editar</DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2 text-xs font-medium" onClick={onEdit}> <Edit2 className="h-3.5 w-3.5" /> Editar</DropdownMenuItem>
                         <DropdownMenuItem className="gap-2 text-xs font-medium text-destructive" onClick={onDelete}>
                             <Trash2 className="h-3.5 w-3.5" /> Remover
                         </DropdownMenuItem>
@@ -562,7 +676,19 @@ function SubscriptionListItem({ subscription, onDelete }: { subscription: Subscr
     );
 }
 
-function AddSubscriptionDialog({ open, onOpenChange, onSubmit, isSubmitting }: { open: boolean; onOpenChange: (o: boolean) => void; onSubmit: (v: any) => Promise<void>; isSubmitting: boolean }) {
+function SubscriptionFormDialog({
+    open,
+    onOpenChange,
+    onSubmit,
+    isSubmitting,
+    subscription
+}: {
+    open: boolean;
+    onOpenChange: (o: boolean) => void;
+    onSubmit: (v: any) => Promise<void>;
+    isSubmitting: boolean;
+    subscription: Subscription | null;
+}) {
     const [name, setName] = useState("");
     const [price, setPrice] = useState("");
     const [currency, setCurrency] = useState("BRL");
@@ -572,7 +698,24 @@ function AddSubscriptionDialog({ open, onOpenChange, onSubmit, isSubmitting }: {
     const [icon, setIcon] = useState("CreditCard");
     const [link, setLink] = useState("");
 
-    const handleAdd = async () => {
+    // Effect to pre-fill data when editing
+    React.useEffect(() => {
+        if (subscription && open) {
+            setName(subscription.name);
+            setPrice(subscription.price.toString());
+            setCurrency(subscription.currency);
+            setCycle(subscription.billing_cycle);
+            setCat(subscription.category);
+            setDate(subscription.next_payment_date);
+            setIcon(subscription.icon);
+            setLink(subscription.link || "");
+        } else if (!open) {
+            // Reset fields when closing
+            setName(""); setPrice(""); setDate(""); setLink(""); setCurrency("BRL"); setCycle("mensal"); setCat("Software"); setIcon("CreditCard");
+        }
+    }, [subscription, open]);
+
+    const handleSave = async () => {
         if (!name || !price || !date) return;
         await onSubmit({
             name,
@@ -585,8 +728,6 @@ function AddSubscriptionDialog({ open, onOpenChange, onSubmit, isSubmitting }: {
             link,
             status: 'active'
         });
-        // Reset fields
-        setName(""); setPrice(""); setDate(""); setLink("");
     };
 
     return (
@@ -596,10 +737,19 @@ function AddSubscriptionDialog({ open, onOpenChange, onSubmit, isSubmitting }: {
                     <DialogHeader className="space-y-3">
                         <div className="flex items-center gap-3">
                             <div className="h-1.5 w-8 bg-primary rounded-full" />
-                            <span className="text-[10px] font-bold tracking-[0.2em] text-primary/70 uppercase">NOVA FERRAMENTA</span>
+                            <span className="text-[10px] font-bold tracking-[0.2em] text-primary/70 uppercase">
+                                {subscription ? "EDITAR FERRAMENTA" : "NOVA FERRAMENTA"}
+                            </span>
                         </div>
-                        <DialogTitle className="text-3xl font-semibold tracking-tight">Vincular Assinatura</DialogTitle>
-                        <DialogDescription className="text-muted-foreground text-sm font-normal">Cadastre um serviço recorrente para automatizar seu fluxo financeiro.</DialogDescription>
+                        <DialogTitle className="text-3xl font-semibold tracking-tight">
+                            {subscription ? "Atualizar Assinatura" : "Vincular Assinatura"}
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground text-sm font-normal">
+                            {subscription
+                                ? "Mantenha os dados da sua assinatura atualizados para um controle financeiro preciso."
+                                : "Cadastre um serviço recorrente para automatizar seu fluxo financeiro."
+                            }
+                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="grid gap-6">
@@ -615,7 +765,7 @@ function AddSubscriptionDialog({ open, onOpenChange, onSubmit, isSubmitting }: {
                                             className="w-16 h-16 rounded-2xl border-2 border-dashed border-border bg-muted/5 hover:border-primary/50 transition-all flex flex-col items-center justify-center p-0"
                                         >
                                             {(() => {
-                                                const SelectedIcon = (LucideIcons as any)[icon] || CreditCard;
+                                                const SelectedIcon = (LucideIcons as any)[icon] || LucideIcons.CreditCard;
                                                 return <SelectedIcon className="h-6 w-6 text-muted-foreground" />;
                                             })()}
                                         </Button>
@@ -690,7 +840,7 @@ function AddSubscriptionDialog({ open, onOpenChange, onSubmit, isSubmitting }: {
                         <div className="space-y-3">
                             <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ">VINCULAR SITE (LINK)</Label>
                             <div className="relative group">
-                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <LucideIcons.Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="https://..."
                                     className="h-12 pl-12 bg-muted/10 border-border rounded-xl font-normal text-xs"
@@ -704,8 +854,8 @@ function AddSubscriptionDialog({ open, onOpenChange, onSubmit, isSubmitting }: {
 
                 <div className="bg-muted/30 p-8 flex gap-3 border-t border-border">
                     <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-semibold text-xs tracking-tight">CANCELAR</Button>
-                    <Button onClick={handleAdd} disabled={isSubmitting} className="flex-1 shadow-xl shadow-primary/10 transition-all active:scale-95 font-semibold text-xs tracking-tight">
-                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "VINCULAR SERVIÇO"}
+                    <Button onClick={handleSave} disabled={isSubmitting} className="flex-1 shadow-xl shadow-primary/10 transition-all active:scale-95 font-semibold text-xs tracking-tight">
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (subscription ? "SALVAR ALTERAÇÕES" : "VINCULAR SERVIÇO")}
                     </Button>
                 </div>
             </DialogContent>

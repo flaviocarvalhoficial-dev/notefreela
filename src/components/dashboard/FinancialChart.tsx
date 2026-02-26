@@ -19,6 +19,7 @@ import { BarChart3, LineChart as LineChartIcon, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toValidDate } from "@/utils/date";
 
 interface FinancialChartProps {
     projects: any[];
@@ -32,8 +33,14 @@ export function FinancialChart({ projects }: FinancialChartProps) {
         const monthlyData: Record<string, { name: string; total: number; received: number; date: Date }> = {};
 
         projects.forEach(project => {
-            if (!project.created_at) return;
-            const date = new Date(project.created_at);
+            const date = toValidDate(project.created_at);
+            if (!date) {
+                if (project.created_at) {
+                    console.warn("[FinancialChart] Data de criação inválida", { id: project.id, created_at: project.created_at });
+                }
+                return;
+            }
+
             const key = format(date, "yyyy-MM");
 
             if (!monthlyData[key]) {

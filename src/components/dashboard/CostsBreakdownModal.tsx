@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
     Dialog,
     DialogContent,
@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useFinancialData } from "@/hooks/use-financial-data";
 import { CostRegistrationDialog } from "./CostRegistrationDialog";
 import {
     Pencil
@@ -49,21 +50,29 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [filterCategory, setFilterCategory] = useState<string>("all");
-    const [editingCost, setEditingCost] = useState<Cost | null>(null);
+    const [editingCost, setEditingCost] = useState<any | null>(null);
     const [isEditOpen, setIsEditOpen] = useState(false);
 
-    const { data: costs = [], isLoading } = useQuery({
+    const {
+        subscriptions = [],
+        isLoading: isLoadingSubs
+    } = useFinancialData();
+
+    const { data: costs = [], isLoading: isLoadingCosts } = useQuery({
         queryKey: ["project_costs_detailed"],
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("project_costs")
                 .select("*, projects(name)")
+                .neq("category", "receita_parcela") // Exclude income installments
                 .order("date", { ascending: false });
 
             if (error) throw error;
             return data as Cost[];
         }
     });
+
+    const isLoading = isLoadingCosts || isLoadingSubs;
 
     const deleteCostMutation = useMutation({
         mutationFn: async (id: string) => {
@@ -72,7 +81,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["project_costs_detailed"] });
-            queryClient.invalidateQueries({ queryKey: ["finance_costs"] });
+            queryClient.invalidateQueries({ queryKey: ["finance_projects"] }); // Invalidate hook data
             toast({ title: "Custo removido", description: "O registro foi excluído com sucesso." });
         },
         onError: (error: any) => {
@@ -90,6 +99,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
 
     const categories = [
         { value: "all", label: "Todas" },
+        { value: "subscription", label: "Assinaturas" },
         { value: "tool", label: "Software" },
         { value: "hourly", label: "Hora Técnica" },
         { value: "service", label: "Serviço" },
@@ -97,7 +107,34 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
         { value: "other", label: "Outros" }
     ];
 
-    const filteredCosts = costs.filter(c => filterCategory === "all" || c.category === filterCategory);
+    const unifiedCosts = useMemo(() => {
+        const projectCostsFormatted = costs.map(c => ({
+            ...c,
+            type: 'project_cost'
+        }));
+
+        const subscriptionCostsFormatted = subscriptions.filter(s => s.status === 'active').map(s => {
+            const priceBRL = s.currency === 'USD' ? s.price * 6 : s.price;
+            const monthlyValue = s.billing_cycle === 'anual' ? priceBRL / 12 : priceBRL;
+
+            return {
+                id: s.id,
+                title: s.name,
+                amount: monthlyValue,
+                category: 'subscription',
+                date: s.next_payment_date,
+                project_id: null,
+                projects: null,
+                type: 'subscription'
+            };
+        });
+
+        return [...projectCostsFormatted, ...subscriptionCostsFormatted].sort((a, b) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+    }, [costs, subscriptions]);
+
+    const filteredCosts = unifiedCosts.filter(c => filterCategory === "all" || c.category === filterCategory);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

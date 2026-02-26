@@ -55,7 +55,7 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("project_costs")
-                .select("amount, date");
+                .select("amount, date, category");
             if (error) throw error;
             return data || [];
         }
@@ -105,7 +105,12 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
             if (!c.date) return;
             const key = format(parseISO(c.date), "yyyy-MM");
             if (dataMap[key]) {
-                dataMap[key].costs += Number(c.amount || 0);
+                const amount = Number(c.amount || 0);
+                if (c.category === 'receita_parcela') {
+                    dataMap[key].gains += amount;
+                } else {
+                    dataMap[key].costs += amount;
+                }
             }
         });
 
