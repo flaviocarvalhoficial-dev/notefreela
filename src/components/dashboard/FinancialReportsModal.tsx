@@ -173,7 +173,7 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
                     </div>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-40 space-y-8">
                     {isLoading ? (
                         <div className="h-[400px] flex flex-col items-center justify-center gap-3">
                             <Loader2 className="h-8 w-8 animate-spin text-primary/40" />

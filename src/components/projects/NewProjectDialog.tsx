@@ -16,6 +16,13 @@ import { ptBR } from "date-fns/locale";
 import { logActivity } from "@/utils/activities";
 import { IconPicker } from "./IconPicker";
 
+const TABS_CONFIG = [
+    { id: 1, label: "Projeto & Cliente", icon: Briefcase },
+    { id: 2, label: "Cronograma", icon: Calendar },
+    { id: 3, label: "Financeiro", icon: DollarSign },
+    { id: 4, label: "Tarefas", icon: ListTodo },
+];
+
 type ProjectStatus = "active" | "planning" | "review" | "completed";
 
 interface NewProjectDialogProps {
@@ -124,25 +131,54 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setInstallments(newParcels);
     };
 
+    const nextStep = () => {
+        if (step === 1 && !newName) {
+            toast({
+                title: "Campo obrigatório",
+                description: "Por favor, dê um nome ao seu projeto.",
+                variant: "destructive"
+            });
+            return;
+        }
+        setStep(prev => Math.min(prev + 1, 4));
+    };
+
+    const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+
     // Auto-calculate global project value
     useEffect(() => {
         const sum = services.reduce((acc, s) => acc + s.price, 0);
         setNewValue(sum);
     }, [services]);
 
-    // Keep preset in sync with value changes
+    // Keep preset in sync with value and date changes - Arthur Marques Sign
     useEffect(() => {
+        const totalValue = Number(newValue) || 0;
         if (paymentPreset === 'full') {
-            setNewAdvance(Number(newValue) || 0);
+            setNewAdvance(totalValue);
         } else if (paymentPreset === '50_50') {
-            const half = Math.round((Number(newValue) || 0) / 2 * 100) / 100;
+            const half = Math.round(totalValue / 2 * 100) / 100;
             setNewAdvance(half);
+
             if (isInstallmentEnabled && installmentCount === 1) {
-                const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+                // Calculate end of the START DATE's month
+                const baseDate = startDate ? new Date(startDate + 'T12:00:00') : new Date();
+                const endOfMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
                 setInstallments([{ amount: half, date: endOfMonth.toISOString().split('T')[0] }]);
             }
         }
-    }, [newValue, paymentPreset]);
+    }, [newValue, paymentPreset, startDate, isInstallmentEnabled, installmentCount]);
+
+    // Add listener for manual entrance changes to update installments if 50/50 - Arthur Marques Sign
+    useEffect(() => {
+        if (paymentPreset === '50_50' && isInstallmentEnabled && installmentCount === 1) {
+            const totalValue = Number(newValue) || 0;
+            const advance = Number(newAdvance) || 0;
+            const remaining = Math.max(0, totalValue - advance);
+
+            setInstallments(prev => prev.map(inst => ({ ...inst, amount: remaining })));
+        }
+    }, [newAdvance]);
 
     const addService = () => {
         if (!serviceInput.trim()) return;
@@ -161,6 +197,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const handlePresetChange = (preset: 'full' | '50_50' | 'custom') => {
         setPaymentPreset(preset);
         const totalValue = Number(newValue) || 0;
+        const projectStartDate = startDate ? new Date(startDate + 'T12:00:00') : new Date();
 
         if (preset === 'full') {
             setNewAdvance(totalValue);
@@ -174,10 +211,17 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             setNewPaymentStatus('partial');
             setIsInstallmentEnabled(true);
             setInstallmentCount(1);
-            // Saldo para o final do mês atual
-            const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+            // Saldo para o final do mês do início do projeto
+            const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
             setInstallments([{ amount: half, date: endOfMonth.toISOString().split('T')[0] }]);
             setRecurringPaymentModel('split');
+
+            // If it's recurring, set next billing to the 1st of next month
+            if (billingType === 'recorrente') {
+                const nextMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 1);
+                setNextBillingDate(nextMonth.toISOString().split('T')[0]);
+            }
         }
     };
 
@@ -327,16 +371,6 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         },
     });
 
-    const nextStep = () => {
-        if (step === 1 && !newName) {
-            toast({ title: "Atenção", description: "O nome do projeto é obrigatório." });
-            return;
-        }
-        setStep(prev => prev + 1);
-    };
-
-    const prevStep = () => setStep(prev => prev - 1);
-
 
 
     return (
@@ -351,390 +385,445 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className={cn(
-                "border-border bg-card/95 backdrop-blur-xl overflow-hidden flex flex-col p-0 transition-all duration-300",
-                isMaximized ? "max-w-[95vw] h-[95vh]" : "max-w-xl h-auto"
-            )}>
-                {/* Header with Progress Bar */}
-                <div className="relative h-1.5 w-full bg-muted/20">
-                    <motion.div
-                        className="absolute h-full bg-primary shadow-glow"
-                        initial={{ width: "25%" }}
-                        animate={{ width: `${(step / 4) * 100}%` }}
-                    />
-                </div>
-
-                <div className="p-6 relative">
+            <DialogContent
+                className={cn(
+                    "border-border p-0 overflow-hidden transition-all duration-300 flex flex-col",
+                    isMaximized ? "max-w-[100vw] h-[100vh] rounded-none m-0" : "max-w-4xl h-[90vh] max-h-[850px]"
+                )}
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+            >
+                <div className="flex h-full relative">
                     {/* Maximize Controls */}
                     <div className="absolute top-4 right-12 z-50 flex items-center gap-1">
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 rounded-md hover:bg-muted text-muted-foreground"
+                            className="h-8 w-8 rounded-md hover:bg-muted text-muted-foreground"
                             onClick={() => setIsMaximized(!isMaximized)}
                             title={isMaximized ? "Restaurar" : "Maximizar"}
                         >
-                            {isMaximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                            {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                         </Button>
                     </div>
 
-                    <DialogHeader className="mb-6">
-                        <div className="flex items-center gap-2 text-primary mb-1">
-                            {step === 1 && <Briefcase className="h-4 w-4" />}
-                            {step === 2 && <Calendar className="h-4 w-4" />}
-                            {step === 3 && <DollarSign className="h-4 w-4" />}
-                            {step === 4 && <ListTodo className="h-4 w-4" />}
-                            <span className="text-[10px] font-semibold opacity-50">
+                    {/* ── Sidebar Nav ─────────────────────────────── */}
+                    <div className="w-44 shrink-0 border-r border-border bg-muted/20 flex flex-col p-3 gap-1">
+                        <div className="px-2 pb-3 pt-1 border-b border-border mb-2">
+                            <p className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
+                                Novo Projeto
+                            </p>
+                            <p className="text-[9px] font-medium text-primary mt-1">
                                 Passo {step} de 4
-                            </span>
+                            </p>
                         </div>
-                        <DialogTitle className="text-2xl font-semibold tracking-tight">
-                            {step === 1 && "O que vamos construir?"}
-                            {step === 2 && "Cronograma e Prazos"}
-                            {step === 3 && "Acordo Financeiro"}
-                            {step === 4 && "Quais as primeiras tarefas?"}
-                        </DialogTitle>
-                    </DialogHeader>
 
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={step}
-                            initial={{ x: 20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -20, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="space-y-5"
-                        >
-                            {step === 1 && (
-                                <>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="project-name" className="text-xs opacity-60">Nome do Projeto</Label>
-                                        <Input
-                                            id="project-name"
-                                            placeholder="Ex: Identidade Visual NoteFreela"
-                                            className="glass-light border-border h-12 text-lg focus:ring-primary/20"
-                                            value={newName}
-                                            onChange={(e) => setNewName(e.target.value)}
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-60">Ícone do Projeto</Label>
-                                        <div className="flex items-center gap-3">
-                                            <IconPicker value={newIcon} onChange={setNewIcon} />
-                                            <span className="text-xs text-muted-foreground">Personalize a identidade do projeto</span>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                        {TABS_CONFIG.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setStep(tab.id)}
+                                className={cn(
+                                    "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-all text-left",
+                                    step === tab.id
+                                        ? "bg-primary/10 text-primary border border-primary/20"
+                                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                )}
+                            >
+                                <tab.icon className="h-3.5 w-3.5 shrink-0" />
+                                {tab.label}
+                                {tab.id === 4 && tasks.length > 0 && (
+                                    <span className="ml-auto text-[9px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                                        {tasks.length}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+
+                        <div className="mt-auto pt-3 border-t border-border space-y-2">
+                            {step < 4 ? (
+                                <Button
+                                    className="w-full h-9 text-xs font-bold"
+                                    onClick={nextStep}
+                                >
+                                    Próximo <ChevronRight className="h-3 w-3 ml-1.5" />
+                                </Button>
+                            ) : (
+                                <Button
+                                    className="w-full h-9 text-xs font-bold"
+                                    onClick={() => createProjectMutation.mutate()}
+                                    disabled={createProjectMutation.isPending || !newName}
+                                >
+                                    {createProjectMutation.isPending ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Check className="h-3.5 w-3.5 mr-1.5" />
+                                            Finalizar
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+
+                            {step > 1 && (
+                                <Button
+                                    variant="ghost"
+                                    className="w-full h-8 text-[10px] text-muted-foreground hover:text-foreground px-0"
+                                    onClick={prevStep}
+                                >
+                                    <ChevronLeft className="h-3 w-3 mr-1" /> Voltar
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ── Content Area ────────────────────────────── */}
+                    <div className="flex-1 overflow-y-scroll custom-scrollbar p-6 pb-60 space-y-8 min-h-0 bg-background/30">
+                        {/* Progress line at top of content area */}
+                        <div className="h-1 w-full bg-muted/20 rounded-full mb-6 overflow-hidden">
+                            <motion.div
+                                className="h-full bg-primary shadow-glow"
+                                initial={{ width: "25%" }}
+                                animate={{ width: `${(step / 4) * 100}%` }}
+                            />
+                        </div>
+
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={step}
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                transition={{ duration: 0.15 }}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-1">
+                                    <h3 className="text-base font-bold tracking-tight">
+                                        {step === 1 && "Identidade do Projeto"}
+                                        {step === 2 && "Cronograma e Prazos"}
+                                        {step === 3 && "Acordo Financeiro"}
+                                        {step === 4 && "Quais as primeiras tarefas?"}
+                                    </h3>
+                                    <p className="text-[11px] text-muted-foreground">
+                                        {step === 1 && "Defina o nome, cliente e tipo de faturamento."}
+                                        {step === 2 && "Configure datas importantes e responsabilidades."}
+                                        {step === 3 && "Ajuste adiantamentos, parcelas e recorrência."}
+                                        {step === 4 && "Adicione tarefas iniciais para o Kanban."}
+                                    </p>
+                                </div>
+
+                                {step === 1 && (
+                                    <>
                                         <div className="space-y-2">
-                                            <Label className="text-xs opacity-60">Tipo de Faturamento</Label>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {(['pontual', 'recorrente'] as const).map((t) => (
-                                                    <Button
-                                                        key={t}
-                                                        type="button"
-                                                        variant={billingType === t ? "default" : "outline"}
-                                                        size="sm"
-                                                        onClick={() => setBillingType(t)}
-                                                        className={cn(
-                                                            "h-9 text-[10px] font-bold  tracking-wider",
-                                                            billingType === t
-                                                                ? "bg-primary/20 text-primary border-primary/50"
-                                                                : "glass-light border-border"
-                                                        )}
-                                                    >
-                                                        {t}
-                                                    </Button>
-                                                ))}
+                                            <Label htmlFor="project-name" className="text-xs text-muted-foreground">Nome do Projeto</Label>
+                                            <Input
+                                                id="project-name"
+                                                placeholder="Ex: Identidade Visual NoteFreela"
+                                                className="glass-light border-border h-11 text-lg font-medium focus:ring-primary/20"
+                                                value={newName}
+                                                onChange={(e) => setNewName(e.target.value)}
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
+                                            <div className="flex items-center gap-3">
+                                                <IconPicker value={newIcon} onChange={setNewIcon} />
+                                                <span className="text-[11px] text-muted-foreground">Personalize a identidade no board</span>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Tipo de Faturamento</Label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {(['pontual', 'recorrente'] as const).map((t) => (
+                                                        <Button
+                                                            key={t}
+                                                            type="button"
+                                                            variant={billingType === t ? "default" : "outline"}
+                                                            size="sm"
+                                                            onClick={() => setBillingType(t)}
+                                                            className={cn(
+                                                                "h-9 text-[10px] font-bold tracking-wider",
+                                                                billingType === t
+                                                                    ? "bg-primary text-primary-foreground"
+                                                                    : "glass-light border-border hover:bg-muted text-muted-foreground"
+                                                            )}
+                                                        >
+                                                            {t === 'pontual' ? 'PONTUAL' : 'RECORRENTE'}
+                                                        </Button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="service-type" className="text-xs text-muted-foreground">Tipo de Serviço</Label>
+                                                <Select value={serviceType} onValueChange={setServiceType}>
+                                                    <SelectTrigger className="glass-light border-border h-9 text-xs">
+                                                        <SelectValue placeholder="Selecione..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="glass border-border">
+                                                        <SelectItem value="design">Design</SelectItem>
+                                                        <SelectItem value="dev">Desenvolvimento</SelectItem>
+                                                        <SelectItem value="social_media">Social Media</SelectItem>
+                                                        <SelectItem value="traffic">Tráfego Pago</SelectItem>
+                                                        <SelectItem value="copywriting">Copywriting</SelectItem>
+                                                        <SelectItem value="other">Outro</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="service-type" className="text-xs opacity-60">Tipo de Serviço</Label>
-                                            <Select value={serviceType} onValueChange={setServiceType}>
-                                                <SelectTrigger className="glass-light border-border h-9 text-xs">
-                                                    <SelectValue placeholder="Selecione..." />
-                                                </SelectTrigger>
-                                                <SelectContent className="glass border-border">
-                                                    <SelectItem value="design">Design</SelectItem>
-                                                    <SelectItem value="dev">Desenvolvimento</SelectItem>
-                                                    <SelectItem value="social_media">Social Media</SelectItem>
-                                                    <SelectItem value="traffic">Tráfego Pago</SelectItem>
-                                                    <SelectItem value="copywriting">Copywriting</SelectItem>
-                                                    <SelectItem value="other">Outro</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <Label htmlFor="project-client" className="text-xs text-muted-foreground flex items-center gap-2">
+                                                <User className="h-3 w-3" /> Cliente
+                                            </Label>
+                                            <Input
+                                                id="project-client"
+                                                placeholder="Ex: Startup X ou Nome do Cliente"
+                                                className="glass-light border-border h-10"
+                                                value={newClient}
+                                                onChange={(e) => setNewClient(e.target.value)}
+                                            />
                                         </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="project-client" className="text-xs opacity-60 flex items-center gap-2">
-                                            <Building2 className="h-3 w-3" /> Cliente
-                                        </Label>
-                                        <Input
-                                            id="project-client"
-                                            placeholder="Ex: Startup X ou Nome do Cliente"
-                                            className="glass-light border-border"
-                                            value={newClient}
-                                            onChange={(e) => setNewClient(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="project-desc" className="text-xs opacity-60">Descrição Rápida (Opcional)</Label>
-                                        <Input
-                                            id="project-desc"
-                                            placeholder="Do que se trata o projeto?"
-                                            className="glass-light border-border"
-                                            value={newDesc}
-                                            onChange={(e) => setNewDesc(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-60">Serviços Contratados (Escopo)</Label>
-                                        <div className="flex gap-2">
-                                            <div className="flex-1">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="project-desc" className="text-xs text-muted-foreground">Descrição Rápida (Opcional)</Label>
+                                            <Input
+                                                id="project-desc"
+                                                placeholder="Do que se trata o projeto?"
+                                                className="glass-light border-border h-10"
+                                                value={newDesc}
+                                                onChange={(e) => setNewDesc(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs text-muted-foreground">Serviços Contratados (Escopo)</Label>
+                                            <div className="flex gap-2">
                                                 <Input
-                                                    placeholder="Serviço (ex: Website)"
-                                                    className="glass-light border-border h-9 text-xs"
+                                                    placeholder="Ex: Website Institucional"
+                                                    className="glass-light border-border h-9 text-xs flex-1"
                                                     value={serviceInput}
                                                     onChange={(e) => setServiceInput(e.target.value)}
                                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
                                                 />
-                                            </div>
-                                            <div className="w-24">
                                                 <Input
                                                     type="number"
-                                                    placeholder="R$ 0,00"
-                                                    className="glass-light border-border h-9 text-xs"
+                                                    placeholder="R$ 0"
+                                                    className="glass-light border-border h-9 text-xs w-24"
                                                     value={servicePriceInput}
                                                     onChange={(e) => setServicePriceInput(e.target.value ? Number(e.target.value) : "")}
                                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
                                                 />
+                                                <Button type="button" onClick={addService} size="sm" className="h-9 w-9 p-0">
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
                                             </div>
-                                            <Button type="button" onClick={addService} size="sm" className="shrink-0 h-9 border-primary transition-all active:scale-95">
-                                                <Plus className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                        <div className="flex flex-col gap-1.5 mt-3">
-                                            {services.map((svc, i) => (
-                                                <div key={i} className="flex items-center justify-between bg-secondary/10 px-3 py-1.5 rounded-md border border-border text-xs group">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                                                        <span className="font-medium">{svc.name}</span>
+                                            <div className="flex flex-col gap-1.5 mt-2">
+                                                {services.map((svc, i) => (
+                                                    <div key={i} className="flex items-center justify-between bg-secondary/10 px-3 py-1.5 rounded-md border border-border text-xs group">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                                                            <span className="font-medium">{svc.name}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-primary font-semibold">
+                                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price)}
+                                                            </span>
+                                                            <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <Plus className="h-3 w-3 rotate-45" />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-primary font-semibold">
-                                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price)}
-                                                        </span>
-                                                        <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Plus className="h-3 w-3 rotate-45" />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {step === 2 && (
+                                    <>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="project-start" className="text-xs text-muted-foreground flex items-center gap-2">
+                                                    <Calendar className="h-3.5 w-3.5" /> Data de Início
+                                                </Label>
+                                                <Input
+                                                    id="project-start"
+                                                    type="date"
+                                                    className="glass-light border-border h-11 [color-scheme:dark]"
+                                                    value={startDate}
+                                                    onChange={(e) => setStartDate(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="project-deadline" className="text-xs text-muted-foreground flex items-center gap-2">
+                                                    <Calendar className="h-3.5 w-3.5" /> Prazo Final
+                                                </Label>
+                                                <Input
+                                                    id="project-deadline"
+                                                    type="date"
+                                                    className="glass-light border-border h-11 [color-scheme:dark]"
+                                                    value={newDeadline}
+                                                    onChange={(e) => setNewDeadline(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Prioridade</Label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {(['low', 'medium', 'high'] as const).map((p) => (
+                                                        <button
+                                                            key={p}
+                                                            type="button"
+                                                            onClick={() => setNewPriority(p)}
+                                                            className={cn(
+                                                                "flex items-center justify-center h-10 rounded-lg border text-[10px] font-bold transition-all",
+                                                                newPriority === p
+                                                                    ? "bg-primary/10 border-primary text-primary"
+                                                                    : "glass-light border-border text-muted-foreground hover:bg-muted"
+                                                            )}
+                                                        >
+                                                            {p === 'low' ? 'BAIXA' : p === 'medium' ? 'MÉDIA' : 'ALTA'}
                                                         </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Responsável</Label>
+                                                <Input
+                                                    id="project-manager"
+                                                    placeholder="Ex: Arthur Marques"
+                                                    className="glass-light border-border h-11"
+                                                    value={newManager}
+                                                    onChange={(e) => setNewManager(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {step === 3 && (
+                                    <>
+                                        <div className="space-y-6">
+                                            {/* SEÇÃO 1: SETUP DO PROJETO */}
+                                            <section className="space-y-4 p-4 rounded-2xl border border-border bg-muted/5">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-6 w-1 bg-primary rounded-full" />
+                                                        <h3 className="text-[10px] font-bold tracking-widest text-foreground uppercase">1. Configuração do Setup</h3>
                                                     </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {step === 2 && (
-                                <>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="project-start" className="text-xs opacity-60 flex items-center gap-2">
-                                                <Calendar className="h-3 w-3" /> Início do Projeto (Gráfico)
-                                            </Label>
-                                            <Input
-                                                id="project-start"
-                                                type="date"
-                                                className="glass-light border-border h-11 [color-scheme:dark]"
-                                                value={startDate}
-                                                onChange={(e) => setStartDate(e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="project-deadline" className="text-xs opacity-60 flex items-center gap-2">
-                                                <Calendar className="h-3 w-3" /> Prazo Final
-                                            </Label>
-                                            <Input
-                                                id="project-deadline"
-                                                type="date"
-                                                className="glass-light border-border h-11 [color-scheme:dark]"
-                                                value={newDeadline}
-                                                onChange={(e) => setNewDeadline(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Prioridade Inicial</Label>
-                                            <div className="grid grid-cols-3 gap-2 h-11">
-                                                {(['low', 'medium', 'high'] as const).map((p) => (
-                                                    <button
-                                                        key={p}
-                                                        type="button"
-                                                        onClick={() => setNewPriority(p)}
-                                                        className={cn(
-                                                            "flex items-center justify-center h-full rounded-xl border font-bold text-[10px] transition-all",
-                                                            newPriority === p ? "bg-primary/20 border-primary text-primary" : "bg-background/20 border-border text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {p === 'low' ? 'Baixa' : p === 'medium' ? 'Méd' : 'Alt'}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Responsável</Label>
-                                            <Input
-                                                id="project-manager"
-                                                placeholder="Nome do Responsável"
-                                                className="glass-light border-border h-11"
-                                                value={newManager}
-                                                onChange={(e) => setNewManager(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {step === 3 && (
-                                <>
-                                    <div className="space-y-6">
-                                        {/* SEÇÃO 1: CONTRATO ATUAL */}
-                                        <div className="space-y-4 p-4 rounded-2xl border border-border bg-muted/5">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <div className="h-6 w-1 bg-primary rounded-full" />
-                                                <h3 className="text-sm font-bold tracking-tight text-foreground">Configuração do Setup</h3>
-                                            </div>
-
-                                            <div className="grid grid-cols-3 gap-2">
-                                                {[
-                                                    { id: 'full', label: '100% Total' },
-                                                    { id: '50_50', label: '50/50' },
-                                                    { id: 'custom', label: 'Personalizado' }
-                                                ].map((p) => (
-                                                    <Button
-                                                        key={p.id}
-                                                        type="button"
-                                                        variant={paymentPreset === p.id ? "default" : "outline"}
-                                                        size="sm"
-                                                        onClick={() => setPaymentPreset(p.id as any)}
-                                                        className={cn(
-                                                            "h-8 text-[10px] font-bold tracking-tight transition-all",
-                                                            paymentPreset === p.id ? "bg-primary/20 text-primary border-primary/50" : "bg-background/50 border-border"
-                                                        )}
-                                                    >
-                                                        {p.label}
-                                                    </Button>
-                                                ))}
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Valor Total do Setup</Label>
-                                                    <div className="relative">
-                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
-                                                        <Input
-                                                            type="number"
-                                                            placeholder="0,00"
-                                                            className="glass-light border-border h-11 pl-9 text-lg font-semibold"
-                                                            value={newValue}
-                                                            onChange={(e) => setNewValue(Number(e.target.value))}
-                                                        />
+                                                    <div className="flex gap-1.5 bg-background/50 p-1 rounded-lg border border-border">
+                                                        {[
+                                                            { id: 'full', label: '100% Total' },
+                                                            { id: '50_50', label: '50/50' },
+                                                            { id: 'custom', label: 'Manual' }
+                                                        ].map((p) => (
+                                                            <button
+                                                                key={p.id}
+                                                                type="button"
+                                                                onClick={() => handlePresetChange(p.id as any)}
+                                                                className={cn(
+                                                                    "h-6 px-3 text-[9px] font-bold rounded-md transition-all",
+                                                                    paymentPreset === p.id
+                                                                        ? "bg-primary/20 text-primary border border-primary/20"
+                                                                        : "text-muted-foreground hover:bg-muted"
+                                                                )}
+                                                            >
+                                                                {p.label}
+                                                            </button>
+                                                        ))}
                                                     </div>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Valor de Entrada</Label>
-                                                    <div className="relative">
-                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
-                                                        <Input
-                                                            type="number"
-                                                            placeholder="0,00"
-                                                            className="glass-light border-border h-11 pl-9 text-lg font-semibold"
-                                                            value={newAdvance}
-                                                            onChange={(e) => setNewAdvance(Number(e.target.value))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Meio de Pagamento</Label>
-                                                    <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
-                                                        <SelectTrigger className="glass-light border-border h-11">
-                                                            <SelectValue placeholder="Selecione..." />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="glass border-border">
-                                                            <SelectItem value="pix">PIX</SelectItem>
-                                                            <SelectItem value="boleto">Boleto</SelectItem>
-                                                            <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-                                                            <SelectItem value="transfer">Transferência</SelectItem>
-                                                            <SelectItem value="other">Outro</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status do Pagamento</Label>
-                                                    <Select value={newPaymentStatus} onValueChange={setNewPaymentStatus}>
-                                                        <SelectTrigger className="glass-light border-border h-11">
-                                                            <SelectValue placeholder="Selecione..." />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="glass border-border">
-                                                            <SelectItem value="pending">Pendente</SelectItem>
-                                                            <SelectItem value="paid">Pago</SelectItem>
-                                                            <SelectItem value="partial">Parcial</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            </div>
-
-                                            {/* SEÇÃO 2: RECORRÊNCIA */}
-                                            <div className="space-y-4 p-4 rounded-2xl border border-border bg-primary/5/10">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <div className="h-6 w-1 bg-primary rounded-full" />
-                                                    <h3 className="text-sm font-bold tracking-tight text-foreground">Faturamento Mensal</h3>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tipo de Cobrança</Label>
-                                                        <div className="grid grid-cols-2 gap-2 h-11">
-                                                            {[
-                                                                { value: 'pontual', label: 'Setup Único' },
-                                                                { value: 'recorrente', label: 'Mensalidade' }
-                                                            ].map((b) => (
-                                                                <button
-                                                                    key={b.value}
-                                                                    type="button"
-                                                                    onClick={() => setBillingType(b.value as any)}
-                                                                    className={cn(
-                                                                        "flex items-center justify-center p-1 rounded-xl border transition-all h-full text-center leading-tight",
-                                                                        billingType === b.value
-                                                                            ? "bg-primary/20 border-primary text-primary shadow-sm"
-                                                                            : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
-                                                                    )}
-                                                                >
-                                                                    <span className="text-[10px] font-bold">{b.label}</span>
-                                                                </button>
-                                                            ))}
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Valor total</Label>
+                                                        <div className="relative">
+                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="0,00"
+                                                                className="glass-light border-border h-11 pl-9 text-lg font-semibold"
+                                                                value={newValue}
+                                                                onChange={(e) => setNewValue(Number(e.target.value))}
+                                                            />
                                                         </div>
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tipo de Serviço</Label>
-                                                        <Select value={serviceType} onValueChange={setServiceType}>
-                                                            <SelectTrigger className="glass-light border-border h-11">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Entrada (Imediata)</Label>
+                                                        <div className="relative">
+                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="0,00"
+                                                                className="glass-light border-border h-11 pl-9 text-lg font-semibold"
+                                                                value={newAdvance}
+                                                                onChange={(e) => setNewAdvance(Number(e.target.value))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Meio de Pagamento</Label>
+                                                        <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
+                                                            <SelectTrigger className="glass-light border-border h-11 text-xs">
                                                                 <SelectValue placeholder="Selecione..." />
                                                             </SelectTrigger>
                                                             <SelectContent className="glass border-border">
-                                                                <SelectItem value="design">Design</SelectItem>
-                                                                <SelectItem value="dev">Desenvolvimento</SelectItem>
-                                                                <SelectItem value="social_media">Social Media</SelectItem>
-                                                                <SelectItem value="traffic">Tráfego Pago</SelectItem>
-                                                                <SelectItem value="copywriting">Copywriting</SelectItem>
+                                                                <SelectItem value="pix">PIX</SelectItem>
+                                                                <SelectItem value="boleto">Boleto</SelectItem>
+                                                                <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                                                                <SelectItem value="transfer">Transferência</SelectItem>
                                                                 <SelectItem value="other">Outro</SelectItem>
                                                             </SelectContent>
                                                         </Select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Status Inicial</Label>
+                                                        <Select value={newPaymentStatus} onValueChange={setNewPaymentStatus}>
+                                                            <SelectTrigger className="glass-light border-border h-11 text-xs">
+                                                                <SelectValue placeholder="Selecione..." />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="glass border-border">
+                                                                <SelectItem value="pending">Pendente</SelectItem>
+                                                                <SelectItem value="paid">Pago</SelectItem>
+                                                                <SelectItem value="partial">Parcial</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+                                            </section>
+
+                                            {/* SEÇÃO 2: RECORRÊNCIA E MANUTENÇÃO */}
+                                            <section className={cn(
+                                                "space-y-4 p-4 rounded-2xl border transition-all duration-300",
+                                                billingType === "recorrente" ? "bg-primary/[0.03] border-primary/20" : "bg-muted/5 border-border"
+                                            )}>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={cn("h-6 w-1 rounded-full", billingType === "recorrente" ? "bg-primary" : "bg-muted-foreground/20")} />
+                                                        <h3 className="text-[10px] font-bold tracking-widest text-foreground uppercase">2. Recorrência e Manutenção</h3>
+                                                    </div>
+                                                    <div className="flex gap-1.5 bg-background/50 p-1 rounded-lg border border-border">
+                                                        {[
+                                                            { value: 'pontual', label: 'Setup Único' },
+                                                            { value: 'recorrente', label: 'Mensalidade' }
+                                                        ].map((b) => (
+                                                            <button
+                                                                key={b.value}
+                                                                type="button"
+                                                                onClick={() => setBillingType(b.value as any)}
+                                                                className={cn(
+                                                                    "h-6 px-3 text-[9px] font-bold rounded-md transition-all",
+                                                                    billingType === b.value
+                                                                        ? "bg-primary/20 text-primary border border-primary/20"
+                                                                        : "text-muted-foreground hover:bg-muted"
+                                                                )}
+                                                            >
+                                                                {b.label}
+                                                            </button>
+                                                        ))}
                                                     </div>
                                                 </div>
 
@@ -742,13 +831,13 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     <motion.div
                                                         initial={{ height: 0, opacity: 0 }}
                                                         animate={{ height: "auto", opacity: 1 }}
-                                                        className="space-y-4 pt-2"
+                                                        className="space-y-4 overflow-hidden"
                                                     >
-                                                        <div className="grid grid-cols-2 gap-4">
+                                                        <div className="grid grid-cols-2 gap-4 pt-2">
                                                             <div className="space-y-2">
-                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ciclo</Label>
+                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Ciclo de faturamento</Label>
                                                                 <Select value={billingCycle} onValueChange={setBillingCycle}>
-                                                                    <SelectTrigger className="glass-light border-border h-11">
+                                                                    <SelectTrigger className="glass-light border-border h-11 text-xs">
                                                                         <SelectValue placeholder="Ciclo" />
                                                                     </SelectTrigger>
                                                                     <SelectContent className="glass border-border">
@@ -761,308 +850,223 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                             </div>
 
                                                             <div className="space-y-2">
-                                                                <Label htmlFor="next-billing" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                                                    <Calendar className="h-3 w-3" /> Próxima Cobrança
+                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+                                                                    <Calendar className="h-3 w-3" /> Início da Cobrança
                                                                 </Label>
                                                                 <Input
-                                                                    id="next-billing"
                                                                     type="date"
-                                                                    className="glass-light border-border h-11 [color-scheme:dark]"
+                                                                    className="glass-light border-border h-11 text-xs [color-scheme:dark]"
                                                                     value={nextBillingDate}
                                                                     onChange={(e) => setNextBillingDate(e.target.value)}
                                                                 />
                                                             </div>
                                                         </div>
 
-                                                        <div className="space-y-4 p-4 rounded-xl border border-primary/20 bg-primary/5/30 backdrop-blur-sm">
-                                                            <div className="space-y-3">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-primary/80">Configuração de Mensalidade</Label>
+                                                        <div className="grid grid-cols-2 gap-3 p-3 rounded-xl border border-primary/10 bg-primary/[0.02]">
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Modelo</Label>
+                                                                <div className="flex flex-col gap-1">
+                                                                    {[
+                                                                        { value: 'full', label: '100% no Início' },
+                                                                        { value: 'split', label: '50% Entrada / 50% Fim' }
+                                                                    ].map((m) => (
+                                                                        <button
+                                                                            key={m.value}
+                                                                            type="button"
+                                                                            onClick={() => setRecurringPaymentModel(m.value as any)}
+                                                                            className={cn(
+                                                                                "flex items-center justify-center h-7 rounded-lg border transition-all text-center text-[9px] font-bold",
+                                                                                recurringPaymentModel === m.value
+                                                                                    ? "bg-primary/20 border-primary text-primary"
+                                                                                    : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
+                                                                            )}
+                                                                        >
+                                                                            {m.label}
+                                                                        </button>
+                                                                    ))}
                                                                 </div>
+                                                            </div>
 
-                                                                <div className="grid grid-cols-1 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Início do faturamento</Label>
-                                                                        <div className="grid grid-cols-2 gap-2 h-11">
-                                                                            {[
-                                                                                { value: 'immediate', label: 'Imediato', desc: 'Junto com Setup' },
-                                                                                { value: 'post_installments', label: 'Pós-Setup', desc: 'Após parcelas' }
-                                                                            ].map((c) => (
-                                                                                <button
-                                                                                    key={c.value}
-                                                                                    type="button"
-                                                                                    onClick={() => setRecurringCondition(c.value as any)}
-                                                                                    className={cn(
-                                                                                        "flex flex-col items-center justify-center p-1 rounded-lg border transition-all text-center h-full",
-                                                                                        recurringCondition === c.value
-                                                                                            ? "bg-primary/20 border-primary text-primary"
-                                                                                            : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
-                                                                                    )}
-                                                                                >
-                                                                                    <span className="text-[10px] font-bold">{c.label}</span>
-                                                                                    <span className="text-[8px] opacity-70 font-medium">{c.desc}</span>
-                                                                                </button>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="grid grid-cols-2 gap-3">
-                                                                        <div className="space-y-2">
-                                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Formato</Label>
-                                                                            <div className="grid grid-cols-1 gap-1">
-                                                                                {[
-                                                                                    { value: 'full', label: 'Integral (100%)' },
-                                                                                    { value: 'split', label: 'Dividido (50/50)' }
-                                                                                ].map((m) => (
-                                                                                    <button
-                                                                                        key={m.value}
-                                                                                        type="button"
-                                                                                        onClick={() => setRecurringPaymentModel(m.value as any)}
-                                                                                        className={cn(
-                                                                                            "flex items-center justify-center h-8 rounded-lg border transition-all text-center",
-                                                                                            recurringPaymentModel === m.value
-                                                                                                ? "bg-primary/20 border-primary text-primary"
-                                                                                                : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
-                                                                                        )}
-                                                                                    >
-                                                                                        <span className="text-[9px] font-bold">{m.label}</span>
-                                                                                    </button>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <div className="space-y-2">
-                                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Vencimento</Label>
-                                                                            <div className="grid grid-cols-1 gap-1">
-                                                                                {[
-                                                                                    { value: 'start', label: 'Início do Mês' },
-                                                                                    { value: 'end', label: 'Fim do Mês' }
-                                                                                ].map((t) => (
-                                                                                    <button
-                                                                                        key={t.value}
-                                                                                        type="button"
-                                                                                        onClick={() => setRecurringTiming(t.value as any)}
-                                                                                        className={cn(
-                                                                                            "flex items-center justify-center h-8 rounded-lg border transition-all text-center",
-                                                                                            recurringTiming === t.value
-                                                                                                ? "bg-primary/20 border-primary text-primary"
-                                                                                                : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
-                                                                                        )}
-                                                                                    >
-                                                                                        <span className="text-[9px] font-bold">{t.label}</span>
-                                                                                    </button>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Gatilho</Label>
+                                                                <div className="flex flex-col gap-1">
+                                                                    {[
+                                                                        { value: 'immediate', label: 'Imediato (Setup)' },
+                                                                        { value: 'post_installments', label: 'Pós-Parcelas' }
+                                                                    ].map((t) => (
+                                                                        <button
+                                                                            key={t.value}
+                                                                            type="button"
+                                                                            onClick={() => setRecurringCondition(t.value as any)}
+                                                                            className={cn(
+                                                                                "flex items-center justify-center h-7 rounded-lg border transition-all text-center text-[9px] font-bold",
+                                                                                recurringCondition === t.value
+                                                                                    ? "bg-primary/20 border-primary text-primary"
+                                                                                    : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
+                                                                            )}
+                                                                        >
+                                                                            {t.label}
+                                                                        </button>
+                                                                    ))}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </motion.div>
                                                 )}
-                                            </div>
-                                        </div>
+                                            </section>
 
-                                        {/* Installment Section - Arthur Marques Sign */}
-                                        <div className="space-y-4 pt-4 border-t border-border/50">
-                                            <div className="flex items-center justify-between">
-                                                <Label className="text-xs font-medium text-foreground">Configurar parcelamento do saldo?</Label>
-                                                <p className="text-[10px] text-muted-foreground">O valor restante será gerado em parcelas para seu financeiro.</p>
-                                            </div>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setIsInstallmentEnabled(!isInstallmentEnabled)}
-                                                className={cn(
-                                                    "h-8 px-3 text-[10px] font-bold  tracking-tight transition-all",
-                                                    isInstallmentEnabled ? "bg-primary/20 text-primary border border-primary/30" : "bg-muted/30 border border-transparent"
-                                                )}
-                                            >
-                                                {isInstallmentEnabled ? "Remover Parcelas" : "Configurar parcelas"}
-                                            </Button>
-                                        </div>
-
-                                        {isInstallmentEnabled && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: "auto", opacity: 1 }}
-                                                className="space-y-4 overflow-hidden"
-                                            >
-                                                <div className="flex gap-2 items-end">
-                                                    <div className="flex-1 space-y-2">
-                                                        <Label className="text-[10px] opacity-60">Número de Parcelas</Label>
-                                                        <Input
-                                                            type="number"
-                                                            min={1}
-                                                            max={24}
-                                                            value={installmentCount}
-                                                            onChange={(e) => setInstallmentCount(Number(e.target.value))}
-                                                            className="h-10 text-xs glass-light border-border"
-                                                        />
+                                            {/* SEÇÃO 3: PARCELAMENTO DO SALDO (SETUP) */}
+                                            <section className="space-y-4 p-4 rounded-2xl border border-border bg-muted/5">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={cn("h-6 w-1 rounded-full", isInstallmentEnabled ? "bg-primary" : "bg-muted-foreground/20")} />
+                                                        <h3 className="text-[10px] font-bold tracking-widest text-foreground uppercase">3. Parcelamento do Saldo de Setup</h3>
                                                     </div>
                                                     <Button
                                                         type="button"
-                                                        variant="outline"
+                                                        variant="ghost"
                                                         size="sm"
-                                                        onClick={generateInstallments}
-                                                        className="h-10 border-primary/50 text-primary hover:bg-primary/5 text-[10px] font-bold"
+                                                        onClick={() => setIsInstallmentEnabled(!isInstallmentEnabled)}
+                                                        className={cn(
+                                                            "h-6 px-3 text-[9px] font-bold rounded-md transition-all",
+                                                            isInstallmentEnabled ? "bg-primary/20 text-primary border border-primary/20" : "bg-background/20 text-muted-foreground"
+                                                        )}
                                                     >
-                                                        Gerar Cronograma
+                                                        {isInstallmentEnabled ? "Remover" : "Habilitar"}
                                                     </Button>
                                                 </div>
 
-                                                <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
-                                                    {installments.map((p, idx) => (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, x: -10 }}
-                                                            animate={{ opacity: 1, x: 0 }}
-                                                            key={idx}
-                                                            className="flex gap-2 items-center bg-muted/5 p-2 rounded-md border border-border group"
-                                                        >
-                                                            <span className="text-[10px] font-bold text-muted-foreground w-8 text-center">{idx + 1}ª</span>
-                                                            <div className="relative flex-1">
-                                                                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-bold">R$</div>
+                                                {isInstallmentEnabled && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: "auto", opacity: 1 }}
+                                                        className="space-y-4 overflow-hidden"
+                                                    >
+                                                        <div className="flex gap-2 items-end">
+                                                            <div className="flex-1 space-y-2">
+                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Número de Parcelas</Label>
                                                                 <Input
                                                                     type="number"
-                                                                    value={p.amount}
-                                                                    onChange={(e) => {
-                                                                        const next = [...installments];
-                                                                        next[idx].amount = Number(e.target.value);
-                                                                        setInstallments(next);
-                                                                    }}
-                                                                    className="h-9 pl-7 text-[11px] glass-light border-border focus:border-primary/40"
+                                                                    min={1}
+                                                                    max={24}
+                                                                    value={installmentCount}
+                                                                    onChange={(e) => setInstallmentCount(Number(e.target.value))}
+                                                                    className="h-10 text-xs glass-light border-border"
                                                                 />
                                                             </div>
-                                                            <Input
-                                                                type="date"
-                                                                value={p.date}
-                                                                onChange={(e) => {
-                                                                    const next = [...installments];
-                                                                    next[idx].date = e.target.value;
-                                                                    setInstallments(next);
-                                                                }}
-                                                                className="h-9 text-[11px] glass-light border-border w-36 [color-scheme:dark]"
-                                                            />
-                                                        </motion.div>
-                                                    ))}
-                                                </div>
-
-                                                {installments.length > 0 && (
-                                                    <div className="p-3 bg-primary/5 rounded-md border border-primary/10">
-                                                        <div className="flex justify-between items-center text-[10px]">
-                                                            <span className="text-muted-foreground">Total Parcelado:</span>
-                                                            <span className="font-bold text-primary">
-                                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                                                                    installments.reduce((acc, curr) => acc + curr.amount, 0)
-                                                                )}
-                                                            </span>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={generateInstallments}
+                                                                className="h-10 border-primary/50 text-primary hover:bg-primary/5 text-[10px] font-bold"
+                                                            >
+                                                                Gerar Cronograma
+                                                            </Button>
                                                         </div>
-                                                    </div>
+
+                                                        <div className="space-y-2">
+                                                            {installments.map((p, idx) => (
+                                                                <div key={idx} className="flex gap-2 items-center bg-background/30 p-2 rounded-lg border border-border group transition-all hover:border-primary/20">
+                                                                    <span className="text-[10px] font-bold text-muted-foreground w-8 text-center">{idx + 1}ª</span>
+                                                                    <div className="relative flex-1">
+                                                                        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-bold">R$</div>
+                                                                        <Input
+                                                                            type="number"
+                                                                            value={p.amount}
+                                                                            onChange={(e) => {
+                                                                                const next = [...installments];
+                                                                                next[idx].amount = Number(e.target.value);
+                                                                                setInstallments(next);
+                                                                            }}
+                                                                            className="h-9 pl-7 text-[11px] glass-light border-border transition-all focus:border-primary/40"
+                                                                        />
+                                                                    </div>
+                                                                    <Input
+                                                                        type="date"
+                                                                        value={p.date}
+                                                                        onChange={(e) => {
+                                                                            const next = [...installments];
+                                                                            next[idx].date = e.target.value;
+                                                                            setInstallments(next);
+                                                                        }}
+                                                                        className="h-9 text-[11px] glass-light border-border w-36 [color-scheme:dark]"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {installments.length > 0 && (
+                                                            <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 flex justify-between items-center">
+                                                                <span className="text-[10px] text-muted-foreground font-medium">Total Parcelado:</span>
+                                                                <span className="text-xs font-bold text-primary">
+                                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                                                        installments.reduce((acc, curr) => acc + curr.amount, 0)
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </motion.div>
                                                 )}
-                                            </motion.div>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-
-                            {step === 4 && (
-                                <>
-                                    <div className="space-y-4">
-                                        <div className="flex gap-2">
-                                            <Input
-                                                placeholder="Digite uma tarefa e aperte Enter..."
-                                                value={taskInput}
-                                                onChange={(e) => setTaskInput(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && addTask()}
-                                                className="glass-light border-border h-11"
-                                            />
-                                            <Button type="button" onClick={addTask} size="icon" className="shrink-0 border-primary transition-all active:scale-95">
-                                                <Plus className="h-4 w-4" />
-                                            </Button>
+                                            </section>
                                         </div>
-
-                                        <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2 scrollbar-thin">
-                                            {tasks.map((task) => (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 5 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    key={task.id}
-                                                    className="flex items-center justify-between p-3 rounded-lg bg-muted/5 border border-border group hover:border-primary/30 transition-colors"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary" />
-                                                        <span className="text-sm font-medium">{task.title}</span>
-                                                    </div>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                                                        onClick={() => removeTask(task.id)}
-                                                    >
-                                                        <Plus className="h-3 w-3 rotate-45 text-destructive" />
-                                                    </Button>
-                                                </motion.div>
-                                            ))}
-                                            {tasks.length === 0 && (
-                                                <div className="text-center py-8 border-2 border-dashed border-border rounded-xl">
-                                                    <ListTodo className="h-8 w-8 mx-auto opacity-10 mb-2" />
-                                                    <p className="text-xs text-muted-foreground">Adicione tarefas iniciais para o projeto.</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
-
-                    <div className="flex gap-3 pt-8 mt-4 border-t border-border">
-                        {step > 1 ? (
-                            <Button
-                                variant="outline"
-                                className="flex-1 glass-light border-border hover:bg-muted/30"
-                                onClick={prevStep}
-                            >
-                                <ChevronLeft className="h-4 w-4 mr-2" /> Voltar
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="ghost"
-                                className="flex-1 border border-transparent hover:border-border"
-                                onClick={() => setOpen(false)}
-                            >
-                                Cancelar
-                            </Button>
-                        )}
-
-                        {step < 4 ? (
-                            <Button
-                                className="flex-1 border-primary transition-all active:scale-95 font-bold"
-                                onClick={nextStep}
-                            >
-                                Próximo <ChevronRight className="h-4 w-4 ml-2" />
-                            </Button>
-                        ) : (
-                            <Button
-                                className="flex-1 border-primary transition-all active:scale-95 font-bold"
-                                onClick={() => createProjectMutation.mutate()}
-                                disabled={createProjectMutation.isPending}
-                            >
-                                {createProjectMutation.isPending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <>
-                                        Criar e Abrir Kanban <Check className="h-4 w-4 ml-2" />
                                     </>
                                 )}
-                            </Button>
-                        )}
+
+                                {step === 4 && (
+                                    <>
+                                        <div className="space-y-4">
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    placeholder="Digite uma tarefa e aperte Enter..."
+                                                    value={taskInput}
+                                                    onChange={(e) => setTaskInput(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && addTask()}
+                                                    className="glass-light border-border h-11"
+                                                />
+                                                <Button type="button" onClick={addTask} size="icon" className="shrink-0 border-primary transition-all active:scale-95">
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+
+                                            <div className="space-y-2 pr-2">
+                                                {tasks.map((task) => (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 5 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        key={task.id}
+                                                        className="flex items-center justify-between p-3 rounded-xl bg-muted/5 border border-border group hover:border-primary/30 transition-all"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                                                            <span className="text-sm font-medium">{task.title}</span>
+                                                        </div>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-all text-destructive hover:bg-destructive/10"
+                                                            onClick={() => removeTask(task.id)}
+                                                        >
+                                                            <Plus className="h-4 w-4 rotate-45" />
+                                                        </Button>
+                                                    </motion.div>
+                                                ))}
+                                                {tasks.length === 0 && (
+                                                    <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl bg-muted/5">
+                                                        <ListTodo className="h-10 w-10 mx-auto opacity-10 mb-2" />
+                                                        <p className="text-xs text-muted-foreground">O Roadmap começa com as primeiras tarefas.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
                 </div>
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 }
 

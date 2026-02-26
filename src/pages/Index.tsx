@@ -37,7 +37,7 @@ const Index = () => {
     }
 
     return (
-        <div className="page-container h-full overflow-y-auto no-scrollbar">
+        <div className="page-container h-full overflow-y-auto custom-scrollbar">
             {/* Standard Header Section - Matching other pages */}
             <header className="heading-container">
                 <div className="flex items-center gap-3">
@@ -102,16 +102,16 @@ const Index = () => {
                     className="bento-card p-5 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-purple-500/5 rounded-xl border border-purple-500/10">
-                            <CheckSquare className="h-4 w-4 text-purple-500" />
+                        <div className="p-2 bg-primary/5 rounded-xl border border-primary/10">
+                            <CheckSquare className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="text-[10px] font-medium text-purple-600">{completionRate}%</span>
+                        <span className="text-[10px] font-medium text-primary">{completionRate}%</span>
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Tarefas</p>
                         <div className="flex items-end justify-between gap-4">
                             <h2 className="text-2xl font-semibold tracking-tight tabular-nums">{tasksStats?.total || 0}</h2>
-                            <Progress value={completionRate} className="h-1.5 flex-1 mb-2 bg-purple-500/10" />
+                            <Progress value={completionRate} className="h-1.5 flex-1 mb-2 bg-primary/10" />
                         </div>
                     </div>
                 </motion.div>
@@ -123,10 +123,10 @@ const Index = () => {
                     className="bento-card p-5 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-                            <Users className="h-4 w-4 text-emerald-500" />
+                        <div className="p-2 bg-primary/5 rounded-xl border border-primary/10">
+                            <Users className="h-4 w-4 text-primary" />
                         </div>
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <div className="h-2 w-2 rounded-full bg-primary/40 animate-pulse" />
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Clientes</p>
@@ -140,12 +140,12 @@ const Index = () => {
                     transition={{ delay: 0.4 }}
                     className="bento-card p-5 flex flex-col justify-between overflow-hidden relative"
                 >
-                    <div className="absolute top-0 right-0 p-8 transform translate-x-4 -translate-y-4 opacity-5">
-                        <TrendingUp className="h-24 w-24 text-primary" />
+                    <div className="absolute top-0 right-0 p-8 transform translate-x-4 -translate-y-4 opacity-5 text-primary">
+                        <TrendingUp className="h-24 w-24" />
                     </div>
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-blue-500/5 rounded-xl border border-blue-500/10">
-                            <TrendingUp className="h-4 w-4 text-blue-500" />
+                        <div className="p-2 bg-primary/5 rounded-xl border border-primary/10">
+                            <TrendingUp className="h-4 w-4 text-primary" />
                         </div>
                         <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>

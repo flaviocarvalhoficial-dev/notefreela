@@ -193,73 +193,90 @@ export function useFinancialData(selectedMonth: string = "all") {
             const billingDateMatches = p.next_billing_date && isInSelectedMonth(p.next_billing_date, selectedMonth);
             const isFutureBilling = p.next_billing_date && p.next_billing_date > today;
 
-            if (isRecurringActive && billingDateMatches && isFutureBilling) {
-                const validBillingDate = toValidDate(p.next_billing_date);
-                if (!validBillingDate) {
-                    console.warn("[Financeiro] next_billing_date inválido", { id: p.id, next_billing_date: p.next_billing_date, project: p });
-                    return; // Skip this project for recurring logic if date is broken
-                }
+            if (isRecurringActive) {
+                let currentBillingDate = p.next_billing_date;
 
-                let shouldBill = true;
-                if (condition === 'post_installments' && p.project_costs && p.project_costs.length > 0) {
-                    const lastInstallmentDate = p.project_costs
-                        .filter(c => c.category === "receita_parcela")
-                        .reduce((max, c) => c.date > max ? c.date : max, "");
-                    if (lastInstallmentDate && p.next_billing_date! <= lastInstallmentDate) {
-                        shouldBill = false;
-                    }
-                }
+                // Projection logic: 6 months ahead - Arthur Marques Sign
+                for (let i = 0; i < 6; i++) {
+                    if (!currentBillingDate) break;
 
-                if (shouldBill) {
-                    const totalValue = Number(p.value) || 0;
+                    const billingDateMatches = isInSelectedMonth(currentBillingDate, selectedMonth);
+                    const isFutureBilling = currentBillingDate > today;
 
-                    if (paymentModel === 'split') {
-                        const halfAmt = totalValue / 2;
+                    if (billingDateMatches && isFutureBilling) {
+                        const validBillingDate = toValidDate(currentBillingDate);
+                        if (!validBillingDate) break;
 
-                        // 1. Entrance (First half)
-                        totalProvisioned += halfAmt;
-                        provisionedItems.push({
-                            id: `recurring-ent-${p.id}`,
-                            title: `Mensalidade (Entrada 50%)`,
-                            amount: halfAmt,
-                            date: p.next_billing_date!,
-                            type: 'recorrente',
-                            projectName: p.name
-                        });
-
-                        // 2. Remainder (Second half)
-                        const d = toValidDate(p.next_billing_date! + 'T12:00:00');
-                        if (d) {
-                            const lastDayOfMonthDate = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-                            const remainderDateISO = safeToISOString(lastDayOfMonthDate);
-
-                            if (remainderDateISO) {
-                                const remainderDate = remainderDateISO.split('T')[0];
-                                // Only add second half if it matches the filter month or if all
-                                if (selectedMonth === "all" || isInSelectedMonth(remainderDate, selectedMonth)) {
-                                    totalProvisioned += halfAmt;
-                                    provisionedItems.push({
-                                        id: `recurring-rem-${p.id}`,
-                                        title: `Mensalidade (Saldo 50%)`,
-                                        amount: halfAmt,
-                                        date: remainderDate,
-                                        type: 'recorrente',
-                                        projectName: p.name
-                                    });
-                                }
+                        let shouldBill = true;
+                        if (condition === 'post_installments' && p.project_costs && p.project_costs.length > 0) {
+                            const lastInstallmentDate = p.project_costs
+                                .filter(c => c.category === "receita_parcela")
+                                .reduce((max, c) => c.date > max ? c.date : max, "");
+                            if (lastInstallmentDate && currentBillingDate <= lastInstallmentDate) {
+                                shouldBill = false;
                             }
                         }
+
+                        if (shouldBill) {
+                            const totalValue = Number(p.value) || 0;
+
+                            if (paymentModel === 'split') {
+                                const halfAmt = totalValue / 2;
+
+                                // 1. Entrance (First half)
+                                totalProvisioned += halfAmt;
+                                provisionedItems.push({
+                                    id: `recurring-ent-${p.id}-${i}`,
+                                    title: `Mensalidade (Entrada 50%) - ${i + 1}º ciclo`,
+                                    amount: halfAmt,
+                                    date: currentBillingDate,
+                                    type: 'recorrente',
+                                    projectName: p.name
+                                });
+
+                                // 2. Remainder (Second half)
+                                const d = toValidDate(currentBillingDate + 'T12:00:00');
+                                if (d) {
+                                    const lastDayOfMonthDate = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+                                    const remainderDateISO = safeToISOString(lastDayOfMonthDate);
+
+                                    if (remainderDateISO) {
+                                        const remainderDate = remainderDateISO.split('T')[0];
+                                        if (selectedMonth === "all" || isInSelectedMonth(remainderDate, selectedMonth)) {
+                                            totalProvisioned += halfAmt;
+                                            provisionedItems.push({
+                                                id: `recurring-rem-${p.id}-${i}`,
+                                                title: `Mensalidade (Saldo 50%) - ${i + 1}º ciclo`,
+                                                amount: halfAmt,
+                                                date: remainderDate,
+                                                type: 'recorrente',
+                                                projectName: p.name
+                                            });
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Integral model
+                                totalProvisioned += totalValue;
+                                provisionedItems.push({
+                                    id: `recurring-${p.id}-${i}`,
+                                    title: `Faturamento Mensal ${i + 1}º ciclo (${timing === 'end' ? 'Postecipado' : 'Antecipado'})`,
+                                    amount: totalValue,
+                                    date: currentBillingDate,
+                                    type: 'recorrente',
+                                    projectName: p.name
+                                });
+                            }
+                        }
+                    }
+
+                    // Move to next month for the next iteration
+                    const nextDateObj = toValidDate(currentBillingDate + 'T12:00:00');
+                    if (nextDateObj) {
+                        nextDateObj.setMonth(nextDateObj.getMonth() + 1);
+                        currentBillingDate = safeToISOString(nextDateObj)?.split('T')[0] || null;
                     } else {
-                        // Integral model
-                        totalProvisioned += totalValue;
-                        provisionedItems.push({
-                            id: `recurring-${p.id}`,
-                            title: `Faturamento Mensal (${timing === 'end' ? 'Postecipado' : 'Antecipado'})`,
-                            amount: totalValue,
-                            date: p.next_billing_date!,
-                            type: 'recorrente',
-                            projectName: p.name
-                        });
+                        break;
                     }
                 }
             }

@@ -138,7 +138,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl border-border bg-sidebar/95 backdrop-blur-xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+            <DialogContent className="max-w-2xl border-border bg-sidebar/95 backdrop-blur-xl h-[90vh] max-h-[850px] flex flex-col p-0 overflow-hidden">
                 <DialogHeader className="p-6 border-b border-border">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -171,7 +171,7 @@ export function CostsBreakdownModal({ open, onOpenChange }: CostsBreakdownModalP
                     ))}
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                <div className="flex-1 overflow-y-scroll custom-scrollbar p-6 pb-60 min-h-0">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-3">
                             <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
