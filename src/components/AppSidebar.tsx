@@ -16,7 +16,8 @@ import {
   Rocket,
   DollarSign,
   CreditCard,
-  Info
+  Info,
+  LayoutGrid
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -51,6 +52,7 @@ const navItems = [
   { title: "Projetos", url: "/projetos", icon: FolderKanban },
   { title: "Tarefas", url: "/tarefas", icon: CheckSquare },
   { title: "Agenda", url: "/agenda", icon: Calendar },
+  { title: "Gestão Pessoal", url: "/gestao-pessoal", icon: LayoutGrid },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Documentos", url: "/documentos", icon: FileText },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },

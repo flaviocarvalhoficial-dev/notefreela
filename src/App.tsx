@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
+import { TimerProvider } from "@/contexts/TimerContext";
 import Index from "./pages/Index";
 import Projetos from "./pages/Projetos";
 import ProjetoDetalhes from "./pages/ProjetoDetalhes";
@@ -20,6 +21,7 @@ import Auth from "./pages/Auth";
 import Atividades from "./pages/Atividades";
 import Configuracoes from "./pages/Configuracoes";
 import Assinaturas from "./pages/Assinaturas";
+import GestaoPessoal from "./pages/GestaoPessoal";
 import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase";
 import { Session } from "@supabase/supabase-js";
@@ -32,34 +34,35 @@ const AppLayout = () => {
   const isDashboard = pathname === "/";
 
   return (
-    // When on the dashboard, the entire layout is fixed-height (h-screen).
-    // No JS DOM manipulation needed — this is purely declarative CSS.
-    <div className={`flex w-full ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
-      <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <Header />
-        <main className={`flex-1 overflow-x-hidden ${isDashboard ? "h-full overflow-hidden no-scrollbar" : "overflow-y-auto custom-scrollbar"}`}>
-          <div className="w-full h-full">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/projetos" element={<Projetos />} />
-              <Route path="/projetos/:id" element={<ProjetoDetalhes />} />
-              <Route path="/tarefas" element={<Tarefas />} />
-              <Route path="/agenda" element={<Agenda />} />
-              <Route path="/clientes" element={<Clientes />} />
-              <Route path="/caixa-entrada" element={<CaixaEntrada />} />
-              <Route path="/documentos" element={<Documentos />} />
-              <Route path="/financeiro" element={<Financeiro />} />
-              <Route path="/atividades" element={<Atividades />} />
-              <Route path="/configuracoes" element={<Configuracoes />} />
-              <Route path="/assinaturas" element={<Assinaturas />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </main>
+    <TimerProvider>
+      <div className={`flex w-full ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
+        <AppSidebar />
+        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+          <Header />
+          <main className={`flex-1 overflow-x-hidden ${isDashboard ? "h-full overflow-hidden no-scrollbar" : "overflow-y-auto custom-scrollbar"}`}>
+            <div className="w-full h-full">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/projetos" element={<Projetos />} />
+                <Route path="/projetos/:id" element={<ProjetoDetalhes />} />
+                <Route path="/tarefas" element={<Tarefas />} />
+                <Route path="/agenda" element={<Agenda />} />
+                <Route path="/clientes" element={<Clientes />} />
+                <Route path="/caixa-entrada" element={<CaixaEntrada />} />
+                <Route path="/documentos" element={<Documentos />} />
+                <Route path="/financeiro" element={<Financeiro />} />
+                <Route path="/atividades" element={<Atividades />} />
+                <Route path="/configuracoes" element={<Configuracoes />} />
+                <Route path="/assinaturas" element={<Assinaturas />} />
+                <Route path="/gestao-pessoal" element={<GestaoPessoal />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </TimerProvider>
   );
 };
 

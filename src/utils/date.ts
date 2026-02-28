@@ -41,6 +41,12 @@ export function safeToISOString(value: any): string | null {
  */
 export function isInSelectedMonth(dateValue: any, selectedMonth: string): boolean {
     if (selectedMonth === "all") return true;
+    if (!dateValue) return false;
+
+    // Optimized string-based check to avoid timezone shifts (e.g., YYYY-MM-DD)
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}/.test(dateValue)) {
+        return dateValue.substring(0, 7) === selectedMonth;
+    }
 
     const date = toValidDate(dateValue);
     if (!date) return false;

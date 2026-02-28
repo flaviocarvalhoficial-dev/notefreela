@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bell, Search, ChevronDown, Moon, Sun, LogOut, User as UserIcon, Settings as SettingsIcon } from "lucide-react";
+import { HeaderTimerBadge } from "@/components/timer/HeaderTimerBadge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
@@ -91,7 +92,7 @@ export function Header() {
 
     return (
         <header className="sticky top-0 w-full h-16 border-b border-border glass-light z-[40]">
-            <div className="max-w-[1750px] mx-auto h-full flex items-center justify-between px-8 md:px-12 lg:px-20 transition-all duration-300">
+            <div className="w-full h-full flex items-center justify-between px-8 md:px-12 lg:px-20 transition-all duration-300">
 
                 {/* Left Area: Welcome Message (Photo and Name in Line) */}
                 <div className="flex items-center gap-4">
@@ -144,8 +145,9 @@ export function Header() {
                     </div>
                 </div>
 
-                {/* Right Area: Mode Toggle, Notifications */}
+                {/* Right Area: Timer + Mode Toggle, Notifications */}
                 <div className="flex items-center gap-2">
+                    <HeaderTimerBadge />
                     <div className="flex items-center gap-1">
                         <Button
                             variant="ghost"

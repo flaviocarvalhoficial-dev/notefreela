@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { TimelineSection } from "@/components/dashboard/TimelineSection";
 import { FinancialChart } from "@/components/dashboard/FinancialChart";
+import { DashboardTimerWidget } from "@/components/dashboard/DashboardTimerWidget";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -167,9 +168,12 @@ const Index = () => {
                     <TimelineSection />
                 </div>
 
-                {/* Financial Chart */}
-                <div className="lg:col-span-1 h-[500px] pt-[60px]">
-                    <FinancialChart projects={projects} />
+                {/* Right column: Timer + Financial Chart */}
+                <div className="lg:col-span-1 flex flex-col gap-4">
+                    <DashboardTimerWidget />
+                    <div className="h-[300px]">
+                        <FinancialChart projects={projects} />
+                    </div>
                 </div>
             </div>
 

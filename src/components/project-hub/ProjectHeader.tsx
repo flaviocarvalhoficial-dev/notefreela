@@ -15,6 +15,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { TimerButton } from '@/components/timer/TimerButton';
 
 interface ProjectHeaderProps {
     project: any;
@@ -165,6 +166,13 @@ export const ProjectHeader = ({
 
                 {/* Quick Actions Bar - Unified HUB Experience */}
                 <div className="pb-6 flex flex-wrap items-center gap-2">
+                    <TimerButton
+                        projectId={project.id}
+                        projectName={project.name}
+                        variant="full"
+                        className="h-9 px-6 shadow-glow-sm"
+                    />
+                    <div className="h-4 w-px bg-border mx-1" />
                     <Button
                         variant="ghost"
                         size="sm"

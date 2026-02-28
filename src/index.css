@@ -248,8 +248,21 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    display: block !important;
+    width: 5px;
+    display: block;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -280,7 +293,7 @@
 }
 
 .page-container {
-  @apply w-full max-w-[1750px] mx-auto px-8 md:px-12 lg:px-20 pt-10 pb-24 flex flex-col gap-10;
+  @apply w-full px-8 md:px-12 lg:px-20 pt-10 pb-24 flex flex-col gap-10;
 }
 
 .section-container {

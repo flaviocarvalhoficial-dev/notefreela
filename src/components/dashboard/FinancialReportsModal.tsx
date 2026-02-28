@@ -44,7 +44,7 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("projects")
-                .select("value, advance_payment, created_at");
+                .select("value, advance_payment, created_at, billing_type, contract_status, next_billing_date, services");
             if (error) throw error;
             return data || [];
         }
@@ -94,10 +94,34 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
         });
 
         projects.forEach(p => {
-            if (!p.created_at) return;
-            const key = format(parseISO(p.created_at), "yyyy-MM");
-            if (dataMap[key]) {
-                dataMap[key].gains += Number(p.advance_payment || 0);
+            // 1. One-time Setup Advance
+            if (p.created_at) {
+                const key = format(parseISO(p.created_at), "yyyy-MM");
+                if (dataMap[key]) {
+                    dataMap[key].gains += Number(p.advance_payment || 0);
+                }
+            }
+
+            // 2. Recurring Income
+            const isRecurringActive = p.billing_type === "recorrente" && p.contract_status === "active";
+            if (isRecurringActive) {
+                const billingConfig = (p.services as any[] || []).find((s: any) => s.name === "__billing_config__");
+                let currentBillingDate = p.next_billing_date;
+                const duration = billingConfig?.contractDuration || 12;
+
+                for (let i = 0; i < duration; i++) {
+                    if (!currentBillingDate) break;
+                    const key = currentBillingDate.substring(0, 7);
+                    if (dataMap[key]) {
+                        dataMap[key].gains += Number(p.value || 0);
+                    }
+
+                    // Move to next month
+                    const d = new Date(currentBillingDate + 'T12:00:00');
+                    if (isNaN(d.getTime())) break;
+                    d.setMonth(d.getMonth() + 1);
+                    currentBillingDate = d.toISOString().split('T')[0];
+                }
             }
         });
 

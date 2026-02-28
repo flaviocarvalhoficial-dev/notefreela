@@ -33,27 +33,52 @@ export function FinancialChart({ projects }: FinancialChartProps) {
         const monthlyData: Record<string, { name: string; total: number; received: number; date: Date }> = {};
 
         projects.forEach(project => {
-            const date = toValidDate(project.created_at);
-            if (!date) {
-                if (project.created_at) {
-                    console.warn("[FinancialChart] Data de criação inválida", { id: project.id, created_at: project.created_at });
+            // 1. Setup values (on created_at month)
+            const setupDate = toValidDate(project.created_at);
+            if (setupDate) {
+                const key = format(setupDate, "yyyy-MM");
+                if (!monthlyData[key]) {
+                    monthlyData[key] = {
+                        name: format(setupDate, "MMM/yy", { locale: ptBR }),
+                        total: 0,
+                        received: 0,
+                        date: startOfMonth(setupDate)
+                    };
                 }
-                return;
+                monthlyData[key].total += Number(project.value || 0);
+                monthlyData[key].received += Number(project.advance_payment || 0);
             }
 
-            const key = format(date, "yyyy-MM");
+            // 2. Recurring values (projected on future months)
+            const isRecurringActive = project.billing_type === "recorrente" && project.contract_status === "active";
+            if (isRecurringActive) {
+                const billingConfig = (project.services as any[] || []).find(s => s.name === "__billing_config__");
+                let currentBillingDate = project.next_billing_date;
+                const duration = billingConfig?.contractDuration || 12;
 
-            if (!monthlyData[key]) {
-                monthlyData[key] = {
-                    name: format(date, "MMM/yy", { locale: ptBR }),
-                    total: 0,
-                    received: 0,
-                    date: startOfMonth(date)
-                };
+                for (let i = 0; i < duration; i++) {
+                    if (!currentBillingDate) break;
+                    const d = toValidDate(currentBillingDate + 'T12:00:00');
+                    if (!d) break;
+
+                    const key = format(d, "yyyy-MM");
+                    if (!monthlyData[key]) {
+                        monthlyData[key] = {
+                            name: format(d, "MMM/yy", { locale: ptBR }),
+                            total: 0,
+                            received: 0,
+                            date: startOfMonth(d)
+                        };
+                    }
+                    // For charting purposes, we consider recurring as both 'total' and 'received' for that future month
+                    monthlyData[key].total += Number(project.value || 0);
+                    monthlyData[key].received += Number(project.value || 0);
+
+                    // Move to next month
+                    d.setMonth(d.getMonth() + 1);
+                    currentBillingDate = d.toISOString().split('T')[0];
+                }
             }
-
-            monthlyData[key].total += Number(project.value || 0);
-            monthlyData[key].received += Number(project.advance_payment || 0);
         });
 
         return Object.values(monthlyData)

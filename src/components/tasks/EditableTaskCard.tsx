@@ -5,6 +5,7 @@ import { format, isBefore } from "date-fns";
 import { CalendarIcon, Check, Flag, Pencil, User, X, Tag as TagIcon, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { TimerButton } from "@/components/timer/TimerButton";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -535,29 +536,39 @@ export function EditableTaskCard({
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete?.();
-                    }}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStartEdit?.();
-                    }}
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
+                <div className="flex items-center gap-1">
+                  {/* Timer button - always visible but compact */}
+                  <TimerButton
+                    taskId={task.id}
+                    taskTitle={task.title}
+                    projectId={task.projectId}
+                    projectName={task.project}
+                    variant="compact"
+                  />
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete?.();
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStartEdit?.();
+                      }}
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>

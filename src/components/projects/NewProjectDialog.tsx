@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Loader2, ChevronRight, ChevronLeft, Check, ListTodo, User, Calendar, Briefcase, Building2, DollarSign, Maximize2, Minimize2, Expand } from "lucide-react";
+import { Plus, Loader2, ChevronRight, ChevronLeft, Check, ListTodo, User, Calendar, Briefcase, Building2, DollarSign, Maximize2, Minimize2, Expand, Zap, BadgePercent, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -69,8 +69,11 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [nextBillingDate, setNextBillingDate] = useState("");
     const [recurringTiming, setRecurringTiming] = useState<'start' | 'end'>('start');
     const [recurringCondition, setRecurringCondition] = useState<'immediate' | 'post_installments'>('immediate');
-    const [recurringPaymentModel, setRecurringPaymentModel] = useState<'full' | 'split'>('full');
-    const [paymentPreset, setPaymentPreset] = useState<'full' | '50_50' | 'custom'>('custom');
+    const [recurringPaymentModel, setRecurringPaymentModel] = useState<'full' | 'split' | 'installments'>('full');
+    const [paymentPreset, setPaymentPreset] = useState<'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom'>('custom');
+    const [isEarlyPayment, setIsEarlyPayment] = useState(false);
+    const [contractDuration, setContractDuration] = useState(12);
+    const [recurringInstallmentCount, setRecurringInstallmentCount] = useState(1);
 
     // Parcelamento status
     const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
@@ -110,6 +113,9 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setIsInstallmentEnabled(false);
         setInstallments([]);
         setInstallmentCount(1);
+        setIsEarlyPayment(false);
+        setContractDuration(12);
+        setRecurringInstallmentCount(1);
     };
 
     const generateInstallments = () => {
@@ -194,7 +200,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setServices(services.filter((_, i) => i !== index));
     };
 
-    const handlePresetChange = (preset: 'full' | '50_50' | 'custom') => {
+    const handlePresetChange = (preset: 'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom') => {
         setPaymentPreset(preset);
         const totalValue = Number(newValue) || 0;
         const projectStartDate = startDate ? new Date(startDate + 'T12:00:00') : new Date();
@@ -205,23 +211,31 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             setIsInstallmentEnabled(false);
             setInstallments([]);
             setRecurringPaymentModel('full');
+            setRecurringCondition('immediate');
         } else if (preset === '50_50') {
             const half = Math.round((totalValue / 2) * 100) / 100;
             setNewAdvance(half);
             setNewPaymentStatus('partial');
             setIsInstallmentEnabled(true);
             setInstallmentCount(1);
-
-            // Saldo para o final do mês do início do projeto
             const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
             setInstallments([{ amount: half, date: endOfMonth.toISOString().split('T')[0] }]);
             setRecurringPaymentModel('split');
-
-            // If it's recurring, set next billing to the 1st of next month
-            if (billingType === 'recorrente') {
-                const nextMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 1);
-                setNextBillingDate(nextMonth.toISOString().split('T')[0]);
-            }
+            setRecurringCondition('post_installments');
+        } else if (preset === 'end_of_month') {
+            setNewAdvance(0);
+            setNewPaymentStatus('pending');
+            setIsInstallmentEnabled(true);
+            setInstallmentCount(1);
+            const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
+            setInstallments([{ amount: totalValue, date: endOfMonth.toISOString().split('T')[0] }]);
+        } else if (preset === 'next_month_10') {
+            setNewAdvance(0);
+            setNewPaymentStatus('pending');
+            setIsInstallmentEnabled(true);
+            setInstallmentCount(1);
+            const nextMonth10 = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 10);
+            setInstallments([{ amount: totalValue, date: nextMonth10.toISOString().split('T')[0] }]);
         }
     };
 
@@ -241,19 +255,19 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             if (!user) throw new Error("Usuário não autenticado");
 
             // 1. Create Project
-            const { data: project, error: pError } = await supabase
+            const { data: projectData, error: projectError } = await supabase
                 .from("projects")
                 .insert({
                     name: newName,
                     description: newDesc,
                     client_name: newClient,
-                    status: "planning",
+                    status: "active", // Changed from "in_progress" to match enum
                     priority: newPriority,
                     deadline: newDeadline || null,
                     user_id: user.id,
                     progress: 0,
-                    value: newValue || 0,
-                    advance_payment: newAdvance || 0,
+                    value: Number(newValue) || 0,
+                    advance_payment: Number(newAdvance) || 0,
                     payment_method: newPaymentMethod,
                     payment_status: newPaymentStatus,
                     avatar_emoji: newIcon,
@@ -264,7 +278,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                             price: 0,
                             timing: recurringTiming,
                             condition: recurringCondition,
-                            paymentModel: recurringPaymentModel
+                            paymentModel: recurringPaymentModel,
+                            isEarlyPayment: isEarlyPayment,
+                            contractDuration: contractDuration,
+                            recurringInstallmentCount: recurringInstallmentCount
                         }
                     ],
                     billing_type: billingType,
@@ -277,13 +294,13 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                 .select()
                 .single();
 
-            if (pError) throw pError;
+            if (projectError) throw projectError;
 
             // 2. Create a default Scenario for this project
             const { data: scenario, error: sError } = await (supabase as any)
                 .from("kanban_scenarios")
                 .insert({
-                    project_id: project.id,
+                    project_id: projectData.id,
                     title: "Fluxo Principal",
                     type: "kanban",
                     user_id: user.id,
@@ -296,9 +313,9 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
 
             // 3. Create Default Columns for this project linked to the scenario
             const defaultColsToInsert = [
-                { project_id: project.id, scenario_id: scenario.id, title: "Início", hint: "Planeje e quebre em passos", position: 0, color: "hsl(220, 15%, 75%)", user_id: user.id },
-                { project_id: project.id, scenario_id: scenario.id, title: "Em Progresso", hint: "Foco no que está em execução", position: 1, color: "hsl(200, 85%, 82%)", user_id: user.id },
-                { project_id: project.id, scenario_id: scenario.id, title: "Concluído", hint: "Entrega e validação", position: 2, color: "hsl(158, 65%, 82%)", user_id: user.id }
+                { project_id: projectData.id, scenario_id: scenario.id, title: "Início", hint: "Planeje e quebre em passos", position: 0, color: "hsl(220, 15%, 75%)", user_id: user.id },
+                { project_id: projectData.id, scenario_id: scenario.id, title: "Em Progresso", hint: "Foco no que está em execução", position: 1, color: "hsl(200, 85%, 82%)", user_id: user.id },
+                { project_id: projectData.id, scenario_id: scenario.id, title: "Concluído", hint: "Entrega e validação", position: 2, color: "hsl(158, 65%, 82%)", user_id: user.id }
             ];
 
             const { data: createdCols, error: cError } = await (supabase as any)
@@ -314,7 +331,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             if (tasks.length > 0) {
                 const tasksToInsert = tasks.map(t => ({
                     title: t.title,
-                    project_id: project.id,
+                    project_id: projectData.id,
                     user_id: user.id,
                     column_id: todoColId,
                     progress: 0,
@@ -332,7 +349,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     amount: p.amount,
                     date: p.date,
                     category: "receita_parcela",
-                    project_id: project.id,
+                    project_id: projectData.id,
                     user_id: user.id
                 }));
 
@@ -340,7 +357,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                 if (costError) throw costError;
             }
 
-            return project;
+            return projectData;
         },
         onSuccess: (project) => {
             queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -702,183 +719,248 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                 )}
 
                                 {step === 3 && (
-                                    <>
-                                        <div className="space-y-6">
-                                            {/* SEÇÃO 1: SETUP DO PROJETO */}
-                                            <section className="space-y-4 p-4 rounded-2xl border border-border bg-muted/5">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-6 w-1 bg-primary rounded-full" />
-                                                        <h3 className="text-[10px] font-bold tracking-widest text-foreground uppercase">1. Configuração do Setup</h3>
-                                                    </div>
-                                                    <div className="flex gap-1.5 bg-background/50 p-1 rounded-lg border border-border">
+                                    <div className="space-y-6">
+                                        {/* CARD 1: CONFIGURAÇÃO BASE (SETUP) */}
+                                        <div className="space-y-4 p-5 rounded-2xl border border-border bg-muted/5 relative overflow-hidden group">
+                                            <div className="absolute top-0 left-0 w-1 h-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
+                                                <div className="space-y-0.5">
+                                                    <h3 className="text-sm font-bold tracking-tight">Configuração de Setup</h3>
+                                                    <p className="text-[10px] text-muted-foreground">Valores iniciais e entrada do projeto.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="col-span-2 space-y-3 mb-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Planos de Pagamento (Presets)</Label>
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                                         {[
-                                                            { id: 'full', label: '100% Total' },
-                                                            { id: '50_50', label: '50/50' },
-                                                            { id: 'custom', label: 'Manual' }
+                                                            { id: 'full', label: '100% à vista', desc: 'Sinal total' },
+                                                            { id: '50_50', label: '50/50', desc: 'Entrada + 1x' },
+                                                            { id: 'end_of_month', label: 'Final do Mês', desc: '30 dias' },
+                                                            { id: 'next_month_10', label: 'Dia 10 Prox.', desc: 'Próximo mês' },
                                                         ].map((p) => (
                                                             <button
                                                                 key={p.id}
                                                                 type="button"
                                                                 onClick={() => handlePresetChange(p.id as any)}
                                                                 className={cn(
-                                                                    "h-6 px-3 text-[9px] font-bold rounded-md transition-all",
+                                                                    "flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-center gap-1",
                                                                     paymentPreset === p.id
-                                                                        ? "bg-primary/20 text-primary border border-primary/20"
-                                                                        : "text-muted-foreground hover:bg-muted"
+                                                                        ? "bg-primary/10 border-primary text-primary shadow-sm"
+                                                                        : "glass-light border-border text-muted-foreground hover:bg-muted/50"
                                                                 )}
                                                             >
-                                                                {p.label}
+                                                                <span className="text-[10px] font-black">{p.label}</span>
+                                                                <span className="text-[8px] opacity-70 font-medium">{p.desc}</span>
                                                             </button>
                                                         ))}
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Valor total</Label>
-                                                        <div className="relative">
-                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
-                                                            <Input
-                                                                type="number"
-                                                                placeholder="0,00"
-                                                                className="glass-light border-border h-11 pl-9 text-lg font-semibold"
-                                                                value={newValue}
-                                                                onChange={(e) => setNewValue(Number(e.target.value))}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Entrada (Imediata)</Label>
-                                                        <div className="relative">
-                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
-                                                            <Input
-                                                                type="number"
-                                                                placeholder="0,00"
-                                                                className="glass-light border-border h-11 pl-9 text-lg font-semibold"
-                                                                value={newAdvance}
-                                                                onChange={(e) => setNewAdvance(Number(e.target.value))}
-                                                            />
-                                                        </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Valor do Setup</Label>
+                                                    <div className="relative group/input">
+                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="0,00"
+                                                            className="glass-light border-border h-11 pl-9 text-lg font-semibold focus:ring-1 focus:ring-primary/20"
+                                                            value={newValue}
+                                                            onChange={(e) => setNewValue(Number(e.target.value))}
+                                                        />
                                                     </div>
                                                 </div>
-
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Meio de Pagamento</Label>
-                                                        <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
-                                                            <SelectTrigger className="glass-light border-border h-11 text-xs">
-                                                                <SelectValue placeholder="Selecione..." />
-                                                            </SelectTrigger>
-                                                            <SelectContent className="glass border-border">
-                                                                <SelectItem value="pix">PIX</SelectItem>
-                                                                <SelectItem value="boleto">Boleto</SelectItem>
-                                                                <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-                                                                <SelectItem value="transfer">Transferência</SelectItem>
-                                                                <SelectItem value="other">Outro</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Status Inicial</Label>
-                                                        <Select value={newPaymentStatus} onValueChange={setNewPaymentStatus}>
-                                                            <SelectTrigger className="glass-light border-border h-11 text-xs">
-                                                                <SelectValue placeholder="Selecione..." />
-                                                            </SelectTrigger>
-                                                            <SelectContent className="glass border-border">
-                                                                <SelectItem value="pending">Pendente</SelectItem>
-                                                                <SelectItem value="paid">Pago</SelectItem>
-                                                                <SelectItem value="partial">Parcial</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Entrada / Sinal</Label>
+                                                    <div className="relative group/input">
+                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="0,00"
+                                                            className="glass-light border-border h-11 pl-9 text-lg font-semibold focus:ring-1 focus:ring-primary/20"
+                                                            value={newAdvance}
+                                                            onChange={(e) => setNewAdvance(Number(e.target.value))}
+                                                        />
                                                     </div>
                                                 </div>
-                                            </section>
+                                            </div>
 
-                                            {/* SEÇÃO 2: RECORRÊNCIA E MANUTENÇÃO */}
-                                            <section className={cn(
-                                                "space-y-4 p-4 rounded-2xl border transition-all duration-300",
-                                                billingType === "recorrente" ? "bg-primary/[0.03] border-primary/20" : "bg-muted/5 border-border"
-                                            )}>
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={cn("h-6 w-1 rounded-full", billingType === "recorrente" ? "bg-primary" : "bg-muted-foreground/20")} />
-                                                        <h3 className="text-[10px] font-bold tracking-widest text-foreground uppercase">2. Recorrência e Manutenção</h3>
-                                                    </div>
-                                                    <div className="flex gap-1.5 bg-background/50 p-1 rounded-lg border border-border">
-                                                        {[
-                                                            { value: 'pontual', label: 'Setup Único' },
-                                                            { value: 'recorrente', label: 'Mensalidade' }
-                                                        ].map((b) => (
-                                                            <button
-                                                                key={b.value}
-                                                                type="button"
-                                                                onClick={() => setBillingType(b.value as any)}
-                                                                className={cn(
-                                                                    "h-6 px-3 text-[9px] font-bold rounded-md transition-all",
-                                                                    billingType === b.value
-                                                                        ? "bg-primary/20 text-primary border border-primary/20"
-                                                                        : "text-muted-foreground hover:bg-muted"
-                                                                )}
-                                                            >
-                                                                {b.label}
-                                                            </button>
-                                                        ))}
-                                                    </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Método</Label>
+                                                    <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
+                                                        <SelectTrigger className="glass-light border-border h-11 text-xs font-medium">
+                                                            <SelectValue placeholder="Selecione..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="glass border-border">
+                                                            <SelectItem value="pix">PIX</SelectItem>
+                                                            <SelectItem value="boleto">Boleto</SelectItem>
+                                                            <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                                                            <SelectItem value="transfer">Transferência</SelectItem>
+                                                            <SelectItem value="other">Outro Meio</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Status Pagto</Label>
+                                                    <Select value={newPaymentStatus} onValueChange={setNewPaymentStatus}>
+                                                        <SelectTrigger className="glass-light border-border h-11 text-xs font-medium">
+                                                            <SelectValue placeholder="Selecione..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="glass border-border">
+                                                            <SelectItem value="pending">A Receber (Pendente)</SelectItem>
+                                                            <SelectItem value="paid">Já Pago (Ganhos)</SelectItem>
+                                                            <SelectItem value="partial">Pago em Parte</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
 
-                                                {billingType === "recorrente" && (
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: "auto", opacity: 1 }}
-                                                        className="space-y-4 overflow-hidden"
+                                            {newPaymentStatus === 'paid' && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -5 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="p-3 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between"
+                                                >
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold text-primary">Pagamento Antecipado?</span>
+                                                        <span className="text-[8px] text-muted-foreground">Marcar como recebido mesmo sendo futuro</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsEarlyPayment(!isEarlyPayment)}
+                                                        className={cn(
+                                                            "px-4 py-1.5 rounded-lg text-[9px] font-bold transition-all border",
+                                                            isEarlyPayment
+                                                                ? "bg-primary text-primary-foreground border-primary"
+                                                                : "bg-background/40 text-muted-foreground border-border hover:bg-background/60"
+                                                        )}
                                                     >
-                                                        <div className="grid grid-cols-2 gap-4 pt-2">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Ciclo de faturamento</Label>
-                                                                <Select value={billingCycle} onValueChange={setBillingCycle}>
-                                                                    <SelectTrigger className="glass-light border-border h-11 text-xs">
-                                                                        <SelectValue placeholder="Ciclo" />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent className="glass border-border">
-                                                                        <SelectItem value="semanal">Semanal</SelectItem>
-                                                                        <SelectItem value="mensal">Mensal</SelectItem>
-                                                                        <SelectItem value="trimestral">Trimestral</SelectItem>
-                                                                        <SelectItem value="anual">Anual</SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </div>
+                                                        {isEarlyPayment ? "ATIVADO" : "DESATIVADO"}
+                                                    </button>
+                                                </motion.div>
+                                            )}
+                                        </div>
 
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
-                                                                    <Calendar className="h-3 w-3" /> Início da Cobrança
-                                                                </Label>
-                                                                <Input
-                                                                    type="date"
-                                                                    className="glass-light border-border h-11 text-xs [color-scheme:dark]"
-                                                                    value={nextBillingDate}
-                                                                    onChange={(e) => setNextBillingDate(e.target.value)}
-                                                                />
-                                                            </div>
+                                        {/* CARD 2: RECORRÊNCIA (OPCIONAL) */}
+                                        <div className={cn(
+                                            "space-y-4 p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group",
+                                            billingType === "recorrente" ? "bg-primary/[0.03] border-primary/20" : "bg-muted/5 border-border"
+                                        )}>
+                                            {billingType === "recorrente" && <div className="absolute top-0 left-0 w-1 h-full bg-primary" />}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">2</span>
+                                                    <div className="space-y-0.5">
+                                                        <h3 className="text-sm font-bold tracking-tight">Recorrência mensal</h3>
+                                                        <p className="text-[10px] text-muted-foreground">Suporte, hospedagem ou retainer.</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex bg-background/50 p-1 rounded-xl border border-border shadow-inner">
+                                                    {[
+                                                        { value: 'pontual', label: 'Inativo' },
+                                                        { value: 'recorrente', label: 'Ativo' }
+                                                    ].map((b) => (
+                                                        <button
+                                                            key={b.value}
+                                                            type="button"
+                                                            onClick={() => setBillingType(b.value as any)}
+                                                            className={cn(
+                                                                "h-7 px-4 text-[9px] font-bold rounded-lg transition-all",
+                                                                billingType === b.value
+                                                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                                                    : "text-muted-foreground hover:bg-muted"
+                                                            )}
+                                                        >
+                                                            {b.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {billingType === "recorrente" && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    className="space-y-4 pt-2 overflow-hidden border-t border-primary/10"
+                                                >
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Ciclo</Label>
+                                                            <Select value={billingCycle} onValueChange={setBillingCycle}>
+                                                                <SelectTrigger className="glass-light border-primary/20 h-10 text-xs">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="glass border-border">
+                                                                    <SelectItem value="semanal">Semanal</SelectItem>
+                                                                    <SelectItem value="mensal">Mensal</SelectItem>
+                                                                    <SelectItem value="trimestral">Trimestral</SelectItem>
+                                                                    <SelectItem value="anual">Anual</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
                                                         </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Início</Label>
+                                                            <Input
+                                                                type="date"
+                                                                className="glass-light border-primary/20 h-10 text-xs [color-scheme:dark]"
+                                                                value={nextBillingDate}
+                                                                onChange={(e) => setNextBillingDate(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Meses</Label>
+                                                            <Input
+                                                                type="number"
+                                                                min={1}
+                                                                className="glass-light border-primary/20 h-10 text-xs text-center font-bold"
+                                                                value={contractDuration}
+                                                                onChange={(e) => setContractDuration(Number(e.target.value))}
+                                                            />
+                                                        </div>
+                                                    </div>
 
-                                                        <div className="grid grid-cols-2 gap-3 p-3 rounded-xl border border-primary/10 bg-primary/[0.02]">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Modelo</Label>
-                                                                <div className="flex flex-col gap-1">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold text-muted-foreground/60 px-1">Configuração de Vencimento e Recebimento</Label>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Pagamento</span>
+                                                                <div className="grid grid-cols-1 gap-1">
                                                                     {[
-                                                                        { value: 'full', label: '100% no Início' },
-                                                                        { value: 'split', label: '50% Entrada / 50% Fim' }
+                                                                        { value: 'start', label: 'Antecipado' },
+                                                                        { value: 'end', label: 'Postecipado' }
+                                                                    ].map((t) => (
+                                                                        <button
+                                                                            key={t.value}
+                                                                            type="button"
+                                                                            onClick={() => setRecurringTiming(t.value as any)}
+                                                                            className={cn(
+                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
+                                                                                recurringTiming === t.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
+                                                                            )}
+                                                                        >
+                                                                            {t.label}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Modelo</span>
+                                                                <div className="grid grid-cols-1 gap-1">
+                                                                    {[
+                                                                        { value: 'full', label: '100% Início' },
+                                                                        { value: 'split', label: '50/50' },
+                                                                        { value: 'installments', label: 'Parcelado' }
                                                                     ].map((m) => (
                                                                         <button
                                                                             key={m.value}
                                                                             type="button"
                                                                             onClick={() => setRecurringPaymentModel(m.value as any)}
                                                                             className={cn(
-                                                                                "flex items-center justify-center h-7 rounded-lg border transition-all text-center text-[9px] font-bold",
-                                                                                recurringPaymentModel === m.value
-                                                                                    ? "bg-primary/20 border-primary text-primary"
-                                                                                    : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
+                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
+                                                                                recurringPaymentModel === m.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
                                                                             )}
                                                                         >
                                                                             {m.label}
@@ -886,23 +968,20 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                                     ))}
                                                                 </div>
                                                             </div>
-
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Gatilho</Label>
-                                                                <div className="flex flex-col gap-1">
+                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Trigger</span>
+                                                                <div className="grid grid-cols-1 gap-1">
                                                                     {[
-                                                                        { value: 'immediate', label: 'Imediato (Setup)' },
-                                                                        { value: 'post_installments', label: 'Pós-Parcelas' }
+                                                                        { value: 'immediate', label: 'Imediato' },
+                                                                        { value: 'post_installments', label: 'Pós Setup' }
                                                                     ].map((t) => (
                                                                         <button
                                                                             key={t.value}
                                                                             type="button"
                                                                             onClick={() => setRecurringCondition(t.value as any)}
                                                                             className={cn(
-                                                                                "flex items-center justify-center h-7 rounded-lg border transition-all text-center text-[9px] font-bold",
-                                                                                recurringCondition === t.value
-                                                                                    ? "bg-primary/20 border-primary text-primary"
-                                                                                    : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
+                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
+                                                                                recurringCondition === t.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
                                                                             )}
                                                                         >
                                                                             {t.label}
@@ -911,106 +990,130 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </motion.div>
-                                                )}
-                                            </section>
-
-                                            {/* SEÇÃO 3: PARCELAMENTO DO SALDO (SETUP) */}
-                                            <section className="space-y-4 p-4 rounded-2xl border border-border bg-muted/5">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={cn("h-6 w-1 rounded-full", isInstallmentEnabled ? "bg-primary" : "bg-muted-foreground/20")} />
-                                                        <h3 className="text-[10px] font-bold tracking-widest text-foreground uppercase">3. Parcelamento do Saldo de Setup</h3>
                                                     </div>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => setIsInstallmentEnabled(!isInstallmentEnabled)}
-                                                        className={cn(
-                                                            "h-6 px-3 text-[9px] font-bold rounded-md transition-all",
-                                                            isInstallmentEnabled ? "bg-primary/20 text-primary border border-primary/20" : "bg-background/20 text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {isInstallmentEnabled ? "Remover" : "Habilitar"}
-                                                    </Button>
-                                                </div>
 
-                                                {isInstallmentEnabled && (
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: "auto", opacity: 1 }}
-                                                        className="space-y-4 overflow-hidden"
-                                                    >
-                                                        <div className="flex gap-2 items-end">
-                                                            <div className="flex-1 space-y-2">
-                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Número de Parcelas</Label>
+                                                    {recurringPaymentModel === 'installments' && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            className="p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between"
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] font-bold text-primary italic">Flexibilidade de Recebimento</span>
+                                                                <span className="text-[8px] text-muted-foreground">Cada mensalidade será dividida em:</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
                                                                 <Input
                                                                     type="number"
                                                                     min={1}
-                                                                    max={24}
-                                                                    value={installmentCount}
-                                                                    onChange={(e) => setInstallmentCount(Number(e.target.value))}
-                                                                    className="h-10 text-xs glass-light border-border"
+                                                                    max={12}
+                                                                    className="w-16 h-8 text-center text-xs font-bold bg-background/50 border-primary/20"
+                                                                    value={recurringInstallmentCount}
+                                                                    onChange={(e) => setRecurringInstallmentCount(Number(e.target.value))}
                                                                 />
+                                                                <span className="text-[10px] font-bold text-muted-foreground">x</span>
                                                             </div>
-                                                            <Button
-                                                                type="button"
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={generateInstallments}
-                                                                className="h-10 border-primary/50 text-primary hover:bg-primary/5 text-[10px] font-bold"
-                                                            >
-                                                                Gerar Cronograma
-                                                            </Button>
-                                                        </div>
+                                                        </motion.div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </div>
 
-                                                        <div className="space-y-2">
-                                                            {installments.map((p, idx) => (
-                                                                <div key={idx} className="flex gap-2 items-center bg-background/30 p-2 rounded-lg border border-border group transition-all hover:border-primary/20">
-                                                                    <span className="text-[10px] font-bold text-muted-foreground w-8 text-center">{idx + 1}ª</span>
-                                                                    <div className="relative flex-1">
-                                                                        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-bold">R$</div>
-                                                                        <Input
-                                                                            type="number"
-                                                                            value={p.amount}
-                                                                            onChange={(e) => {
-                                                                                const next = [...installments];
-                                                                                next[idx].amount = Number(e.target.value);
-                                                                                setInstallments(next);
-                                                                            }}
-                                                                            className="h-9 pl-7 text-[11px] glass-light border-border transition-all focus:border-primary/40"
-                                                                        />
-                                                                    </div>
+                                        {/* SEÇÃO 3: PARCELAMENTO DO SALDO (SETUP) */}
+                                        <section className="space-y-4 p-4 rounded-2xl border border-border bg-muted/5">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={cn("h-6 w-1 rounded-full", isInstallmentEnabled ? "bg-primary" : "bg-muted-foreground/20")} />
+                                                    <h3 className="text-[10px] font-bold tracking-widest text-foreground uppercase">3. Parcelamento do Saldo de Setup</h3>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setIsInstallmentEnabled(!isInstallmentEnabled)}
+                                                    className={cn(
+                                                        "h-6 px-3 text-[9px] font-bold rounded-md transition-all",
+                                                        isInstallmentEnabled ? "bg-primary/20 text-primary border border-primary/20" : "bg-background/20 text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {isInstallmentEnabled ? "Remover" : "Habilitar"}
+                                                </Button>
+                                            </div>
+
+                                            {isInstallmentEnabled && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    className="space-y-4 overflow-hidden"
+                                                >
+                                                    <div className="flex gap-2 items-end">
+                                                        <div className="flex-1 space-y-2">
+                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Número de Parcelas</Label>
+                                                            <Input
+                                                                type="number"
+                                                                min={1}
+                                                                max={24}
+                                                                value={installmentCount}
+                                                                onChange={(e) => setInstallmentCount(Number(e.target.value))}
+                                                                className="h-10 text-xs glass-light border-border"
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={generateInstallments}
+                                                            className="h-10 border-primary/50 text-primary hover:bg-primary/5 text-[10px] font-bold"
+                                                        >
+                                                            Gerar Cronograma
+                                                        </Button>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        {installments.map((p, idx) => (
+                                                            <div key={idx} className="flex gap-2 items-center bg-background/30 p-2 rounded-lg border border-border group transition-all hover:border-primary/20">
+                                                                <span className="text-[10px] font-bold text-muted-foreground w-8 text-center">{idx + 1}ª</span>
+                                                                <div className="relative flex-1">
+                                                                    <div className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px] font-bold">R$</div>
                                                                     <Input
-                                                                        type="date"
-                                                                        value={p.date}
+                                                                        type="number"
+                                                                        value={p.amount}
                                                                         onChange={(e) => {
                                                                             const next = [...installments];
-                                                                            next[idx].date = e.target.value;
+                                                                            next[idx].amount = Number(e.target.value);
                                                                             setInstallments(next);
                                                                         }}
-                                                                        className="h-9 text-[11px] glass-light border-border w-36 [color-scheme:dark]"
+                                                                        className="h-9 pl-7 text-[11px] glass-light border-border transition-all focus:border-primary/40"
                                                                     />
                                                                 </div>
-                                                            ))}
-                                                        </div>
-
-                                                        {installments.length > 0 && (
-                                                            <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 flex justify-between items-center">
-                                                                <span className="text-[10px] text-muted-foreground font-medium">Total Parcelado:</span>
-                                                                <span className="text-xs font-bold text-primary">
-                                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                                                                        installments.reduce((acc, curr) => acc + curr.amount, 0)
-                                                                    )}
-                                                                </span>
+                                                                <Input
+                                                                    type="date"
+                                                                    value={p.date}
+                                                                    onChange={(e) => {
+                                                                        const next = [...installments];
+                                                                        next[idx].date = e.target.value;
+                                                                        setInstallments(next);
+                                                                    }}
+                                                                    className="h-9 text-[11px] glass-light border-border w-36 [color-scheme:dark]"
+                                                                />
                                                             </div>
-                                                        )}
-                                                    </motion.div>
-                                                )}
-                                            </section>
-                                        </div>
-                                    </>
+                                                        ))}
+                                                    </div>
+
+                                                    {installments.length > 0 && (
+                                                        <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 flex justify-between items-center">
+                                                            <span className="text-[10px] text-muted-foreground font-medium">Total Parcelado:</span>
+                                                            <span className="text-xs font-bold text-primary">
+                                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                                                    installments.reduce((acc, curr) => acc + curr.amount, 0)
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </section>
+                                    </div>
                                 )}
 
                                 {step === 4 && (
@@ -1063,10 +1166,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                 )}
                             </motion.div>
                         </AnimatePresence>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
+                    </div >
+                </div >
+            </DialogContent >
+        </Dialog >
     );
 }
 

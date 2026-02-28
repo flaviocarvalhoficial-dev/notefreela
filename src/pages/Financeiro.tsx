@@ -67,6 +67,10 @@ interface Project {
     deadline: string | null;
     created_at: string;
     services?: { name: string; price: number }[];
+    billing_type?: string;
+    contract_status?: string;
+    next_billing_date?: string;
+    payment_status?: string;
 }
 
 export default function Financeiro() {
@@ -94,12 +98,38 @@ export default function Financeiro() {
 
     const monthOptions = useMemo(() => {
         const months = new Set<string>();
-        const currentMonth = new Date().toISOString().substring(0, 7);
+        const todayLocal = new Date().toLocaleDateString('en-CA');
+        const currentMonth = todayLocal.substring(0, 7);
         months.add(currentMonth);
 
         allProjects.forEach(p => {
             if (p.created_at) months.add(p.created_at.substring(0, 7));
             if (p.deadline) months.add(p.deadline.substring(0, 7));
+
+            // Adicionar meses das parcelas/custos
+            const installments = (p as any).project_costs || [];
+            installments.forEach((c: any) => {
+                if (c.date) months.add(c.date.substring(0, 7));
+            });
+
+            // NEW: Adicionar meses projetados de faturamento recorrente
+            const isRecurringActive = p.billing_type === "recorrente" && p.contract_status === "active";
+            if (isRecurringActive) {
+                const billingConfig = (p.services as any[] || []).find((s: any) => s.name === "__billing_config__");
+                let curDate = p.next_billing_date;
+                const duration = billingConfig?.contractDuration || 12;
+
+                for (let i = 0; i < duration; i++) {
+                    if (!curDate) break;
+                    months.add(curDate.substring(0, 7));
+
+                    const nextDateObj = toValidDate(curDate + 'T12:00:00');
+                    if (nextDateObj) {
+                        nextDateObj.setMonth(nextDateObj.getMonth() + 1);
+                        curDate = safeToISOString(nextDateObj)?.split('T')[0] || null;
+                    } else { break; }
+                }
+            }
         });
 
         return Array.from(months).sort().reverse().map(m => {
@@ -114,19 +144,67 @@ export default function Financeiro() {
 
     const filteredProjects = useMemo(() => {
         return allProjects.filter(p => {
-            const remaining = (p.value || 0) - (p.advance_payment || 0);
-            const isPaid = remaining <= 0 && (p.value || 0) > 0;
-            const hasAdvance = (p.advance_payment || 0) > 0;
-            const payStatus = isPaid ? "paid" : hasAdvance ? "partial" : "pending";
+            const servicesArray = Array.isArray(p.services) ? p.services : [];
+            const billingConfig = servicesArray.find((s: any) => s.name === "__billing_config__");
+            const isEarlyPayment = billingConfig?.isEarlyPayment || false;
+            const isProjectFullyPaid = p.payment_status === "paid" || isEarlyPayment;
+
+            const installments = (p as any).project_costs?.filter((c: any) => c.category === "receita_parcela") || [];
+            const todayStr = new Date().toLocaleDateString('en-CA');
+
+            const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
+            const installmentsPaid = installments.filter((c: any) => c.date <= todayStr || isProjectFullyPaid).reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
+            const paidTotal = advancePaid + installmentsPaid;
+            const remaining = (p.value || 0) - paidTotal;
+            const hasActivity = paidTotal > 0 || installments.length > 0;
+
+            const payStatus = isProjectFullyPaid || remaining <= 0 ? "paid" : hasActivity ? "partial" : "pending";
 
             const matchesSearch = (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.client_name?.toLowerCase().includes(searchQuery.toLowerCase()));
 
             const matchesStatus = statusFilter === "all" || payStatus === statusFilter;
 
+            const hasInstallmentInMonth = installments.some((c: any) => {
+                let targetMonth = c.date.substring(0, 7);
+                const day = parseInt(c.date.split('-')[2]);
+                if (day <= 10 && p.deadline) {
+                    const dDate = toValidDate(p.deadline);
+                    const cDate = toValidDate(c.date);
+                    if (dDate && cDate) {
+                        const prevMonthDate = new Date(cDate.getFullYear(), cDate.getMonth() - 1, 1);
+                        const prevMonthStr = prevMonthDate.toISOString().substring(0, 7);
+                        if (prevMonthStr === dDate.toISOString().substring(0, 7)) targetMonth = prevMonthStr;
+                    }
+                }
+                return isInSelectedMonth(targetMonth, selectedMonth);
+            });
+
+            const hasRecurringInMonth = (() => {
+                const isRecurringActive = (p as any).billing_type === "recorrente" && (p as any).contract_status === "active";
+                if (!isRecurringActive) return false;
+
+                let curBillingDate = (p as any).next_billing_date;
+                const duration = billingConfig?.contractDuration || 12;
+
+                for (let i = 0; i < duration; i++) {
+                    if (!curBillingDate) break;
+                    if (isInSelectedMonth(curBillingDate, selectedMonth)) return true;
+
+                    const nextDateObj = toValidDate(curBillingDate + 'T12:00:00');
+                    if (nextDateObj) {
+                        nextDateObj.setMonth(nextDateObj.getMonth() + 1);
+                        curBillingDate = safeToISOString(nextDateObj)?.split('T')[0] || null;
+                    } else { break; }
+                }
+                return false;
+            })();
+
             const matchesMonth = selectedMonth === "all" ||
                 isInSelectedMonth(p.created_at, selectedMonth) ||
-                isInSelectedMonth(p.deadline, selectedMonth);
+                isInSelectedMonth(p.deadline, selectedMonth) ||
+                hasInstallmentInMonth ||
+                hasRecurringInMonth;
 
             return matchesSearch && matchesStatus && matchesMonth;
         });
@@ -136,54 +214,95 @@ export default function Financeiro() {
         let gains = 0;
         let futureValue = 0;
         let total = 0;
-        const today = new Date().toISOString().split('T')[0];
-        const validToday = toValidDate(today);
+        const today = new Date().toLocaleDateString('en-CA');
 
         filteredProjects.forEach(p => {
             const installments = (p as any).project_costs?.filter((c: any) => c.category === "receita_parcela") || [];
+            const billingConfig = (p.services as any[] || []).find((s: any) => s.name === "__billing_config__");
+            const isEarlyPayment = billingConfig?.isEarlyPayment || false;
+            const isProjectFullyPaid = p.payment_status === "paid" || isEarlyPayment;
 
-            const advanceDate = (p.created_at || "").split('T')[0];
+            const advanceDateStr = (p.created_at || "").split('T')[0];
             const advanceAmt = Number(p.advance_payment) || 0;
+            const isAdvanceFuture = advanceDateStr > today;
+            const isAdvancePaid = isProjectFullyPaid || p.payment_status === "partial";
 
-            const advancePaid = advanceDate <= today ? advanceAmt : 0;
-            const advanceProv = advanceDate > today ? advanceAmt : 0;
+            const advanceReceived = (!isAdvanceFuture || isAdvancePaid) ? advanceAmt : 0;
+            const advanceProvisioned = (isAdvanceFuture && !isAdvancePaid) ? advanceAmt : 0;
 
-            const installmentsPaid = installments
-                .filter((c: any) => c.date <= today)
+            const installmentsReceived = installments
+                .filter((c: any) => c.date <= today || isProjectFullyPaid)
                 .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
 
-            const installmentsProv = installments
-                .filter((c: any) => c.date > today)
+            const installmentsProvisioned = installments
+                .filter((c: any) => c.date > today && !isProjectFullyPaid)
                 .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
 
-            const paidTotal = advancePaid + installmentsPaid;
-            const provisionedTotal = advanceProv + installmentsProv;
+            const alreadyPaid = advanceReceived + installmentsReceived;
+            const futureScheduled = advanceProvisioned + installmentsProvisioned;
+            const residualValue = Math.max(0, (p.value || 0) - (alreadyPaid + futureScheduled));
 
+            // Calc Gains & Provision based on Month filter
             if (selectedMonth === "all") {
-                gains += paidTotal;
-                futureValue += provisionedTotal + Math.max(0, (p.value || 0) - (paidTotal + provisionedTotal));
-                total += (p.value || 0);
+                gains += alreadyPaid;
+                futureValue += futureScheduled + residualValue;
             } else {
-                if (isInSelectedMonth(advanceDate, selectedMonth)) {
-                    gains += advancePaid;
+                // Advance
+                if (isInSelectedMonth(advanceDateStr, selectedMonth)) {
+                    gains += advanceReceived;
+                    futureValue += advanceProvisioned;
                 }
-
+                // Installments
                 installments.forEach((c: any) => {
-                    if (isInSelectedMonth(c.date, selectedMonth)) {
-                        const validDate = toValidDate(c.date);
-                        if (validDate && validToday) {
-                            gains += validDate <= validToday ? Number(c.amount) : 0;
-                            futureValue += validDate > validToday ? Number(c.amount) : 0;
+                    let targetMonth = c.date.substring(0, 7);
+                    const day = parseInt(c.date.split('-')[2]);
+                    if (day <= 10 && p.deadline) {
+                        const dDate = toValidDate(p.deadline);
+                        const cDate = toValidDate(c.date);
+                        if (dDate && cDate) {
+                            const prevMonthDate = new Date(cDate.getFullYear(), cDate.getMonth() - 1, 1);
+                            const prevMonthStr = prevMonthDate.toISOString().substring(0, 7);
+                            if (prevMonthStr === dDate.toISOString().substring(0, 7)) targetMonth = prevMonthStr;
                         }
                     }
-                });
 
-                total = gains + futureValue;
+                    if (isInSelectedMonth(targetMonth, selectedMonth)) {
+                        if (c.date <= today || isProjectFullyPaid) gains += Number(c.amount);
+                        else futureValue += Number(c.amount);
+                    }
+                });
+                // Residual
+                if (residualValue > 0 && p.deadline && isInSelectedMonth(p.deadline, selectedMonth)) {
+                    futureValue += residualValue;
+                }
+            }
+
+            // Recurring Logic
+            const isRecurringActive = p.billing_type === "recorrente" && p.contract_status === "active";
+            if (isRecurringActive) {
+                let currentBillingDate = p.next_billing_date;
+                const duration = billingConfig?.contractDuration || 12;
+
+                for (let i = 0; i < duration; i++) {
+                    if (!currentBillingDate) break;
+
+                    if (selectedMonth === "all" || isInSelectedMonth(currentBillingDate, selectedMonth)) {
+                        const val = Number(p.value) || 0;
+                        if (currentBillingDate > today) futureValue += val;
+                        else gains += val;
+                    }
+
+                    const nextDateObj = toValidDate(currentBillingDate + 'T12:00:00');
+                    if (nextDateObj) {
+                        nextDateObj.setMonth(nextDateObj.getMonth() + 1);
+                        currentBillingDate = safeToISOString(nextDateObj)?.split('T')[0] || null;
+                    } else { break; }
+                }
             }
         });
 
         return {
-            totalValue: total,
+            totalValue: gains + futureValue,
             totalPaid: gains,
             totalRemaining: futureValue,
             projects: filteredProjects,
@@ -460,7 +579,7 @@ export default function Financeiro() {
                                             <td className="p-4 font-medium text-emerald-500/90">
                                                 {formatCurrency(
                                                     (() => {
-                                                        const todayStr = new Date().toISOString().split('T')[0];
+                                                        const todayStr = new Date().toLocaleDateString('en-CA');
                                                         const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
                                                         const installmentsPaid = (p as any).project_costs
                                                             ?.filter((c: any) => c.category === "receita_parcela" && c.date <= todayStr)
@@ -472,7 +591,7 @@ export default function Financeiro() {
                                             <td className="p-4 font-medium text-amber-500/90">
                                                 {formatCurrency(
                                                     (() => {
-                                                        const todayStr = new Date().toISOString().split('T')[0];
+                                                        const todayStr = new Date().toLocaleDateString('en-CA');
                                                         const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
                                                         const installmentsPaid = (p as any).project_costs
                                                             ?.filter((c: any) => c.category === "receita_parcela" && c.date <= todayStr)
@@ -483,7 +602,7 @@ export default function Financeiro() {
                                             </td>
                                             <td className="p-4 text-center">
                                                 {(() => {
-                                                    const todayStr = new Date().toISOString().split('T')[0];
+                                                    const todayStr = new Date().toLocaleDateString('en-CA');
                                                     const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
                                                     const installmentsPaid = (p as any).project_costs
                                                         ?.filter((c: any) => c.category === "receita_parcela" && c.date <= todayStr)
@@ -520,16 +639,18 @@ export default function Financeiro() {
                                                         >
                                                             <div className="px-14 py-3 space-y-2">
                                                                 <div className="grid grid-cols-2 gap-4 pb-1 border-b border-border text-[10px] font-medium text-muted-foreground">
-                                                                    <span>Serviço / Detalhe Financeiro</span>
+                                                                    <span>Item / Detalhe Financeiro</span>
                                                                     <span className="text-right">Valor</span>
                                                                 </div>
-                                                                {p.services?.map((svc, idx) => (
+                                                                {/* 1. Setup Services (only on creation month or if 'all') */}
+                                                                {(selectedMonth === "all" || isInSelectedMonth(p.created_at, selectedMonth)) && p.services?.filter(s => s.name !== "__billing_config__").map((svc, idx) => (
                                                                     <div key={`svc-${idx}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 hover:bg-primary/5 transition-colors rounded-sm px-1">
                                                                         <span className="text-muted-foreground font-medium">{svc.name}</span>
                                                                         <span className="text-right font-medium text-foreground">{formatCurrency(svc.price)}</span>
                                                                     </div>
                                                                 ))}
-                                                                {(p as any).project_costs?.filter((c: any) => c.category === "receita_parcela").map((parcela: any, idx: number) => (
+                                                                {/* 2. Setup Installments (only if matching month) */}
+                                                                {(p as any).project_costs?.filter((c: any) => c.category === "receita_parcela" && (selectedMonth === "all" || isInSelectedMonth(c.date, selectedMonth))).map((parcela: any, idx: number) => (
                                                                     <div key={`parcela-${idx}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 bg-primary/5 hover:bg-primary/10 transition-colors rounded-sm px-1">
                                                                         <span className="text-primary font-bold flex items-center gap-2">
                                                                             <DollarSign className="h-3 w-3" /> {parcela.title}
@@ -538,6 +659,38 @@ export default function Financeiro() {
                                                                         <span className="text-right font-bold text-primary">{formatCurrency(parcela.amount)}</span>
                                                                     </div>
                                                                 ))}
+                                                                {/* 3. Recurring Cycles (only if matching month) */}
+                                                                {(() => {
+                                                                    const isRecurringActive = (p as any).billing_type === "recorrente" && (p as any).contract_status === "active";
+                                                                    if (!isRecurringActive) return null;
+
+                                                                    const servicesArray = Array.isArray(p.services) ? p.services : [];
+                                                                    const billingConfig = servicesArray.find((s: any) => s.name === "__billing_config__");
+                                                                    let currDate = (p as any).next_billing_date;
+                                                                    const duration = billingConfig?.contractDuration || 12;
+                                                                    const cycles = [];
+
+                                                                    for (let i = 0; i < duration; i++) {
+                                                                        if (!currDate) break;
+                                                                        if (selectedMonth === "all" || isInSelectedMonth(currDate, selectedMonth)) {
+                                                                            cycles.push(
+                                                                                <div key={`rec-${p.id}-${i}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 bg-primary/[0.08] hover:bg-primary/[0.12] transition-colors rounded-sm px-1">
+                                                                                    <span className="text-primary font-bold flex items-center gap-2">
+                                                                                        <Clock className="h-3 w-3" /> Faturamento Recorrente ({i + 1}º ciclo)
+                                                                                        <span className="text-[9px] opacity-60 font-medium">({format(parseISO(currDate), "dd/MM")})</span>
+                                                                                    </span>
+                                                                                    <span className="text-right font-bold text-primary">{formatCurrency(p.value)}</span>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                        const nextDateObj = toValidDate(currDate + 'T12:00:00');
+                                                                        if (nextDateObj) {
+                                                                            nextDateObj.setMonth(nextDateObj.getMonth() + 1);
+                                                                            currDate = safeToISOString(nextDateObj)?.split('T')[0] || null;
+                                                                        } else { break; }
+                                                                    }
+                                                                    return cycles;
+                                                                })()}
                                                             </div>
                                                         </motion.div>
                                                     </td>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
     Loader2, Save, Plus, Briefcase, DollarSign, ListTodo,
     Settings2, Check, Trash2, GripVertical, Calendar, Maximize2, Minimize2,
-    ChevronRight, ChevronLeft, User
+    ChevronRight, ChevronLeft, User, Zap, BadgePercent, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -117,13 +117,14 @@ export function EditProjectDialog({
     // ── Advanced Billing Rules ────────────────────────────────
     const [recurringTiming, setRecurringTiming] = useState<'start' | 'end'>('start');
     const [recurringCondition, setRecurringCondition] = useState<'immediate' | 'post_installments'>('immediate');
-    const [recurringPaymentModel, setRecurringPaymentModel] = useState<'full' | 'split'>('full');
+    const [recurringPaymentModel, setRecurringPaymentModel] = useState<'full' | 'split' | 'installments'>('full');
+    const [recurringInstallmentCount, setRecurringInstallmentCount] = useState(1);
 
     // ── Parcelamento status ───────────────────────────────────
     const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
     const [installments, setInstallments] = useState<{ amount: number; date: string }[]>([]);
     const [installmentCount, setInstallmentCount] = useState<number>(1);
-    const [paymentPreset, setPaymentPreset] = useState<'full' | '50_50' | 'custom'>('custom');
+    const [paymentPreset, setPaymentPreset] = useState<'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom'>('custom');
 
     const nextStep = () => {
         if (step === 1 && !newName) {
@@ -139,9 +140,13 @@ export function EditProjectDialog({
 
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-    const handlePresetChange = (preset: 'full' | '50_50' | 'custom') => {
+    const [isEarlyPayment, setIsEarlyPayment] = useState(false);
+    const [contractDuration, setContractDuration] = useState(12);
+
+    const handlePresetChange = (preset: 'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom') => {
         setPaymentPreset(preset);
         const totalValue = Number(newValue) || 0;
+        const projectStartDate = startDate ? new Date(startDate + 'T12:00:00') : new Date();
 
         if (preset === 'full') {
             setNewAdvance(totalValue);
@@ -156,19 +161,24 @@ export function EditProjectDialog({
             setNewPaymentStatus('partial');
             setIsInstallmentEnabled(true);
             setInstallmentCount(1);
-
-            // Proxima cobrança 1º do proximo mes
-            const today = new Date();
-            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-            setNextBillingDate(nextMonth.toISOString().split('T')[0]);
-
-            // Saldo para o final do mês atual
-            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
             setInstallments([{ amount: half, date: endOfMonth.toISOString().split('T')[0] }]);
-
             setRecurringPaymentModel('split');
             setRecurringCondition('post_installments');
-            setBillingType('recorrente');
+        } else if (preset === 'end_of_month') {
+            setNewAdvance(0);
+            setNewPaymentStatus('pending');
+            setIsInstallmentEnabled(true);
+            setInstallmentCount(1);
+            const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
+            setInstallments([{ amount: totalValue, date: endOfMonth.toISOString().split('T')[0] }]);
+        } else if (preset === 'next_month_10') {
+            setNewAdvance(0);
+            setNewPaymentStatus('pending');
+            setIsInstallmentEnabled(true);
+            setInstallmentCount(1);
+            const nextMonth10 = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 10);
+            setInstallments([{ amount: totalValue, date: nextMonth10.toISOString().split('T')[0] }]);
         }
     };
 
@@ -219,6 +229,22 @@ export function EditProjectDialog({
         setInstallments(newParcels);
     };
 
+    // Fetch project installments (costs) - Arthur Marques Sign
+    const { data: projectCosts = [], isLoading: loadingCosts } = useQuery({
+        queryKey: ["project-costs-edit", project.id],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("project_costs")
+                .select("*")
+                .eq("project_id", project.id)
+                .eq("category", "receita_parcela")
+                .order("date", { ascending: true });
+            if (error) throw error;
+            return data || [];
+        },
+        enabled: open,
+    });
+
     // Fetch project tasks
     const { data: projectTasks = [], isLoading: loadingTasks } = useQuery({
         queryKey: ["project-tasks-edit", project.id],
@@ -254,6 +280,17 @@ export function EditProjectDialog({
             const actualServices = (project.services as any[] || []).filter(s => s.name !== "__billing_config__");
             setServices(actualServices);
 
+            // Extract billing config
+            const config = (project.services as any[] || []).find(s => s.name === "__billing_config__");
+            if (config) {
+                setRecurringTiming(config.timing || 'start');
+                setRecurringCondition(config.condition || 'immediate');
+                setRecurringPaymentModel(config.paymentModel || 'full');
+                setRecurringInstallmentCount(config.recurring_installments || 1);
+                setIsEarlyPayment(!!config.isEarlyPayment);
+                setContractDuration(config.contractDuration || 12);
+            }
+
             setBillingType((project.billing_type as any) || "pontual");
             setServiceType(project.service_type || "");
             setContractStatus(project.contract_status || "active");
@@ -267,13 +304,7 @@ export function EditProjectDialog({
                 project.created_at ? new Date(project.created_at).toISOString().split("T")[0] : ""
             );
 
-            // Load Advanced Config from services JSON - Arthur Marques Sign
-            const config = (project.services as any[] || []).find(s => s.name === "__billing_config__");
-            if (config) {
-                setRecurringTiming(config.timing || 'start');
-                setRecurringCondition(config.condition || 'immediate');
-                setRecurringPaymentModel(config.paymentModel || 'full');
-            }
+
         }
     }, [open, project]);
 
@@ -358,6 +389,19 @@ export function EditProjectDialog({
 
     const updateProjectMutation = useMutation({
         mutationFn: async () => {
+            const finalServices = [
+                ...services.filter(s => s.name !== "__billing_config__"),
+                {
+                    name: "__billing_config__",
+                    price: 0,
+                    timing: recurringTiming,
+                    condition: recurringCondition,
+                    paymentModel: recurringPaymentModel,
+                    recurring_installments: recurringInstallmentCount,
+                    isEarlyPayment: isEarlyPayment,
+                    contractDuration: contractDuration
+                }
+            ];
             const { error } = await supabase
                 .from("projects")
                 .update({
@@ -376,16 +420,7 @@ export function EditProjectDialog({
                     payment_method: newPaymentMethod,
                     payment_status: newPaymentStatus,
                     avatar_emoji: newIcon,
-                    services: [
-                        ...services.filter(s => s.name !== "__billing_config__"),
-                        {
-                            name: "__billing_config__",
-                            price: 0,
-                            timing: recurringTiming,
-                            condition: recurringCondition,
-                            paymentModel: recurringPaymentModel
-                        }
-                    ],
+                    services: finalServices,
                     billing_type: billingType,
                     service_type: serviceType,
                     contract_status: contractStatus,
@@ -652,167 +687,189 @@ export function EditProjectDialog({
                                         {step === 4 && "Roadmap e Tarefas"}
                                     </h3>
                                     <p className="text-[11px] text-muted-foreground">
-                                        {step === 1 && "Edite o nome, cliente, descrição e escopo de serviços."}
-                                        {step === 2 && "Ajuste datas, responsáveis e status do fluxo."}
-                                        {step === 3 && "Ajuste adiantamentos, parcelas e cálculos."}
+                                        {step === 1 && "Edite o nome, cliente e tipo de faturamento."}
+                                        {step === 2 && "Configure datas importantes e responsabilidades."}
+                                        {step === 3 && "Ajuste adiantamentos, parcelas e metragem financeira."}
                                         {step === 4 && "Gerencie as entregas e micro-tarefas."}
                                     </p>
                                 </div>
                                 {step === 1 && (
-                                    <>
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="edit-name" className="text-xs text-muted-foreground">
-                                                    Nome do Projeto
-                                                </Label>
-                                                <Input
-                                                    id="edit-name"
-                                                    className="glass-light border-border h-11 text-lg font-medium"
-                                                    value={newName}
-                                                    onChange={(e) => setNewName(e.target.value)}
-                                                />
-                                            </div>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="edit-name" className="text-xs text-muted-foreground">Nome do Projeto</Label>
+                                            <Input
+                                                id="edit-name"
+                                                className="glass-light border-border h-11 text-lg font-medium focus:ring-1 focus:ring-primary/20"
+                                                value={newName}
+                                                onChange={(e) => setNewName(e.target.value)}
+                                            />
+                                        </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label className="text-xs text-muted-foreground">Ícone Visual</Label>
-                                                    <div className="flex items-center gap-3">
-                                                        <IconPicker value={newIcon} onChange={setNewIcon} />
-                                                        <span className="text-[10px] text-muted-foreground leading-tight">
-                                                            Emoji que identifica<br />o projeto no board
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="edit-client" className="text-xs text-muted-foreground flex items-center gap-2">
-                                                        <User className="h-3 w-3" /> Cliente
-                                                    </Label>
-                                                    <Input
-                                                        id="edit-client"
-                                                        className="glass-light border-border h-10"
-                                                        value={newClient}
-                                                        onChange={(e) => setNewClient(e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label htmlFor="edit-desc" className="text-xs text-muted-foreground">
-                                                    Descrição Geral
-                                                </Label>
-                                                <Input
-                                                    id="edit-desc"
-                                                    className="glass-light border-border h-10"
-                                                    value={newDesc}
-                                                    onChange={(e) => setNewDesc(e.target.value)}
-                                                    placeholder="Do que se trata o projeto?"
-                                                />
-                                            </div>
-
-                                            <div className="pt-4 space-y-4 border-t border-border/50">
-                                                <div className="flex items-center gap-2">
-                                                    <Briefcase className="h-4 w-4 text-primary" />
-                                                    <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Escopo de Serviços</h4>
-                                                </div>
-
-                                                <div className="flex gap-2">
-                                                    <Input
-                                                        placeholder="Serviço (ex: Website)"
-                                                        className="glass-light border-border h-9 text-xs flex-1"
-                                                        value={serviceInput}
-                                                        onChange={(e) => setServiceInput(e.target.value)}
-                                                        onKeyDown={(e) =>
-                                                            e.key === "Enter" && (e.preventDefault(), addService())
-                                                        }
-                                                    />
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="R$ 0"
-                                                        className="glass-light border-border h-9 text-xs w-24"
-                                                        value={servicePriceInput}
-                                                        onChange={(e) =>
-                                                            setServicePriceInput(
-                                                                e.target.value ? Number(e.target.value) : ""
-                                                            )
-                                                        }
-                                                        onKeyDown={(e) =>
-                                                            e.key === "Enter" && (e.preventDefault(), addService())
-                                                        }
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        onClick={addService}
-                                                        size="sm"
-                                                        className="h-9 w-9 p-0"
-                                                    >
-                                                        <Plus className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-
-                                                <div className="space-y-1.5">
-                                                    {services.map((svc, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className="flex items-center justify-between bg-primary/5 px-3 py-2 rounded-lg border border-primary/10 text-xs group transition-all hover:border-primary/30"
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                                                                <span className="font-medium">{svc.name}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="text-primary font-bold">
-                                                                    {new Intl.NumberFormat("pt-BR", {
-                                                                        style: "currency",
-                                                                        currency: "BRL",
-                                                                    }).format(svc.price)}
-                                                                </span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => removeService(i)}
-                                                                    className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                >
-                                                                    <Plus className="h-3 w-3 rotate-45" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                    {services.length === 0 && (
-                                                        <p className="text-[10px] text-muted-foreground italic text-center py-2 bg-muted/20 rounded-lg border border-dashed border-border">
-                                                            Nenhum serviço adicionado. Defina o escopo para calcular o valor.
-                                                        </p>
-                                                    )}
-                                                </div>
-
-                                                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 flex justify-between items-center">
-                                                    <span className="text-[10px] text-primary/80 font-bold uppercase tracking-widest">Valor Total do Contrato</span>
-                                                    <span className="text-base font-black text-primary">
-                                                        {new Intl.NumberFormat("pt-BR", {
-                                                            style: "currency",
-                                                            currency: "BRL",
-                                                        }).format(newValue)}
-                                                    </span>
-                                                </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
+                                            <div className="flex items-center gap-3">
+                                                <IconPicker value={newIcon} onChange={setNewIcon} />
+                                                <span className="text-[11px] text-muted-foreground">Identidade visual no cockpit</span>
                                             </div>
                                         </div>
-                                    </>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Tipo de Faturamento</Label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {(['pontual', 'recorrente'] as const).map((t) => (
+                                                        <Button
+                                                            key={t}
+                                                            type="button"
+                                                            variant={billingType === t ? "default" : "outline"}
+                                                            size="sm"
+                                                            onClick={() => setBillingType(t)}
+                                                            className={cn(
+                                                                "h-9 text-[10px] font-bold tracking-wider transition-all",
+                                                                billingType === t
+                                                                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                                                                    : "glass-light border-border hover:bg-muted text-muted-foreground"
+                                                            )}
+                                                        >
+                                                            {t === 'pontual' ? 'PONTUAL' : 'RECORRENTE'}
+                                                        </Button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="edit-service-type" className="text-xs text-muted-foreground">Tipo de Serviço</Label>
+                                                <Select value={serviceType} onValueChange={setServiceType}>
+                                                    <SelectTrigger className="glass-light border-border h-9 text-xs">
+                                                        <SelectValue placeholder="Selecione..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="glass border-border z-[100]">
+                                                        <SelectItem value="design">Design</SelectItem>
+                                                        <SelectItem value="dev">Desenvolvimento</SelectItem>
+                                                        <SelectItem value="social_media">Social Media</SelectItem>
+                                                        <SelectItem value="traffic">Tráfego Pago</SelectItem>
+                                                        <SelectItem value="copywriting">Copywriting</SelectItem>
+                                                        <SelectItem value="other">Outro</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="edit-client" className="text-xs text-muted-foreground flex items-center gap-2">
+                                                <User className="h-3 w-3" /> Cliente
+                                            </Label>
+                                            <Input
+                                                id="edit-client"
+                                                className="glass-light border-border h-10 px-3"
+                                                value={newClient}
+                                                onChange={(e) => setNewClient(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="edit-desc" className="text-xs text-muted-foreground">Descrição Rápida (Opcional)</Label>
+                                            <Input
+                                                id="edit-desc"
+                                                className="glass-light border-border h-10 px-3"
+                                                value={newDesc}
+                                                onChange={(e) => setNewDesc(e.target.value)}
+                                                placeholder="Do que se trata o projeto?"
+                                            />
+                                        </div>
+
+                                        <div className="pt-4 space-y-4 border-t border-border/50">
+                                            <div className="flex items-center gap-2">
+                                                <Briefcase className="h-4 w-4 text-primary" />
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Escopo de Serviços</h4>
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    placeholder="Serviço (ex: Website)"
+                                                    className="glass-light border-border h-9 text-xs flex-1 px-3"
+                                                    value={serviceInput}
+                                                    onChange={(e) => setServiceInput(e.target.value)}
+                                                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addService())}
+                                                />
+                                                <Input
+                                                    type="number"
+                                                    placeholder="R$ 0"
+                                                    className="glass-light border-border h-9 text-xs w-24 px-3"
+                                                    value={servicePriceInput}
+                                                    onChange={(e) => setServicePriceInput(e.target.value ? Number(e.target.value) : "")}
+                                                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addService())}
+                                                />
+                                                <Button type="button" onClick={addService} size="sm" className="h-9 w-9 p-0">
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+
+                                            <div className="space-y-1.5 min-h-[40px]">
+                                                {services.map((svc, i) => (
+                                                    <div key={i} className="flex items-center justify-between bg-primary/5 px-3 py-2 rounded-lg border border-primary/10 text-xs transition-all hover:bg-primary/10">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                                                            <span className="font-medium">{svc.name}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-primary font-bold">
+                                                                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(svc.price)}
+                                                            </span>
+                                                            <button type="button" onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive transition-colors">
+                                                                <Plus className="h-3.5 w-3.5 rotate-45" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {services.length === 0 && (
+                                                    <p className="text-[10px] text-muted-foreground italic text-center py-4 bg-muted/5 rounded-lg border border-dashed border-border">
+                                                        Nenhum serviço adicionado. Defina o escopo para calcular o valor.
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 flex justify-between items-center shadow-sm">
+                                                <span className="text-[10px] text-primary/80 font-bold uppercase tracking-widest">Valor Total do Contrato</span>
+                                                <span className="text-base font-black text-primary">
+                                                    {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(newValue)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 )}
 
                                 {step === 2 && (
-                                    <>
+                                    <div className="space-y-6">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="edit-manager" className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <User className="h-3.5 w-3.5" /> Gestor Responsável
+                                                <Label htmlFor="edit-start" className="text-xs text-muted-foreground flex items-center gap-2">
+                                                    <Calendar className="h-3.5 w-3.5" /> Data de Início
                                                 </Label>
                                                 <Input
-                                                    id="edit-manager"
-                                                    className="glass-light border-border h-10"
-                                                    value={newManager}
-                                                    onChange={(e) => setNewManager(e.target.value)}
+                                                    id="edit-start"
+                                                    type="date"
+                                                    className="glass-light border-border h-11 [color-scheme:dark]"
+                                                    value={startDate}
+                                                    onChange={(e) => setStartDate(e.target.value)}
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-xs text-muted-foreground">Nível de Prioridade</Label>
+                                                <Label htmlFor="edit-deadline" className="text-xs text-muted-foreground flex items-center gap-2">
+                                                    <Calendar className="h-3.5 w-3.5" /> Prazo Final
+                                                </Label>
+                                                <Input
+                                                    id="edit-deadline"
+                                                    type="date"
+                                                    className="glass-light border-border h-11 [color-scheme:dark]"
+                                                    value={newDeadline}
+                                                    onChange={(e) => setNewDeadline(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Prioridade</Label>
                                                 <div className="grid grid-cols-3 gap-2">
                                                     {(['low', 'medium', 'high'] as const).map((p) => (
                                                         <button
@@ -822,8 +879,8 @@ export function EditProjectDialog({
                                                             className={cn(
                                                                 "flex items-center justify-center h-10 rounded-lg border text-[10px] font-bold transition-all",
                                                                 newPriority === p
-                                                                    ? "bg-primary border-primary text-primary-foreground"
-                                                                    : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
+                                                                    ? "bg-primary/10 border-primary text-primary"
+                                                                    : "glass-light border-border text-muted-foreground hover:bg-muted"
                                                             )}
                                                         >
                                                             {p === 'low' ? 'BAIXA' : p === 'medium' ? 'MÉDIA' : 'ALTA'}
@@ -831,44 +888,31 @@ export function EditProjectDialog({
                                                     ))}
                                                 </div>
                                             </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="edit-manager" className="text-xs text-muted-foreground flex items-center gap-2">
+                                                    <User className="h-3.5 w-3.5" /> Responsável
+                                                </Label>
+                                                <Input
+                                                    id="edit-manager"
+                                                    placeholder="Ex: Arthur Marques"
+                                                    className="glass-light border-border h-11"
+                                                    value={newManager}
+                                                    onChange={(e) => setNewManager(e.target.value)}
+                                                />
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <Label className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <Calendar className="h-3.5 w-3.5" /> Data de Início
-                                                </Label>
-                                                <Input
-                                                    type="date"
-                                                    className="glass-light border-border h-10 [color-scheme:dark]"
-                                                    value={startDate}
-                                                    onChange={(e) => setStartDate(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <Calendar className="h-3.5 w-3.5" /> Prazo Final
-                                                </Label>
-                                                <Input
-                                                    type="date"
-                                                    className="glass-light border-border h-10 [color-scheme:dark]"
-                                                    value={newDeadline}
-                                                    onChange={(e) => setNewDeadline(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
-                                            <div className="space-y-2">
                                                 <Label className="text-xs text-muted-foreground">Status do Projeto</Label>
-                                                <Select value={newStatus} onValueChange={(v: any) => setNewStatus(v)}>
-                                                    <SelectTrigger className="glass-light border-border h-10">
+                                                <Select value={newStatus} onValueChange={(v) => setNewStatus(v as ProjectStatus)}>
+                                                    <SelectTrigger className="glass-light border-border h-11 text-xs">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent className="glass border-border z-[100]">
-                                                        <SelectItem value="planning">Planejamento</SelectItem>
                                                         <SelectItem value="active">Em Progresso</SelectItem>
-                                                        <SelectItem value="review">Em Revisão</SelectItem>
+                                                        <SelectItem value="planning">Planejamento</SelectItem>
+                                                        <SelectItem value="review">Revisão / Feedback</SelectItem>
                                                         <SelectItem value="completed">Concluído</SelectItem>
                                                     </SelectContent>
                                                 </Select>
@@ -876,7 +920,7 @@ export function EditProjectDialog({
                                             <div className="space-y-2">
                                                 <Label className="text-xs text-muted-foreground">Status do Contrato</Label>
                                                 <Select value={contractStatus} onValueChange={(v: any) => setContractStatus(v)}>
-                                                    <SelectTrigger className="glass-light border-border h-10">
+                                                    <SelectTrigger className="glass-light border-border h-11 text-xs">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent className="glass border-border z-[100]">
@@ -900,143 +944,82 @@ export function EditProjectDialog({
                                                 />
                                             </div>
                                         </div>
-                                    </>
+                                    </div>
                                 )}
 
                                 {/* ══ FINANCEIRO ═══════════════════════════ */}
                                 {step === 3 && (
-                                    <div className="space-y-6 pb-10">
-                                        {/* SEÇÃO 1: ESCOPO E VALOR TOTAL */}
-                                        <div className="space-y-4 p-4 rounded-2xl border border-border bg-muted/5">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <div className="h-6 w-1 bg-primary rounded-full" />
-                                                <h3 className="text-sm font-bold tracking-tight">Valor e Escopo do Contrato</h3>
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                                    <Briefcase className="h-3 w-3" /> Serviços Contratados (Escopo)
-                                                </Label>
-                                                <div className="flex gap-2">
-                                                    <Input
-                                                        placeholder="Serviço (ex: Website)"
-                                                        className="glass-light border-border h-9 text-xs flex-1"
-                                                        value={serviceInput}
-                                                        onChange={(e) => setServiceInput(e.target.value)}
-                                                        onKeyDown={(e) =>
-                                                            e.key === "Enter" && (e.preventDefault(), addService())
-                                                        }
-                                                    />
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="R$ 0"
-                                                        className="glass-light border-border h-9 text-xs w-24"
-                                                        value={servicePriceInput}
-                                                        onChange={(e) =>
-                                                            setServicePriceInput(
-                                                                e.target.value ? Number(e.target.value) : ""
-                                                            )
-                                                        }
-                                                        onKeyDown={(e) =>
-                                                            e.key === "Enter" && (e.preventDefault(), addService())
-                                                        }
-                                                    />
+                                    <div className="space-y-6">
+                                        {/* SEÇÃO 0: PRESETS DE PAGAMENTO */}
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1 flex items-center gap-2">
+                                                <Zap className="h-3 w-3 text-primary" /> Sugestões de Pagamento
+                                            </Label>
+                                            <div className="grid grid-cols-5 gap-2">
+                                                {(['full', '50_50', 'end_of_month', 'next_month_10', 'custom'] as const).map((preset) => (
                                                     <Button
+                                                        key={preset}
                                                         type="button"
-                                                        onClick={addService}
-                                                        size="sm"
-                                                        className="shrink-0 h-9"
+                                                        variant={paymentPreset === preset ? "default" : "outline"}
+                                                        onClick={() => handlePresetChange(preset)}
+                                                        className={cn(
+                                                            "h-12 flex flex-col gap-0.5 px-0 transition-all",
+                                                            paymentPreset === preset
+                                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 border-primary"
+                                                                : "glass-light border-border hover:bg-muted text-muted-foreground"
+                                                        )}
                                                     >
-                                                        <Plus className="h-4 w-4" />
+                                                        <span className="text-[9px] font-black uppercase tracking-tighter leading-none">
+                                                            {preset === 'full' ? '100%' :
+                                                                preset === '50_50' ? '50/50' :
+                                                                    preset === 'end_of_month' ? 'FECH' :
+                                                                        preset === 'next_month_10' ? 'M+1' : 'USR'}
+                                                        </span>
+                                                        <span className="text-[8px] opacity-60 font-medium">
+                                                            {preset === 'full' ? 'À VISTA' :
+                                                                preset === '50_50' ? 'SINAL' :
+                                                                    preset === 'end_of_month' ? 'MÊS' :
+                                                                        preset === 'next_month_10' ? 'DIA 10' : 'FIXO'}
+                                                        </span>
                                                     </Button>
-                                                </div>
-                                                <div className="flex flex-col gap-1.5 mt-2">
-                                                    {services.map((svc, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className="flex items-center justify-between bg-secondary/10 px-3 py-1.5 rounded-md border border-border text-xs group"
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <GripVertical className="h-3 w-3 text-muted-foreground" />
-                                                                <span className="font-medium">{svc.name}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="text-primary font-medium">
-                                                                    {new Intl.NumberFormat("pt-BR", {
-                                                                        style: "currency",
-                                                                        currency: "BRL",
-                                                                    }).format(svc.price)}
-                                                                </span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => removeService(i)}
-                                                                    className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                >
-                                                                    <Plus className="h-3 w-3 rotate-45" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                    {services.length === 0 && (
-                                                        <p className="text-[10px] text-muted-foreground italic pl-1">
-                                                            Nenhum serviço no escopo.
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 flex justify-between items-center">
-                                                <span className="text-xs text-muted-foreground font-medium">
-                                                    Valor Total Calculado
-                                                </span>
-                                                <span className="text-sm font-semibold text-primary">
-                                                    {new Intl.NumberFormat("pt-BR", {
-                                                        style: "currency",
-                                                        currency: "BRL",
-                                                    }).format(newValue)}
-                                                </span>
+                                                ))}
                                             </div>
                                         </div>
 
-                                        {/* SEÇÃO 1: CONFIGURAÇÃO DE SETUP */}
+                                        {/* SEÇÃO 1: CONFIGURAÇÃO BASE (SETUP) */}
                                         <div className="space-y-4 p-5 rounded-2xl border border-border bg-muted/5 relative overflow-hidden group">
                                             <div className="absolute top-0 left-0 w-1 h-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
-                                                    <h3 className="text-sm font-bold tracking-tight">Configuração do Setup</h3>
-                                                </div>
-                                                <div className="flex gap-1 p-1 bg-muted/30 rounded-lg border border-border">
-                                                    {[
-                                                        { id: 'full', label: '100% Antecipado' },
-                                                        { id: '50_50', label: 'Início (50/50)' },
-                                                        { id: 'custom', label: 'Personalizado' }
-                                                    ].map((p) => (
-                                                        <button
-                                                            key={p.id}
-                                                            type="button"
-                                                            onClick={() => handlePresetChange(p.id as any)}
-                                                            className={cn(
-                                                                "px-3 py-1 text-[9px] font-bold rounded-md transition-all",
-                                                                paymentPreset === p.id
-                                                                    ? "bg-primary text-primary-foreground shadow-sm"
-                                                                    : "text-muted-foreground hover:text-foreground"
-                                                            )}
-                                                        >
-                                                            {p.label}
-                                                        </button>
-                                                    ))}
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
+                                                <div className="space-y-0.5">
+                                                    <h3 className="text-sm font-bold tracking-tight">Valores de Setup</h3>
+                                                    <p className="text-[10px] text-muted-foreground">Configuração inicial do projeto.</p>
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Valor de Entrada</Label>
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Valor Total</Label>
                                                     <div className="relative">
-                                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
                                                         <Input
                                                             type="number"
-                                                            className="glass-light border-border h-10 pl-9"
+                                                            className="glass-light border-border h-11 pl-9 text-lg font-semibold focus:ring-1 focus:ring-primary/20"
+                                                            value={newValue}
+                                                            onChange={(e) => {
+                                                                setNewValue(Number(e.target.value));
+                                                                setPaymentPreset('custom');
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Entrada / Sinal</Label>
+                                                    <div className="relative">
+                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
+                                                        <Input
+                                                            type="number"
+                                                            className="glass-light border-border h-11 pl-9 text-lg font-semibold focus:ring-1 focus:ring-primary/20"
                                                             value={newAdvance}
                                                             onChange={(e) => {
                                                                 setNewAdvance(Number(e.target.value));
@@ -1045,98 +1028,102 @@ export function EditProjectDialog({
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status do Pagamento</Label>
-                                                    <div className="grid grid-cols-3 gap-1.5 h-10">
-                                                        {[
-                                                            { id: 'pending', label: 'Pendente' },
-                                                            { id: 'partial', label: 'Parcial' },
-                                                            { id: 'paid', label: 'Quitado' }
-                                                        ].map((s) => (
-                                                            <button
-                                                                key={s.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setNewPaymentStatus(s.id);
-                                                                    setPaymentPreset('custom');
-                                                                    if (s.id === 'partial') setIsInstallmentEnabled(true);
-                                                                }}
-                                                                className={cn(
-                                                                    "flex items-center justify-center rounded-lg border text-[10px] font-bold transition-all",
-                                                                    newPaymentStatus === s.id
-                                                                        ? "bg-primary/10 border-primary text-primary"
-                                                                        : "bg-background/20 border-border text-muted-foreground"
-                                                                )}
-                                                            >
-                                                                {s.label}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Meio de Pagamento</Label>
-                                                <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
-                                                    <SelectTrigger className="glass-light border-border h-10">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="glass border-border z-[100]">
-                                                        <SelectItem value="pix">PIX</SelectItem>
-                                                        <SelectItem value="boleto">Boleto</SelectItem>
-                                                        <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-                                                        <SelectItem value="transfer">Transferência</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-
-                                        {/* SEÇÃO 2: RECORRÊNCIA */}
-                                        <div className="space-y-4 p-5 rounded-2xl border border-border bg-muted/5 relative overflow-hidden group">
-                                            <div className="absolute top-0 left-0 w-1 h-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">2</span>
-                                                <h3 className="text-sm font-bold tracking-tight">Recorrência e Manutenção</h3>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tipo de Contrato</Label>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        {[
-                                                            { value: 'pontual', label: 'Único' },
-                                                            { value: 'recorrente', label: 'Recorrente' }
-                                                        ].map((b) => (
-                                                            <button
-                                                                key={b.value}
-                                                                type="button"
-                                                                onClick={() => setBillingType(b.value as any)}
-                                                                className={cn(
-                                                                    "flex flex-col items-center justify-center py-2 rounded-xl border transition-all",
-                                                                    billingType === b.value
-                                                                        ? "bg-primary/20 border-primary text-primary"
-                                                                        : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
-                                                                )}
-                                                            >
-                                                                <span className="text-[11px] font-bold">{b.label}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ciclo</Label>
-                                                    <Select value={billingCycle} onValueChange={setBillingCycle} disabled={billingType !== 'recorrente'}>
-                                                        <SelectTrigger className="glass-light border-border h-10">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Método de Pagamento</Label>
+                                                    <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
+                                                        <SelectTrigger className="glass-light border-border h-11 text-xs font-medium focus:ring-1 focus:ring-primary/20">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent className="glass border-border z-[100]">
-                                                            <SelectItem value="semanal">Semanal</SelectItem>
-                                                            <SelectItem value="mensal">Mensal</SelectItem>
-                                                            <SelectItem value="trimestral">Trimestral</SelectItem>
-                                                            <SelectItem value="anual">Anual</SelectItem>
+                                                            <SelectItem value="pix">PIX</SelectItem>
+                                                            <SelectItem value="boleto">Boleto</SelectItem>
+                                                            <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                                                            <SelectItem value="transfer">Transferência</SelectItem>
+                                                            <SelectItem value="other">Outro Meio</SelectItem>
                                                         </SelectContent>
                                                     </Select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Status do Pagamento</Label>
+                                                    <Select value={newPaymentStatus} onValueChange={(v) => {
+                                                        setNewPaymentStatus(v);
+                                                        setPaymentPreset('custom');
+                                                        if (v === 'partial') setIsInstallmentEnabled(true);
+                                                    }}>
+                                                        <SelectTrigger className="glass-light border-border h-11 text-xs font-medium focus:ring-1 focus:ring-primary/20">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="glass border-border z-[100]">
+                                                            <SelectItem value="pending">Pendente</SelectItem>
+                                                            <SelectItem value="paid">Já Pago (Quitado)</SelectItem>
+                                                            <SelectItem value="partial">Parcial / Parcelado</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+
+                                            {newPaymentStatus === 'paid' && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -5 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="p-3 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between"
+                                                >
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold text-primary">Antecipado?</span>
+                                                        <span className="text-[8px] text-muted-foreground">Considerar recebido mesmo se for futuro</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsEarlyPayment(!isEarlyPayment)}
+                                                        className={cn(
+                                                            "px-4 py-1.5 rounded-lg text-[9px] font-bold transition-all border",
+                                                            isEarlyPayment
+                                                                ? "bg-primary text-primary-foreground border-primary"
+                                                                : "bg-background/40 text-muted-foreground border-border hover:bg-muted"
+                                                        )}
+                                                    >
+                                                        {isEarlyPayment ? "ATIVADO" : "DESATIVADO"}
+                                                    </button>
+                                                </motion.div>
+                                            )}
+                                        </div>
+
+                                        {/* SEÇÃO 2: RECORRÊNCIA */}
+                                        <div className={cn(
+                                            "space-y-4 p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group",
+                                            billingType === "recorrente" ? "bg-primary/[0.03] border-primary/20" : "bg-muted/5 border-border"
+                                        )}>
+                                            {billingType === "recorrente" && <div className="absolute top-0 left-0 w-1 h-full bg-primary" />}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">2</span>
+                                                    <div className="space-y-0.5">
+                                                        <h3 className="text-sm font-bold tracking-tight">Serviço Recorrente</h3>
+                                                        <p className="text-[10px] text-muted-foreground">Mensalidades ou manutenção ativa.</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex bg-background/50 p-1 rounded-xl border border-border">
+                                                    {[
+                                                        { value: 'pontual', label: 'Inativo' },
+                                                        { value: 'recorrente', label: 'Ativo' }
+                                                    ].map((b) => (
+                                                        <button
+                                                            key={b.value}
+                                                            type="button"
+                                                            onClick={() => setBillingType(b.value as any)}
+                                                            className={cn(
+                                                                "h-7 px-4 text-[9px] font-bold rounded-lg transition-all",
+                                                                billingType === b.value
+                                                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                                                    : "text-muted-foreground hover:bg-muted"
+                                                            )}
+                                                        >
+                                                            {b.label}
+                                                        </button>
+                                                    ))}
                                                 </div>
                                             </div>
 
@@ -1144,98 +1131,137 @@ export function EditProjectDialog({
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: "auto", opacity: 1 }}
-                                                    className="space-y-4 pt-2 overflow-hidden"
+                                                    className="space-y-4 pt-2 overflow-hidden border-t border-primary/10"
                                                 >
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3" /> Início do Faturamento (Próxima Cobrança)
-                                                        </Label>
-                                                        <Input
-                                                            type="date"
-                                                            className="glass-light border-border h-10 [color-scheme:dark]"
-                                                            value={nextBillingDate}
-                                                            onChange={(e) => setNextBillingDate(e.target.value)}
-                                                        />
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Ciclo</Label>
+                                                            <Select value={billingCycle} onValueChange={setBillingCycle}>
+                                                                <SelectTrigger className="glass-light border-primary/20 h-10 text-xs">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="glass border-border z-[100]">
+                                                                    <SelectItem value="semanal">Semanal</SelectItem>
+                                                                    <SelectItem value="mensal">Mensal</SelectItem>
+                                                                    <SelectItem value="trimestral">Trimestral</SelectItem>
+                                                                    <SelectItem value="anual">Anual</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Início</Label>
+                                                            <Input
+                                                                type="date"
+                                                                className="glass-light border-primary/20 h-10 text-xs [color-scheme:dark]"
+                                                                value={nextBillingDate}
+                                                                onChange={(e) => setNextBillingDate(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Meses</Label>
+                                                            <Input
+                                                                type="number"
+                                                                min={1}
+                                                                className="glass-light border-primary/20 h-10 text-xs text-center font-bold"
+                                                                value={contractDuration}
+                                                                onChange={(e) => setContractDuration(Number(e.target.value))}
+                                                            />
+                                                        </div>
                                                     </div>
 
-                                                    <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-4">
-                                                        <div className="grid grid-cols-1 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Gatilho da Recorrência</Label>
-                                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold text-muted-foreground/60 px-1">Configuração de Faturamento</Label>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Timing</span>
+                                                                <div className="grid grid-cols-1 gap-1">
                                                                     {[
-                                                                        { value: 'immediate', label: 'Imediato', desc: 'Junto com Setup' },
-                                                                        { value: 'post_installments', label: 'Post-Setup', desc: 'Após parcelas' }
-                                                                    ].map((c) => (
+                                                                        { value: 'start', label: 'Antecipado' },
+                                                                        { value: 'end', label: 'Postecipado' }
+                                                                    ].map((t) => (
                                                                         <button
-                                                                            key={c.value}
+                                                                            key={t.value}
                                                                             type="button"
-                                                                            onClick={() => setRecurringCondition(c.value as any)}
+                                                                            onClick={() => setRecurringTiming(t.value as any)}
                                                                             className={cn(
-                                                                                "flex flex-col items-center justify-center py-2 px-1 rounded-lg border transition-all text-center",
-                                                                                recurringCondition === c.value
-                                                                                    ? "bg-primary/20 border-primary text-primary"
-                                                                                    : "bg-background/20 border-border text-muted-foreground hover:bg-background/40"
+                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
+                                                                                recurringTiming === t.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
                                                                             )}
                                                                         >
-                                                                            <span className="text-[10px] font-bold">{c.label}</span>
-                                                                            <span className="text-[8px] opacity-70">{c.desc}</span>
+                                                                            {t.label}
                                                                         </button>
                                                                     ))}
                                                                 </div>
                                                             </div>
-
-                                                            <div className="grid grid-cols-2 gap-3">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Modelo</Label>
-                                                                    <div className="grid grid-cols-1 gap-1">
-                                                                        {[
-                                                                            { value: 'full', label: 'Integral (100%)' },
-                                                                            { value: 'split', label: 'Dividido (50/50)' }
-                                                                        ].map((m) => (
-                                                                            <button
-                                                                                key={m.value}
-                                                                                type="button"
-                                                                                onClick={() => setRecurringPaymentModel(m.value as any)}
-                                                                                className={cn(
-                                                                                    "flex items-center justify-center h-8 rounded-lg border text-[9px] font-bold transition-all",
-                                                                                    recurringPaymentModel === m.value
-                                                                                        ? "bg-primary/20 border-primary text-primary"
-                                                                                        : "bg-background/20 border-border text-muted-foreground"
-                                                                                )}
-                                                                            >
-                                                                                {m.label}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
+                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Modelo</span>
+                                                                <div className="grid grid-cols-1 gap-1">
+                                                                    {[
+                                                                        { value: 'full', label: '100% Início' },
+                                                                        { value: 'split', label: '50/50' },
+                                                                        { value: 'installments', label: 'Parcelado' }
+                                                                    ].map((m) => (
+                                                                        <button
+                                                                            key={m.value}
+                                                                            type="button"
+                                                                            onClick={() => setRecurringPaymentModel(m.value as any)}
+                                                                            className={cn(
+                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
+                                                                                recurringPaymentModel === m.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
+                                                                            )}
+                                                                        >
+                                                                            {m.label}
+                                                                        </button>
+                                                                    ))}
                                                                 </div>
-
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Timing</Label>
-                                                                    <div className="grid grid-cols-1 gap-1">
-                                                                        {[
-                                                                            { value: 'start', label: 'Início do Mês' },
-                                                                            { value: 'end', label: 'Fim do Mês' }
-                                                                        ].map((t) => (
-                                                                            <button
-                                                                                key={t.value}
-                                                                                type="button"
-                                                                                onClick={() => setRecurringTiming(t.value as any)}
-                                                                                className={cn(
-                                                                                    "flex items-center justify-center h-8 rounded-lg border text-[9px] font-bold transition-all",
-                                                                                    recurringTiming === t.value
-                                                                                        ? "bg-primary/20 border-primary text-primary"
-                                                                                        : "bg-background/20 border-border text-muted-foreground"
-                                                                                )}
-                                                                            >
-                                                                                {t.label}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
+                                                            </div>
+                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Gatilho</span>
+                                                                <div className="grid grid-cols-1 gap-1">
+                                                                    {[
+                                                                        { value: 'immediate', label: 'Imediato' },
+                                                                        { value: 'post_installments', label: 'Pós Setup' }
+                                                                    ].map((t) => (
+                                                                        <button
+                                                                            key={t.value}
+                                                                            type="button"
+                                                                            onClick={() => setRecurringCondition(t.value as any)}
+                                                                            className={cn(
+                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
+                                                                                recurringCondition === t.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
+                                                                            )}
+                                                                        >
+                                                                            {t.label}
+                                                                        </button>
+                                                                    ))}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    {recurringPaymentModel === 'installments' && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            className="p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between"
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] font-bold text-primary italic">Divisão da Mensalidade</span>
+                                                                <span className="text-[8px] text-muted-foreground">Cada ciclo será faturado em:</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <Input
+                                                                    type="number"
+                                                                    min={1}
+                                                                    max={12}
+                                                                    className="w-16 h-8 text-center text-xs font-bold bg-background/50 border-primary/20 focus:ring-1 focus:ring-primary/20"
+                                                                    value={recurringInstallmentCount}
+                                                                    onChange={(e) => setRecurringInstallmentCount(Number(e.target.value))}
+                                                                />
+                                                                <span className="text-[10px] font-bold text-muted-foreground">x</span>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
                                                 </motion.div>
                                             )}
                                         </div>
@@ -1247,8 +1273,8 @@ export function EditProjectDialog({
                                                 <div className="flex items-center gap-2">
                                                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">3</span>
                                                     <div className="space-y-0.5">
-                                                        <h3 className="text-sm font-bold tracking-tight">Parcelamento do Saldo de Setup</h3>
-                                                        <p className="text-[10px] text-muted-foreground">Configurar parcelas para o valor não pago na entrada.</p>
+                                                        <h3 className="text-sm font-bold tracking-tight">Parcelamento de Setup</h3>
+                                                        <p className="text-[10px] text-muted-foreground">Configure as parcelas do saldo remanescente.</p>
                                                     </div>
                                                 </div>
                                                 <Button
@@ -1257,11 +1283,11 @@ export function EditProjectDialog({
                                                     size="sm"
                                                     onClick={() => setIsInstallmentEnabled(!isInstallmentEnabled)}
                                                     className={cn(
-                                                        "h-8 px-3 text-[10px] font-bold transition-all",
-                                                        isInstallmentEnabled ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted/30 border border-transparent"
+                                                        "h-8 px-3 text-[10px] font-bold transition-all border",
+                                                        isInstallmentEnabled ? "bg-primary/10 text-primary border-primary/20" : "bg-muted/30 border-transparent hover:bg-muted/50"
                                                     )}
                                                 >
-                                                    {isInstallmentEnabled ? "Remover Parcelas" : "Configurar parcelas"}
+                                                    {isInstallmentEnabled ? "Remover Parcelas" : "Ativar Parcelas"}
                                                 </Button>
                                             </div>
 
@@ -1280,22 +1306,22 @@ export function EditProjectDialog({
                                                                 max={24}
                                                                 value={installmentCount}
                                                                 onChange={(e) => setInstallmentCount(Number(e.target.value))}
-                                                                className="h-10 text-xs glass-light border-border"
+                                                                className="h-10 text-xs glass-light border-border focus:ring-1 focus:ring-primary/20"
                                                             />
                                                         </div>
                                                         <Button
                                                             type="button"
                                                             variant="outline"
                                                             onClick={generateInstallments}
-                                                            className="h-10 text-xs gap-2 border-border"
+                                                            className="h-10 text-xs gap-2 border-border hover:bg-muted transition-all"
                                                         >
-                                                            <Save className="h-3.5 w-3.5" /> Gerar Cronograma
+                                                            <BadgePercent className="h-3.5 w-3.5" /> Gerar Parcelas
                                                         </Button>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
                                                         {installments.map((p, idx) => (
-                                                            <div key={idx} className="flex gap-2 p-3 rounded-xl bg-background/40 border border-border group hover:border-primary/20 transition-all">
+                                                            <div key={idx} className="flex gap-2 p-3 rounded-xl bg-background/40 border border-border group hover:border-primary/20 transition-all shadow-sm">
                                                                 <div className="flex flex-col flex-1 gap-1">
                                                                     <Label className="text-[9px] font-bold text-muted-foreground uppercase">{idx + 1}ª Parcela</Label>
                                                                     <div className="relative">
@@ -1308,12 +1334,12 @@ export function EditProjectDialog({
                                                                                 newP[idx].amount = Number(e.target.value);
                                                                                 setInstallments(newP);
                                                                             }}
-                                                                            className="h-8 pl-8 text-[11px] glass-light border-border"
+                                                                            className="h-8 pl-8 text-[11px] glass-light border-border focus:ring-1 focus:ring-primary/20"
                                                                         />
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex flex-col gap-1 w-28">
-                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase">Data</Label>
+                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase">Vencimento</Label>
                                                                     <Input
                                                                         type="date"
                                                                         value={p.date}
@@ -1322,7 +1348,7 @@ export function EditProjectDialog({
                                                                             newP[idx].date = e.target.value;
                                                                             setInstallments(newP);
                                                                         }}
-                                                                        className="h-8 text-[11px] glass-light border-border px-2 [color-scheme:dark]"
+                                                                        className="h-8 text-[11px] glass-light border-border px-2 [color-scheme:dark] focus:ring-1 focus:ring-primary/20"
                                                                     />
                                                                 </div>
                                                             </div>
@@ -1336,7 +1362,7 @@ export function EditProjectDialog({
 
                                 {/* ══ TAREFAS ══════════════════════════════ */}
                                 {step === 4 && (
-                                    <>
+                                    <div className="space-y-6">
                                         <h3 className="text-sm font-semibold tracking-tight">
                                             Tarefas do Projeto
                                         </h3>
@@ -1388,79 +1414,81 @@ export function EditProjectDialog({
                                                     </p>
                                                 </div>
                                             ) : (
-                                                projectTasks.map((task: any) => (
-                                                    <motion.div
-                                                        key={task.id}
-                                                        initial={{ opacity: 0, y: 4 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card group hover:border-primary/20 transition-all"
-                                                    >
-                                                        <button
-                                                            onClick={() =>
-                                                                toggleTaskDoneMutation.mutate({
-                                                                    id: task.id,
-                                                                    currentColId: task.column_id,
-                                                                })
-                                                            }
-                                                            className={cn(
-                                                                "w-4 h-4 rounded-full border-2 shrink-0 transition-all flex items-center justify-center",
-                                                                task.progress >= 100
-                                                                    ? "bg-primary border-primary"
-                                                                    : "border-muted-foreground/40 hover:border-primary"
-                                                            )}
+                                                <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                                                    {projectTasks.map((task: any) => (
+                                                        <motion.div
+                                                            key={task.id}
+                                                            initial={{ opacity: 0, y: 4 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card group hover:border-primary/20 transition-all shadow-sm"
                                                         >
-                                                            {task.progress >= 100 && (
-                                                                <Check className="h-2.5 w-2.5 text-white" />
-                                                            )}
-                                                        </button>
-                                                        <div className="flex-1 min-w-0">
-                                                            <span
-                                                                className={cn(
-                                                                    "text-sm font-medium truncate block",
-                                                                    task.progress >= 100
-                                                                        ? "line-through text-muted-foreground"
-                                                                        : "text-foreground"
-                                                                )}
-                                                            >
-                                                                {task.title}
-                                                            </span>
-                                                            {task.due_date && (
-                                                                <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                                                                    <Calendar className="h-2.5 w-2.5" />
-                                                                    {new Date(task.due_date).toLocaleDateString(
-                                                                        "pt-BR"
-                                                                    )}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span
-                                                                className={cn(
-                                                                    "text-[9px] font-medium px-1.5 py-0.5 rounded-full",
-                                                                    task.priority === "high"
-                                                                        ? "bg-red-500/10 text-red-400"
-                                                                        : task.priority === "medium"
-                                                                            ? "bg-yellow-500/10 text-yellow-500"
-                                                                            : "bg-muted text-muted-foreground"
-                                                                )}
-                                                            >
-                                                                {task.priority === "high"
-                                                                    ? "Alta"
-                                                                    : task.priority === "medium"
-                                                                        ? "Méd"
-                                                                        : "Baixa"}
-                                                            </span>
                                                             <button
                                                                 onClick={() =>
-                                                                    deleteTaskMutation.mutate(task.id)
+                                                                    toggleTaskDoneMutation.mutate({
+                                                                        id: task.id,
+                                                                        currentColId: task.column_id,
+                                                                    })
                                                                 }
-                                                                className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+                                                                className={cn(
+                                                                    "w-4 h-4 rounded-full border-2 shrink-0 transition-all flex items-center justify-center",
+                                                                    task.progress >= 100
+                                                                        ? "bg-primary border-primary"
+                                                                        : "border-muted-foreground/40 hover:border-primary"
+                                                                )}
                                                             >
-                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                {task.progress >= 100 && (
+                                                                    <Check className="h-2.5 w-2.5 text-white" />
+                                                                )}
                                                             </button>
-                                                        </div>
-                                                    </motion.div>
-                                                ))
+                                                            <div className="flex-1 min-w-0">
+                                                                <span
+                                                                    className={cn(
+                                                                        "text-sm font-medium truncate block",
+                                                                        task.progress >= 100
+                                                                            ? "line-through text-muted-foreground"
+                                                                            : "text-foreground"
+                                                                    )}
+                                                                >
+                                                                    {task.title}
+                                                                </span>
+                                                                {task.due_date && (
+                                                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                                                                        <Calendar className="h-2.5 w-2.5" />
+                                                                        {new Date(task.due_date).toLocaleDateString(
+                                                                            "pt-BR"
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span
+                                                                    className={cn(
+                                                                        "text-[9px] font-medium px-1.5 py-0.5 rounded-full",
+                                                                        task.priority === "high"
+                                                                            ? "bg-red-500/10 text-red-400"
+                                                                            : task.priority === "medium"
+                                                                                ? "bg-yellow-500/10 text-yellow-500"
+                                                                                : "bg-muted text-muted-foreground"
+                                                                    )}
+                                                                >
+                                                                    {task.priority === "high"
+                                                                        ? "Alta"
+                                                                        : task.priority === "medium"
+                                                                            ? "Méd"
+                                                                            : "Baixa"}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        deleteTaskMutation.mutate(task.id)
+                                                                    }
+                                                                    className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
                                             )}
                                         </div>
 
@@ -1479,7 +1507,7 @@ export function EditProjectDialog({
                                                 </div>
                                             </div>
                                         )}
-                                    </>
+                                    </div>
                                 )}
 
                                 {/* STEP 5 REMOVED */}
