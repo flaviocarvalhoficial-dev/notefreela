@@ -76,7 +76,7 @@ export function EditProjectDialog({
     const [step, setStep] = useState<number>(1);
     const [isMaximized, setIsMaximized] = useState(false);
 
-    // ── Geral ────────────────────────────────────────────────
+    // â”€â”€ Geral â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [newName, setNewName] = useState(project?.name || "");
     const [newDesc, setNewDesc] = useState(project?.description || "");
     const [newClient, setNewClient] = useState(project?.client_name || "");
@@ -87,7 +87,7 @@ export function EditProjectDialog({
     );
     const [newDeadline, setNewDeadline] = useState(project?.deadline || "");
 
-    // ── Financeiro ───────────────────────────────────────────
+    // â”€â”€ Financeiro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [newValue, setNewValue] = useState(project?.value || 0);
     const [newAdvance, setNewAdvance] = useState(project?.advance_payment || 0);
     const [newPaymentMethod, setNewPaymentMethod] = useState(project?.payment_method || "pix");
@@ -106,7 +106,7 @@ export function EditProjectDialog({
             : ""
     );
 
-    // ── Configurações ────────────────────────────────────────
+    // â”€â”€ ConfiguraÃ§Ãµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [newStatus, setNewStatus] = useState<ProjectStatus>(project.status as ProjectStatus);
     const [newPriority, setNewPriority] = useState<"high" | "medium" | "low">(project.priority as any);
     const [newProgress, setNewProgress] = useState(project.progress);
@@ -114,11 +114,11 @@ export function EditProjectDialog({
         (project.contract_status as any) || "active"
     );
 
-    // ── Tasks ────────────────────────────────────────────────
+    // â”€â”€ Tasks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [newTaskTitle, setNewTaskTitle] = useState("");
 
-    // ── Advanced Billing Rules ────────────────────────────────
-    const [recurringTiming, setRecurringTiming] = useState<'start' | 'end'>('start');
+    // â”€â”€ Advanced Billing Rules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const [recurringFluxo, setRecurringFluxo] = useState<'start' | 'end'>('start');
     const [recurringCondition, setRecurringCondition] = useState<'immediate' | 'post_installments'>('immediate');
     const [recurringPaymentModel, setRecurringPaymentModel] = useState<'full' | 'split' | 'installments'>('full');
     const [recurringInstallmentCount, setRecurringInstallmentCount] = useState(1);
@@ -141,11 +141,13 @@ export function EditProjectDialog({
 
     // Auto-calculate recurring amount from services
     useEffect(() => {
-        const total = recurringServices.reduce((acc, curr) => acc + curr.price, 0);
-        setRecurringAmount(total);
+        if (recurringServices.length > 0) {
+            const total = recurringServices.reduce((acc, curr) => acc + curr.price, 0);
+            setRecurringAmount(total);
+        }
     }, [recurringServices]);
 
-    // ── Parcelamento status ───────────────────────────────────
+    // â”€â”€ Parcelamento status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
     const [installments, setInstallments] = useState<{ amount: number; date: string }[]>([]);
     const [installmentCount, setInstallmentCount] = useState<number>(1);
@@ -154,8 +156,8 @@ export function EditProjectDialog({
     const nextStep = () => {
         if (step === 1 && !newName) {
             toast({
-                title: "Campo obrigatório",
-                description: "Por favor, dê um nome ao seu projeto.",
+                title: "Campo obrigatÃ³rio",
+                description: "Por favor, dÃª um nome ao seu projeto.",
                 variant: "destructive"
             });
             return;
@@ -187,10 +189,15 @@ export function EditProjectDialog({
     useEffect(() => {
         if (billingAgreement) {
             setContractDuration(billingAgreement.months || 12);
-            setRecurringAmount(Number(billingAgreement.monthly_amount) || 0);
-            setRecurringTiming(billingAgreement.timing || 'start');
+            // Only update amount if it's not zero or if it's our only source
+            if (Number(billingAgreement.monthly_amount) > 0) {
+                setRecurringAmount(Number(billingAgreement.monthly_amount));
+            }
+            setRecurringFluxo(billingAgreement.Fluxo || 'start');
             setRecurringCondition(billingAgreement.trigger || 'immediate');
-            setRecurringServices(billingAgreement.recurring_services || []);
+            if (billingAgreement.recurring_services && billingAgreement.recurring_services.length > 0) {
+                setRecurringServices(billingAgreement.recurring_services);
+            }
         }
     }, [billingAgreement]);
 
@@ -334,12 +341,20 @@ export function EditProjectDialog({
             // Extract billing config
             const config = (project.services as any[] || []).find(s => s.name === "__billing_config__");
             if (config) {
-                setRecurringTiming(config.timing || 'start');
+                setRecurringFluxo(config.Fluxo || 'start');
                 setRecurringCondition(config.condition || 'immediate');
                 setRecurringPaymentModel(config.paymentModel || 'full');
                 setRecurringInstallmentCount(config.recurring_installments || 1);
                 setIsEarlyPayment(!!config.isEarlyPayment);
                 setContractDuration(config.contractDuration || 12);
+
+                // FALLBACK for recurring amount and services from JSON - Arthur Marques Sign
+                if (config.monthly_amount) setRecurringAmount(Number(config.monthly_amount));
+                else if (config.price) setRecurringAmount(Number(config.price));
+
+                if (config.recurring_services && config.recurring_services.length > 0) {
+                    setRecurringServices(config.recurring_services);
+                }
             }
 
             setBillingType((project.billing_type as any) || "pontual");
@@ -400,7 +415,7 @@ export function EditProjectDialog({
         setServices(services.filter((_, i) => i !== index));
     };
 
-    // ── Helper: resolve first column ID for this project ────
+    // â”€â”€ Helper: resolve first column ID for this project â”€â”€â”€â”€
     const resolveFirstColumnId = async (): Promise<string> => {
         // Strategy 1: direct link via project_id on kanban_columns
         const { data: directCols } = await supabase
@@ -436,12 +451,12 @@ export function EditProjectDialog({
         return "todo";
     };
 
-    // ── Mutations ────────────────────────────────────────────
+    // â”€â”€ Mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     const updateProjectMutation = useMutation({
         mutationFn: async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Usuário não autenticado");
+            if (!user) throw new Error("UsuÃ¡rio nÃ£o autenticado");
 
             const finalServices = [
 
@@ -449,7 +464,7 @@ export function EditProjectDialog({
                 {
                     name: "__billing_config__",
                     price: 0,
-                    timing: recurringTiming,
+                    Fluxo: recurringFluxo,
                     condition: recurringCondition,
                     paymentModel: recurringPaymentModel,
                     recurring_installments: recurringInstallmentCount,
@@ -496,7 +511,7 @@ export function EditProjectDialog({
             const { data: agreement, error: agreementError } = await (supabase as any)
                 .from("billing_agreements")
                 .upsert({
-                    id: billingAgreement?.id, // Se já existir um ID, ele atualiza o correto
+                    id: billingAgreement?.id, // Se jÃ¡ existir um ID, ele atualiza o correto
                     project_id: project.id,
                     user_id: user.id,
                     model: billingModel,
@@ -540,7 +555,7 @@ export function EditProjectDialog({
                         due_date: inst.date,
                         amount: inst.amount,
                         status: 'provisionado',
-                        origin_label: `Configuração - Parcela ${idx + 1}/${installments.length}`
+                        origin_label: `ConfiguraÃ§Ã£o - Parcela ${idx + 1}/${installments.length}`
                     });
                 });
             }
@@ -550,7 +565,7 @@ export function EditProjectDialog({
                 const startDateStr = nextBillingDate || new Date().toISOString().split('T')[0];
                 let baseDate = new Date(startDateStr + 'T12:00:00');
 
-                // If trigger is "Pós Setup" (post_installments), start after the last setup installment
+                // If trigger is "PÃ³s Setup" (post_installments), start after the last setup installment
                 if (recurringCondition === 'post_installments' && installmentSeeds.length > 0) {
                     const lastSetupDate = new Date(installmentSeeds[installmentSeeds.length - 1].due_date + 'T12:00:00');
                     baseDate = addMonths(lastSetupDate, 1);
@@ -589,7 +604,7 @@ export function EditProjectDialog({
 
             logActivity({
                 title: "Projeto Atualizado",
-                description: `As informações do projeto "${newName}" foram atualizadas.`,
+                description: `As informaÃ§Ãµes do projeto "${newName}" foram atualizadas.`,
                 type: "project",
                 metadata: { project_id: project.id }
             });
@@ -605,7 +620,7 @@ export function EditProjectDialog({
     const addTaskMutation = useMutation({
         mutationFn: async (title: string) => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Não autenticado");
+            if (!user) throw new Error("NÃ£o autenticado");
 
             const columnId = await resolveFirstColumnId();
 
@@ -692,7 +707,7 @@ export function EditProjectDialog({
     const handleOpenChange = (newOpen: boolean) => {
         setOpen(newOpen);
         if (!newOpen) {
-            // Limpa estados temporários de input ao fechar
+            // Limpa estados temporÃ¡rios de input ao fechar
             setRecServiceInput("");
             setRecServicePriceInput("");
         }
@@ -723,7 +738,7 @@ export function EditProjectDialog({
                         </Button>
                     </div>
 
-                    {/* ── Sidebar Nav ─────────────────────────────── */}
+                    {/* â”€â”€ Sidebar Nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                     <div className="w-44 shrink-0 border-r border-border bg-muted/20 flex flex-col p-3 gap-1">
                         <div className="px-2 pb-3 pt-1 border-b border-border mb-2">
                             <p className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
@@ -761,7 +776,7 @@ export function EditProjectDialog({
                                     className="w-full h-9 text-xs font-bold"
                                     onClick={nextStep}
                                 >
-                                    Próximo <ChevronRight className="h-3 w-3 ml-1.5" />
+                                    PrÃ³ximo <ChevronRight className="h-3 w-3 ml-1.5" />
                                 </Button>
                             ) : (
                                 <Button
@@ -774,7 +789,7 @@ export function EditProjectDialog({
                                     ) : (
                                         <>
                                             <Save className="h-3.5 w-3.5 mr-1.5" />
-                                            Salvar Alterações
+                                            Salvar AlteraÃ§Ãµes
                                         </>
                                     )}
                                 </Button>
@@ -792,7 +807,7 @@ export function EditProjectDialog({
                         </div>
                     </div>
 
-                    {/* ── Content Area ────────────────────────────── */}
+                    {/* â”€â”€ Content Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                     <div className="flex-1 overflow-y-scroll custom-scrollbar p-6 pb-60 space-y-8 min-h-0 bg-background/30">
                         {/* Progress line at top of content area */}
                         <div className="h-1 w-full bg-muted/20 rounded-full mb-6 overflow-hidden">
@@ -839,7 +854,7 @@ export function EditProjectDialog({
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
+                                            <Label className="text-xs text-muted-foreground">Ãcone do Projeto</Label>
                                             <div className="flex items-center gap-3">
                                                 <IconPicker value={newIcon} onChange={setNewIcon} />
                                                 <span className="text-[11px] text-muted-foreground">Identidade visual no cockpit</span>
@@ -870,7 +885,7 @@ export function EditProjectDialog({
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="edit-service-type" className="text-xs text-muted-foreground">Tipo de Serviço</Label>
+                                                <Label htmlFor="edit-service-type" className="text-xs text-muted-foreground">Tipo de ServiÃ§o</Label>
                                                 <Select value={serviceType} onValueChange={setServiceType}>
                                                     <SelectTrigger className="glass-light border-border h-9 text-xs">
                                                         <SelectValue placeholder="Selecione..." />
@@ -879,7 +894,7 @@ export function EditProjectDialog({
                                                         <SelectItem value="design">Design</SelectItem>
                                                         <SelectItem value="dev">Desenvolvimento</SelectItem>
                                                         <SelectItem value="social_media">Social Media</SelectItem>
-                                                        <SelectItem value="traffic">Tráfego Pago</SelectItem>
+                                                        <SelectItem value="traffic">TrÃ¡fego Pago</SelectItem>
                                                         <SelectItem value="copywriting">Copywriting</SelectItem>
                                                         <SelectItem value="other">Outro</SelectItem>
                                                     </SelectContent>
@@ -900,7 +915,7 @@ export function EditProjectDialog({
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="edit-desc" className="text-xs text-muted-foreground">Descrição Rápida (Opcional)</Label>
+                                            <Label htmlFor="edit-desc" className="text-xs text-muted-foreground">DescriÃ§Ã£o RÃ¡pida (Opcional)</Label>
                                             <Input
                                                 id="edit-desc"
                                                 className="glass-light border-border h-10 px-3"
@@ -913,12 +928,12 @@ export function EditProjectDialog({
                                         <div className="pt-4 space-y-4 border-t border-border/50">
                                             <div className="flex items-center gap-2">
                                                 <Briefcase className="h-4 w-4 text-primary" />
-                                                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Escopo de Serviços</h4>
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Escopo de ServiÃ§os</h4>
                                             </div>
 
                                             <div className="flex gap-2">
                                                 <Input
-                                                    placeholder="Serviço (ex: Website)"
+                                                    placeholder="ServiÃ§o (ex: Website)"
                                                     className="glass-light border-border h-9 text-xs flex-1 px-3"
                                                     value={serviceInput}
                                                     onChange={(e) => setServiceInput(e.target.value)}
@@ -956,7 +971,7 @@ export function EditProjectDialog({
                                                 ))}
                                                 {services.length === 0 && (
                                                     <p className="text-[10px] text-muted-foreground italic text-center py-4 bg-muted/5 rounded-lg border border-dashed border-border">
-                                                        Nenhum serviço adicionado. Defina o escopo para calcular o valor.
+                                                        Nenhum serviÃ§o adicionado. Defina o escopo para calcular o valor.
                                                     </p>
                                                 )}
                                             </div>
@@ -976,7 +991,7 @@ export function EditProjectDialog({
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="edit-start" className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <Calendar className="h-3.5 w-3.5" /> Data de Início
+                                                    <Calendar className="h-3.5 w-3.5" /> Data de InÃ­cio
                                                 </Label>
                                                 <Input
                                                     id="edit-start"
@@ -1016,14 +1031,14 @@ export function EditProjectDialog({
                                                                     : "glass-light border-border text-muted-foreground hover:bg-muted"
                                                             )}
                                                         >
-                                                            {p === 'low' ? 'BAIXA' : p === 'medium' ? 'MÉDIA' : 'ALTA'}
+                                                            {p === 'low' ? 'BAIXA' : p === 'medium' ? 'MÃ‰DIA' : 'ALTA'}
                                                         </button>
                                                     ))}
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="edit-manager" className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <User className="h-3.5 w-3.5" /> Responsável
+                                                    <User className="h-3.5 w-3.5" /> ResponsÃ¡vel
                                                 </Label>
                                                 <Input
                                                     id="edit-manager"
@@ -1045,8 +1060,8 @@ export function EditProjectDialog({
                                                     <SelectContent className="glass border-border z-[100]">
                                                         <SelectItem value="active">Em Progresso</SelectItem>
                                                         <SelectItem value="planning">Planejamento</SelectItem>
-                                                        <SelectItem value="review">Revisão / Feedback</SelectItem>
-                                                        <SelectItem value="completed">Concluído</SelectItem>
+                                                        <SelectItem value="review">RevisÃ£o / Feedback</SelectItem>
+                                                        <SelectItem value="completed">ConcluÃ­do</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -1080,13 +1095,13 @@ export function EditProjectDialog({
                                     </div>
                                 )}
 
-                                {/* ══ FINANCEIRO ═══════════════════════════ */}
+                                {/* ▬▬ FINANCEIRO ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ */}
                                 {step === 3 && (
                                     <div className="space-y-6">
                                         {/* SEÇÃO 0: PRESETS DE PAGAMENTO */}
-                                        <div className="space-y-3">
-                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1 flex items-center gap-2">
-                                                <Zap className="h-3 w-3 text-primary" /> Sugestões de Pagamento
+                                        <div className="space-y-4">
+                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-primary px-1 flex items-center gap-2">
+                                                <Zap className="h-3 w-3" /> Condições Sugeridas
                                             </Label>
                                             <div className="grid grid-cols-5 gap-2">
                                                 {(['full', '50_50', 'end_of_month', 'next_month_10', 'custom'] as const).map((preset) => (
@@ -1096,22 +1111,22 @@ export function EditProjectDialog({
                                                         variant={paymentPreset === preset ? "default" : "outline"}
                                                         onClick={() => handlePresetChange(preset)}
                                                         className={cn(
-                                                            "h-12 flex flex-col gap-0.5 px-0 transition-all",
+                                                            "h-12 flex flex-col gap-0.5 px-0 transition-all border-2",
                                                             paymentPreset === preset
-                                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 border-primary"
-                                                                : "glass-light border-border hover:bg-muted text-muted-foreground"
+                                                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 border-primary"
+                                                                : "glass-light border-border hover:bg-muted text-muted-foreground opacity-60"
                                                         )}
                                                     >
-                                                        <span className="text-[9px] font-black uppercase tracking-tighter leading-none">
+                                                        <span className="text-[10px] font-black uppercase tracking-tighter leading-none">
                                                             {preset === 'full' ? '100%' :
                                                                 preset === '50_50' ? '50/50' :
                                                                     preset === 'end_of_month' ? 'FECH' :
                                                                         preset === 'next_month_10' ? 'M+1' : 'USR'}
                                                         </span>
-                                                        <span className="text-[8px] opacity-60 font-medium">
+                                                        <span className="text-[7px] font-bold opacity-80">
                                                             {preset === 'full' ? 'À VISTA' :
                                                                 preset === '50_50' ? 'SINAL' :
-                                                                    preset === 'end_of_month' ? 'MÊS' :
+                                                                    preset === 'end_of_month' ? 'FECH' :
                                                                         preset === 'next_month_10' ? 'DIA 10' : 'FIXO'}
                                                         </span>
                                                     </Button>
@@ -1119,14 +1134,14 @@ export function EditProjectDialog({
                                             </div>
                                         </div>
 
-                                        {/* SEÇÃO 1: CONFIGURAÇÃO BASE (SETUP) */}
-                                        <div className="space-y-4 p-5 rounded-2xl border border-border bg-muted/5 relative overflow-hidden group">
-                                            <div className="absolute top-0 left-0 w-1 h-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
+                                        {/* SEÇÃO 1: PAGAMENTO DO PROJETO */}
+                                        <div className="space-y-6 p-6 rounded-2xl border border-border bg-card relative overflow-hidden group shadow-sm shadow-black/5">
+                                            <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20 group-hover:bg-primary transition-all duration-300" />
+                                            <div className="flex items-center gap-3">
+                                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-[10px] font-bold shadow-lg shadow-primary/10">1</span>
                                                 <div className="space-y-0.5">
-                                                    <h3 className="text-sm font-bold tracking-tight">Valores de Setup</h3>
-                                                    <p className="text-[10px] text-muted-foreground">Configuração inicial do projeto.</p>
+                                                    <h3 className="text-sm font-bold tracking-tight text-foreground">Pagamento do Projeto</h3>
+                                                    <p className="text-[10px] text-muted-foreground">Defina o valor base e a condição de entrada.</p>
                                                 </div>
                                             </div>
 
@@ -1147,7 +1162,7 @@ export function EditProjectDialog({
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Entrada / Sinal</Label>
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Valor de Entrada</Label>
                                                     <div className="relative">
                                                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</div>
                                                         <Input
@@ -1205,8 +1220,8 @@ export function EditProjectDialog({
                                                     className="p-3 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between"
                                                 >
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold text-primary">Antecipado?</span>
-                                                        <span className="text-[8px] text-muted-foreground">Considerar recebido mesmo se for futuro</span>
+                                                        <span className="text-[10px] font-bold text-primary italic uppercase tracking-wider">Antecipado?</span>
+                                                        <span className="text-[8px] text-muted-foreground uppercase opacity-70 tracking-widest">Considerar recebido no saldo atual</span>
                                                     </div>
                                                     <button
                                                         type="button"
@@ -1214,7 +1229,7 @@ export function EditProjectDialog({
                                                         className={cn(
                                                             "px-4 py-1.5 rounded-lg text-[9px] font-bold transition-all border",
                                                             isEarlyPayment
-                                                                ? "bg-primary text-primary-foreground border-primary"
+                                                                ? "bg-primary text-primary-foreground border-primary shadow-sm"
                                                                 : "bg-background/40 text-muted-foreground border-border hover:bg-muted"
                                                         )}
                                                     >
@@ -1224,18 +1239,18 @@ export function EditProjectDialog({
                                             )}
                                         </div>
 
-                                        {/* SEÇÃO 2: RECORRÊNCIA */}
+                                        {/* SEÇÃO 2: MENSALIDADE / MANUTENÇÃO */}
                                         <div className={cn(
-                                            "space-y-4 p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group",
-                                            billingType === "recorrente" ? "bg-primary/[0.03] border-primary/20" : "bg-muted/5 border-border"
+                                            "space-y-6 p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden group shadow-sm shadow-black/5",
+                                            billingType === "recorrente" ? "bg-primary/[0.02] border-primary/20" : "bg-card border-border"
                                         )}>
-                                            {billingType === "recorrente" && <div className="absolute top-0 left-0 w-1 h-full bg-primary" />}
+                                            {billingType === "recorrente" && <div className="absolute top-0 left-0 w-1.5 h-full bg-primary shadow-lg shadow-primary/10" />}
                                             <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">2</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold leading-none">2</span>
                                                     <div className="space-y-0.5">
-                                                        <h3 className="text-sm font-bold tracking-tight">Serviço Recorrente</h3>
-                                                        <p className="text-[10px] text-muted-foreground">Mensalidades ou manutenção ativa.</p>
+                                                        <h3 className="text-sm font-bold tracking-tight text-foreground">Mensalidade / Manutenção</h3>
+                                                        <p className="text-[10px] text-muted-foreground">Ative para serviços recorrentes ou suporte mensal.</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex bg-background/50 p-1 rounded-xl border border-border">
@@ -1248,9 +1263,9 @@ export function EditProjectDialog({
                                                             type="button"
                                                             onClick={() => setBillingType(b.value as any)}
                                                             className={cn(
-                                                                "h-7 px-4 text-[9px] font-bold rounded-lg transition-all",
+                                                                "h-8 px-5 text-[9px] font-bold rounded-lg transition-all",
                                                                 billingType === b.value
-                                                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                                                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/10"
                                                                     : "text-muted-foreground hover:bg-muted"
                                                             )}
                                                         >
@@ -1264,66 +1279,69 @@ export function EditProjectDialog({
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: "auto", opacity: 1 }}
-                                                    className="space-y-4 pt-2 border-t border-primary/10"
+                                                    className="space-y-6 pt-2 border-t border-primary/10"
                                                 >
                                                     <div className="pt-2 space-y-4">
                                                         <div className="flex items-center gap-2">
                                                             <Briefcase className="h-3.5 w-3.5 text-primary/60" />
-                                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Escopo Recorrente</h4>
+                                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 px-1">Escopo do Serviço</h4>
                                                         </div>
 
                                                         <div className="flex gap-2">
                                                             <Input
-                                                                placeholder="Serviço (ex: Manutenção)"
-                                                                className="glass-light border-primary/20 h-9 text-xs flex-1 px-3"
+                                                                placeholder="Nome do serviço (ex: Manutenção)"
+                                                                className="glass-light border-primary/10 h-10 text-xs flex-1 px-4"
                                                                 value={recServiceInput}
                                                                 onChange={(e) => setRecServiceInput(e.target.value)}
                                                                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRecurringService())}
                                                             />
-                                                            <Input
-                                                                type="number"
-                                                                placeholder="R$ 0"
-                                                                className="glass-light border-primary/20 h-9 text-xs w-24 px-3"
-                                                                value={recServicePriceInput}
-                                                                onChange={(e) => setRecServicePriceInput(e.target.value ? Number(e.target.value) : "")}
-                                                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRecurringService())}
-                                                            />
-                                                            <Button type="button" onClick={addRecurringService} size="sm" className="h-9 w-9 p-0 bg-primary/20 text-primary hover:bg-primary/30 border-none shadow-none">
+                                                            <div className="relative w-28">
+                                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">R$</span>
+                                                                <Input
+                                                                    type="number"
+                                                                    placeholder="0"
+                                                                    className="glass-light border-primary/10 h-10 text-xs pl-8 pr-3 font-bold"
+                                                                    value={recServicePriceInput}
+                                                                    onChange={(e) => setRecServicePriceInput(e.target.value ? Number(e.target.value) : "")}
+                                                                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRecurringService())}
+                                                                />
+                                                            </div>
+                                                            <Button type="button" onClick={addRecurringService} size="sm" className="h-10 w-10 p-0 bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground border-none transition-all shadow-none">
                                                                 <Plus className="h-4 w-4" />
                                                             </Button>
                                                         </div>
 
-                                                        <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1 min-h-[10px]">
+                                                        <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1 min-h-[10px] custom-scrollbar">
                                                             {recurringServices.length > 0 ? (
                                                                 recurringServices.map((svc, i) => (
-                                                                    <div key={i} className="flex items-center justify-between bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 text-[11px] transition-all hover:bg-primary/10">
-                                                                        <div className="flex items-center gap-2">
+                                                                    <div key={i} className="flex items-center justify-between bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 text-[11px] hover:border-primary/20 transition-all">
+                                                                        <div className="flex items-center gap-2.5">
                                                                             <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                                                                            <span className="font-medium text-foreground/80">{svc.name}</span>
+                                                                            <span className="font-semibold text-foreground/80">{svc.name}</span>
                                                                         </div>
-                                                                        <div className="flex items-center gap-3">
-                                                                            <span className="text-primary font-bold">
+                                                                        <div className="flex items-center gap-4">
+                                                                            <span className="text-primary font-bold tabular-nums">
                                                                                 {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(svc.price)}
                                                                             </span>
-                                                                            <button type="button" onClick={() => removeRecurringService(i)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
+                                                                            <button type="button" onClick={() => removeRecurringService(i)} className="text-muted-foreground hover:text-destructive transition-colors p-1 bg-background/50 rounded-md">
                                                                                 <Plus className="h-3 w-3 rotate-45" />
                                                                             </button>
                                                                         </div>
                                                                     </div>
                                                                 ))
                                                             ) : (
-                                                                <div className="text-center py-4 border border-dashed border-primary/10 rounded-lg">
-                                                                    <p className="text-[10px] text-muted-foreground/60 italic">Nenhum serviço recorrente adicionado</p>
+                                                                <div className="text-center py-6 border border-dashed border-primary/20 rounded-xl bg-primary/5">
+                                                                    <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-widest">Nenhum serviço adicionado</p>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </div>
 
-                                                    <div className="grid grid-cols-4 gap-2 border-t border-primary/10 pt-4">
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Ciclo</Label>
+                                                    <div className="grid grid-cols-4 gap-3 border-t border-primary/10 pt-6">
+                                                        <div className="space-y-2">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">Ciclo</Label>
                                                             <Select value={billingCycle} onValueChange={setBillingCycle}>
-                                                                <SelectTrigger className="glass-light border-primary/20 h-10 text-xs">
+                                                                <SelectTrigger className="glass-light border-border h-10 text-[11px] font-medium">
                                                                     <SelectValue />
                                                                 </SelectTrigger>
                                                                 <SelectContent className="glass border-border z-[100]">
@@ -1334,32 +1352,35 @@ export function EditProjectDialog({
                                                                 </SelectContent>
                                                             </Select>
                                                         </div>
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Início</Label>
+                                                        <div className="space-y-2">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">Início</Label>
                                                             <Input
                                                                 type="date"
-                                                                className="glass-light border-primary/20 h-10 text-xs [color-scheme:dark]"
+                                                                className="glass-light border-border h-10 text-[11px] [color-scheme:dark] font-medium"
                                                                 value={nextBillingDate}
                                                                 onChange={(e) => setNextBillingDate(e.target.value)}
                                                             />
                                                         </div>
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Meses</Label>
-                                                            <Input
-                                                                type="number"
-                                                                min={1}
-                                                                className="glass-light border-primary/20 h-10 text-xs text-center font-bold"
-                                                                value={contractDuration}
-                                                                onChange={(e) => setContractDuration(Number(e.target.value))}
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Valor Mensal</Label>
+                                                        <div className="space-y-2">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">Contrato</Label>
                                                             <div className="relative">
-                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground">R$</span>
                                                                 <Input
                                                                     type="number"
-                                                                    className="glass-light border-primary/20 h-10 text-xs text-center font-bold pl-6"
+                                                                    min={1}
+                                                                    className="glass-light border-border h-10 text-[11px] text-center font-bold pr-8"
+                                                                    value={contractDuration}
+                                                                    onChange={(e) => setContractDuration(Number(e.target.value))}
+                                                                />
+                                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">MESES</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">Total</Label>
+                                                            <div className="relative">
+                                                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">R$</span>
+                                                                <Input
+                                                                    type="number"
+                                                                    className="glass-light border-border h-10 text-[11px] text-center font-bold pl-7 bg-primary/5 border-primary/20 text-primary"
                                                                     value={recurringAmount}
                                                                     onChange={(e) => setRecurringAmount(Number(e.target.value))}
                                                                 />
@@ -1367,23 +1388,26 @@ export function EditProjectDialog({
                                                         </div>
                                                     </div>
 
-                                                    <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold text-muted-foreground/60 px-1">Configuração de Faturamento</Label>
-                                                        <div className="grid grid-cols-3 gap-2">
-                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
-                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Timing</span>
-                                                                <div className="grid grid-cols-1 gap-1">
+                                                    <div className="space-y-4">
+                                                        <Label className="text-[10px] font-bold text-muted-foreground/60 px-1 uppercase tracking-widest text-center block opacity-70">Configuração de Cobrança</Label>
+                                                        <div className="grid grid-cols-3 gap-3">
+                                                            {/* FLUXO */}
+                                                            <div className="p-3 rounded-2xl border border-border bg-background/40 space-y-3 shadow-inner">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center opacity-60">Fluxo</span>
+                                                                <div className="grid grid-cols-1 gap-1.5">
                                                                     {[
-                                                                        { value: 'start', label: 'Antecipado' },
-                                                                        { value: 'end', label: 'Postecipado' }
+                                                                        { value: 'start', label: 'No Início' },
+                                                                        { value: 'end', label: 'No Final' }
                                                                     ].map((t) => (
                                                                         <button
                                                                             key={t.value}
                                                                             type="button"
-                                                                            onClick={() => setRecurringTiming(t.value as any)}
+                                                                            onClick={() => setRecurringFluxo(t.value as any)}
                                                                             className={cn(
-                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
-                                                                                recurringTiming === t.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
+                                                                                "h-8 text-[10px] font-bold rounded-lg transition-all border",
+                                                                                recurringFluxo === t.value
+                                                                                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                                                                    : "bg-background/60 text-muted-foreground border-border hover:bg-muted"
                                                                             )}
                                                                         >
                                                                             {t.label}
@@ -1391,12 +1415,14 @@ export function EditProjectDialog({
                                                                     ))}
                                                                 </div>
                                                             </div>
-                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
-                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Modelo</span>
-                                                                <div className="grid grid-cols-1 gap-1">
+
+                                                            {/* FORMATO */}
+                                                            <div className="p-3 rounded-2xl border border-border bg-background/40 space-y-3 shadow-inner">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center opacity-60">Formato</span>
+                                                                <div className="grid grid-cols-1 gap-1.5">
                                                                     {[
-                                                                        { value: 'full', label: '100% Início' },
-                                                                        { value: 'split', label: '50/50' },
+                                                                        { value: 'full', label: 'Total 100%' },
+                                                                        { value: 'split', label: 'Meio a Meio' },
                                                                         { value: 'installments', label: 'Parcelado' }
                                                                     ].map((m) => (
                                                                         <button
@@ -1404,8 +1430,10 @@ export function EditProjectDialog({
                                                                             type="button"
                                                                             onClick={() => setRecurringPaymentModel(m.value as any)}
                                                                             className={cn(
-                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
-                                                                                recurringPaymentModel === m.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
+                                                                                "h-8 text-[10px] font-bold rounded-lg transition-all border",
+                                                                                recurringPaymentModel === m.value
+                                                                                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                                                                    : "bg-background/60 text-muted-foreground border-border hover:bg-muted"
                                                                             )}
                                                                         >
                                                                             {m.label}
@@ -1413,20 +1441,24 @@ export function EditProjectDialog({
                                                                     ))}
                                                                 </div>
                                                             </div>
-                                                            <div className="p-2.5 rounded-xl border border-border bg-background/30 space-y-2">
-                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center">Gatilho</span>
-                                                                <div className="grid grid-cols-1 gap-1">
+
+                                                            {/* INÍCIO */}
+                                                            <div className="p-3 rounded-2xl border border-border bg-background/40 space-y-3 shadow-inner">
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center opacity-60">Início</span>
+                                                                <div className="grid grid-cols-1 gap-1.5">
                                                                     {[
                                                                         { value: 'immediate', label: 'Imediato' },
-                                                                        { value: 'post_installments', label: 'Pós Setup' }
+                                                                        { value: 'post_installments', label: 'Pós Entrega' }
                                                                     ].map((t) => (
                                                                         <button
                                                                             key={t.value}
                                                                             type="button"
                                                                             onClick={() => setRecurringCondition(t.value as any)}
                                                                             className={cn(
-                                                                                "h-8 text-[9px] font-bold rounded-md transition-all border",
-                                                                                recurringCondition === t.value ? "bg-primary/20 border-primary text-primary" : "border-transparent text-muted-foreground"
+                                                                                "h-8 text-[10px] font-bold rounded-lg transition-all border",
+                                                                                recurringCondition === t.value
+                                                                                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                                                                    : "bg-background/60 text-muted-foreground border-border hover:bg-muted"
                                                                             )}
                                                                         >
                                                                             {t.label}
@@ -1436,42 +1468,18 @@ export function EditProjectDialog({
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    {recurringPaymentModel === 'installments' && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, scale: 0.95 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            className="p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between"
-                                                        >
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[10px] font-bold text-primary italic">Divisão da Mensalidade</span>
-                                                                <span className="text-[8px] text-muted-foreground">Cada ciclo será faturado em:</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <Input
-                                                                    type="number"
-                                                                    min={1}
-                                                                    max={12}
-                                                                    className="w-16 h-8 text-center text-xs font-bold bg-background/50 border-primary/20 focus:ring-1 focus:ring-primary/20"
-                                                                    value={recurringInstallmentCount}
-                                                                    onChange={(e) => setRecurringInstallmentCount(Number(e.target.value))}
-                                                                />
-                                                                <span className="text-[10px] font-bold text-muted-foreground">x</span>
-                                                            </div>
-                                                        </motion.div>
-                                                    )}
                                                 </motion.div>
                                             )}
                                         </div>
 
-                                        {/* SEÇÃO 3: PARCELAMENTO DO SETUP */}
-                                        <div className="space-y-4 p-5 rounded-2xl border border-border bg-muted/5 relative overflow-hidden group">
-                                            <div className="absolute top-0 left-0 w-1 h-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                                        {/* SEÇÃO 3: PARCELAMENTO DE SETUP */}
+                                        <div className="space-y-6 p-6 rounded-2xl border border-border bg-card relative overflow-hidden group shadow-sm shadow-black/5">
+                                            <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20 group-hover:bg-primary transition-all duration-300" />
                                             <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">3</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold">3</span>
                                                     <div className="space-y-0.5">
-                                                        <h3 className="text-sm font-bold tracking-tight">Parcelamento de Setup</h3>
+                                                        <h3 className="text-sm font-bold tracking-tight text-foreground">Parcelamento de Setup</h3>
                                                         <p className="text-[10px] text-muted-foreground">Configure as parcelas do saldo remanescente.</p>
                                                     </div>
                                                 </div>
@@ -1481,7 +1489,7 @@ export function EditProjectDialog({
                                                     size="sm"
                                                     onClick={() => setIsInstallmentEnabled(!isInstallmentEnabled)}
                                                     className={cn(
-                                                        "h-8 px-3 text-[10px] font-bold transition-all border",
+                                                        "h-8 px-4 text-[10px] font-bold transition-all border rounded-xl",
                                                         isInstallmentEnabled ? "bg-primary/10 text-primary border-primary/20" : "bg-muted/30 border-transparent hover:bg-muted/50"
                                                     )}
                                                 >
@@ -1493,37 +1501,37 @@ export function EditProjectDialog({
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: "auto", opacity: 1 }}
-                                                    className="space-y-4 overflow-hidden pt-2"
+                                                    className="space-y-6 overflow-hidden pt-2"
                                                 >
-                                                    <div className="flex gap-2 items-end">
+                                                    <div className="flex gap-3 items-end">
                                                         <div className="flex-1 space-y-2">
-                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Número de Parcelas</Label>
+                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Número de Parcelas</Label>
                                                             <Input
                                                                 type="number"
                                                                 min={1}
                                                                 max={24}
                                                                 value={installmentCount}
                                                                 onChange={(e) => setInstallmentCount(Number(e.target.value))}
-                                                                className="h-10 text-xs glass-light border-border focus:ring-1 focus:ring-primary/20"
+                                                                className="h-10 text-xs glass-light border-border focus:ring-1 focus:ring-primary/20 font-bold text-center"
                                                             />
                                                         </div>
                                                         <Button
                                                             type="button"
                                                             variant="outline"
                                                             onClick={generateInstallments}
-                                                            className="h-10 text-xs gap-2 border-border hover:bg-muted transition-all"
+                                                            className="h-10 text-xs gap-2 border-border hover:bg-muted transition-all px-4 font-bold uppercase tracking-tight"
                                                         >
                                                             <BadgePercent className="h-3.5 w-3.5" /> Gerar Parcelas
                                                         </Button>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
                                                         {installments.map((p, idx) => (
-                                                            <div key={idx} className="flex gap-2 p-3 rounded-xl bg-background/40 border border-border group hover:border-primary/20 transition-all shadow-sm">
-                                                                <div className="flex flex-col flex-1 gap-1">
-                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase">{idx + 1}ª Parcela</Label>
+                                                            <div key={idx} className="flex gap-3 p-4 rounded-xl bg-background/40 border border-border group hover:border-primary/30 transition-all shadow-sm">
+                                                                <div className="flex flex-col flex-1 gap-1.5">
+                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase opacity-70">{idx + 1}ª Parcela</Label>
                                                                     <div className="relative">
-                                                                        <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                                                                        <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground opacity-50" />
                                                                         <Input
                                                                             type="number"
                                                                             value={p.amount}
@@ -1532,12 +1540,12 @@ export function EditProjectDialog({
                                                                                 newP[idx].amount = Number(e.target.value);
                                                                                 setInstallments(newP);
                                                                             }}
-                                                                            className="h-8 pl-8 text-[11px] glass-light border-border focus:ring-1 focus:ring-primary/20"
+                                                                            className="h-10 pl-9 text-xs glass-light border-border focus:ring-1 focus:ring-primary/20 font-bold"
                                                                         />
                                                                     </div>
                                                                 </div>
-                                                                <div className="flex flex-col gap-1 w-28">
-                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase">Vencimento</Label>
+                                                                <div className="flex flex-col gap-1.5 w-32">
+                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase opacity-70">Vencimento</Label>
                                                                     <Input
                                                                         type="date"
                                                                         value={p.date}
@@ -1546,7 +1554,7 @@ export function EditProjectDialog({
                                                                             newP[idx].date = e.target.value;
                                                                             setInstallments(newP);
                                                                         }}
-                                                                        className="h-8 text-[11px] glass-light border-border px-2 [color-scheme:dark] focus:ring-1 focus:ring-primary/20"
+                                                                        className="h-10 text-[11px] glass-light border-border px-3 [color-scheme:dark] focus:ring-1 focus:ring-primary/20 font-medium"
                                                                     />
                                                                 </div>
                                                             </div>
@@ -1558,17 +1566,20 @@ export function EditProjectDialog({
                                     </div>
                                 )}
 
-                                {/* ══ TAREFAS ══════════════════════════════ */}
+                                {/* â•â• TAREFAS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
                                 {step === 4 && (
                                     <div className="space-y-6">
-                                        <h3 className="text-sm font-semibold tracking-tight">
-                                            Tarefas do Projeto
-                                        </h3>
+                                        <div className="flex items-center gap-3 mb-2 px-1">
+                                            <div className="h-6 w-1 bg-primary rounded-full opacity-50" />
+                                            <h3 className="text-sm font-bold tracking-tight text-foreground">
+                                                Tarefas do Projeto
+                                            </h3>
+                                        </div>
 
                                         <div className="flex gap-2">
                                             <Input
                                                 placeholder="Nova tarefa... (Enter para adicionar)"
-                                                className="glass-light border-border h-10 flex-1"
+                                                className="glass-light border-border h-11 flex-1 px-4 text-xs focus:ring-1 focus:ring-primary/20"
                                                 value={newTaskTitle}
                                                 onChange={(e) => setNewTaskTitle(e.target.value)}
                                                 onKeyDown={(e) => {
@@ -1581,7 +1592,7 @@ export function EditProjectDialog({
                                             <Button
                                                 type="button"
                                                 size="icon"
-                                                className="h-10 w-10 shrink-0"
+                                                className="h-11 w-11 shrink-0 rounded-xl bg-primary shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                                                 disabled={!newTaskTitle.trim() || addTaskMutation.isPending}
                                                 onClick={() =>
                                                     newTaskTitle.trim() &&
@@ -1591,35 +1602,48 @@ export function EditProjectDialog({
                                                 {addTaskMutation.isPending ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
-                                                    <Plus className="h-4 w-4" />
+                                                    <Plus className="h-5 w-5" />
                                                 )}
                                             </Button>
                                         </div>
 
-                                        <div className="space-y-2 mt-2">
+                                        <div className="space-y-2 mt-4">
                                             {loadingTasks ? (
-                                                <div className="flex items-center justify-center py-10">
-                                                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                                <div className="flex items-center justify-center py-20">
+                                                    <Loader2 className="h-6 w-6 animate-spin text-primary/40" />
                                                 </div>
                                             ) : projectTasks.length === 0 ? (
-                                                <div className="text-center py-10 border-2 border-dashed border-border rounded-xl">
-                                                    <ListTodo className="h-8 w-8 mx-auto opacity-10 mb-2" />
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Nenhuma tarefa neste projeto.
-                                                    </p>
-                                                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                                                        Adicione tarefas acima.
+                                                <div className="text-center py-16 border border-dashed border-border rounded-[24px] bg-muted/5 group">
+                                                    <div className="relative w-16 h-16 mx-auto mb-4 grayscale opacity-20 group-hover:grayscale-0 group-hover:opacity-40 transition-all duration-500">
+                                                        {/* METÁFORA VISUAL: MESA VAZIA */}
+                                                        <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-primary">
+                                                            <path d="M3 18h18M5 18v-4a2 2 0 012-2h10a2 2 0 012 2v4M8 12V8a1 1 0 011-1h6a1 1 0 011 1v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                                            <rect x="10" y="9" width="4" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.5" className="opacity-40" />
+                                                        </svg>
+                                                    </div>
+                                                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Mesa de trabalho limpa</p>
+                                                    <p className="text-[10px] text-muted-foreground/50 mt-1">
+                                                        Adicione a primeira tarefa para começar.
                                                     </p>
                                                 </div>
                                             ) : (
-                                                <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                                                <div className="grid grid-cols-1 gap-2.5 max-h-[440px] overflow-y-auto pr-1 custom-scrollbar min-h-[50px]">
                                                     {projectTasks.map((task: any) => (
                                                         <motion.div
                                                             key={task.id}
-                                                            initial={{ opacity: 0, y: 4 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card group hover:border-primary/20 transition-all shadow-sm"
+                                                            initial={{ opacity: 0, x: -4 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            className={cn(
+                                                                "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 group relative overflow-hidden",
+                                                                task.progress >= 100
+                                                                    ? "bg-muted/10 border-border/40 opacity-60"
+                                                                    : "bg-card border-border hover:border-primary/30 shadow-sm shadow-black/[0.02] hover:shadow-md hover:shadow-primary/[0.04]"
+                                                            )}
                                                         >
+                                                            {task.progress < 100 && (
+                                                                <div className="absolute top-0 left-0 w-1 h-full bg-primary/0 group-hover:bg-primary/20 transition-all" />
+                                                            )}
+
                                                             <button
                                                                 onClick={() =>
                                                                     toggleTaskDoneMutation.mutate({
@@ -1628,58 +1652,51 @@ export function EditProjectDialog({
                                                                     })
                                                                 }
                                                                 className={cn(
-                                                                    "w-4 h-4 rounded-full border-2 shrink-0 transition-all flex items-center justify-center",
+                                                                    "w-5 h-5 rounded-full border-2 shrink-0 transition-all flex items-center justify-center shadow-inner",
                                                                     task.progress >= 100
-                                                                        ? "bg-primary border-primary"
-                                                                        : "border-muted-foreground/40 hover:border-primary"
+                                                                        ? "bg-primary border-primary shadow-primary/20"
+                                                                        : "border-border bg-background group-hover:border-primary/40 hover:scale-110 active:scale-95"
                                                                 )}
                                                             >
                                                                 {task.progress >= 100 && (
-                                                                    <Check className="h-2.5 w-2.5 text-white" />
+                                                                    <Check className="h-3 w-3 text-white" strokeWidth={3} />
                                                                 )}
                                                             </button>
+
                                                             <div className="flex-1 min-w-0">
                                                                 <span
                                                                     className={cn(
-                                                                        "text-sm font-medium truncate block",
+                                                                        "text-[13px] font-semibold tracking-tight block transition-all",
                                                                         task.progress >= 100
-                                                                            ? "text-muted-foreground"
-                                                                            : "text-foreground"
+                                                                            ? "text-muted-foreground/60 line-through"
+                                                                            : "text-foreground group-hover:text-primary transition-colors"
                                                                     )}
                                                                 >
                                                                     {task.title}
                                                                 </span>
                                                                 {task.due_date && (
-                                                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                                                                        <Calendar className="h-2.5 w-2.5" />
-                                                                        {new Date(task.due_date).toLocaleDateString(
-                                                                            "pt-BR"
-                                                                        )}
+                                                                    <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-1.5 mt-1 opacity-70">
+                                                                        <Calendar className="h-3 w-3" />
+                                                                        {new Date(task.due_date).toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' })}
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span
-                                                                    className={cn(
-                                                                        "text-[9px] font-medium px-1.5 py-0.5 rounded-full",
-                                                                        task.priority === "high"
-                                                                            ? "bg-red-500/10 text-red-400"
-                                                                            : task.priority === "medium"
-                                                                                ? "bg-yellow-500/10 text-yellow-500"
-                                                                                : "bg-muted text-muted-foreground"
-                                                                    )}
-                                                                >
-                                                                    {task.priority === "high"
-                                                                        ? "Alta"
+
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={cn(
+                                                                    "px-2 py-0.5 rounded-lg border text-[8px] font-black uppercase tracking-tighter",
+                                                                    task.priority === "high"
+                                                                        ? "bg-red-500/5 border-red-500/10 text-red-500"
                                                                         : task.priority === "medium"
-                                                                            ? "Méd"
-                                                                            : "Baixa"}
-                                                                </span>
+                                                                            ? "bg-orange-500/5 border-orange-500/10 text-orange-500"
+                                                                            : "bg-muted/40 border-border text-muted-foreground"
+                                                                )}>
+                                                                    {task.priority === "high" ? "ALTA" : task.priority === "medium" ? "MÉD" : "BAIXA"}
+                                                                </div>
+
                                                                 <button
-                                                                    onClick={() =>
-                                                                        deleteTaskMutation.mutate(task.id)
-                                                                    }
-                                                                    className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+                                                                    onClick={() => deleteTaskMutation.mutate(task.id)}
+                                                                    className="text-muted-foreground/40 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-destructive/5 rounded-md"
                                                                 >
                                                                     <Trash2 className="h-3.5 w-3.5" />
                                                                 </button>
@@ -1691,17 +1708,14 @@ export function EditProjectDialog({
                                         </div>
 
                                         {projectTasks.length > 0 && (
-                                            <div className="pt-2 border-t border-border">
-                                                <div className="flex justify-between text-xs text-muted-foreground">
-                                                    <span>{projectTasks.length} tarefas no total</span>
-                                                    <span className="text-primary font-medium">
-                                                        {
-                                                            projectTasks.filter(
-                                                                (t: any) => t.progress >= 100
-                                                            ).length
-                                                        }{" "}
-                                                        concluídas
-                                                    </span>
+                                            <div className="pt-4 border-t border-border/40 mt-2">
+                                                <div className="flex justify-between items-center px-1">
+                                                    <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{projectTasks.length} TAREFAS ATIVAS</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
+                                                            {projectTasks.filter((t: any) => t.progress >= 100).length} CONCLUÍDAS
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}

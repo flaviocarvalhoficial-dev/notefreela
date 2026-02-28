@@ -172,36 +172,29 @@ export default function Financeiro() {
 
             const matchesStatus = statusFilter === "all" || payStatus === statusFilter;
 
-            const hasInstallmentInMonth = installments.some((c: any) => {
-                let targetMonth = c.date.substring(0, 7);
-                const day = parseInt(c.date.split('-')[2]);
-                if (day <= 10 && p.deadline) {
-                    const dDate = toValidDate(p.deadline);
-                    const cDate = toValidDate(c.date);
-                    if (dDate && cDate) {
-                        const prevMonthDate = new Date(cDate.getFullYear(), cDate.getMonth() - 1, 1);
-                        const prevMonthStr = prevMonthDate.toISOString().substring(0, 7);
-                        if (prevMonthStr === dDate.toISOString().substring(0, 7)) targetMonth = prevMonthStr;
-                    }
-                }
-                return isInSelectedMonth(targetMonth, selectedMonth);
-            });
+            const hasInstallmentInMonth = installments.some((c: any) =>
+                isInSelectedMonth(c.date, selectedMonth)
+            );
+
+            const hasNewInstallmentInMonth = ((p as any).installments || []).some((i: any) =>
+                isInSelectedMonth(i.due_date, selectedMonth)
+            );
 
             const hasRecurringInMonth = (() => {
-                const isRecurringActive = (p as any).billing_type === "recorrente" && (p as any).contract_status === "active";
+                const isRecurringActive = (p as any).billing_type === "recorrente" && (p as any).contract_status !== "expired";
                 if (!isRecurringActive) return false;
 
-                let curBillingDate = (p as any).next_billing_date;
+                let curDateStr = (p as any).next_billing_date || p.deadline || p.created_at;
                 const duration = billingConfig?.contractDuration || 12;
 
                 for (let i = 0; i < duration; i++) {
-                    if (!curBillingDate) break;
-                    if (isInSelectedMonth(curBillingDate, selectedMonth)) return true;
+                    if (!curDateStr) break;
+                    if (isInSelectedMonth(curDateStr, selectedMonth)) return true;
 
-                    const nextDateObj = toValidDate(curBillingDate + 'T12:00:00');
+                    const nextDateObj = toValidDate(curDateStr + 'T12:00:00');
                     if (nextDateObj) {
                         nextDateObj.setMonth(nextDateObj.getMonth() + 1);
-                        curBillingDate = safeToISOString(nextDateObj)?.split('T')[0] || null;
+                        curDateStr = safeToISOString(nextDateObj)?.split('T')[0] || null;
                     } else { break; }
                 }
                 return false;
@@ -211,6 +204,7 @@ export default function Financeiro() {
                 isInSelectedMonth(p.created_at, selectedMonth) ||
                 isInSelectedMonth(p.deadline, selectedMonth) ||
                 hasInstallmentInMonth ||
+                hasNewInstallmentInMonth ||
                 hasRecurringInMonth;
 
             return matchesSearch && matchesStatus && matchesMonth;
@@ -753,65 +747,113 @@ export default function Financeiro() {
                             );
                         })}
 
-                        {activeStatDetail === 'provisioned' && (financialStats.provisionedItems?.length || 0) > 0 ? (
-                            financialStats.provisionedItems?.map(item => (
-                                <div key={item.id} className="p-3 rounded-md bg-muted/5 border border-border flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Badge variant="outline" className={cn(
-                                                "text-[8px] uppercase px-1 h-3.5",
-                                                item.type === 'recorrente' ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground"
-                                            )}>
-                                                {item.type}
-                                            </Badge>
-                                            <p className="text-[10px] font-medium text-foreground truncate">{item.projectName}</p>
-                                        </div>
-                                        <p className="text-[11px] font-medium text-muted-foreground leading-tight">{item.title}</p>
-                                        <p className="text-[9px] text-muted-foreground/60 mt-1">Data prevista: {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                        {activeStatDetail === 'provisioned' && (
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between mb-6">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Expectativa Mensal</p>
+                                        <p className="text-2xl font-medium tabular-nums text-foreground tracking-tight">
+                                            {formatCurrency(financialStats.provisionedItems.reduce((acc, curr) => acc + curr.amount, 0))}
+                                        </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-medium tabular-nums text-primary">
-                                            {formatCurrency(item.amount)}
-                                        </p>
-                                        <p className="text-[9px] text-muted-foreground">A receber</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Total de Itens</p>
+                                        <p className="text-xl font-medium text-muted-foreground">{financialStats.provisionedItems.length}</p>
                                     </div>
                                 </div>
-                            ))
-                        ) : activeStatDetail === 'provisioned' && (
-                            <div className="text-center py-10 space-y-2">
-                                <DollarSign className="h-8 w-8 text-muted-foreground/20 mx-auto" />
-                                <p className="text-xs text-muted-foreground">Nenhuma provisão para este período</p>
+
+                                {financialStats.provisionedItems.length > 0 ? (
+                                    financialStats.provisionedItems.map(item => {
+                                        const isVirtual = item.id.toString().startsWith('virtual');
+                                        return (
+                                            <div key={item.id} className={cn(
+                                                "p-4 rounded-xl border transition-all flex items-center justify-between group",
+                                                isVirtual ? "bg-muted/5 border-border/40 border-dashed" : "bg-card border-border hover:border-primary/30"
+                                            )}>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className={cn(
+                                                            "p-1.5 rounded-md",
+                                                            item.type === 'recorrente' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                                        )}>
+                                                            {item.type === 'recorrente' ? <Clock className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-[9px] font-bold text-muted-foreground uppercase truncate tracking-wider">{item.projectName}</p>
+                                                            <p className="text-[13px] font-medium text-foreground truncate leading-none mt-0.5">{item.title}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <p className="text-[10px] font-medium text-muted-foreground flex items-center gap-1.5">
+                                                            {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}
+                                                        </p>
+                                                        {isVirtual && (
+                                                            <span className="text-[8px] font-bold text-primary/40 uppercase border border-primary/10 px-1 rounded bg-primary/5">Projetado</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right pl-4">
+                                                    <p className="text-base font-medium tabular-nums text-primary leading-none mb-1">
+                                                        {formatCurrency(item.amount)}
+                                                    </p>
+                                                    <p className="text-[9px] font-medium text-muted-foreground uppercase opacity-60">A receber</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="text-center py-10 space-y-2">
+                                        <DollarSign className="h-8 w-8 text-muted-foreground/20 mx-auto" />
+                                        <p className="text-xs text-muted-foreground">Nenhuma provisão identificada</p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {activeStatDetail === 'income' && (financialStats.incomeItems?.length || 0) > 0 ? (
-                            financialStats.incomeItems?.map(item => (
-                                <div key={item.id} className="p-3 rounded-md bg-muted/5 border border-border flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Badge variant="outline" className={cn(
-                                                "text-[8px] uppercase px-1 h-3.5",
-                                                item.type === 'recorrente' ? "bg-primary/10 text-primary border-primary/20" : "bg-muted"
-                                            )}>
-                                                {item.type}
-                                            </Badge>
-                                            <p className="text-[10px] font-medium text-foreground truncate">{item.projectName}</p>
-                                        </div>
-                                        <p className="text-[11px] font-medium text-muted-foreground leading-tight">{item.title}</p>
-                                        <p className="text-[9px] text-muted-foreground/60 mt-1">Recebido em: {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                        {activeStatDetail === 'income' && (
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between mb-6">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Faturamento Realizado</p>
+                                        <p className="text-2xl font-medium tabular-nums text-foreground tracking-tight">
+                                            {formatCurrency(financialStats.incomeItems.reduce((acc, curr) => acc + curr.amount, 0))}
+                                        </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-medium tabular-nums text-primary">
-                                            {formatCurrency(item.amount)}
-                                        </p>
-                                        <p className="text-[9px] text-muted-foreground italic">recebido</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Recebimentos</p>
+                                        <p className="text-xl font-medium text-muted-foreground">{financialStats.incomeItems.length}</p>
                                     </div>
                                 </div>
-                            ))
-                        ) : activeStatDetail === 'income' && (
-                            <div className="text-center py-10 space-y-2">
-                                <CheckCircle2 className="h-8 w-8 text-muted-foreground/20 mx-auto" />
-                                <p className="text-xs text-muted-foreground">Nenhum recebimento confirmado neste período</p>
+
+                                {(financialStats.incomeItems?.length || 0) > 0 ? (
+                                    financialStats.incomeItems?.map(item => (
+                                        <div key={item.id} className="p-4 rounded-xl border border-border bg-card flex items-center justify-between group hover:border-primary/30 transition-all">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <div className="p-1.5 rounded-md bg-primary/5 text-primary/60">
+                                                        <CheckCircle2 className="h-3 w-3" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-[9px] font-bold text-muted-foreground uppercase truncate tracking-wider">{item.projectName}</p>
+                                                        <p className="text-[13px] font-medium text-foreground truncate leading-none mt-0.5">{item.title}</p>
+                                                    </div>
+                                                </div>
+                                                <p className="text-[10px] font-medium text-muted-foreground">Recebido em: {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                                            </div>
+                                            <div className="text-right pl-4">
+                                                <p className="text-base font-medium tabular-nums text-primary leading-none mb-1">
+                                                    {formatCurrency(item.amount)}
+                                                </p>
+                                                <p className="text-[9px] font-bold text-primary/60 uppercase italic tracking-tighter">Liquidado</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-10 space-y-2">
+                                        <CheckCircle2 className="h-8 w-8 text-muted-foreground/20 mx-auto" />
+                                        <p className="text-xs text-muted-foreground">Nenhum recebimento confirmado</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
