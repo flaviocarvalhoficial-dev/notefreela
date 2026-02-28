@@ -54,8 +54,29 @@ const Documentos = () => {
         ];
     }, [documents]);
 
-    const handleDownload = (doc: any) => {
-        window.open(doc.url, '_blank');
+    const handleView = (doc: any) => {
+        if (doc.url) {
+            window.open(doc.url, '_blank', 'noreferrer');
+        }
+    };
+
+    const handleDownload = async (doc: any) => {
+        try {
+            const response = await fetch(doc.url);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${doc.title}.${doc.type.toLowerCase()}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Downlaod failed:", error);
+            // Fallback: Just open it
+            window.open(doc.url, '_blank');
+        }
     };
 
     return (
@@ -171,12 +192,16 @@ const Documentos = () => {
                                                     className="group hover:bg-white/[0.02] transition-colors cursor-default"
                                                 >
                                                     <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="h-10 w-10 rounded-md bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors border border-border">
+                                                        <div
+                                                            className="flex items-center gap-4 cursor-pointer group/item"
+                                                            onClick={() => handleView(doc)}
+                                                            title="Clique para visualizar no navegador"
+                                                        >
+                                                            <div className="h-10 w-10 rounded-md bg-muted/50 flex items-center justify-center text-muted-foreground group-hover/item:bg-primary/5 group-hover/item:text-primary transition-colors border border-border">
                                                                 <FileText className="h-5 w-5" />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-medium text-foreground truncate tracking-tight">{doc.title}</p>
+                                                                <p className="text-sm font-medium text-foreground truncate tracking-tight group-hover/item:text-primary transition-colors">{doc.title}</p>
                                                                 <p className="text-[10px] font-medium text-primary/60  tracking-tight truncate">{doc.projectName}</p>
                                                             </div>
                                                         </div>
@@ -196,7 +221,11 @@ const Documentos = () => {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md"
-                                                                onClick={() => handleDownload(doc)}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDownload(doc);
+                                                                }}
+                                                                title="Baixar arquivo"
                                                             >
                                                                 <Download className="h-4 w-4" />
                                                             </Button>

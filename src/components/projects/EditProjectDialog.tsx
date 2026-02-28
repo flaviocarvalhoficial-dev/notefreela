@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { addMonths, format } from "date-fns";
 import {
     Loader2, Save, Plus, Briefcase, DollarSign, ListTodo,
     Settings2, Check, Trash2, GripVertical, Calendar, Maximize2, Minimize2,
@@ -63,6 +64,8 @@ export function EditProjectDialog({
     onOpenChange: setExternalOpen,
     trigger
 }: EditProjectDialogProps) {
+    if (!project) return null;
+
     const [internalOpen, setInternalOpen] = useState(false);
     const isControlled = externalOpen !== undefined;
     const open = isControlled ? externalOpen : internalOpen;
@@ -74,29 +77,29 @@ export function EditProjectDialog({
     const [isMaximized, setIsMaximized] = useState(false);
 
     // ── Geral ────────────────────────────────────────────────
-    const [newName, setNewName] = useState(project.name);
-    const [newDesc, setNewDesc] = useState(project.description || "");
-    const [newClient, setNewClient] = useState(project.client_name || "");
-    const [newManager, setNewManager] = useState(project.manager_name || "");
-    const [newIcon, setNewIcon] = useState(project.avatar_emoji || "Briefcase");
+    const [newName, setNewName] = useState(project?.name || "");
+    const [newDesc, setNewDesc] = useState(project?.description || "");
+    const [newClient, setNewClient] = useState(project?.client_name || "");
+    const [newManager, setNewManager] = useState(project?.manager_name || "");
+    const [newIcon, setNewIcon] = useState(project?.avatar_emoji || "Briefcase");
     const [startDate, setStartDate] = useState(
-        project.created_at ? new Date(project.created_at).toISOString().split("T")[0] : ""
+        project?.created_at ? new Date(project.created_at).toISOString().split("T")[0] : ""
     );
-    const [newDeadline, setNewDeadline] = useState(project.deadline || "");
+    const [newDeadline, setNewDeadline] = useState(project?.deadline || "");
 
     // ── Financeiro ───────────────────────────────────────────
-    const [newValue, setNewValue] = useState(project.value || 0);
-    const [newAdvance, setNewAdvance] = useState(project.advance_payment || 0);
-    const [newPaymentMethod, setNewPaymentMethod] = useState(project.payment_method || "pix");
-    const [newPaymentStatus, setNewPaymentStatus] = useState(project.payment_status || "pending");
-    const [services, setServices] = useState<{ name: string; price: number }[]>(project.services || []);
+    const [newValue, setNewValue] = useState(project?.value || 0);
+    const [newAdvance, setNewAdvance] = useState(project?.advance_payment || 0);
+    const [newPaymentMethod, setNewPaymentMethod] = useState(project?.payment_method || "pix");
+    const [newPaymentStatus, setNewPaymentStatus] = useState(project?.payment_status || "pending");
+    const [services, setServices] = useState<{ name: string; price: number }[]>(project?.services || []);
     const [serviceInput, setServiceInput] = useState("");
     const [servicePriceInput, setServicePriceInput] = useState<number | "">("");
     const [billingType, setBillingType] = useState<"pontual" | "recorrente">(
-        (project.billing_type as any) || "pontual"
+        (project?.billing_type as any) || "pontual"
     );
-    const [serviceType, setServiceType] = useState<string>(project.service_type || "");
-    const [billingCycle, setBillingCycle] = useState<string>(project.billing_cycle || "mensal");
+    const [serviceType, setServiceType] = useState<string>(project?.service_type || "");
+    const [billingCycle, setBillingCycle] = useState<string>(project?.billing_cycle || "mensal");
     const [nextBillingDate, setNextBillingDate] = useState(
         project.next_billing_date
             ? new Date(project.next_billing_date).toISOString().split("T")[0]
@@ -119,6 +122,28 @@ export function EditProjectDialog({
     const [recurringCondition, setRecurringCondition] = useState<'immediate' | 'post_installments'>('immediate');
     const [recurringPaymentModel, setRecurringPaymentModel] = useState<'full' | 'split' | 'installments'>('full');
     const [recurringInstallmentCount, setRecurringInstallmentCount] = useState(1);
+    const [recurringServices, setRecurringServices] = useState<{ name: string; price: number }[]>([]);
+    const [recServiceInput, setRecServiceInput] = useState("");
+    const [recServicePriceInput, setRecServicePriceInput] = useState<number | "">("");
+
+    const addRecurringService = () => {
+        if (!recServiceInput) return;
+        const price = Number(recServicePriceInput) || 0;
+        const newServices = [...recurringServices, { name: recServiceInput, price }];
+        setRecurringServices(newServices);
+        setRecServiceInput("");
+        setRecServicePriceInput("");
+    };
+
+    const removeRecurringService = (index: number) => {
+        setRecurringServices(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Auto-calculate recurring amount from services
+    useEffect(() => {
+        const total = recurringServices.reduce((acc, curr) => acc + curr.price, 0);
+        setRecurringAmount(total);
+    }, [recurringServices]);
 
     // ── Parcelamento status ───────────────────────────────────
     const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
@@ -142,6 +167,32 @@ export function EditProjectDialog({
 
     const [isEarlyPayment, setIsEarlyPayment] = useState(false);
     const [contractDuration, setContractDuration] = useState(12);
+    const [recurringAmount, setRecurringAmount] = useState<number>(0);
+
+    // Fetch billing agreement to populate specialized fields
+    const { data: billingAgreement } = useQuery({
+        queryKey: ["billing-agreement", project.id],
+        queryFn: async () => {
+            const { data, error } = await (supabase as any)
+                .from("billing_agreements")
+                .select("*")
+                .eq("project_id", project.id)
+                .single();
+            if (error && error.code !== 'PGRST116') throw error;
+            return data;
+        },
+        enabled: open
+    });
+
+    useEffect(() => {
+        if (billingAgreement) {
+            setContractDuration(billingAgreement.months || 12);
+            setRecurringAmount(Number(billingAgreement.monthly_amount) || 0);
+            setRecurringTiming(billingAgreement.timing || 'start');
+            setRecurringCondition(billingAgreement.trigger || 'immediate');
+            setRecurringServices(billingAgreement.recurring_services || []);
+        }
+    }, [billingAgreement]);
 
     const handlePresetChange = (preset: 'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom') => {
         setPaymentPreset(preset);
@@ -389,7 +440,11 @@ export function EditProjectDialog({
 
     const updateProjectMutation = useMutation({
         mutationFn: async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Usuário não autenticado");
+
             const finalServices = [
+
                 ...services.filter(s => s.name !== "__billing_config__"),
                 {
                     name: "__billing_config__",
@@ -431,31 +486,100 @@ export function EditProjectDialog({
                 .eq("id", project.id);
             if (error) throw error;
 
-            // Manage Installments in project_costs - Arthur Marques Sign
-            // 1. Always clear existing ones to prevent duplicates when updating
-            await supabase
-                .from("project_costs")
+            // 5. Create Billing Agreement & Installments (MIGRATION TO NEW MODEL) - Arthur Marques Sign
+            const billingModel = paymentPreset === 'full' ? '100inicio' :
+                paymentPreset === '50_50' ? '50_50' :
+                    paymentPreset === 'end_of_month' ? '100fim' :
+                        'parcelado';
+
+            // 5a. Upsert Billing Agreement
+            const { data: agreement, error: agreementError } = await (supabase as any)
+                .from("billing_agreements")
+                .upsert({
+                    id: billingAgreement?.id, // Se já existir um ID, ele atualiza o correto
+                    project_id: project.id,
+                    user_id: user.id,
+                    model: billingModel,
+                    trigger: recurringCondition,
+                    cycle: billingType,
+                    months: contractDuration,
+                    monthly_amount: recurringAmount,
+                    recurring_services: recurringServices,
+                    entry_amount: Number(newAdvance) || 0,
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (agreementError) {
+                console.error("Erro no Billing Agreement:", agreementError);
+                throw agreementError;
+            }
+
+            // 5b. Clear OLD UNPAID installments (provisionado)
+            await (supabase as any)
+                .from("installments")
                 .delete()
                 .eq("project_id", project.id)
-                .eq("category", "receita_parcela");
+                .eq("status", "provisionado");
 
-            // 2. Insert new ones if enabled
+            // 5c. Create NEW Installments
+            const installmentSeeds: any[] = [];
+
+            // Advance/Sinal as a paid installment (if not already recorded)
+            // Note: In edit mode, we might want to check if it already exists, 
+            // but for simplicity, we are regenerating the planned ones.
+            // PAID installments are usually kept.
+
             if (isInstallmentEnabled && installments.length > 0) {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) throw new Error("Usuário não autenticado.");
-
-                const costsToInsert = installments.map((p, idx) => ({
-                    title: `Parcela ${idx + 1}/${installments.length} - ${newName}`,
-                    amount: p.amount,
-                    date: p.date,
-                    category: "receita_parcela",
-                    project_id: project.id,
-                    user_id: user.id
-                }));
-
-                const { error: costError } = await supabase.from("project_costs").insert(costsToInsert);
-                if (costError) throw costError;
+                installments.forEach((inst, idx) => {
+                    installmentSeeds.push({
+                        project_id: project.id,
+                        billing_agreement_id: agreement.id,
+                        user_id: user.id,
+                        due_date: inst.date,
+                        amount: inst.amount,
+                        status: 'provisionado',
+                        origin_label: `Configuração - Parcela ${idx + 1}/${installments.length}`
+                    });
+                });
             }
+
+            // Group 2: Recurring installments (if active)
+            if (billingType === 'recorrente' && contractDuration > 0) {
+                const startDateStr = nextBillingDate || new Date().toISOString().split('T')[0];
+                let baseDate = new Date(startDateStr + 'T12:00:00');
+
+                // If trigger is "Pós Setup" (post_installments), start after the last setup installment
+                if (recurringCondition === 'post_installments' && installmentSeeds.length > 0) {
+                    const lastSetupDate = new Date(installmentSeeds[installmentSeeds.length - 1].due_date + 'T12:00:00');
+                    baseDate = addMonths(lastSetupDate, 1);
+                }
+
+                for (let i = 0; i < contractDuration; i++) {
+                    const d = addMonths(baseDate, i);
+                    const amount = Number(recurringAmount) || 0;
+
+                    installmentSeeds.push({
+                        project_id: project.id,
+                        billing_agreement_id: agreement.id,
+                        user_id: user.id,
+                        due_date: format(d, 'yyyy-MM-dd'),
+                        amount: amount,
+                        status: 'provisionado',
+                        origin_label: `Mensalidade ${i + 1}/${contractDuration}`
+                    });
+                }
+            }
+
+            if (installmentSeeds.length > 0) {
+                const { error: instError } = await (supabase as any)
+                    .from("installments")
+                    .insert(installmentSeeds);
+                if (instError) throw instError;
+            }
+
+            return { id: project.id, name: newName };
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -565,8 +689,17 @@ export function EditProjectDialog({
 
 
 
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen);
+        if (!newOpen) {
+            // Limpa estados temporários de input ao fechar
+            setRecServiceInput("");
+            setRecServicePriceInput("");
+        }
+    };
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
             <DialogContent
                 className={cn(
@@ -1131,9 +1264,62 @@ export function EditProjectDialog({
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: "auto", opacity: 1 }}
-                                                    className="space-y-4 pt-2 overflow-hidden border-t border-primary/10"
+                                                    className="space-y-4 pt-2 border-t border-primary/10"
                                                 >
-                                                    <div className="grid grid-cols-3 gap-2">
+                                                    <div className="pt-2 space-y-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <Briefcase className="h-3.5 w-3.5 text-primary/60" />
+                                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Escopo Recorrente</h4>
+                                                        </div>
+
+                                                        <div className="flex gap-2">
+                                                            <Input
+                                                                placeholder="Serviço (ex: Manutenção)"
+                                                                className="glass-light border-primary/20 h-9 text-xs flex-1 px-3"
+                                                                value={recServiceInput}
+                                                                onChange={(e) => setRecServiceInput(e.target.value)}
+                                                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRecurringService())}
+                                                            />
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="R$ 0"
+                                                                className="glass-light border-primary/20 h-9 text-xs w-24 px-3"
+                                                                value={recServicePriceInput}
+                                                                onChange={(e) => setRecServicePriceInput(e.target.value ? Number(e.target.value) : "")}
+                                                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRecurringService())}
+                                                            />
+                                                            <Button type="button" onClick={addRecurringService} size="sm" className="h-9 w-9 p-0 bg-primary/20 text-primary hover:bg-primary/30 border-none shadow-none">
+                                                                <Plus className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+
+                                                        <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1 min-h-[10px]">
+                                                            {recurringServices.length > 0 ? (
+                                                                recurringServices.map((svc, i) => (
+                                                                    <div key={i} className="flex items-center justify-between bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 text-[11px] transition-all hover:bg-primary/10">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                                                                            <span className="font-medium text-foreground/80">{svc.name}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className="text-primary font-bold">
+                                                                                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(svc.price)}
+                                                                            </span>
+                                                                            <button type="button" onClick={() => removeRecurringService(i)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
+                                                                                <Plus className="h-3 w-3 rotate-45" />
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                ))
+                                                            ) : (
+                                                                <div className="text-center py-4 border border-dashed border-primary/10 rounded-lg">
+                                                                    <p className="text-[10px] text-muted-foreground/60 italic">Nenhum serviço recorrente adicionado</p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-4 gap-2 border-t border-primary/10 pt-4">
                                                         <div className="space-y-1.5">
                                                             <Label className="text-[10px] font-bold text-muted-foreground/60">Ciclo</Label>
                                                             <Select value={billingCycle} onValueChange={setBillingCycle}>
@@ -1166,6 +1352,18 @@ export function EditProjectDialog({
                                                                 value={contractDuration}
                                                                 onChange={(e) => setContractDuration(Number(e.target.value))}
                                                             />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60">Valor Mensal</Label>
+                                                            <div className="relative">
+                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground">R$</span>
+                                                                <Input
+                                                                    type="number"
+                                                                    className="glass-light border-primary/20 h-10 text-xs text-center font-bold pl-6"
+                                                                    value={recurringAmount}
+                                                                    onChange={(e) => setRecurringAmount(Number(e.target.value))}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
 

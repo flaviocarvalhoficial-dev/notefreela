@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { addMonths, format } from "date-fns";
 import { Plus, Loader2, ChevronRight, ChevronLeft, Check, ListTodo, User, Calendar, Briefcase, Building2, DollarSign, Maximize2, Minimize2, Expand, Zap, BadgePercent, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { logActivity } from "@/utils/activities";
 import { IconPicker } from "./IconPicker";
@@ -74,6 +74,29 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [isEarlyPayment, setIsEarlyPayment] = useState(false);
     const [contractDuration, setContractDuration] = useState(12);
     const [recurringInstallmentCount, setRecurringInstallmentCount] = useState(1);
+    const [recurringAmount, setRecurringAmount] = useState<number>(0);
+    const [recurringServices, setRecurringServices] = useState<{ name: string; price: number }[]>([]);
+    const [recServiceInput, setRecServiceInput] = useState("");
+    const [recServicePriceInput, setRecServicePriceInput] = useState<number | "">("");
+
+    const addRecurringService = () => {
+        if (!recServiceInput) return;
+        const price = Number(recServicePriceInput) || 0;
+        const newServices = [...recurringServices, { name: recServiceInput, price }];
+        setRecurringServices(newServices);
+        setRecServiceInput("");
+        setRecServicePriceInput("");
+    };
+
+    const removeRecurringService = (index: number) => {
+        setRecurringServices(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Auto-calculate recurring amount from services
+    useEffect(() => {
+        const total = recurringServices.reduce((acc, curr) => acc + curr.price, 0);
+        setRecurringAmount(total);
+    }, [recurringServices]);
 
     // Parcelamento status
     const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
@@ -116,6 +139,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setIsEarlyPayment(false);
         setContractDuration(12);
         setRecurringInstallmentCount(1);
+        setRecurringAmount(0);
+        setRecurringServices([]);
+        setRecServiceInput("");
+        setRecServicePriceInput("");
     };
 
     const generateInstallments = () => {
@@ -342,22 +369,121 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                 if (tError) throw tError;
             }
 
-            // 5. Create Installments as Costs if enabled
-            if (isInstallmentEnabled && installments.length > 0) {
-                const costsToInsert = installments.map((p, idx) => ({
-                    title: `Parcela ${idx + 1}/${installments.length} - ${newName}`,
-                    amount: p.amount,
-                    date: p.date,
-                    category: "receita_parcela",
+            // 5. Create Billing Agreement & Installments
+            const billingModel = paymentPreset === 'full' ? '100inicio' :
+                paymentPreset === '50_50' ? '50_50' :
+                    paymentPreset === 'end_of_month' ? '100fim' :
+                        'parcelado';
+
+            const { data: agreement, error: agreementError } = await (supabase as any)
+                .from("billing_agreements")
+                .insert({
                     project_id: projectData.id,
-                    user_id: user.id
+                    user_id: user.id,
+                    model: billingModel,
+                    trigger: recurringCondition,
+                    cycle: billingType,
+                    months: contractDuration,
+                    monthly_amount: recurringAmount,
+                    recurring_services: recurringServices,
+                    entry_amount: Number(newAdvance) || 0,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (agreementError) throw agreementError;
+
+            // 6. Create Installments
+            const installmentSeeds: any[] = [];
+
+            // Advance/Sinal as a paid installment
+            if (Number(newAdvance) > 0) {
+                installmentSeeds.push({
+                    project_id: projectData.id,
+                    billing_agreement_id: agreement.id,
+                    user_id: user.id,
+                    due_date: startDate || new Date().toISOString().split('T')[0],
+                    amount: Number(newAdvance),
+                    status: 'recebido',
+                    origin_label: 'Sinal / Adiantamento'
+                });
+            }
+
+            // Planned installments
+            if (isInstallmentEnabled && installments.length > 0) {
+                installments.forEach((inst, idx) => {
+                    installmentSeeds.push({
+                        project_id: projectData.id,
+                        billing_agreement_id: agreement.id,
+                        user_id: user.id,
+                        due_date: inst.date,
+                        amount: inst.amount,
+                        status: 'provisionado',
+                        origin_label: `Configuração - Parcela ${idx + 1}/${installments.length}`
+                    });
+                });
+            }
+
+            // Group 2: Recurring installments (if active)
+            if (billingType === 'recorrente' && contractDuration > 0) {
+                const startDateStr = nextBillingDate || new Date().toISOString().split('T')[0];
+                let baseDate = new Date(startDateStr + 'T12:00:00');
+
+                // If trigger is "Pós Setup" (condition: post_installments/pos_setup), start after the last setup installment
+                if (recurringCondition === 'post_installments' && installmentSeeds.length > 0) {
+                    const lastSetupDate = new Date(installmentSeeds[installmentSeeds.length - 1].due_date + 'T12:00:00');
+                    baseDate = addMonths(lastSetupDate, 1);
+                }
+
+                for (let i = 0; i < contractDuration; i++) {
+                    const d = addMonths(baseDate, i);
+                    const amount = Number(recurringAmount) || 0;
+
+                    installmentSeeds.push({
+                        project_id: projectData.id,
+                        billing_agreement_id: agreement.id,
+                        user_id: user.id,
+                        due_date: format(d, 'yyyy-MM-dd'),
+                        amount: amount,
+                        status: 'provisionado',
+                        origin_label: `Mensalidade ${i + 1}/${contractDuration}`
+                    });
+                }
+            }
+
+            // Also handle recurring installments if it's already recurring
+            // (Usually recurring starts after setup, but let's at least seed the first one if applicable)
+
+            const { data: createdInstallments, error: instError } = await (supabase as any)
+                .from("installments")
+                .insert(installmentSeeds)
+                .select();
+
+            if (instError) throw instError;
+
+            // 7. Create Transactions for PAID installments
+            const paidInstallments = (createdInstallments || []).filter((i: any) => i.status === 'recebido');
+            if (paidInstallments.length > 0) {
+                const transactionsToInsert = paidInstallments.map((i: any) => ({
+                    project_id: projectData.id,
+                    installment_id: i.id,
+                    user_id: user.id,
+                    amount: i.amount,
+                    payment_date: i.due_date,
+                    payment_method: newPaymentMethod,
+                    description: `Recebimento: ${i.origin_label}`
                 }));
 
-                const { error: costError } = await supabase.from("project_costs").insert(costsToInsert);
-                if (costError) throw costError;
+                const { error: transError } = await (supabase as any)
+                    .from("transactions")
+                    .insert(transactionsToInsert);
+
+                if (transError) throw transError;
             }
 
             return projectData;
+
         },
         onSuccess: (project) => {
             queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -886,14 +1012,61 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     animate={{ height: "auto", opacity: 1 }}
                                                     className="space-y-4 pt-2 overflow-hidden border-t border-primary/10"
                                                 >
-                                                    <div className="grid grid-cols-3 gap-2">
+                                                    <div className="pt-2 space-y-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <Briefcase className="h-3.5 w-3.5 text-primary/60" />
+                                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Escopo Recorrente</h4>
+                                                        </div>
+
+                                                        <div className="flex gap-2">
+                                                            <Input
+                                                                placeholder="Serviço (ex: Manutenção)"
+                                                                className="glass-light border-primary/20 h-9 text-xs flex-1 px-3"
+                                                                value={recServiceInput}
+                                                                onChange={(e) => setRecServiceInput(e.target.value)}
+                                                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRecurringService())}
+                                                            />
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="R$ 0"
+                                                                className="glass-light border-primary/20 h-9 text-xs w-24 px-3"
+                                                                value={recServicePriceInput}
+                                                                onChange={(e) => setRecServicePriceInput(e.target.value ? Number(e.target.value) : "")}
+                                                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRecurringService())}
+                                                            />
+                                                            <Button type="button" onClick={addRecurringService} size="sm" className="h-9 w-9 p-0 bg-primary/20 text-primary hover:bg-primary/30 border-none shadow-none">
+                                                                <Plus className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+
+                                                        <div className="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
+                                                            {recurringServices.map((svc, i) => (
+                                                                <div key={i} className="flex items-center justify-between bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 text-[11px] transition-all hover:bg-primary/10">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                                                                        <span className="font-medium text-foreground/80">{svc.name}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-3">
+                                                                        <span className="text-primary font-bold">
+                                                                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(svc.price)}
+                                                                        </span>
+                                                                        <button type="button" onClick={() => removeRecurringService(i)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
+                                                                            <Plus className="h-3 w-3 rotate-45" />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-4 gap-2 border-t border-primary/10 pt-4">
                                                         <div className="space-y-1.5">
                                                             <Label className="text-[10px] font-bold text-muted-foreground/60">Ciclo</Label>
                                                             <Select value={billingCycle} onValueChange={setBillingCycle}>
-                                                                <SelectTrigger className="glass-light border-primary/20 h-10 text-xs">
+                                                                <SelectTrigger className="glass-light border-primary/20 h-10 text-xs text-left">
                                                                     <SelectValue />
                                                                 </SelectTrigger>
-                                                                <SelectContent className="glass border-border">
+                                                                <SelectContent className="glass border-border z-[100]">
                                                                     <SelectItem value="semanal">Semanal</SelectItem>
                                                                     <SelectItem value="mensal">Mensal</SelectItem>
                                                                     <SelectItem value="trimestral">Trimestral</SelectItem>
@@ -919,6 +1092,18 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                                 value={contractDuration}
                                                                 onChange={(e) => setContractDuration(Number(e.target.value))}
                                                             />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60 text-center">Valor Mensal</Label>
+                                                            <div className="relative">
+                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground">R$</span>
+                                                                <Input
+                                                                    type="number"
+                                                                    className="glass-light border-primary/20 h-10 text-xs text-center font-bold pl-6"
+                                                                    value={recurringAmount}
+                                                                    onChange={(e) => setRecurringAmount(Number(e.target.value))}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
 

@@ -36,6 +36,7 @@ const Projetos = () => {
   const [filterBilling, setFilterBilling] = useState<"all" | "pontual" | "recorrente">("all");
   const [filterService, setFilterService] = useState<string>("all");
   const [filterClient, setFilterClient] = useState<string>("all");
+  const [editingProject, setEditingProject] = useState<any | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -212,6 +213,7 @@ const Projetos = () => {
                     key={project.id}
                     project={project}
                     onDelete={() => deleteProjectMutation.mutate(project.id)}
+                    onEdit={() => setEditingProject(project)}
                     onClick={() => navigate(`/projetos/${project.id}`)}
                   />
                 ))}
@@ -230,6 +232,7 @@ const Projetos = () => {
                     key={project.id}
                     project={project}
                     onDelete={() => deleteProjectMutation.mutate(project.id)}
+                    onEdit={() => setEditingProject(project)}
                     onClick={() => navigate(`/projetos/${project.id}`)}
                   />
                 ))}
@@ -258,6 +261,15 @@ const Projetos = () => {
             />
           </motion.div>
         )}
+
+        <EditProjectDialog
+          key={editingProject?.id}
+          project={editingProject}
+          open={!!editingProject}
+          onOpenChange={(o) => {
+            if (!o) setEditingProject(null);
+          }}
+        />
       </div>
     </div>
   );
@@ -265,7 +277,7 @@ const Projetos = () => {
 
 // --- SUBCOMPONENTS ---
 
-function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: () => void, onClick: () => void }) {
+function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onDelete: () => void, onEdit: () => void, onClick: () => void }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
@@ -317,14 +329,14 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="glass border-border">
-                <EditProjectDialog
-                  project={project}
-                  trigger={
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>
-                    </div>
-                  }
-                />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation(); // Trava a navegação
+                    onEdit();
+                  }}
+                >
+                  Editar
+                </DropdownMenuItem>
                 <DeleteConfirmDialog
                   title="Excluir Projeto"
                   description="Ação irreversível. Confirmar exclusão do projeto?"
@@ -333,7 +345,6 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
                     <div onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuItem
                         className="text-destructive font-medium focus:bg-destructive/10"
-                        onSelect={(e) => e.preventDefault()}
                       >
                         Excluir
                       </DropdownMenuItem>
@@ -384,7 +395,7 @@ function ProjectCard({ project, onDelete, onClick }: { project: any, onDelete: (
   );
 }
 
-function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelete: () => void, onClick: () => void }) {
+function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any, onDelete: () => void, onEdit: () => void, onClick: () => void }) {
   return (
     <motion.div
       whileHover={{ x: 4 }}
@@ -443,14 +454,14 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="glass border-border text-foreground">
-            <EditProjectDialog
-              project={project}
-              trigger={
-                <div onClick={(e) => e.stopPropagation()}>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Editar</DropdownMenuItem>
-                </div>
-              }
-            />
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation(); // Trava a navegação
+                onEdit();
+              }}
+            >
+              Editar
+            </DropdownMenuItem>
             <DeleteConfirmDialog
               title="Excluir Projeto"
               description="Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita."
@@ -459,7 +470,6 @@ function ProjectListItem({ project, onDelete, onClick }: { project: any, onDelet
                 <div onClick={(e) => e.stopPropagation()}>
                   <DropdownMenuItem
                     className="text-destructive font-medium focus:bg-destructive/10 focus:text-destructive"
-                    onSelect={(e) => e.preventDefault()}
                   >
                     Excluir
                   </DropdownMenuItem>

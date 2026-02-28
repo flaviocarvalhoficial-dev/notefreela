@@ -446,7 +446,7 @@ function ClientActions({ client, onDelete }: { client: any, onDelete: (id: strin
                     <NewClientDialog
                         client={client}
                         trigger={
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="gap-2 w-full cursor-pointer font-medium text-xs">
+                            <DropdownMenuItem className="gap-2 w-full cursor-pointer font-medium text-xs">
                                 <Edit className="h-3.5 w-3.5" /> Editar Dados
                             </DropdownMenuItem>
                         }
@@ -458,7 +458,6 @@ function ClientActions({ client, onDelete }: { client: any, onDelete: (id: strin
                         trigger={
                             <DropdownMenuItem
                                 className="text-destructive gap-2 focus:text-destructive w-full cursor-pointer font-medium text-xs"
-                                onSelect={(e) => e.preventDefault()}
                             >
                                 <Trash2 className="h-3.5 w-3.5" /> Remover Registro
                             </DropdownMenuItem>

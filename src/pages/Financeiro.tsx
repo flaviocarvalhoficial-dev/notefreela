@@ -19,7 +19,8 @@ import {
     ChevronDown,
     List,
     TrendingDown,
-    Wallet
+    Wallet,
+    CheckCircle2
 } from "lucide-react";
 import { CostRegistrationDialog } from "@/components/dashboard/CostRegistrationDialog";
 import { Button } from "@/components/ui/button";
@@ -107,9 +108,15 @@ export default function Financeiro() {
             if (p.deadline) months.add(p.deadline.substring(0, 7));
 
             // Adicionar meses das parcelas/custos
-            const installments = (p as any).project_costs || [];
-            installments.forEach((c: any) => {
+            const legacyInstallments = (p as any).project_costs || [];
+            legacyInstallments.forEach((c: any) => {
                 if (c.date) months.add(c.date.substring(0, 7));
+            });
+
+            // NEW: Adicionar meses da nova tabela de parcelas
+            const newInstallments = (p as any).installments || [];
+            newInstallments.forEach((i: any) => {
+                if (i.due_date) months.add(i.due_date.substring(0, 7));
             });
 
             // NEW: Adicionar meses projetados de faturamento recorrente
@@ -211,104 +218,18 @@ export default function Financeiro() {
     }, [allProjects, searchQuery, statusFilter, selectedMonth]);
 
     const stats = useMemo(() => {
-        let gains = 0;
-        let futureValue = 0;
-        let total = 0;
-        const today = new Date().toLocaleDateString('en-CA');
-
-        filteredProjects.forEach(p => {
-            const installments = (p as any).project_costs?.filter((c: any) => c.category === "receita_parcela") || [];
-            const billingConfig = (p.services as any[] || []).find((s: any) => s.name === "__billing_config__");
-            const isEarlyPayment = billingConfig?.isEarlyPayment || false;
-            const isProjectFullyPaid = p.payment_status === "paid" || isEarlyPayment;
-
-            const advanceDateStr = (p.created_at || "").split('T')[0];
-            const advanceAmt = Number(p.advance_payment) || 0;
-            const isAdvanceFuture = advanceDateStr > today;
-            const isAdvancePaid = isProjectFullyPaid || p.payment_status === "partial";
-
-            const advanceReceived = (!isAdvanceFuture || isAdvancePaid) ? advanceAmt : 0;
-            const advanceProvisioned = (isAdvanceFuture && !isAdvancePaid) ? advanceAmt : 0;
-
-            const installmentsReceived = installments
-                .filter((c: any) => c.date <= today || isProjectFullyPaid)
-                .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
-
-            const installmentsProvisioned = installments
-                .filter((c: any) => c.date > today && !isProjectFullyPaid)
-                .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
-
-            const alreadyPaid = advanceReceived + installmentsReceived;
-            const futureScheduled = advanceProvisioned + installmentsProvisioned;
-            const residualValue = Math.max(0, (p.value || 0) - (alreadyPaid + futureScheduled));
-
-            // Calc Gains & Provision based on Month filter
-            if (selectedMonth === "all") {
-                gains += alreadyPaid;
-                futureValue += futureScheduled + residualValue;
-            } else {
-                // Advance
-                if (isInSelectedMonth(advanceDateStr, selectedMonth)) {
-                    gains += advanceReceived;
-                    futureValue += advanceProvisioned;
-                }
-                // Installments
-                installments.forEach((c: any) => {
-                    let targetMonth = c.date.substring(0, 7);
-                    const day = parseInt(c.date.split('-')[2]);
-                    if (day <= 10 && p.deadline) {
-                        const dDate = toValidDate(p.deadline);
-                        const cDate = toValidDate(c.date);
-                        if (dDate && cDate) {
-                            const prevMonthDate = new Date(cDate.getFullYear(), cDate.getMonth() - 1, 1);
-                            const prevMonthStr = prevMonthDate.toISOString().substring(0, 7);
-                            if (prevMonthStr === dDate.toISOString().substring(0, 7)) targetMonth = prevMonthStr;
-                        }
-                    }
-
-                    if (isInSelectedMonth(targetMonth, selectedMonth)) {
-                        if (c.date <= today || isProjectFullyPaid) gains += Number(c.amount);
-                        else futureValue += Number(c.amount);
-                    }
-                });
-                // Residual
-                if (residualValue > 0 && p.deadline && isInSelectedMonth(p.deadline, selectedMonth)) {
-                    futureValue += residualValue;
-                }
-            }
-
-            // Recurring Logic
-            const isRecurringActive = p.billing_type === "recorrente" && p.contract_status === "active";
-            if (isRecurringActive) {
-                let currentBillingDate = p.next_billing_date;
-                const duration = billingConfig?.contractDuration || 12;
-
-                for (let i = 0; i < duration; i++) {
-                    if (!currentBillingDate) break;
-
-                    if (selectedMonth === "all" || isInSelectedMonth(currentBillingDate, selectedMonth)) {
-                        const val = Number(p.value) || 0;
-                        if (currentBillingDate > today) futureValue += val;
-                        else gains += val;
-                    }
-
-                    const nextDateObj = toValidDate(currentBillingDate + 'T12:00:00');
-                    if (nextDateObj) {
-                        nextDateObj.setMonth(nextDateObj.getMonth() + 1);
-                        currentBillingDate = safeToISOString(nextDateObj)?.split('T')[0] || null;
-                    } else { break; }
-                }
-            }
-        });
-
         return {
-            totalValue: gains + futureValue,
-            totalPaid: gains,
-            totalRemaining: futureValue,
+            gains: financialStats.totalIncome,
+            totalPaid: financialStats.totalIncome,
+            futureValue: financialStats.totalRemaining,
+            totalRemaining: financialStats.totalRemaining,
+            provisioned: financialStats.totalProvisioned,
+            provisionedItems: financialStats.provisionedItems,
+            totalValue: financialStats.totalIncome + financialStats.totalRemaining,
             projects: filteredProjects,
             projectCount: filteredProjects.length
         };
-    }, [filteredProjects, selectedMonth]);
+    }, [filteredProjects, selectedMonth, financialStats]);
 
     const totalCosts = financialStats.totalCosts;
     const netProfit = financialStats.netProfit;
@@ -792,7 +713,7 @@ export default function Financeiro() {
                                 activeStatDetail === 'future' ? ((p.value || 0) - (p.advance_payment || 0)) :
                                     0;
 
-                            if (activeStatDetail === 'provisioned') return null; // Handled separately below
+                            if (activeStatDetail === 'provisioned' || activeStatDetail === 'income') return null; // Handled separately below
 
                             if (activeStatDetail === 'profit') {
                                 return (
@@ -832,29 +753,67 @@ export default function Financeiro() {
                             );
                         })}
 
-                        {activeStatDetail === 'provisioned' && financialStats.provisionedItems?.map(item => (
-                            <div key={item.id} className="p-3 rounded-md bg-muted/5 border border-border flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Badge variant="outline" className={cn(
-                                            "text-[8px] uppercase px-1 h-3.5",
-                                            item.type === 'recorrente' ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground"
-                                        )}>
-                                            {item.type}
-                                        </Badge>
-                                        <p className="text-[10px] font-medium text-foreground truncate">{item.projectName}</p>
+                        {activeStatDetail === 'provisioned' && (financialStats.provisionedItems?.length || 0) > 0 ? (
+                            financialStats.provisionedItems?.map(item => (
+                                <div key={item.id} className="p-3 rounded-md bg-muted/5 border border-border flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Badge variant="outline" className={cn(
+                                                "text-[8px] uppercase px-1 h-3.5",
+                                                item.type === 'recorrente' ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground"
+                                            )}>
+                                                {item.type}
+                                            </Badge>
+                                            <p className="text-[10px] font-medium text-foreground truncate">{item.projectName}</p>
+                                        </div>
+                                        <p className="text-[11px] font-medium text-muted-foreground leading-tight">{item.title}</p>
+                                        <p className="text-[9px] text-muted-foreground/60 mt-1">Data prevista: {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}</p>
                                     </div>
-                                    <p className="text-[11px] font-medium text-muted-foreground leading-tight">{item.title}</p>
-                                    <p className="text-[9px] text-muted-foreground/60 mt-1">Data prevista: {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                                    <div className="text-right">
+                                        <p className="text-sm font-medium tabular-nums text-primary">
+                                            {formatCurrency(item.amount)}
+                                        </p>
+                                        <p className="text-[9px] text-muted-foreground">A receber</p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-medium tabular-nums text-primary">
-                                        {formatCurrency(item.amount)}
-                                    </p>
-                                    <p className="text-[9px] text-muted-foreground">A receber</p>
-                                </div>
+                            ))
+                        ) : activeStatDetail === 'provisioned' && (
+                            <div className="text-center py-10 space-y-2">
+                                <DollarSign className="h-8 w-8 text-muted-foreground/20 mx-auto" />
+                                <p className="text-xs text-muted-foreground">Nenhuma provisão para este período</p>
                             </div>
-                        ))}
+                        )}
+
+                        {activeStatDetail === 'income' && (financialStats.incomeItems?.length || 0) > 0 ? (
+                            financialStats.incomeItems?.map(item => (
+                                <div key={item.id} className="p-3 rounded-md bg-muted/5 border border-border flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Badge variant="outline" className={cn(
+                                                "text-[8px] uppercase px-1 h-3.5",
+                                                item.type === 'recorrente' ? "bg-primary/10 text-primary border-primary/20" : "bg-muted"
+                                            )}>
+                                                {item.type}
+                                            </Badge>
+                                            <p className="text-[10px] font-medium text-foreground truncate">{item.projectName}</p>
+                                        </div>
+                                        <p className="text-[11px] font-medium text-muted-foreground leading-tight">{item.title}</p>
+                                        <p className="text-[9px] text-muted-foreground/60 mt-1">Recebido em: {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-medium tabular-nums text-primary">
+                                            {formatCurrency(item.amount)}
+                                        </p>
+                                        <p className="text-[9px] text-muted-foreground italic">recebido</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : activeStatDetail === 'income' && (
+                            <div className="text-center py-10 space-y-2">
+                                <CheckCircle2 className="h-8 w-8 text-muted-foreground/20 mx-auto" />
+                                <p className="text-xs text-muted-foreground">Nenhum recebimento confirmado neste período</p>
+                            </div>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>

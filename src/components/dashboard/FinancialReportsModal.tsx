@@ -39,41 +39,27 @@ interface FinancialReportsModalProps {
 export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsModalProps) {
     const [timeRange, setTimeRange] = useState("12");
 
-    const { data: projects = [], isLoading: loadingProjects } = useQuery({
-        queryKey: ["finance_projects_report"],
+    const { data: rawReportData, isLoading: loadingData } = useQuery({
+        queryKey: ["financial_report_data"],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from("projects")
-                .select("value, advance_payment, created_at, billing_type, contract_status, next_billing_date, services");
-            if (error) throw error;
-            return data || [];
-        }
-    });
+            const projectsRes = await supabase.from("projects").select("id, name, value, advance_payment, created_at, billing_type, contract_status, next_billing_date, services");
+            const costsRes = await supabase.from("project_costs").select("amount, date, category, project_id");
 
-    const { data: costs = [], isLoading: loadingCosts } = useQuery({
-        queryKey: ["finance_costs_report"],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("project_costs")
-                .select("amount, date, category");
-            if (error) throw error;
-            return data || [];
+            // New tables (fallback to empty array if not exist)
+            const transactionsRes = await (supabase as any).from("transactions").select("*");
+            const installmentsRes = await (supabase as any).from("installments").select("*");
+
+            return {
+                projects: projectsRes.data || [],
+                costs: costsRes.data || [],
+                transactions: transactionsRes.data || [],
+                installments: installmentsRes.data || []
+            };
         }
     });
 
     const reportData = useMemo(() => {
-        if (!projects.length && !costs.length) {
-            // Pre-fill months even if no data to show empty charts
-            const end = new Date();
-            const start = subMonths(end, parseInt(timeRange) - 1);
-            return eachMonthOfInterval({ start, end }).map(m => ({
-                month: format(m, "MMM/yy", { locale: ptBR }),
-                gains: 0,
-                costs: 0,
-                profit: 0,
-                date: m
-            }));
-        }
+        const { projects = [], costs = [], transactions = [], installments = [] } = rawReportData || {};
 
         const rangeInMonths = parseInt(timeRange);
         const end = new Date();
@@ -93,45 +79,58 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
             };
         });
 
-        projects.forEach(p => {
-            // 1. One-time Setup Advance
-            if (p.created_at) {
-                const key = format(parseISO(p.created_at), "yyyy-MM");
-                if (dataMap[key]) {
-                    dataMap[key].gains += Number(p.advance_payment || 0);
-                }
+        // 1. Gains from TRANSACTIONS (New Model)
+        transactions.forEach((t: any) => {
+            if (!t.payment_date) return;
+            const key = t.payment_date.substring(0, 7);
+            if (dataMap[key]) {
+                dataMap[key].gains += Number(t.amount || 0);
             }
+        });
 
-            // 2. Recurring Income
-            const isRecurringActive = p.billing_type === "recorrente" && p.contract_status === "active";
-            if (isRecurringActive) {
-                const billingConfig = (p.services as any[] || []).find((s: any) => s.name === "__billing_config__");
-                let currentBillingDate = p.next_billing_date;
-                const duration = billingConfig?.contractDuration || 12;
+        // 2. Gains from Projects & Costs (Legacy fallback + additional)
+        projects.forEach(p => {
+            const projectInstallments = installments.filter((i: any) => i.project_id === p.id);
+            const hasNewInstallments = projectInstallments.length > 0;
 
-                for (let i = 0; i < duration; i++) {
-                    if (!currentBillingDate) break;
-                    const key = currentBillingDate.substring(0, 7);
-                    if (dataMap[key]) {
-                        dataMap[key].gains += Number(p.value || 0);
+            if (!hasNewInstallments) {
+                // Advance / Signal (Legacy)
+                if (p.created_at) {
+                    const key = p.created_at.substring(0, 7);
+                    if (dataMap[key]) dataMap[key].gains += Number(p.advance_payment || 0);
+                }
+
+                // Recurring (Manual projection for legacy)
+                if (p.billing_type === "recorrente" && p.contract_status === "active") {
+                    const billingConfig = (p.services as any[] || []).find((s: any) => s.name === "__billing_config__");
+                    let curDate = p.next_billing_date;
+                    for (let i = 0; i < 12; i++) {
+                        if (!curDate) break;
+                        const key = curDate.substring(0, 7);
+                        if (dataMap[key]) dataMap[key].gains += Number(p.value || 0);
+
+                        // Safe date advancement
+                        const d = new Date(curDate + 'T12:00:00');
+                        if (isNaN(d.getTime())) break;
+                        d.setMonth(d.getMonth() + 1);
+                        curDate = d.toISOString().split('T')[0];
                     }
-
-                    // Move to next month
-                    const d = new Date(currentBillingDate + 'T12:00:00');
-                    if (isNaN(d.getTime())) break;
-                    d.setMonth(d.getMonth() + 1);
-                    currentBillingDate = d.toISOString().split('T')[0];
                 }
             }
         });
 
+        // 3. Costs & Legacy installments
         costs.forEach(c => {
             if (!c.date) return;
-            const key = format(parseISO(c.date), "yyyy-MM");
+            const key = c.date.substring(0, 7);
             if (dataMap[key]) {
                 const amount = Number(c.amount || 0);
                 if (c.category === 'receita_parcela') {
-                    dataMap[key].gains += amount;
+                    // Check if this project is already handled by new installments
+                    const isNewModel = c.project_id && installments.some((i: any) => i.project_id === c.project_id);
+                    if (!isNewModel) {
+                        dataMap[key].gains += amount;
+                    }
                 } else {
                     dataMap[key].costs += amount;
                 }
@@ -145,7 +144,8 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
                 month: item.month.charAt(0).toUpperCase() + item.month.slice(1)
             }))
             .sort((a, b) => a.date.getTime() - b.date.getTime());
-    }, [projects, costs, timeRange]);
+    }, [rawReportData, timeRange]);
+
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', {
@@ -163,7 +163,7 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
         }), { gains: 0, costs: 0, profit: 0 });
     }, [reportData]);
 
-    const isLoading = loadingProjects || loadingCosts;
+    const isLoading = loadingData;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
