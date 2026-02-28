@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,6 +14,7 @@ import {
 import {
     SortableContext,
     verticalListSortingStrategy,
+    arrayMove,
 } from "@dnd-kit/sortable";
 import {
     Filter, Search, Loader2, Plus, Check,
@@ -241,6 +242,49 @@ export default function Tarefas() {
         setSearchParams(newParams);
     };
 
+    // --- Panning Logic (Horizontal Board Scroll) ---
+    const boardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const [panningScenarioId, setPanningScenarioId] = useState<string | null>(null);
+    const [panStartX, setPanStartX] = useState(0);
+    const [panScrollLeft, setPanScrollLeft] = useState(0);
+
+    const onPanStart = (id: string, e: React.MouseEvent) => {
+        if ((e.target as HTMLElement).closest('button, input, a, [data-task-id], [data-dnd-item]')) return;
+        if (activeId) return;
+
+        setPanningScenarioId(id);
+        const el = boardRefs.current[id];
+        if (el) {
+            setPanStartX(e.pageX - el.offsetLeft);
+            setPanScrollLeft(el.scrollLeft);
+        }
+    };
+
+    useEffect(() => {
+        const stopPanning = () => setPanningScenarioId(null);
+        const handlePanning = (e: MouseEvent) => {
+            if (!panningScenarioId) return;
+            const el = boardRefs.current[panningScenarioId];
+            if (el) {
+                const x = e.pageX - el.offsetLeft;
+                const walk = (x - panStartX) * 1.5;
+                el.scrollLeft = panScrollLeft - walk;
+            }
+        };
+
+        if (panningScenarioId) {
+            window.addEventListener('mousemove', handlePanning);
+            window.addEventListener('mouseup', stopPanning);
+            window.addEventListener('mouseleave', stopPanning);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handlePanning);
+            window.removeEventListener('mouseup', stopPanning);
+            window.removeEventListener('mouseleave', stopPanning);
+        };
+    }, [panningScenarioId, panStartX, panScrollLeft]);
+
     const activeTask = useMemo(() => tasks.find((t) => t.id === activeId) ?? null, [tasks, activeId]);
 
     function handleDragStart(e: DragStartEvent) {
@@ -256,11 +300,53 @@ export default function Tarefas() {
         const activeTaskId = String(active.id);
         const overId = String(over.id);
 
-        const targetCol = columns.find(c => c.id === overId)?.id ||
-            tasks.find(t => t.id === overId)?.column_id;
+        const targetColId = (columns.find(c => c.id === overId)?.id ||
+            tasks.find(t => t.id === overId)?.column_id) as ColumnId;
 
-        if (targetCol && tasks.find(t => t.id === activeTaskId)?.column_id !== targetCol) {
-            mutations.moveTask({ id: activeTaskId, column_id: targetCol as ColumnId });
+        if (targetColId) {
+            const sourceTask = tasks.find(t => t.id === activeTaskId);
+            if (!sourceTask) return;
+
+            const activatorEvent = e.activatorEvent as any;
+            const isAltUsed = Boolean(activatorEvent && activatorEvent.altKey === true);
+
+            if (isAltUsed) {
+                mutations.duplicateTask({ id: activeTaskId, column_id: targetColId });
+                return;
+            }
+
+            // --- Reordering and Move Logic ---
+            const sourceColId = sourceTask.column_id;
+            const currentItems = [...(tasksByColumn[targetColId] || [])];
+
+            // Se estivermos movendo dentro da mesma coluna
+            if (sourceColId === targetColId) {
+                const oldIndex = currentItems.findIndex(t => t.id === activeTaskId);
+                const newIndex = currentItems.findIndex(t => t.id === overId);
+
+                if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                    const reordered = arrayMove(currentItems, oldIndex, newIndex);
+                    const updates = reordered.map((t, idx) => ({ id: t.id, position: idx }));
+                    mutations.updateTasksOrder(updates);
+                }
+            } else {
+                // Se estivermos movendo entre colunas
+                const overIndex = currentItems.findIndex(t => t.id === overId);
+                const newItems = [...currentItems];
+
+                if (overIndex !== -1) {
+                    newItems.splice(overIndex, 0, sourceTask);
+                } else {
+                    newItems.push(sourceTask);
+                }
+
+                const updates = newItems.map((t, idx) => ({
+                    id: t.id,
+                    position: idx,
+                    column_id: t.id === activeTaskId ? targetColId : undefined
+                }));
+                mutations.updateTasksOrder(updates);
+            }
         }
     }
 
@@ -758,18 +844,23 @@ export default function Tarefas() {
                                                         animate={{ height: "auto", opacity: 1 }}
                                                         exit={{ height: 0, opacity: 0 }}
                                                         transition={{ duration: 0.2 }}
-                                                        className="overflow-hidden"
+                                                        className="overflow-visible"
                                                     >
                                                         <DndContext
                                                             sensors={sensors}
                                                             collisionDetection={closestCorners}
                                                             onDragStart={handleDragStart}
                                                             onDragEnd={handleDragEnd}
+                                                            autoScroll={{ threshold: { x: 0.1, y: 0.1 }, acceleration: 5 }}
                                                         >
-                                                            <div className={cn(
-                                                                "w-full overflow-x-auto pb-4 custom-scrollbar pl-1",
-                                                                scenario.type === 'checklist' ? "" : "cursor-grab active:cursor-grabbing"
-                                                            )}>
+                                                            <div
+                                                                ref={el => boardRefs.current[scenario.id] = el}
+                                                                onMouseDown={(e) => onPanStart(scenario.id, e)}
+                                                                className={cn(
+                                                                    "w-full overflow-x-auto pb-4 custom-scrollbar pl-1 select-none transition-colors",
+                                                                    scenario.type === 'checklist' ? "" : (panningScenarioId === scenario.id ? "cursor-grabbing" : "cursor-grab")
+                                                                )}
+                                                            >
                                                                 <div className={cn(
                                                                     "flex flex-row pr-10 items-start",
                                                                     scenario.type === 'checklist' ? "gap-12" : "gap-4"
@@ -903,6 +994,9 @@ export default function Tarefas() {
                                                                                                                     mutations.deleteTask(t.id);
                                                                                                                 }
                                                                                                             }}
+                                                                                                            onDuplicate={() => {
+                                                                                                                mutations.duplicateTask({ id: t.id });
+                                                                                                            }}
                                                                                                             projects={projects}
                                                                                                         />
                                                                                                     </div>
@@ -955,6 +1049,8 @@ export default function Tarefas() {
                                                                                 isOverlay
                                                                                 isEditing={false}
                                                                                 accentColor="hsl(220, 15%, 75%)"
+                                                                                onCancelEdit={() => { }}
+                                                                                onSave={() => { }}
                                                                             />
                                                                         ) : null}
                                                                     </div>

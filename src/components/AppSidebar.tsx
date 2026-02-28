@@ -49,7 +49,6 @@ import { supabase } from "@/integrations/supabase";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: Home },
-  { title: "Projetos", url: "/projetos", icon: FolderKanban },
   { title: "Tarefas", url: "/tarefas", icon: CheckSquare },
   { title: "Agenda", url: "/agenda", icon: Calendar },
   { title: "Gestão Pessoal", url: "/gestao-pessoal", icon: LayoutGrid },
@@ -92,6 +91,18 @@ export function AppSidebar() {
     }
   });
 
+  const { data: sidebarProjects = [] } = useQuery({
+    queryKey: ["sidebar-projects"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, name, status")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const inboxGroups = [
     { type: 'idea', title: 'Ideias', icon: Lightbulb },
     { type: 'prompt', title: 'Prompts', icon: Terminal },
@@ -126,27 +137,88 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className={cn("gap-0.5", open ? "px-2" : "px-0 items-center")}>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={!open ? item.title : undefined}
-                    className="h-10 rounded-md transition-all hover:bg-sidebar-accent"
-                  >
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className={cn(
-                        "flex items-center text-muted-foreground transition-colors w-full h-full",
-                        open ? "gap-2.5 px-3" : "justify-center"
-                      )}
-                      activeClassName="text-foreground font-medium bg-sidebar-accent"
+              {navItems.map((item, index) => (
+                <div key={item.title}>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={!open ? item.title : undefined}
+                      className="h-10 rounded-md transition-all hover:bg-sidebar-accent"
                     >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
-                      {open && <span className="text-[13px] font-medium tracking-tight">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/"}
+                        className={cn(
+                          "flex items-center text-muted-foreground transition-colors w-full h-full",
+                          open ? "gap-2.5 px-3" : "justify-center"
+                        )}
+                        activeClassName="text-foreground font-medium bg-sidebar-accent"
+                      >
+                        <item.icon className="h-[18px] w-[18px] shrink-0" />
+                        {open && <span className="text-[13px] font-medium tracking-tight">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  {/* Render Projects Tree after Dashboard (index 0) */}
+                  {index === 0 && (
+                    <Collapsible asChild defaultOpen={false} className="group/collapsible">
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          asChild
+                          tooltip={!open ? "Projetos" : undefined}
+                          className="h-10 rounded-md transition-all hover:bg-sidebar-accent"
+                        >
+                          <NavLink
+                            to="/projetos"
+                            className={cn(
+                              "flex items-center text-muted-foreground transition-colors w-full h-full",
+                              open ? "gap-2.5 px-3" : "justify-center"
+                            )}
+                            activeClassName="text-foreground font-medium bg-sidebar-accent"
+                          >
+                            <FolderKanban className="h-[18px] w-[18px] shrink-0" />
+                            {open && <span className="text-[13px] font-medium tracking-tight">Projetos</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+
+                        {open && (
+                          <>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
+                                <ChevronRight className="h-4 w-4" />
+                              </SidebarMenuAction>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub className="ml-3 mt-1 border-l border-sidebar-border gap-0 pb-2">
+                                {sidebarProjects.length > 0 ? (
+                                  sidebarProjects.map((project: any) => (
+                                    <SidebarMenuSubItem key={project.id}>
+                                      <button
+                                        onClick={() => navigate(`/projetos/${project.id}`)}
+                                        className="px-4 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2 w-full group/item"
+                                      >
+                                        <div className={cn(
+                                          "h-1.5 w-1.5 rounded-full shrink-0",
+                                          project.status === 'completed' ? "bg-emerald-500" :
+                                            project.status === 'in_progress' ? "bg-blue-500" :
+                                              "bg-muted-foreground/30"
+                                        )} />
+                                        <span className="truncate">{project.name}</span>
+                                      </button>
+                                    </SidebarMenuSubItem>
+                                  ))
+                                ) : (
+                                  <span className="px-4 py-1 text-[10px] text-muted-foreground italic">Nenhum projeto</span>
+                                )}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </>
+                        )}
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  )}
+                </div>
               ))}
 
               {/* Caixa de Entrada with Deep Tree */}

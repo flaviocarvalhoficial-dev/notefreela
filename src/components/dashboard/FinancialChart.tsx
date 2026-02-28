@@ -94,7 +94,7 @@ export function FinancialChart({ projects }: FinancialChartProps) {
     };
 
     return (
-        <div className="bento-card p-6 h-[400px] flex flex-col">
+        <div className="bento-card p-6 h-full flex flex-col">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-lg font-semibold tracking-tight">Fluxo Financeiro</h3>

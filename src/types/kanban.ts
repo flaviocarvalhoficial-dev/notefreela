@@ -19,6 +19,8 @@ export interface Task {
     column_id: ColumnId;
     assignee?: string | null;
     tags?: TaskTag[];
+    created_at: string;
+    position: number;
 }
 
 export interface Column {

@@ -11,8 +11,30 @@ const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
 function applyThemeToDom(theme: Theme) {
   const root = document.documentElement;
+
+  // Create a transition-stopper style tag
+  const disableTransitions = document.createElement("style");
+  disableTransitions.innerHTML = `
+    * {
+      -webkit-transition: none !important;
+      -moz-transition: none !important;
+      -ms-transition: none !important;
+      -o-transition: none !important;
+      transition: none !important;
+    }
+  `;
+  document.head.appendChild(disableTransitions);
+
+  // Perform the theme swap
   root.classList.remove("dark", "light");
   root.classList.add(theme);
+
+  // Force a reflow to ensure the theme change is applied before re-enabling transitions
+  // This is a common trick to make the browser calculate the new styles immediately
+  window.getComputedStyle(root).opacity;
+
+  // Remove the transition-stopper
+  document.head.removeChild(disableTransitions);
 }
 
 export function ThemeProvider({

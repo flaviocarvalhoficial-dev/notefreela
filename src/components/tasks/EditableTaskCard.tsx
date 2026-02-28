@@ -2,7 +2,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, isBefore } from "date-fns";
-import { CalendarIcon, Check, Flag, Pencil, User, X, Tag as TagIcon, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, Check, Flag, Pencil, User, X, Tag as TagIcon, Plus, Trash2, Copy } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { TimerButton } from "@/components/timer/TimerButton";
@@ -123,6 +123,7 @@ export function EditableTaskCard({
   onCancelEdit,
   onSave,
   onDelete,
+  onDuplicate,
   accentColor,
   projects = [],
   variant = 'card',
@@ -131,9 +132,10 @@ export function EditableTaskCard({
   isOverlay?: boolean;
   isEditing?: boolean;
   onStartEdit?: () => void;
-  onCancelEdit?: () => void;
-  onSave?: (values: EditTaskValues) => void;
+  onCancelEdit: () => void;
+  onSave: (values: EditTaskValues) => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
   accentColor?: string;
   projects?: { id: string, name: string }[];
   variant?: 'card' | 'minimal';
@@ -207,7 +209,7 @@ export function EditableTaskCard({
               <h3
                 className={cn(
                   "text-sm font-medium leading-tight text-foreground tracking-tight transition-colors group-hover:text-foreground",
-                  task.progress === 100 && "line-through text-muted-foreground font-normal"
+                  task.progress === 100 && "text-muted-foreground font-normal"
                 )}
               >
                 {task.title}
@@ -536,7 +538,7 @@ export function EditableTaskCard({
                   )}
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                   {/* Timer button - always visible but compact */}
                   <TimerButton
                     taskId={task.id}
@@ -545,30 +547,40 @@ export function EditableTaskCard({
                     projectName={task.project}
                     variant="compact"
                   />
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete?.();
-                      }}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStartEdit?.();
-                      }}
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete?.();
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDuplicate?.();
+                    }}
+                    title="Duplicar Tarefa"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStartEdit?.();
+                    }}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
             </>
@@ -604,13 +616,25 @@ export function EditableTaskCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-5 w-5 text-muted-foreground"
+                  className="h-5 w-5 text-muted-foreground hover:text-primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDuplicate?.();
+                  }}
+                  title="Duplicar Tarefa"
+                >
+                  <Copy className="h-2.5 w-2.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-muted-foreground hover:text-primary"
                   onClick={(e) => {
                     e.stopPropagation();
                     onStartEdit?.();
                   }}
                 >
-                  <Pencil className="h-3 w-3" />
+                  <Pencil className="h-2.5 w-2.5" />
                 </Button>
               </div>
             </div>

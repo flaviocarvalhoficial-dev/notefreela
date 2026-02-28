@@ -137,10 +137,10 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
         <Dialog open={open} onOpenChange={onOpenChange}>
             {client && (
                 <DialogContent
-                    className="max-w-[1100px] h-[92vh] flex flex-col p-0 border-border bg-[#0B0B0B] gap-0 overflow-hidden shadow-2xl z-50"
+                    className="max-w-[1100px] h-[92vh] flex flex-col p-0 border-border bg-background gap-0 overflow-hidden shadow-2xl z-50"
                 >
                     {/* Header Premium */}
-                    <div className="p-8 pb-6 bg-gradient-to-b from-[#141414] to-transparent">
+                    <div className="p-8 pb-6 bg-gradient-to-b from-card/50 to-transparent">
                         <div className="flex items-center justify-between mb-8">
                             <div className="space-y-1.5">
                                 <DialogTitle className="text-4xl font-medium tracking-tight text-foreground flex items-center gap-3">
@@ -157,68 +157,68 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
 
                         {/* Stats de Visão Geral (Filtradas) */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            <div className="bg-[#141414] border border-border p-6 rounded-2xl relative overflow-hidden group">
+                            <div className="bg-card border border-border p-6 rounded-2xl relative overflow-hidden group shadow-sm">
                                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
                                     <Briefcase className="h-16 w-16" />
                                 </div>
-                                <p className="text-[10px] font-medium text-muted-foreground  tracking-tight mb-2">Total Investido (Filtrado)</p>
-                                <p className="text-3xl font-medium tracking-tight text-foreground tabular-nums">
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Total Investido (Filtrado)</p>
+                                <p className="text-3xl font-semibold tracking-tight text-foreground tabular-nums">
                                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.total)}
                                 </p>
                             </div>
-                            <div className="bg-[#141414] border border-border p-6 rounded-2xl">
-                                <p className="text-[10px] font-medium text-muted-foreground  tracking-tight mb-2">Projetos no Período</p>
-                                <p className="text-3xl font-medium tracking-tight text-foreground tabular-nums">{stats.count}</p>
+                            <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Projetos no Período</p>
+                                <p className="text-3xl font-semibold tracking-tight text-foreground tabular-nums">{stats.count}</p>
                             </div>
-                            <div className="bg-[#141414] border border-border p-6 rounded-2xl">
-                                <p className="text-[10px] font-medium text-muted-foreground  tracking-tight mb-2">Projetos Ativos</p>
-                                <p className="text-3xl font-medium tracking-tight text-primary tabular-nums">{stats.active}</p>
+                            <div className="bg-card border border-border p-6 rounded-2xl shadow-sm border-l-4 border-l-primary">
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Projetos Ativos</p>
+                                <p className="text-3xl font-semibold tracking-tight text-primary tabular-nums">{stats.active}</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Toolbar de Filtros Internos */}
-                    <div className="px-8 py-4 border-y border-border bg-[#0E0E0E] flex flex-wrap items-center gap-3">
+                    <div className="px-8 py-4 border-y border-border bg-muted/20 flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2 mr-2">
                             <Filter className="h-4 w-4 text-primary" />
                             <span className="text-[10px] font-medium text-muted-foreground  tracking-tight">Filtros de Análise:</span>
                         </div>
 
                         <Select value={yearFilter} onValueChange={setYearFilter}>
-                            <SelectTrigger className="w-[100px] h-9 bg-transparent border-border text-[11px] font-medium rounded-md">
+                            <SelectTrigger className="w-[100px] h-9 bg-background border-border text-[11px] font-medium rounded-md">
                                 <SelectValue placeholder="Ano" />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#141414] border-border">
+                            <SelectContent className="bg-card border-border">
                                 <SelectItem value="all">Todos Anos</SelectItem>
                                 {filterOptions.years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                             </SelectContent>
                         </Select>
 
                         <Select value={monthFilter} onValueChange={setMonthFilter}>
-                            <SelectTrigger className="w-[120px] h-9 bg-transparent border-border text-[11px] font-medium rounded-md">
+                            <SelectTrigger className="w-[120px] h-9 bg-background border-border text-[11px] font-medium rounded-md">
                                 <SelectValue placeholder="Mês" />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#141414] border-border">
+                            <SelectContent className="bg-card border-border">
                                 <SelectItem value="all">Todos Meses</SelectItem>
                                 {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                             </SelectContent>
                         </Select>
 
                         <Select value={serviceFilter} onValueChange={setServiceFilter}>
-                            <SelectTrigger className="w-[160px] h-9 bg-transparent border-border text-[11px] font-medium rounded-md">
+                            <SelectTrigger className="w-[160px] h-9 bg-background border-border text-[11px] font-medium rounded-md">
                                 <SelectValue placeholder="Serviço" />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#141414] border-border">
+                            <SelectContent className="bg-card border-border">
                                 <SelectItem value="all">Categorias</SelectItem>
                                 {filterOptions.services.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                             </SelectContent>
                         </Select>
 
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-[140px] h-9 bg-transparent border-border text-[11px] font-medium rounded-md">
+                            <SelectTrigger className="w-[140px] h-9 bg-background border-border text-[11px] font-medium rounded-md">
                                 <SelectValue placeholder="Situação" />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#141414] border-border">
+                            <SelectContent className="bg-card border-border">
                                 <SelectItem value="all">Todos Status</SelectItem>
                                 <SelectItem value="active">Em Andamento</SelectItem>
                                 <SelectItem value="completed">Concluídos</SelectItem>
@@ -236,13 +236,13 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                     <ScrollArea className="flex-1 px-8 py-6">
                         <div className="space-y-4">
                             {filteredProjects.length === 0 ? (
-                                <div className="py-24 text-center border border-dashed border-border rounded-3xl bg-[#141414]/20">
-                                    <Search className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
+                                <div className="py-24 text-center border border-dashed border-border rounded-3xl bg-muted/10">
+                                    <Search className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-10" />
                                     <p className="text-sm font-medium text-muted-foreground  tracking-tight">Nenhum registro encontrado para estes filtros.</p>
                                 </div>
                             ) : (
                                 filteredProjects.map((project) => (
-                                    <div key={project.id} className="group bg-[#141414]/40 hover:bg-[#141414] border border-border rounded-2xl p-6 transition-all duration-300">
+                                    <div key={project.id} className="group bg-card/40 hover:bg-card border border-border rounded-2xl p-6 transition-all duration-300 shadow-sm">
                                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                                             {/* Nome e Info Principal */}
                                             <div className="lg:col-span-4 min-w-0">
@@ -330,7 +330,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                     </ScrollArea>
 
                     {/* Footer contextualizado */}
-                    <div className="p-6 bg-[#0E0E0E] border-t border-border flex items-center justify-between">
+                    <div className="p-6 bg-muted/20 border-t border-border flex items-center justify-between">
                         <p className="text-[10px] font-medium text-muted-foreground  tracking-tight">Exibindo {stats.count} de {allProjects.length} projetos vinculados</p>
                         <Button variant="ghost" className="h-10 px-8 rounded-md border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all" onClick={() => onOpenChange(false)}>
                             Fechar Painel

@@ -12,6 +12,7 @@ interface SortableTaskItemProps {
     onCancelEdit: () => void;
     onSave: (values: EditTaskValues) => void;
     onDelete?: () => void;
+    onDuplicate?: () => void;
     projects?: { id: string; name: string }[];
     variant?: 'card' | 'minimal';
 }
@@ -24,6 +25,7 @@ export function SortableTaskItem({
     onCancelEdit,
     onSave,
     onDelete,
+    onDuplicate,
     projects,
     variant = 'card',
 }: SortableTaskItemProps) {
@@ -64,6 +66,7 @@ export function SortableTaskItem({
                 onCancelEdit={onCancelEdit}
                 onSave={onSave}
                 onDelete={onDelete}
+                onDuplicate={onDuplicate}
                 accentColor={color}
                 projects={projects}
                 variant={variant}

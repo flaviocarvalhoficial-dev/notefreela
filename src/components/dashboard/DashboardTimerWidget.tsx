@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type FilterMode = "all" | "project" | "task";
 
@@ -303,7 +304,7 @@ export function DashboardTimerWidget() {
             )}
 
             {/* Entries list */}
-            <div className="divide-y divide-border/40 max-h-[300px] overflow-y-auto custom-scrollbar bg-card/20">
+            <ScrollArea className="h-[210px] w-full" type="always">
                 {entries.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground opacity-40">
                         <Activity className="h-10 w-10 stroke-[1.5px]" />
@@ -313,74 +314,84 @@ export function DashboardTimerWidget() {
                         </div>
                     </div>
                 ) : (
-                    entries.map(entry => (
-                        <div key={entry.id} className="px-5 py-4 flex items-center justify-between group hover:bg-muted/10 transition-colors">
-                            <div className="flex items-center gap-3.5 min-w-0">
-                                <div className={cn(
-                                    "p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110",
-                                    entry.task_title ? "bg-blue-500/10 text-blue-600 dark:bg-blue-400/5" : "bg-primary/10 text-primary"
-                                )}>
-                                    {entry.task_title
-                                        ? <CheckSquare className="h-4 w-4" />
-                                        : <Briefcase className="h-4 w-4" />}
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="text-[13px] font-normal text-foreground truncate leading-tight mb-0.5">
-                                        {entry.task_title ?? entry.project_name ?? "Sessão Avulsa"}
-                                    </p>
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-                                            {format(new Date(entry.started_at), "dd MMM, HH:mm", { locale: ptBR })}
-                                        </p>
-                                        <span className="text-muted-foreground/30">•</span>
-                                        <p className="text-[10px] text-muted-foreground font-normal tracking-tight">
-                                            {entry.project_name ?? "Geral"}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="shrink-0 text-right">
-                                {entry.ended_at ? (
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[14px] font-mono font-bold text-foreground tabular-nums tracking-tight">
-                                            {formatDuration(entry.duration_seconds ?? 0)}
-                                        </span>
-                                        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Concluído</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full">
-                                        <span className="relative flex h-1.5 w-1.5">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
-                                        </span>
-                                        <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Vivo</span>
-                                    </div>
+                    <div className="flex flex-col">
+                        {entries.map((entry, idx) => (
+                            <div
+                                key={entry.id}
+                                className={cn(
+                                    "px-5 py-4 flex items-center justify-between group hover:bg-primary/5 transition-colors border-b border-border/10 last:border-0",
+                                    idx % 2 === 0 ? "bg-transparent" : "bg-muted/5"
                                 )}
+                            >
+                                <div className="flex items-center gap-3.5 min-w-0">
+                                    <div className={cn(
+                                        "p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110",
+                                        entry.task_title ? "bg-blue-500/10 text-blue-600 dark:bg-blue-400/5" : "bg-primary/10 text-primary"
+                                    )}>
+                                        {entry.task_title
+                                            ? <CheckSquare className="h-4 w-4" />
+                                            : <Briefcase className="h-4 w-4" />}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[13px] font-normal text-foreground truncate leading-tight mb-0.5">
+                                            {entry.task_title ?? entry.project_name ?? "Sessão Avulsa"}
+                                        </p>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+                                                {format(new Date(entry.started_at), "dd MMM, HH:mm", { locale: ptBR })}
+                                            </p>
+                                            <span className="text-muted-foreground/30">•</span>
+                                            <p className="text-[10px] text-muted-foreground font-normal tracking-tight">
+                                                {entry.project_name ?? "Geral"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                    {entry.ended_at ? (
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[14px] font-mono font-bold text-foreground tabular-nums tracking-tight">
+                                                {formatDuration(entry.duration_seconds ?? 0)}
+                                            </span>
+                                            <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Concluído</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full">
+                                            <span className="relative flex h-1.5 w-1.5">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
+                                            </span>
+                                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Vivo</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        ))}
+                    </div>
                 )}
-            </div>
+            </ScrollArea>
 
             {/* Footer Summary */}
-            {completedEntries.length > 0 && (
-                <div className="px-5 py-4 border-t border-border/40 flex items-center justify-between bg-card group/footer">
-                    <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40 group-hover/footer:scale-125 transition-transform" />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                            {filterMode === "project" && selectedProjectData
-                                ? `Filtro: ${selectedProjectData.name}`
-                                : "Filtro: Consolidado"}
-                        </span>
+            {
+                completedEntries.length > 0 && (
+                    <div className="px-5 py-4 border-t border-border/40 flex items-center justify-between bg-card group/footer">
+                        <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-1.5 rounded-full bg-primary/40 group-hover/footer:scale-125 transition-transform" />
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                {filterMode === "project" && selectedProjectData
+                                    ? `Filtro: ${selectedProjectData.name}`
+                                    : "Filtro: Consolidado"}
+                            </span>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[14px] font-bold text-foreground tabular-nums tracking-tighter">
+                                {formatDuration(total)}
+                            </p>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <p className="text-[14px] font-bold text-foreground tabular-nums tracking-tighter">
-                            {formatDuration(total)}
-                        </p>
-                    </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
 

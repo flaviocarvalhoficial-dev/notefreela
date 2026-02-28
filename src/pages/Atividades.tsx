@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
+import { cn } from "@/lib/utils";
 
 type ActivityType = "project" | "task" | "comment" | "status" | "assignment";
 
@@ -100,9 +101,11 @@ const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
         </motion.div>
       )}
 
-      {/* Lista de Atividades */}
       <motion.div
-        className="bento-card flex-1 overflow-auto"
+        className={cn(
+          "flex-1 overflow-auto",
+          !hideHeader && "bento-card"
+        )}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -117,7 +120,7 @@ const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
             <p className="text-sm">Nenhuma atividade registrada ainda</p>
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-0">
             {filteredActivities.map((activity, index) => {
               const Icon = activityIcons[activity.type] || Activity;
               const color = activityColors[activity.type] || "hsl(var(--primary))";
@@ -128,7 +131,7 @@ const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 + index * 0.03 }}
-                  className="glass-light p-4 rounded-lg hover:bg-muted/10 transition-all group"
+                  className="p-4 transition-all hover:bg-muted/5 border-b border-border/60 last:border-0"
                 >
                   <div className="flex items-start gap-4">
                     <div

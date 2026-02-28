@@ -268,6 +268,34 @@ export default function Assinaturas() {
         }
     });
 
+    const markAsPaidMutation = useMutation({
+        mutationFn: async (sub: Subscription) => {
+            const currentDate = parseISO(sub.next_payment_date);
+            const nextDate = addMonths(currentDate, sub.billing_cycle === 'anual' ? 12 : 1);
+            const nextDateStr = format(nextDate, 'yyyy-MM-dd');
+
+            // 1. Update subscription next payment date (Purely visual change for cycle management)
+            const { error: updateError } = await (supabase as any)
+                .from("tool_subscriptions")
+                .update({ next_payment_date: nextDateStr })
+                .eq("id", sub.id);
+            if (updateError) throw updateError;
+
+            return { name: sub.name, nextDate: nextDateStr };
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["tool-subscriptions"] });
+            queryClient.invalidateQueries({ queryKey: ["finance_projects"] });
+            toast({
+                title: "Confirmado!",
+                description: `${data.name} marcado como pago. Próximo vencimento: ${format(parseISO(data.nextDate), "dd/MM/yyyy")}.`,
+            });
+        },
+        onError: (err: any) => {
+            toast({ title: "Erro ao atualizar", description: err.message, variant: "destructive" });
+        }
+    });
+
     // Calculations
     const filteredSubscriptions = useMemo(() => {
         return subscriptions.filter((sub) => {
@@ -488,6 +516,8 @@ export default function Assinaturas() {
                                         setEditingSubscription(sub);
                                         setIsAddOpen(true);
                                     }}
+                                    onMarkAsPaid={() => markAsPaidMutation.mutate(sub)}
+                                    isProcessing={markAsPaidMutation.isPending && markAsPaidMutation.variables?.id === sub.id}
                                 />
                             ) : (
                                 <SubscriptionListItem
@@ -498,6 +528,8 @@ export default function Assinaturas() {
                                         setEditingSubscription(sub);
                                         setIsAddOpen(true);
                                     }}
+                                    onMarkAsPaid={() => markAsPaidMutation.mutate(sub)}
+                                    isProcessing={markAsPaidMutation.isPending && markAsPaidMutation.variables?.id === sub.id}
                                 />
                             )
                         ))}
@@ -549,7 +581,13 @@ function SubscriptionIcon({ iconName, className }: { iconName: string; className
     return <Icon className={className} />;
 }
 
-function SubscriptionCard({ subscription, onDelete, onEdit }: { subscription: Subscription; onDelete: () => void; onEdit: () => void }) {
+function SubscriptionCard({ subscription, onDelete, onEdit, onMarkAsPaid, isProcessing }: {
+    subscription: Subscription;
+    onDelete: () => void;
+    onEdit: () => void;
+    onMarkAsPaid: () => void;
+    isProcessing?: boolean;
+}) {
     const isOverdue = isAfter(new Date(), parseISO(subscription.next_payment_date));
 
     return (
@@ -607,23 +645,54 @@ function SubscriptionCard({ subscription, onDelete, onEdit }: { subscription: Su
                 </div>
 
                 <div className={cn(
-                    "flex items-center justify-between px-3 py-2 rounded-xl text-[10px] font-bold tracking-[0.1em] border uppercase",
+                    "flex items-center justify-between px-3 py-2 rounded-xl text-[10px] font-bold tracking-[0.1em] border uppercase group/status relative overflow-hidden",
                     isOverdue
                         ? "bg-rose-500/5 text-rose-500 border-rose-500/20"
                         : "bg-emerald-500/5 text-emerald-500 border-emerald-500/20"
                 )}>
-                    <div className="flex items-center gap-1.5 ">
+                    <div className="flex items-center gap-1.5 z-10">
                         <Clock className="w-3.5 h-3.5" />
                         <span>Vence {format(parseISO(subscription.next_payment_date), "dd/MM", { locale: ptBR })}</span>
                     </div>
-                    {isOverdue && <AlertCircle className="w-3.5 h-3.5" />}
+
+                    <div className="flex items-center gap-2 z-10">
+                        {isOverdue && <AlertCircle className="w-3.5 h-3.5" />}
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={isProcessing}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkAsPaid();
+                            }}
+                            className={cn(
+                                "h-6 px-2 text-[9px] font-bold border rounded-md transition-all active:scale-95",
+                                isOverdue
+                                    ? "bg-rose-500/10 border-rose-500/30 text-rose-600 hover:bg-rose-500 hover:text-white"
+                                    : "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500 hover:text-white"
+                            )}
+                        >
+                            {isProcessing ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                                <><CheckCircle2 className="h-3 w-3 mr-1" /> PAGO</>
+                            )}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </motion.div>
     );
 }
 
-function SubscriptionListItem({ subscription, onDelete, onEdit }: { subscription: Subscription; onDelete: () => void; onEdit: () => void }) {
+function SubscriptionListItem({ subscription, onDelete, onEdit, onMarkAsPaid, isProcessing }: {
+    subscription: Subscription;
+    onDelete: () => void;
+    onEdit: () => void;
+    onMarkAsPaid: () => void;
+    isProcessing?: boolean;
+}) {
+    const isOverdue = isAfter(new Date(), parseISO(subscription.next_payment_date));
 
     return (
         <motion.div
@@ -651,12 +720,36 @@ function SubscriptionListItem({ subscription, onDelete, onEdit }: { subscription
                     <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">VALOR</span>
                 </div>
                 <div className="hidden sm:flex flex-col text-right w-24">
-                    <span className="text-xs font-semibold">{format(parseISO(subscription.next_payment_date), "dd MMM", { locale: ptBR })}</span>
+                    <span className={cn(
+                        "text-xs font-semibold",
+                        isOverdue ? "text-rose-500" : "text-foreground"
+                    )}>
+                        {format(parseISO(subscription.next_payment_date), "dd MMM", { locale: ptBR })}
+                    </span>
                     <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">VENCIMENTO</span>
                 </div>
             </div>
 
             <div className="flex items-center gap-2">
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    disabled={isProcessing}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onMarkAsPaid();
+                    }}
+                    className={cn(
+                        "h-8 w-8 rounded-lg transition-all",
+                        isOverdue ? "text-rose-500 hover:bg-rose-500/10" : "text-emerald-500 hover:bg-emerald-500/10"
+                    )}
+                >
+                    {isProcessing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <CheckCircle2 className="h-4 w-4" title="Confirmar Pagamento" />
+                    )}
+                </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8 opacity-40 group-hover:opacity-100">

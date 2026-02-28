@@ -122,7 +122,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
                                                 <div className="flex flex-col">
                                                     <span className={cn(
                                                         "text-sm font-medium tracking-tight transition-colors",
-                                                        task.column_id === 'done' ? "text-muted-foreground line-through" : "text-foreground group-hover:text-primary"
+                                                        task.column_id === 'done' ? "text-muted-foreground" : "text-foreground group-hover:text-primary"
                                                     )}>
                                                         {task.title}
                                                     </span>

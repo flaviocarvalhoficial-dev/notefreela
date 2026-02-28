@@ -1643,7 +1643,7 @@ export function EditProjectDialog({
                                                                     className={cn(
                                                                         "text-sm font-medium truncate block",
                                                                         task.progress >= 100
-                                                                            ? "line-through text-muted-foreground"
+                                                                            ? "text-muted-foreground"
                                                                             : "text-foreground"
                                                                     )}
                                                                 >

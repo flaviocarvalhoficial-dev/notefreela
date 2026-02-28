@@ -76,12 +76,14 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
             const { data, error } = await supabase
                 .from("tasks")
                 .select(`*, projects (name, value, advance_payment)`)
+                .order("position", { ascending: true })
                 .order("created_at", { ascending: true });
 
             if (error) throw error;
             return data.map(t => ({
                 ...t,
                 progress: t.progress ?? 0,
+                position: (t as any).position ?? 0,
                 project_name: (t.projects as any)?.name,
                 billing_period: (t as any).billing_period
             })) as Task[];
@@ -196,15 +198,19 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
     });
 
     const moveTaskMutation = useMutation({
-        mutationFn: async ({ id, column_id }: { id: string, column_id: ColumnId }) => {
-            const { error } = await supabase.from("tasks").update({ column_id: column_id as any }).eq("id", id);
+        mutationFn: async ({ id, column_id, position }: { id: string, column_id: ColumnId, position?: number }) => {
+            const updateData: any = { column_id: column_id as any };
+            if (typeof position === 'number') {
+                updateData.position = position;
+            }
+            const { error } = await supabase.from("tasks").update(updateData).eq("id", id);
             if (error) throw error;
         },
-        onMutate: async ({ id, column_id }) => {
+        onMutate: async ({ id, column_id, position }) => {
             await queryClient.cancelQueries({ queryKey: ["tasks"] });
             const previousTasks = queryClient.getQueryData(["tasks"]);
             queryClient.setQueryData(["tasks"], (old: any) =>
-                old ? old.map((t: any) => t.id === id ? { ...t, column_id } : t) : []
+                old ? old.map((t: any) => t.id === id ? { ...t, column_id, position: position ?? t.position } : t) : []
             );
             return { previousTasks };
         },
@@ -213,6 +219,25 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
             toast({ title: "Erro ao mover", description: "Não foi possível salvar a posição.", variant: "destructive" });
         },
         onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        }
+    });
+
+    const updateTasksOrderMutation = useMutation({
+        mutationFn: async (taskUpdates: { id: string, position: number, column_id?: ColumnId }[]) => {
+            // Supabase doesn't support bulk update with different values per row easily via the JS client
+            // without using RPC or multiple calls. Since our reorder happens within a column (max ~10-20 items),
+            // a Promise.all with individual updates is acceptable or simpler.
+            const updates = taskUpdates.map(u => {
+                const data: any = { position: u.position };
+                if (u.column_id) data.column_id = u.column_id;
+                return supabase.from("tasks").update(data).eq("id", u.id);
+            });
+            const results = await Promise.all(updates);
+            const error = results.find(r => r.error)?.error;
+            if (error) throw error;
+        },
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tasks"] });
         }
     });
@@ -440,6 +465,45 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
         }
     });
 
+    const duplicateTaskMutation = useMutation({
+        mutationFn: async ({ id, column_id }: { id: string, column_id?: ColumnId }) => {
+            const task = tasks.find(t => t.id === id);
+            if (!task) throw new Error("Tarefa não encontrada");
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Não autenticado");
+
+            // Para garantir que a cópia fique "abaixo" da referência na ordenação por created_at ASC,
+            // definimos o created_at da cópia como o da original + 1 segundo (ou milissegundo se o sistema suportar).
+            // Como no Supabase costuma ser timestamp, somar 1 segundo à original garante que ela fique logo após.
+            const originalCreatedAt = new Date(task.created_at);
+            const newCreatedAt = new Date(originalCreatedAt.getTime() + 1000).toISOString();
+
+            const { error, data } = await supabase.from("tasks").insert({
+                title: `${task.title} (Cópia)`,
+                due_date: task.due_date,
+                user_id: user.id,
+                column_id: (column_id || task.column_id) as any,
+                project_id: task.project_id,
+                priority: task.priority,
+                progress: task.progress,
+                start_time: (task as any).start_time,
+                end_time: (task as any).end_time,
+                billing_period: (task as any).billing_period,
+                created_at: newCreatedAt
+            }).select().single();
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["tasks"] });
+            toast({ title: "Tarefa duplicada" });
+        },
+        onError: (err) => {
+            toast({ title: "Erro ao duplicar tarefa", description: err.message, variant: "destructive" });
+        }
+    });
+
     return {
         scenarios,
         columns,
@@ -453,6 +517,8 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
             updateTask: updateTaskMutation.mutate,
             moveTask: moveTaskMutation.mutate,
             createTask: createTaskMutation.mutate,
+            updateTasksOrder: updateTasksOrderMutation.mutate,
+            duplicateTask: (payload: { id: string, column_id?: ColumnId }) => duplicateTaskMutation.mutate(payload),
             deleteTask: deleteTaskMutation.mutate,
             updateColumn: updateColumnMutation.mutate,
             createColumn: createColumnMutation.mutate,

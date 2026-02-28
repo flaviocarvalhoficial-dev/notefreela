@@ -498,7 +498,7 @@ const HabitBentoCard = ({ category, habits, onDelete, onAddMore }: any) => {
                                     <div className="min-w-0 flex flex-col">
                                         <span className={cn(
                                             "text-[13px] font-medium transition-colors",
-                                            habit.completed_today ? "text-muted-foreground line-through" : "text-foreground"
+                                            habit.completed_today ? "text-muted-foreground" : "text-foreground"
                                         )}>
                                             {habit.title}
                                         </span>

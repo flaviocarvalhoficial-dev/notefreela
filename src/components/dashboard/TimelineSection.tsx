@@ -228,7 +228,7 @@ export function TimelineSection({
 
   return (
     <motion.section
-      className="notion-card h-full flex flex-col overflow-hidden"
+      className="bento-card bg-card/40 backdrop-blur-sm h-full flex flex-col overflow-hidden border border-border/60 shadow-sm"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
@@ -236,12 +236,11 @@ export function TimelineSection({
       <header className="p-4 border-b border-border flex items-center justify-between shrink-0">
         {/* ... (Existing header content) ... */}
         <div className="flex items-center gap-4">
-          <h2 className="text-[10px] font-medium text-muted-foreground leading-none  tracking-tight">Cronograma</h2>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
             <SelectTrigger className="h-7 w-[160px] bg-muted/30 border-none text-[10px] font-medium rounded-md focus:ring-0">
               <SelectValue placeholder="Projeto" />
             </SelectTrigger>
-            <SelectContent className="notion-card border-border">
+            <SelectContent className="bento-card border-border">
               <SelectItem value="all">Todos os Projetos</SelectItem>
               {projects.map(p => (
                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -277,14 +276,14 @@ export function TimelineSection({
       </header>
 
       <div className="flex-1 overflow-hidden flex flex-col relative">
-        <div className="timeline-viewport flex-1 select-none overflow-auto technical-scrollbar"
+        <div className="timeline-viewport flex-1 select-none overflow-auto custom-scrollbar relative"
           ref={viewportRef}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
           onPointerLeave={endDrag}>
-          <div className="min-w-max relative flex flex-col bg-background/50" style={{ height: totalHeight + 100 }}>
+          <div className="min-w-max relative flex flex-col bg-background/20" style={{ height: Math.max(totalHeight + 100, 600) }}>
             {/* Header X-Axis */}
             <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
               {/* Months Row */}
@@ -317,12 +316,26 @@ export function TimelineSection({
 
             {/* Grid Area */}
             <div className="relative flex-1 min-h-[200px]" style={{ width: daysInRange.length * slotPx }}>
+              {/* Horizontal Grid Lanes */}
+              <div className="absolute inset-y-0 left-0 right-0 flex flex-col pointer-events-none">
+                {Array.from({ length: Math.ceil(Math.max(totalHeight + 100, 600) / LANE_HEIGHT) }).map((_, idx) => (
+                  <div
+                    key={`h-${idx}`}
+                    className={cn(
+                      "border-b border-border/5",
+                      idx % 2 === 0 ? "bg-muted/5" : "bg-transparent"
+                    )}
+                    style={{ height: LANE_HEIGHT }}
+                  />
+                ))}
+              </div>
+
               {/* Vertical Grid Lines */}
               <div className="absolute inset-y-0 left-0 right-0 flex pointer-events-none">
                 {daysInRange.map((d, idx) => (
                   <div key={`v-${idx}`} className={cn(
-                    "h-full border-r border-border/[0.03] shrink-0",
-                    isToday(d) && "bg-primary/[0.01] border-primary/5"
+                    "h-full border-r border-border/10 shrink-0",
+                    isToday(d) && "bg-primary/[0.01] border-primary/20"
                   )} style={{ width: slotPx }} />
                 ))}
               </div>
@@ -398,7 +411,7 @@ export function TimelineSection({
                         </ContextMenu>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent className="notion-card border-border px-3 py-2">
+                    <TooltipContent className="bento-card border-border px-3 py-2">
                       <p className="text-xs font-medium mb-0.5">{a.title}</p>
                       <p className="text-[9px] font-medium text-muted-foreground  tracking-tight">
                         {a.projectName ? `${a.meta} • ${a.projectName}` : a.meta}
