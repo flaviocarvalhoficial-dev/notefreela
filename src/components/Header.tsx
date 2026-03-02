@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Search, ChevronDown, Moon, Sun, LogOut, User as UserIcon, Settings as SettingsIcon } from "lucide-react";
+import { Bell, Search, ChevronDown, Moon, Sun, LogOut, User as UserIcon, Settings as SettingsIcon, Eye } from "lucide-react";
 import { HeaderTimerBadge } from "@/components/timer/HeaderTimerBadge";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/hooks/use-theme";
+import { useValueVisibility } from "@/hooks/use-value-visibility";
+import { EyeClosed } from "@/components/shared/EyeClosed";
 import { supabase } from "@/integrations/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -18,9 +20,9 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-
 export function Header() {
     const { theme, setTheme } = useTheme();
+    const { hideValues, toggleHideValues } = useValueVisibility();
     const { pathname } = useLocation();
     const isDashboard = pathname === "/";
     const [mounted, setMounted] = useState(false);
@@ -149,6 +151,20 @@ export function Header() {
                 <div className="flex items-center gap-2">
                     <HeaderTimerBadge />
                     <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-full hover:bg-muted/40 transition-all"
+                            onClick={toggleHideValues}
+                            title={hideValues ? "Mostrar valores" : "Esconder valores"}
+                        >
+                            {hideValues ? (
+                                <EyeClosed className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                            )}
+                        </Button>
+
                         <Button
                             variant="ghost"
                             size="icon"

@@ -150,7 +150,7 @@ export const ProjectHeader = ({
                                 <DollarSign className="w-3 h-3 text-primary/40" />
                                 <span className="text-[9px] font-medium text-muted-foreground tracking-tight ">SALDO</span>
                             </div>
-                            <p className="text-base font-medium tabular-nums tracking-tight">
+                            <p className="text-base font-medium tabular-nums tracking-tight mask-value">
                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(kpis.financialBalance)}
                             </p>
                         </div>

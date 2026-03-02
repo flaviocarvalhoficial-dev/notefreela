@@ -23,6 +23,7 @@ import {
     CheckCircle2
 } from "lucide-react";
 import { CostRegistrationDialog } from "@/components/dashboard/CostRegistrationDialog";
+import { MaskableValue } from "@/components/shared/MaskableValue";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
@@ -229,7 +230,8 @@ export default function Financeiro() {
     const netProfit = financialStats.netProfit;
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        return <span className="mask-value">{formatted}</span>;
     };
 
     if (isFinancialLoading) {

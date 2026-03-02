@@ -21,13 +21,15 @@ import {
     Heart,
     DollarSign,
     Eye,
-    EyeOff,
     ExternalLink,
     Dumbbell as WorkoutIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { EyeClosed } from "@/components/shared/EyeClosed";
+
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -756,7 +758,7 @@ const AccessSection = () => {
                                             onClick={() => setShowPass(showPass === acesso.id ? null : acesso.id)}
                                             className="text-muted-foreground hover:text-primary transition-colors"
                                         >
-                                            {showPass === acesso.id ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                            {showPass === acesso.id ? <EyeClosed className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                         </button>
                                     </div>
                                 </div>

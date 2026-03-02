@@ -159,7 +159,7 @@ const Index = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Faturamento Est.</p>
-                        <h2 className="text-2xl font-semibold tracking-tight tabular-nums">
+                        <h2 className="text-2xl font-semibold tracking-tight tabular-nums mask-value">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(
                                 projects.reduce((acc, p) => acc + (Number(p.value) || 0), 0)
                             )}

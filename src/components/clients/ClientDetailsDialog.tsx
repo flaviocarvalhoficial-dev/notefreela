@@ -162,7 +162,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                     <Briefcase className="h-16 w-16" />
                                 </div>
                                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Total Investido (Filtrado)</p>
-                                <p className="text-3xl font-semibold tracking-tight text-foreground tabular-nums">
+                                <p className="text-3xl font-semibold tracking-tight text-foreground tabular-nums mask-value">
                                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.total)}
                                 </p>
                             </div>
@@ -278,19 +278,19 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                 <div className="flex items-center gap-8">
                                                     <div className="space-y-1">
                                                         <span className="text-[9px] font-medium text-muted-foreground  tracking-tight">Total</span>
-                                                        <p className="text-xs font-medium text-foreground tabular-nums">
+                                                        <p className="text-xs font-medium text-foreground tabular-nums mask-value">
                                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value)}
                                                         </p>
                                                     </div>
                                                     <div className="space-y-1 text-emerald-500/80">
                                                         <span className="text-[9px] font-medium opacity-40  tracking-tight">Pago</span>
-                                                        <p className="text-xs font-medium tabular-nums">
+                                                        <p className="text-xs font-medium tabular-nums mask-value">
                                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.advance_payment || 0)}
                                                         </p>
                                                     </div>
                                                     <div className="space-y-1 text-amber-500/80">
                                                         <span className="text-[9px] font-medium opacity-40  tracking-tight">Resto</span>
-                                                        <p className="text-xs font-medium tabular-nums">
+                                                        <p className="text-xs font-medium tabular-nums mask-value">
                                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value - (project.advance_payment || 0))}
                                                         </p>
                                                     </div>
@@ -316,7 +316,7 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
                                                             <CheckCircle2 className="h-3.5 w-3.5 text-primary/30 group-hover/svc:text-primary transition-colors" />
                                                             <span className="text-[11px] font-medium text-foreground">{svc.name}</span>
                                                         </div>
-                                                        <span className="text-[11px] font-medium text-foreground tabular-nums">
+                                                        <span className="text-[11px] font-medium text-foreground tabular-nums mask-value">
                                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price || 0)}
                                                         </span>
                                                     </div>

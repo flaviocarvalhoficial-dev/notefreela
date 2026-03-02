@@ -5,7 +5,7 @@ import {
     Heading1, Heading2, Heading3,
     List, ListOrdered, CheckSquare,
     Quote, Minus, Code2, Type,
-    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox
+    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox, Columns2
 } from 'lucide-react';
 
 export interface SlashCommandItem {
@@ -119,6 +119,26 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
         group: 'Blocos',
         action: (editor) => {
             editor.chain().focus().setHorizontalRule().run();
+        },
+    },
+    {
+        id: 'columns-2',
+        label: '2 Colunas',
+        description: 'Dividir conteúdo em 2 colunas',
+        icon: <Columns2 className="w-4 h-4" />,
+        group: 'Blocos',
+        action: (editor) => {
+            editor.chain().focus().insertColumns(2).run();
+        },
+    },
+    {
+        id: 'columns-3',
+        label: '3 Colunas',
+        description: 'Dividir conteúdo em 3 colunas',
+        icon: <LayoutGrid className="w-4 h-4" />,
+        group: 'Blocos',
+        action: (editor) => {
+            editor.chain().focus().insertColumns(3).run();
         },
     },
     // --- AÇÕES ---

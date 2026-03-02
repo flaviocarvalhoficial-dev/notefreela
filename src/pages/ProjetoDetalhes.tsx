@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { ProjectHeader } from "@/components/project-hub/ProjectHeader";
 import { BlockEditor } from "@/components/project-hub/BlockEditor";
 import { ProjectDock } from "@/components/project-hub/ProjectDock";
@@ -16,7 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { NewTaskDialog } from "@/components/tasks/NewTaskDialog";
 import { CostRegistrationDialog } from "@/components/dashboard/CostRegistrationDialog";
 import { AddInboxDialog } from "@/components/project-hub/AddInboxDialog";
-import { type BlockEditorRef } from "@/components/project-hub/BlockEditor";
+import { type BlockEditorRef, type BlockEditorStatus } from "@/components/project-hub/BlockEditor";
 interface ActivityLog {
     id: string;
     title: string;
@@ -44,11 +45,17 @@ const ProjetoHub = () => {
     const [selectedDocCategory, setSelectedDocCategory] = useState<string>("");
 
     const editorRef = useRef<BlockEditorRef>(null);
+    const [editorStatus, setEditorStatus] = useState({
+        hasColumns: false,
+        canUndo: false,
+        canRedo: false
+    });
 
 
-    // Local page title state for smooth typing (avoids mutation per keystroke)
     const [pageTitleLocal, setPageTitleLocal] = useState("");
     const titleDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const contentDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const deletionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Fetch Project Data
     const { data: project, isLoading } = useQuery({
@@ -271,8 +278,19 @@ const ProjetoHub = () => {
     useEffect(() => {
         return () => {
             if (titleDebounceRef.current) clearTimeout(titleDebounceRef.current);
+            if (contentDebounceRef.current) clearTimeout(contentDebounceRef.current);
         };
     }, []);
+
+    const handleContentChange = useCallback((json: any) => {
+        if (contentDebounceRef.current) {
+            clearTimeout(contentDebounceRef.current);
+        }
+
+        contentDebounceRef.current = setTimeout(() => {
+            updateContentMutation.mutate(json);
+        }, 1000); // 1s debounce to prevent instability during typing
+    }, [updateContentMutation]);
 
     const deleteProjectMutation = useMutation({
         mutationFn: async () => {
@@ -280,10 +298,38 @@ const ProjetoHub = () => {
             if (error) throw error;
         },
         onSuccess: () => {
-            toast({ title: "Projeto removido" });
             navigate("/projetos");
         }
     });
+
+    const handleDeleteProject = () => {
+        setIsDeleting(false); // Close dialog
+
+        toast({
+            title: "Projeto será excluído...",
+            description: "Você tem 5 segundos para desfazer esta ação.",
+            duration: 5000,
+            action: (
+                <ToastAction
+                    altText="Desfazer"
+                    onClick={() => {
+                        if (deletionTimeoutRef.current) {
+                            clearTimeout(deletionTimeoutRef.current);
+                            deletionTimeoutRef.current = null;
+                            toast({ title: "Exclusão cancelada", description: "O projeto está seguro." });
+                        }
+                    }}
+                >
+                    Desfazer
+                </ToastAction>
+            ),
+        });
+
+        deletionTimeoutRef.current = setTimeout(() => {
+            deleteProjectMutation.mutate();
+            deletionTimeoutRef.current = null;
+        }, 5000);
+    };
 
     const createTaskMutation = useMutation({
         mutationFn: async (values: any) => {
@@ -415,6 +461,8 @@ const ProjetoHub = () => {
                     onSelectPage={(pageId) => setActivePageId(pageId)}
                     onAddPage={() => createPageMutation.mutate()}
                     onDeletePage={(pageId) => deletePageMutation.mutate(pageId)}
+                    editorRef={editorRef}
+                    editorStatus={editorStatus}
                 />
 
                 {/* Editor Area */}
@@ -448,7 +496,8 @@ const ProjetoHub = () => {
                             ref={editorRef}
                             key={activePageId || 'main'}
                             content={activePageId ? (activePage?.content_blocks || []) : ((project as any).content_blocks || (project.description ? [{ type: 'paragraph', content: [{ type: 'text', text: project.description }] }] : []))}
-                            onChange={(json) => updateContentMutation.mutate(json)}
+                            onChange={handleContentChange}
+                            onStatusChange={setEditorStatus}
 
                             onCommand={(cmd) => {
                                 // Record that this command was triggered from editor to insert reference later
@@ -524,9 +573,9 @@ const ProjetoHub = () => {
             <DeleteConfirmDialog
                 open={isDeleting}
                 onOpenChange={setIsDeleting}
-                title="Excluir Hub do Projeto"
-                description="Isso removerá todo o histórico e conteúdo deste workspace. Confirmar?"
-                onConfirm={() => deleteProjectMutation.mutate()}
+                onConfirm={handleDeleteProject}
+                title="Excluir Projeto"
+                description="Tem certeza? Isso apagará todos os dados, tarefas e documentos associados."
             />
 
             <AddDocumentDialog

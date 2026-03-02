@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import React from "react";
 import {
     FileText, FilePlus, ChevronRight, Home,
     MoreHorizontal, Trash2, Copy,
@@ -20,7 +19,6 @@ interface PageNavProps {
     onAddPage: () => void;
     onDeletePage?: (pageId: string) => void;
     editorRef?: React.RefObject<any>;
-    editorStatus?: { hasColumns: boolean; canUndo: boolean; canRedo: boolean };
 }
 
 export const PageNav = ({
@@ -30,102 +28,44 @@ export const PageNav = ({
     onSelectPage,
     onAddPage,
     onDeletePage,
-    editorRef,
-    editorStatus
+    editorRef
 }: PageNavProps) => {
     const activePage = pages.find((p) => p.id === activePageId);
 
     return (
-        <div className="w-full border-b border-border bg-card/20 backdrop-blur-sm px-2 sm:px-4">
-            <div className="w-full py-0">
-                {/* Top Row: Breadcrumb & Editor Actions */}
-                <div className="flex items-center justify-between py-2.5">
-                    <div className="flex items-center gap-1.5 text-[11px]">
-                        <button
-                            onClick={() => onSelectPage(null)}
-                            className={cn(
-                                "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors font-medium",
-                                !activePageId
-                                    ? "bg-primary/10 text-primary"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                            )}
-                        >
-                            <Home className="h-3 w-3" />
-                            <span className="max-w-[140px] truncate">{projectName}</span>
-                        </button>
-
-                        {activePageId && activePage && (
-                            <>
-                                <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                                <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
-                                    <FileText className="h-3 w-3" />
-                                    <span className="max-w-[180px] truncate">
-                                        {activePage.title || "Sem título"}
-                                    </span>
-                                </span>
-                            </>
+        <div className="w-full border-b border-border bg-card/20 backdrop-blur-sm">
+            <div className="max-w-4xl px-4 sm:px-8 py-0">
+                {/* Breadcrumb Row */}
+                <div className="flex items-center gap-1.5 py-2.5 text-[11px]">
+                    <button
+                        onClick={() => onSelectPage(null)}
+                        className={cn(
+                            "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors font-medium",
+                            !activePageId
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                         )}
-                    </div>
+                    >
+                        <Home className="h-3 w-3" />
+                        <span className="max-w-[140px] truncate">{projectName}</span>
+                    </button>
 
-                    {/* Editor Actions (Right Aligned) */}
-                    {editorRef?.current && (
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-0.5">
-                                <button
-                                    onClick={() => editorRef?.current?.undo()}
-                                    disabled={!editorStatus?.canUndo}
-                                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-20 transition-all"
-                                    title="Desfazer (Ctrl+Z)"
-                                >
-                                    <Undo className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => editorRef?.current?.redo()}
-                                    disabled={!editorStatus?.canRedo}
-                                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-20 transition-all"
-                                    title="Refazer (Ctrl+Y)"
-                                >
-                                    <Redo className="h-3.5 w-3.5" />
-                                </button>
-                            </div>
-
-                            <div className="w-px h-4 bg-border/60" />
-
-                            <div className="flex items-center gap-1">
-                                {editorStatus?.hasColumns ? (
-                                    <button
-                                        onClick={() => editorRef?.current?.removeColumns()}
-                                        className="p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-all"
-                                        title="Remover Colunas"
-                                    >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                ) : (
-                                    <>
-                                        <button
-                                            onClick={() => editorRef.current.insertColumns(2)}
-                                            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
-                                            title="Layout 2 Colunas"
-                                        >
-                                            <Columns2 className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button
-                                            onClick={() => editorRef.current.insertColumns(3)}
-                                            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
-                                            title="Layout 3 Colunas"
-                                        >
-                                            <LayoutGrid className="h-3.5 w-3.5" />
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
+                    {activePageId && activePage && (
+                        <>
+                            <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+                                <FileText className="h-3 w-3" />
+                                <span className="max-w-[180px] truncate">
+                                    {activePage.title || "Sem título"}
+                                </span>
+                            </span>
+                        </>
                     )}
                 </div>
 
-                {/* Sub-pages Navigation */}
+                {/* Page Tree — horizontal tab-style */}
                 {pages.length > 0 && (
-                    <div className="flex items-center gap-0.5 pb-2 overflow-x-auto scrollbar-none -mx-1 px-1 border-t border-border/40 pt-2">
+                    <div className="flex items-center gap-0.5 pb-1 overflow-x-auto scrollbar-none -mx-1 px-1">
                         <button
                             onClick={() => onSelectPage(null)}
                             className={cn(
@@ -204,7 +144,7 @@ export const PageNav = ({
                 )}
 
                 {pages.length === 0 && (
-                    <div className="flex items-center gap-2 pb-2 border-t border-border/40 pt-2">
+                    <div className="flex items-center gap-2 pb-2">
                         <div className={cn(
                             "w-1.5 h-1.5 rounded-full bg-primary"
                         )} />
@@ -217,6 +157,60 @@ export const PageNav = ({
                             <FilePlus className="h-3 w-3" />
                             <span>Adicionar Página</span>
                         </button>
+                    </div>
+                )}
+
+                {/* Editor Tools Row */}
+                {editorRef?.current && (
+                    <div className="flex items-center justify-between py-2 border-t border-border/40">
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => editorRef.current.undo()}
+                                disabled={!editorRef.current.canUndo()}
+                                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-20 transition-all"
+                                title="Desfazer (Ctrl+Z)"
+                            >
+                                <Undo className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                                onClick={() => editorRef.current.redo()}
+                                disabled={!editorRef.current.canRedo()}
+                                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-20 transition-all"
+                                title="Refazer (Ctrl+Y)"
+                            >
+                                <Redo className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {editorRef.current.isActive('columns') ? (
+                                <button
+                                    onClick={() => editorRef.current.removeColumns()}
+                                    className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-all ring-1 ring-destructive/20 border-none"
+                                >
+                                    <XCircle className="h-3 w-3" />
+                                    LIMPAR COLUNAS
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-1 px-1 py-1 rounded-lg bg-muted/30 border border-border/50">
+                                    <button
+                                        onClick={() => editorRef.current.insertColumns(2)}
+                                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+                                    >
+                                        <Columns2 className="h-3 w-3" />
+                                        2 COLUNAS
+                                    </button>
+                                    <div className="w-px h-3 bg-border" />
+                                    <button
+                                        onClick={() => editorRef.current.insertColumns(3)}
+                                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+                                    >
+                                        <LayoutGrid className="h-3 w-3" />
+                                        3 COLUNAS
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

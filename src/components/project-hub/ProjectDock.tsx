@@ -205,15 +205,15 @@ export const ProjectDock = ({
                         <div className="grid grid-cols-3 gap-2">
                             <div className="p-3 bg-secondary/10 border border-border rounded-lg">
                                 <p className="text-[9px] font-medium text-muted-foreground tracking-tight ">VALOR</p>
-                                <p className="text-sm font-medium text-foreground tabular-nums">{fmt(valorTotal)}</p>
+                                <p className="text-sm font-medium text-foreground tabular-nums mask-value">{fmt(valorTotal)}</p>
                             </div>
                             <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-lg">
                                 <p className="text-[9px] font-medium text-emerald-600/60 tracking-tight ">RECEBIDO</p>
-                                <p className="text-sm font-medium text-emerald-500 tabular-nums">{fmt(recebido)}</p>
+                                <p className="text-sm font-medium text-emerald-500 tabular-nums mask-value">{fmt(recebido)}</p>
                             </div>
                             <div className="p-3 bg-rose-500/5 border border-rose-500/10 rounded-lg">
                                 <p className="text-[9px] font-medium text-rose-600/60 tracking-tight ">CUSTOS</p>
-                                <p className="text-sm font-medium text-rose-500 tabular-nums">{fmt(totalCustos)}</p>
+                                <p className="text-sm font-medium text-rose-500 tabular-nums mask-value">{fmt(totalCustos)}</p>
                             </div>
                         </div>
 
@@ -229,7 +229,7 @@ export const ProjectDock = ({
                                 "text-xs font-bold tabular-nums",
                                 lucro >= 0 ? "text-emerald-500" : "text-rose-500"
                             )}>
-                                {lucro >= 0 ? '+' : ''}{fmt(lucro)}
+                                <span className="mask-value">{lucro >= 0 ? '+' : ''}{fmt(lucro)}</span>
                             </span>
                         </div>
 
@@ -249,7 +249,7 @@ export const ProjectDock = ({
                                             <p className="text-[8px] text-muted-foreground">{new Date(entry.date).toLocaleDateString('pt-BR')}</p>
                                         </div>
                                     </div>
-                                    <p className="text-xs font-medium tabular-nums text-rose-500">
+                                    <p className="text-xs font-medium tabular-nums text-rose-500 mask-value">
                                         -{fmt(Math.abs(entry.amount))}
                                     </p>
                                 </div>

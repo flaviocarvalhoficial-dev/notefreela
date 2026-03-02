@@ -395,7 +395,7 @@ export default function Assinaturas() {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 ">ESTIMATIVA MENSAL</p>
-                        <h2 className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground tabular-nums mask-value">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalMonthly)}
                         </h2>
                     </div>
@@ -632,7 +632,7 @@ function SubscriptionCard({ subscription, onDelete, onEdit, onMarkAsPaid, isProc
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ">VALOR</span>
-                        <span className="text-lg font-bold tabular-nums">
+                        <span className="text-lg font-bold tabular-nums mask-value">
                             {subscription.currency === 'USD' ? '$' : 'R$'} {subscription.price.toLocaleString('pt-BR')}
                             <span className="text-[10px] text-muted-foreground ml-1 font-medium">/{subscription.billing_cycle === 'anual' ? 'ano' : 'mês'}</span>
                         </span>
@@ -714,7 +714,7 @@ function SubscriptionListItem({ subscription, onDelete, onEdit, onMarkAsPaid, is
 
             <div className="flex items-center gap-12 pr-6">
                 <div className="hidden lg:flex flex-col text-right w-24">
-                    <span className="text-xs font-bold tabular-nums ">
+                    <span className="text-xs font-bold tabular-nums mask-value">
                         {subscription.currency === 'USD' ? '$' : 'R$'} {subscription.price.toLocaleString('pt-BR')}
                     </span>
                     <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">VALOR</span>
@@ -747,7 +747,7 @@ function SubscriptionListItem({ subscription, onDelete, onEdit, onMarkAsPaid, is
                     {isProcessing ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                        <CheckCircle2 className="h-4 w-4" title="Confirmar Pagamento" />
+                        <CheckCircle2 className="h-4 w-4" />
                     )}
                 </Button>
                 <DropdownMenu>

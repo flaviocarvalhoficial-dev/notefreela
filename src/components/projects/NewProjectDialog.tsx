@@ -766,7 +766,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                             <span className="font-medium">{svc.name}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                            <span className="text-primary font-semibold">
+                                                            <span className="text-primary font-semibold mask-value">
                                                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price)}
                                                             </span>
                                                             <button onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1047,7 +1047,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                                         <span className="font-medium text-foreground/80">{svc.name}</span>
                                                                     </div>
                                                                     <div className="flex items-center gap-3">
-                                                                        <span className="text-primary font-bold">
+                                                                        <span className="text-primary font-bold mask-value">
                                                                             {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(svc.price)}
                                                                         </span>
                                                                         <button type="button" onClick={() => removeRecurringService(i)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
@@ -1288,7 +1288,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     {installments.length > 0 && (
                                                         <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 flex justify-between items-center">
                                                             <span className="text-[10px] text-muted-foreground font-medium">Total Parcelado:</span>
-                                                            <span className="text-xs font-bold text-primary">
+                                                            <span className="text-xs font-bold text-primary mask-value">
                                                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                                     installments.reduce((acc, curr) => acc + curr.amount, 0)
                                                                 )}

@@ -960,7 +960,7 @@ export function EditProjectDialog({
                                                             <span className="font-medium">{svc.name}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                            <span className="text-primary font-bold">
+                                                            <span className="text-primary font-bold mask-value">
                                                                 {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(svc.price)}
                                                             </span>
                                                             <button type="button" onClick={() => removeService(i)} className="text-muted-foreground hover:text-destructive transition-colors">
@@ -978,7 +978,7 @@ export function EditProjectDialog({
 
                                             <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 flex justify-between items-center shadow-sm">
                                                 <span className="text-[10px] text-primary/80 font-bold uppercase tracking-widest">Valor Total do Contrato</span>
-                                                <span className="text-base font-black text-primary">
+                                                <span className="text-base font-black text-primary mask-value">
                                                     {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(newValue)}
                                                 </span>
                                             </div>
@@ -1320,7 +1320,7 @@ export function EditProjectDialog({
                                                                             <span className="font-semibold text-foreground/80">{svc.name}</span>
                                                                         </div>
                                                                         <div className="flex items-center gap-4">
-                                                                            <span className="text-primary font-bold tabular-nums">
+                                                                            <span className="text-primary font-bold tabular-nums mask-value">
                                                                                 {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(svc.price)}
                                                                             </span>
                                                                             <button type="button" onClick={() => removeRecurringService(i)} className="text-muted-foreground hover:text-destructive transition-colors p-1 bg-background/50 rounded-md">

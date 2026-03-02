@@ -82,7 +82,7 @@ const Projetos = () => {
     { label: "Total", value: projects.length, icon: Briefcase, color: "text-[hsl(var(--peach))]" },
     { label: "Ativos", value: projects.filter(p => p.status === "active").length, icon: TrendingUp, color: "text-[hsl(var(--peach))]" },
     { label: "Em Revisão", value: projects.filter(p => p.status === "review").length, icon: CheckCircle2, color: "text-[hsl(var(--peach))]" },
-    { label: "Investimento", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(projects.reduce((acc, p) => acc + ((p as any).value || 0), 0)), icon: DollarSign, color: "text-[hsl(var(--peach))]" },
+    { label: "Investimento", value: <span className="mask-value">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(projects.reduce((acc, p) => acc + ((p as any).value || 0), 0))}</span>, icon: DollarSign, color: "text-[hsl(var(--peach))]" },
   ];
 
   return (
@@ -364,7 +364,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-[9px] font-medium text-muted-foreground  tracking-tight mb-1">Faturamento</span>
-              <span className="text-sm font-medium text-foreground tabular-nums">
+              <span className="text-sm font-medium text-foreground tabular-nums mask-value">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value || 0)}
               </span>
             </div>
@@ -437,7 +437,7 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
           <span className="text-[8px] text-muted-foreground  font-medium tracking-tight">Serviço</span>
         </div>
         <div className="hidden xl:flex flex-col text-right w-24 opacity-60">
-          <span className="text-xs font-medium tabular-nums">
+          <span className="text-xs font-medium tabular-nums mask-value">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
           </span>
           <span className="text-[8px] text-muted-foreground  font-medium tracking-tight">

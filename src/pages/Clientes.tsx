@@ -134,7 +134,7 @@ const Clientes = () => {
                         </div>
                         <div>
                             <p className="text-[10px] font-medium text-muted-foreground tracking-tight mb-0.5">{stat.title}</p>
-                            <p className="text-xl font-medium tracking-tight tabular-nums text-foreground">
+                            <p className="text-xl font-medium tracking-tight tabular-nums text-foreground mask-value">
                                 {typeof stat.value === 'number' && stat.title.includes("Total")
                                     ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stat.value)
                                     : stat.value}
@@ -369,7 +369,7 @@ function ClientCard({ client, onDelete, onClick, index }: { client: any, onDelet
                     <div className="space-y-1 text-right">
                         <p className="text-[10px] text-muted-foreground font-medium  tracking-tight">Total Investido</p>
                         <div className="flex items-center justify-end gap-2">
-                            <span className="text-base font-medium tracking-tight text-foreground tabular-nums">
+                            <span className="text-base font-medium tracking-tight text-foreground tabular-nums mask-value">
                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.totalValue || 0)}
                             </span>
                         </div>
@@ -420,7 +420,7 @@ function ClientListItem({ client, onDelete, onClick, index }: { client: any, onD
                 </div>
                 <div className="flex flex-col items-end w-28">
                     <span className="text-[10px] text-muted-foreground font-medium  tracking-tight">Investido</span>
-                    <span className="text-sm font-medium text-foreground tracking-tight tabular-nums">
+                    <span className="text-sm font-medium text-foreground tracking-tight tabular-nums mask-value">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.totalValue || 0)}
                     </span>
                 </div>

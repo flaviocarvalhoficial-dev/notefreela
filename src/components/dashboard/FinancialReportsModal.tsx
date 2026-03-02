@@ -148,11 +148,12 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
 
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', {
+        const formatted = new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL',
             maximumFractionDigits: 0
         }).format(value);
+        return <span className="mask-value">{formatted}</span>;
     };
 
     const totals = useMemo(() => {
@@ -249,8 +250,24 @@ export function FinancialReportsModal({ open, onOpenChange }: FinancialReportsMo
                                             <YAxis
                                                 axisLine={false}
                                                 tickLine={false}
-                                                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                                                tickFormatter={(val) => `R$${val / 1000}k`}
+                                                tick={(props) => {
+                                                    const { x, y, payload } = props;
+                                                    return (
+                                                        <g transform={`translate(${x},${y})`}>
+                                                            <text
+                                                                x={0}
+                                                                y={0}
+                                                                dy={4}
+                                                                textAnchor="end"
+                                                                fill="hsl(var(--muted-foreground))"
+                                                                fontSize={10}
+                                                                className="mask-value"
+                                                            >
+                                                                {`R$${payload.value / 1000}k`}
+                                                            </text>
+                                                        </g>
+                                                    );
+                                                }}
                                             />
                                             <Tooltip
                                                 contentStyle={{

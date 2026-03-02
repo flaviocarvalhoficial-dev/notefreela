@@ -90,7 +90,8 @@ export function FinancialChart({ projects }: FinancialChartProps) {
     }, [projects]);
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value);
+        const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value);
+        return <span className="mask-value">{formatted}</span>;
     };
 
     return (
@@ -153,8 +154,24 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                             <YAxis
                                 axisLine={false}
                                 tickLine={false}
-                                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                                tickFormatter={(value) => `R$${value / 1000}k`}
+                                tick={(props) => {
+                                    const { x, y, payload } = props;
+                                    return (
+                                        <g transform={`translate(${x},${y})`}>
+                                            <text
+                                                x={0}
+                                                y={0}
+                                                dy={4}
+                                                textAnchor="end"
+                                                fill="hsl(var(--muted-foreground))"
+                                                fontSize={11}
+                                                className="mask-value"
+                                            >
+                                                {`R$${payload.value / 1000}k`}
+                                            </text>
+                                        </g>
+                                    );
+                                }}
                             />
                             <Tooltip
                                 cursor={{ fill: 'hsl(var(--muted)/0.2)' }}
@@ -210,8 +227,24 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                             <YAxis
                                 axisLine={false}
                                 tickLine={false}
-                                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                                tickFormatter={(value) => `R$${value / 1000}k`}
+                                tick={(props) => {
+                                    const { x, y, payload } = props;
+                                    return (
+                                        <g transform={`translate(${x},${y})`}>
+                                            <text
+                                                x={0}
+                                                y={0}
+                                                dy={4}
+                                                textAnchor="end"
+                                                fill="hsl(var(--muted-foreground))"
+                                                fontSize={11}
+                                                className="mask-value"
+                                            >
+                                                {`R$${payload.value / 1000}k`}
+                                            </text>
+                                        </g>
+                                    );
+                                }}
                             />
                             <Tooltip
                                 contentStyle={{

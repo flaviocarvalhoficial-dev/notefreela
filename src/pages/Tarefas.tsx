@@ -455,7 +455,7 @@ export default function Tarefas() {
                                     <div className="mb-6 bg-secondary/30 p-2.5 rounded-md border border-border flex justify-between items-center relative z-10">
                                         <div className="flex flex-col">
                                             <p className="text-[8px] font-medium text-muted-foreground  leading-none">Investimento</p>
-                                            <p className="text-[11px] font-medium tracking-tight">{p.value ? `R$ ${p.value.toLocaleString()}` : 'Sob demanda'}</p>
+                                            <p className="text-[11px] font-medium tracking-tight mask-value">{p.value ? `R$ ${p.value.toLocaleString()}` : 'Sob demanda'}</p>
                                         </div>
                                         <Badge variant="outline" className="h-5 text-[8px] bg-primary/5 text-primary font-medium border-primary">
                                             ROI Focus
@@ -619,7 +619,7 @@ export default function Tarefas() {
                     </div>
                     <div className="min-w-0">
                         <p className="text-[8px] font-medium text-primary/60 tracking-tight mb-0.5 truncate">Valor Total</p>
-                        <p className="text-xl font-medium tabular-nums text-foreground tracking-tight">R$ {projectValue.toLocaleString()}</p>
+                        <p className="text-xl font-medium tabular-nums text-foreground tracking-tight mask-value">R$ {projectValue.toLocaleString()}</p>
                     </div>
                 </div>
 
@@ -629,7 +629,7 @@ export default function Tarefas() {
                     </div>
                     <div className="min-w-0">
                         <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 truncate">{projectBalance >= 0 ? 'Saldo Liq.' : 'Custo'}</p>
-                        <p className={cn("text-xl font-medium tabular-nums tracking-tight", projectBalance >= 0 ? "text-foreground" : "text-orange-500/80")}>
+                        <p className={cn("text-xl font-medium tabular-nums tracking-tight mask-value", projectBalance >= 0 ? "text-foreground" : "text-orange-500/80")}>
                             R$ {Math.abs(projectBalance).toLocaleString()}
                         </p>
                     </div>

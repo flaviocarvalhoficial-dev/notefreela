@@ -65,7 +65,7 @@ export function TimelineSection({
   const [selectedProject, setSelectedProject] = useState<string>("all");
   const lastDragEndedAtRef = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef({ active: false, startClientX: 0, startScrollLeft: 0 });
+  const dragRef = useRef({ active: false, startClientX: 0, startClientY: 0, startScrollLeft: 0, startScrollTop: 0 });
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const queryClient = useQueryClient();
@@ -202,7 +202,13 @@ export function TimelineSection({
     // User requested "one line per task", implying vertical list.
     // Let's keep existing drag for Horizontal, but allow native Vertical scroll.
     if (e.button !== 0) return;
-    dragRef.current = { active: true, startClientX: e.clientX, startScrollLeft: viewportRef.current?.scrollLeft || 0 };
+    dragRef.current = {
+      active: true,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startScrollLeft: viewportRef.current?.scrollLeft || 0,
+      startScrollTop: viewportRef.current?.scrollTop || 0
+    };
     setIsDragging(true);
     try { (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId); } catch { }
   };
@@ -210,6 +216,7 @@ export function TimelineSection({
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragRef.current.active || !viewportRef.current) return;
     viewportRef.current.scrollLeft = dragRef.current.startScrollLeft - (e.clientX - dragRef.current.startClientX);
+    viewportRef.current.scrollTop = dragRef.current.startScrollTop - (e.clientY - dragRef.current.startClientY);
   };
 
   const endDrag = () => {
@@ -276,7 +283,10 @@ export function TimelineSection({
       </header>
 
       <div className="flex-1 overflow-hidden flex flex-col relative">
-        <div className="timeline-viewport flex-1 select-none overflow-auto custom-scrollbar relative"
+        <div className={cn(
+          "timeline-viewport flex-1 select-none overflow-auto custom-scrollbar relative",
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        )}
           ref={viewportRef}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
