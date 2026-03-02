@@ -9,6 +9,7 @@ import { ProjectHeader } from "@/components/project-hub/ProjectHeader";
 import { BlockEditor } from "@/components/project-hub/BlockEditor";
 import { ProjectDock } from "@/components/project-hub/ProjectDock";
 import { PageNav } from "@/components/project-hub/PageNav";
+import { cn } from "@/lib/utils";
 import { EditProjectDialog } from "@/components/projects/EditProjectDialog";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { AddDocumentDialog } from "@/components/projects/AddDocumentDialog";
@@ -56,6 +57,36 @@ const ProjetoHub = () => {
     const titleDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const contentDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const deletionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Sidebar Resizing
+    const [sidebarWidth, setSidebarWidth] = useState(384);
+    const [isResizing, setIsResizing] = useState(false);
+
+    const startResizing = useCallback(() => {
+        setIsResizing(true);
+    }, []);
+
+    const stopResizing = useCallback(() => {
+        setIsResizing(false);
+    }, []);
+
+    const resize = useCallback((e: MouseEvent) => {
+        if (isResizing) {
+            const newWidth = window.innerWidth - e.clientX;
+            if (newWidth > 280 && newWidth < 800) {
+                setSidebarWidth(newWidth);
+            }
+        }
+    }, [isResizing]);
+
+    useEffect(() => {
+        window.addEventListener("mousemove", resize);
+        window.addEventListener("mouseup", stopResizing);
+        return () => {
+            window.removeEventListener("mousemove", resize);
+            window.removeEventListener("mouseup", stopResizing);
+        };
+    }, [resize, stopResizing]);
 
     // Fetch Project Data
     const { data: project, isLoading } = useQuery({
@@ -136,6 +167,32 @@ const ProjetoHub = () => {
                 .order("created_at", { ascending: true });
             if (error) throw error;
             return data || [];
+        },
+        enabled: !!id,
+    });
+
+    const { data: transactions = [] } = useQuery({
+        queryKey: ["project-transactions", id],
+        queryFn: async () => {
+            const { data, error } = await (supabase as any)
+                .from("transactions")
+                .select("*")
+                .eq("project_id", id as string);
+            if (error) return [];
+            return (data || []) as any[];
+        },
+        enabled: !!id,
+    });
+
+    const { data: installments = [] } = useQuery({
+        queryKey: ["project-installments", id],
+        queryFn: async () => {
+            const { data, error } = await (supabase as any)
+                .from("installments")
+                .select("*")
+                .eq("project_id", id as string);
+            if (error) return [];
+            return (data || []) as any[];
         },
         enabled: !!id,
     });
@@ -406,7 +463,26 @@ const ProjetoHub = () => {
     // KPI Calculations
     const kpis = useMemo(() => {
         const nextDeadline = project?.deadline ? format(new Date(project.deadline), "dd/MM/yy", { locale: ptBR }) : null;
-        const financialBalance = costs.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
+        const now = new Date();
+        const currentMonth = format(now, "yyyy-MM");
+
+        // 1. Filter everything strictly for CURRENT PROJECT and CURRENT MONTH
+        // (Queries are already project-scoped, but we filter defensively here too)
+        const projectInstallments = (installments as any[]).filter(inst => inst.project_id === id);
+        const projectCosts = (costs as any[]).filter(c => c.project_id === id);
+
+        // 2. Pending for the month (Provisioned or Overdue items due in March)
+        const pendingInstallments = projectInstallments
+            .filter(i => (i.status === 'provisionado' || i.status === 'atrasado') && (i.due_date || "").startsWith(currentMonth))
+            .reduce((acc, i) => acc + (Number(i.amount) || 0), 0);
+
+        // 3. Extra pending revenues in month from project_costs
+        const pendingManual = projectCosts
+            .filter(c => (c.category === 'revenue' || c.category === 'receita_parcela') && (c.date || "").startsWith(currentMonth) && c.date > now.toISOString().split('T')[0])
+            .reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
+
+        // financialBalance = Everything strictly "A Receber" this month for this project
+        const financialBalance = pendingInstallments + pendingManual;
 
         return {
             openTasks: tasks.filter((t: any) => t.status !== 'done').length,
@@ -414,7 +490,7 @@ const ProjetoHub = () => {
             financialBalance,
             nextDeadline
         };
-    }, [project, tasks, inboxItems, costs]);
+    }, [project, tasks, inboxItems, costs, transactions, installments, id]);
 
     if (isLoading) {
         return (
@@ -435,7 +511,10 @@ const ProjetoHub = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+        <div className={cn(
+            "min-h-screen bg-background flex flex-col overflow-hidden transition-colors",
+            isResizing && "cursor-col-resize select-none"
+        )}>
             <ProjectHeader
                 project={project}
                 kpis={kpis}
@@ -466,11 +545,11 @@ const ProjetoHub = () => {
                 />
 
                 {/* Editor Area */}
-                <div className="flex-1 flex overflow-hidden">
+                <div className="flex-1 flex overflow-hidden relative">
                     <div className="flex-1 overflow-y-auto custom-scrollbar transition-all duration-300">
-                        <div className="px-4 sm:px-8 pt-6">
+                        <div className="pt-6">
                             {activePageId && activePage && (
-                                <div className="mb-4 flex items-center gap-2 group">
+                                <div className="mb-4 px-4 sm:px-8 flex items-center gap-2 group">
                                     <input
                                         type="text"
                                         value={pageTitleLocal}
@@ -520,47 +599,59 @@ const ProjetoHub = () => {
                             }}
                         />
                     </div>
+
+                    {isDockOpen && (
+                        <div
+                            onMouseDown={startResizing}
+                            className={cn(
+                                "w-1 hover:w-1.5 cursor-col-resize bg-border/40 hover:bg-primary/40 transition-all z-20 absolute top-0 bottom-0 right-[var(--sidebar-width)]",
+                                isResizing && "bg-primary w-1.5"
+                            )}
+                            style={{ right: sidebarWidth }}
+                        />
+                    )}
+
+                    <ProjectDock
+                        project={project}
+                        tasks={tasks}
+                        inbox={inboxItems}
+                        finance={costs}
+                        documents={documents}
+                        pages={pages}
+                        activities={activities.map((a: any) => ({
+                            title: a.title,
+                            created_at: format(new Date(a.created_at), "dd MMM, HH:mm", { locale: ptBR }),
+                            type: a.type
+                        }))}
+                        isOpen={isDockOpen}
+                        onClose={() => setIsDockOpen(false)}
+                        onSelectPage={(pageId) => setActivePageId(pageId)}
+                        onAddPage={() => createPageMutation.mutate()}
+                        mode="sidebar"
+                        style={{ width: sidebarWidth }}
+                        onCreateItem={(type) => {
+                            if (type === 'doc') {
+                                setSelectedDocCategory('briefing');
+                                setIsAddingDoc(true);
+                            } else if (type === 'task') {
+                                setIsAddTaskOpen(true);
+                            } else if (type === 'inbox') {
+                                setIsAddInboxOpen(true);
+                            } else if (type === 'finance') {
+                                setIsAddCostOpen(true);
+                            }
+                        }}
+                        onInsertReference={(type, itemId) => {
+                            let title = "";
+                            if (type === 'task') title = tasks.find((t: any) => t.id === itemId)?.title;
+                            else if (type === 'inbox') title = inboxItems.find((i: any) => i.id === itemId)?.title || inboxItems.find((i: any) => i.id === itemId)?.content?.substring(0, 20);
+                            else if (type === 'page') title = pages.find((p: any) => p.id === itemId)?.title;
+                            else if (type === 'doc') title = documents.find((d: any) => d.id === itemId)?.name;
+
+                            editorRef.current?.insertItem(type as any, itemId, title);
+                        }}
+                    />
                 </div>
-
-                <ProjectDock
-                    project={project}
-                    tasks={tasks}
-                    inbox={inboxItems}
-                    finance={costs}
-                    documents={documents}
-                    pages={pages}
-                    activities={activities.map((a: any) => ({
-                        title: a.title,
-                        created_at: format(new Date(a.created_at), "dd MMM, HH:mm", { locale: ptBR }),
-                        type: a.type
-                    }))}
-                    isOpen={isDockOpen}
-                    onClose={() => setIsDockOpen(false)}
-                    onSelectPage={(pageId) => setActivePageId(pageId)}
-                    onAddPage={() => createPageMutation.mutate()}
-                    onCreateItem={(type) => {
-                        if (type === 'doc') {
-                            setSelectedDocCategory('briefing');
-                            setIsAddingDoc(true);
-                        } else if (type === 'task') {
-                            setIsAddTaskOpen(true);
-                        } else if (type === 'inbox') {
-                            setIsAddInboxOpen(true);
-                        } else if (type === 'finance') {
-                            setIsAddCostOpen(true);
-                        }
-                    }}
-                    onInsertReference={(type, itemId) => {
-                        let title = "";
-                        if (type === 'task') title = tasks.find((t: any) => t.id === itemId)?.title;
-                        if (type === 'inbox') title = (inboxItems.find((i: any) => i.id === itemId)?.title) || (inboxItems.find((i: any) => i.id === itemId)?.content?.substring(0, 20) + "...");
-                        if (type === 'page') title = pages.find((p: any) => p.id === itemId)?.title;
-
-                        editorRef.current?.insertItem(type, itemId, title);
-                        toast({ title: "Referência Inserida", description: `Item [${type}] vinculado ao documento.` });
-                    }}
-                />
-
             </main>
 
             {/* Dialogs */}

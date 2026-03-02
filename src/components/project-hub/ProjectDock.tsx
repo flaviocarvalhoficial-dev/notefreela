@@ -27,6 +27,8 @@ interface ProjectDockProps {
     onAddPage?: () => void;
     isOpen: boolean;
     onClose: () => void;
+    mode?: 'overlay' | 'sidebar';
+    style?: React.CSSProperties;
 }
 
 type TabType = 'tasks' | 'inbox' | 'finance' | 'docs' | 'activity';
@@ -44,7 +46,9 @@ export const ProjectDock = ({
     onSelectPage,
     onAddPage,
     isOpen,
-    onClose
+    onClose,
+    mode = 'overlay',
+    style
 }: ProjectDockProps) => {
     const [activeTab, setActiveTab] = useState<TabType>('tasks');
     const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -352,19 +356,25 @@ export const ProjectDock = ({
         <AnimatePresence>
             {isOpen && (
                 <>
+                    {mode === 'overlay' && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={onClose}
+                            className="fixed inset-0 bg-background/20 backdrop-blur-[2px] z-40"
+                        />
+                    )}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="fixed inset-0 bg-background/5 backdrop-blur-[1px] z-40"
-                    />
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
+                        initial={mode === 'overlay' ? { x: '100%' } : { width: 0, opacity: 0 }}
+                        animate={mode === 'overlay' ? { x: 0 } : { width: 'auto', opacity: 1 }}
+                        exit={mode === 'overlay' ? { x: '100%' } : { width: 0, opacity: 0 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed right-0 top-0 bottom-0 w-80 sm:w-96 bg-card border-l border-border shadow-2xl z-50 flex flex-col"
+                        className={cn(
+                            "bg-card border-l border-border flex flex-col h-full",
+                            mode === 'overlay' ? "fixed right-0 top-0 bottom-0 w-80 sm:w-96 shadow-2xl z-50" : "relative border-l"
+                        )}
+                        style={mode === 'sidebar' ? style : undefined}
                     >
                         <div className="flex items-center justify-between px-4 py-4 border-b border-border">
                             <div className="flex items-center gap-2">

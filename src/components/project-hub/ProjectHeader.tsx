@@ -55,8 +55,8 @@ export const ProjectHeader = ({
     const ProjectIcon = (LucideIcons as any)[project?.avatar_emoji] || Briefcase;
 
     return (
-        <header className="w-full bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-30">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <header className="w-full bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-30 transition-all duration-300">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
                 {/* Top Breadcrumb & Actions */}
                 <div className="flex items-center justify-between h-12 border-b border-border">
                     <div className="flex items-center gap-4">

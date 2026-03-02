@@ -7,6 +7,14 @@ export const Column = Node.create({
         return {
             width: {
                 default: '50%',
+                parseHTML: element => element.style.width || element.getAttribute('data-width'),
+                renderHTML: attributes => {
+                    if (!attributes.width) return {};
+                    return {
+                        style: `width: ${attributes.width}; flex: none;`,
+                        'data-width': attributes.width,
+                    };
+                },
             },
         };
     },
@@ -14,7 +22,11 @@ export const Column = Node.create({
         return [{ tag: 'div[data-type="column"]' }];
     },
     renderHTML({ HTMLAttributes }) {
-        return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'column', class: 'column' }), 0];
+        return ['div',
+            mergeAttributes(HTMLAttributes, { 'data-type': 'column', class: 'column' }),
+            ['div', { class: 'column-resizer', contenteditable: 'false' }],
+            ['div', { class: 'column-content' }, 0]
+        ];
     },
 });
 
@@ -31,31 +43,26 @@ export const Columns = Node.create({
     addCommands() {
         return {
             insertColumns: (count: number = 2) => ({ state, commands }) => {
-                const currentContent = state.doc.content.toJSON();
-
-                // Use existing content if any, otherwise a default paragraph
-                const firstColumnContent = currentContent.length > 0
-                    ? currentContent
-                    : [{ type: 'paragraph' }];
+                const defaultWidth = `${(100 / count).toFixed(2)}%`;
 
                 const columns = [
-                    {
+                    ...Array.from({ length: count }).map((_, i) => ({
                         type: 'column',
-                        content: firstColumnContent
-                    },
-                    ...Array.from({ length: count - 1 }).map(() => ({
-                        type: 'column',
-                        content: [{ type: 'paragraph' }]
+                        attrs: { width: defaultWidth },
+                        content: i === 0 ? state.doc.content.toJSON() : [{ type: 'paragraph' }]
                     }))
                 ];
 
-                return commands.setContent({
+                return commands.insertContent({
                     type: 'columns',
                     content: columns,
                 });
             },
             toggleColumns: () => ({ commands }) => {
                 return commands.toggleNode('columns', 'column');
+            },
+            removeColumns: () => ({ commands }) => {
+                return commands.lift('column');
             },
         };
     },
@@ -66,6 +73,7 @@ declare module '@tiptap/core' {
         columns: {
             insertColumns: (count?: number) => ReturnType;
             toggleColumns: () => ReturnType;
+            removeColumns: () => ReturnType;
         };
     }
 }

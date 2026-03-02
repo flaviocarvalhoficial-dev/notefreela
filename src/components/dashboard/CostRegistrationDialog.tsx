@@ -135,6 +135,7 @@ export function CostRegistrationDialog({
         { value: "hourly", label: "Hora Técnica (Tempo)" },
         { value: "service", label: "Serviço Terceirizado" },
         { value: "marketing", label: "Marketing / Ads" },
+        { value: "revenue", label: "Receita / Extra" },
         { value: "other", label: "Outros" }
     ];
 

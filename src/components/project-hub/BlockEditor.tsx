@@ -142,6 +142,9 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
       },
       editable,
       editorProps: {
+        handleDOMEvents: {
+          // Moved resize logic to a React useEffect for better stability
+        },
         handleKeyDown: (_view, event) => {
           // Detect '/' key to open slash menu
           if (event.key === '/' && !slashMenu.isOpen) {
@@ -178,6 +181,92 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         },
       },
     });
+
+    // Handle Column Resizing via direct DOM events for reliability
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el || !editor) return;
+
+      const handleMouseDown = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.classList.contains('column-resizer')) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const column = target.parentElement as HTMLElement;
+          const container = column.parentElement as HTMLElement;
+
+          if (!column || !container) return;
+          const nextColumn = column.nextElementSibling as HTMLElement;
+          if (!nextColumn) return;
+
+          const containerWidth = container.offsetWidth;
+          const startX = e.clientX;
+          const startWidthL = column.offsetWidth;
+          const startWidthR = nextColumn.offsetWidth;
+
+          const columns = Array.from(container.querySelectorAll('.column'));
+          const colIndex = columns.indexOf(column);
+
+          // Find column nodes in the editor to ensure we have correct positions
+          let columnsPos = -1;
+          editor.state.doc.descendants((node, pos) => {
+            if (node.type.name === 'columns') {
+              // Simple check: is this the container we clicked on?
+              // We'll use the first column's position for verification
+              const firstChildPos = pos + 1;
+              const domUnder = editor.view.nodeDOM(firstChildPos);
+              if (domUnder && (domUnder === columns[0] || domUnder.contains(columns[0]))) {
+                columnsPos = pos;
+                return false;
+              }
+            }
+            return true;
+          });
+
+          if (columnsPos === -1) return;
+
+          const onMouseMove = (moveE: MouseEvent) => {
+            const deltaX = moveE.clientX - startX;
+            const newL = ((startWidthL + deltaX) / containerWidth) * 100;
+            const newR = ((startWidthR - deltaX) / containerWidth) * 100;
+
+            if (newL < 10 || newR < 10) return;
+
+            const tr = editor.state.tr;
+            let offset = columnsPos + 1;
+            const node = editor.state.doc.nodeAt(columnsPos);
+            if (!node) return;
+
+            for (let i = 0; i < node.childCount; i++) {
+              const child = node.child(i);
+              if (i === colIndex) {
+                tr.setNodeMarkup(offset, undefined, { ...child.attrs, width: `${newL.toFixed(2)}%` });
+              } else if (i === colIndex + 1) {
+                tr.setNodeMarkup(offset, undefined, { ...child.attrs, width: `${newR.toFixed(2)}%` });
+              }
+              offset += child.nodeSize;
+            }
+            editor.view.dispatch(tr.setMeta('addToHistory', false));
+          };
+
+          const onMouseUp = () => {
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = '';
+            container.classList.remove('is-resizing');
+          };
+
+          window.addEventListener('mousemove', onMouseMove);
+          window.addEventListener('mouseup', onMouseUp);
+          document.body.style.cursor = 'col-resize';
+          container.classList.add('is-resizing');
+        }
+      };
+
+      el.addEventListener('mousedown', handleMouseDown);
+      return () => el.removeEventListener('mousedown', handleMouseDown);
+    }, [editor]);
 
     useImperativeHandle(ref, () => ({
       insertItem: (type: string, id: string, title?: string) => {
@@ -365,18 +454,82 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
           gap: 0 !important;
           align-items: stretch;
           width: 100%;
-          border: 1px solid hsl(var(--border) / 0.3);
-          border-radius: 0.75rem;
+          border: 1px solid hsl(var(--border) / 0.4);
+          border-radius: 1rem;
           overflow: hidden;
-          background: transparent;
+          background: hsl(var(--secondary) / 0.05);
+          transition: all 0.2s ease;
         }
+
+        .columns-container.is-resizing {
+          cursor: col-resize;
+          user-select: none;
+        }
+
+        .columns-container.is-resizing .column:after {
+          background: hsl(var(--primary) / 0.6);
+          width: 4px;
+        }
+
         .column {
           min-width: 0;
-          padding: 0.25rem 1.5rem 1rem 1.5rem !important;
+          padding: 1.5rem 1.5rem 1.5rem 1.5rem !important;
           transition: background 0.2s;
-          min-height: 60px;
-          border: none !important;
+          min-height: 80px;
           position: relative;
+        }
+
+        .column-content {
+          pointer-events: auto !important;
+        }
+
+        /* Prevent clicks on content from interfering with resizer area */
+        .columns-container.is-resizing .column-content {
+          pointer-events: none !important;
+        }
+        
+        /* ── Col Resizers (Drag Handle) ── */
+        .column-resizer {
+          position: absolute;
+          right: -5px;
+          top: 0;
+          bottom: 0;
+          width: 10px;
+          cursor: col-resize;
+          z-index: 50;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          pointer-events: all !important;
+        }
+
+        .column-resizer:after {
+          content: "";
+          width: 2px;
+          height: 100%;
+          background: hsl(var(--border) / 0.4);
+          transition: all 0.2s ease;
+        }
+
+        .column:not(:last-child):hover .column-resizer:after,
+        .columns-container.is-resizing .column-resizer:after {
+          background: hsl(var(--primary));
+          width: 4px;
+          box-shadow: 0 0 10px hsl(var(--primary) / 0.3);
+        }
+
+        .column:hover { background: hsl(var(--primary) / 0.02); }
+        .column:focus-within { background: hsl(var(--primary) / 0.04); }
+        
+        /* Subtle indicator when column is empty */
+        .column.is-empty[data-placeholder]::after {
+          content: "Digite aqui...";
+          position: absolute;
+          top: 1.5rem;
+          left: 1.5rem;
+          color: hsl(var(--muted-foreground) / 0.3);
+          font-size: 0.9em;
+          pointer-events: none;
         }
         .column:hover { background: hsl(var(--primary) / 0.01); }
         .column:focus-within { background: hsl(var(--primary) / 0.02); }
