@@ -189,6 +189,39 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
 
       const handleMouseDown = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
+
+        // 1. Handle Delete Column
+        if (target.classList.contains('column-delete')) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Move selection to the column being deleted first
+          const pos = editor.view.posAtDOM(target, 0);
+          if (pos !== undefined) {
+            editor.commands.setTextSelection(pos);
+            editor.chain().focus().deleteColumn().run();
+          }
+          return;
+        }
+
+        // 2. Handle Add Column (via CSS pseudo-element click zone)
+        if (target.classList.contains('columns-container')) {
+          const rect = target.getBoundingClientRect();
+          const isRightEdge = (e.clientX - rect.left) > (target.offsetWidth - 40);
+
+          if (isRightEdge) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const pos = editor.view.posAtDOM(target, 1);
+            if (pos !== undefined) {
+              editor.commands.setTextSelection(pos);
+              editor.chain().focus().addColumn().run();
+            }
+            return;
+          }
+        }
+
         if (target.classList.contains('column-resizer')) {
           e.preventDefault();
           e.stopPropagation();
@@ -491,35 +524,147 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         /* ── Col Resizers (Drag Handle) ── */
         .column-resizer {
           position: absolute;
-          right: -5px;
+          right: -8px; /* Larger hit area */
           top: 0;
           bottom: 0;
-          width: 10px;
+          width: 16px;
           cursor: col-resize;
           z-index: 50;
           display: flex;
           align-items: center;
           justify-content: center;
           pointer-events: all !important;
+          transition: opacity 0.2s ease;
+          opacity: 0; /* Hidden by default for a cleaner look */
         }
 
+        .column:hover .column-resizer,
+        .columns-container.is-resizing .column-resizer {
+          opacity: 1;
+        }
+
+        /* The vertical line indicator */
         .column-resizer:after {
           content: "";
           width: 2px;
-          height: 100%;
-          background: hsl(var(--border) / 0.4);
+          height: calc(100% - 2rem);
+          background: hsl(var(--primary) / 0.15);
+          border-radius: 1px;
           transition: all 0.2s ease;
         }
 
-        .column:not(:last-child):hover .column-resizer:after,
+        /* The "Grabber" handle (three dots) */
+        .column-resizer:before {
+          content: "⋮";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 12px;
+          height: 24px;
+          background: hsl(var(--card));
+          border: 1px solid hsl(var(--border) / 0.6);
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          color: hsl(var(--muted-foreground));
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          z-index: 51;
+          transition: all 0.2s ease;
+        }
+
+        .column-resizer:hover:after,
         .columns-container.is-resizing .column-resizer:after {
+          background: hsl(var(--primary) / 0.4);
+          width: 3px;
+        }
+
+        .column-resizer:hover:before,
+        .columns-container.is-resizing .column-resizer:before {
           background: hsl(var(--primary));
-          width: 4px;
-          box-shadow: 0 0 10px hsl(var(--primary) / 0.3);
+          color: white;
+          border-color: hsl(var(--primary));
+          box-shadow: 0 4px 8px hsl(var(--primary) / 0.2);
         }
 
         .column:hover { background: hsl(var(--primary) / 0.02); }
         .column:focus-within { background: hsl(var(--primary) / 0.04); }
+
+        /* ── Delete Column Button ── */
+        .column-delete {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 20px;
+          height: 20px;
+          background: hsl(var(--destructive) / 0.1);
+          color: hsl(var(--destructive));
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          cursor: pointer;
+          opacity: 0;
+          transition: all 0.2s ease;
+          z-index: 60;
+          border: 1px solid transparent;
+        }
+
+        .column:hover .column-delete {
+          opacity: 1;
+        }
+
+        .column-delete:hover {
+          background: hsl(var(--destructive));
+          color: white;
+          transform: scale(1.1);
+        }
+
+        /* ── Add Column Indicator ── */
+        .columns-container {
+          position: relative;
+        }
+
+        /* Only show "Add" area if childCount < 3 (managed via Tailwind or JS, 
+           here we'll use a CSS selector if data-child-count is available - 
+           let's add that attribute in Columns.ts) */
+        .columns-container:after {
+          content: "+";
+          position: absolute;
+          right: 0;
+          top: 0;
+          bottom: 0;
+          width: 30px;
+          background: hsl(var(--primary) / 0.03);
+          border-left: 1px dashed hsl(var(--border));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: hsl(var(--muted-foreground));
+          cursor: pointer;
+          opacity: 0;
+          transition: all 0.2s ease;
+          font-size: 18px;
+          z-index: 10;
+        }
+
+        /* Hide add button when at 3 columns */
+        .columns-container[data-child-count="3"]:after,
+        .columns-container[data-child-count="4"]:after {
+          display: none !important;
+        }
+
+        .columns-container:hover:after {
+          opacity: 1;
+        }
+
+        .columns-container:hover:after:hover {
+          background: hsl(var(--primary) / 0.1);
+          color: hsl(var(--primary));
+        }
         
         /* Subtle indicator when column is empty */
         .column.is-empty[data-placeholder]::after {

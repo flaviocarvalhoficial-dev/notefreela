@@ -146,6 +146,8 @@ const HabitsSection = () => {
     const createCategory = useCreateCategory();
     const deleteHabit = useDeleteHabit();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+    const [newOrg, setNewOrg] = useState({ name: "", icon: "Target" });
     const [newHabit, setNewHabit] = useState<Partial<Habit>>({
         title: "",
         frequency: "daily",
@@ -154,6 +156,20 @@ const HabitsSection = () => {
         category: "", // For new category names
         metadata: { time: "", shift: "manhã", distance: "", goal: "", unit: "" }
     });
+
+    const handleCreateOrg = async () => {
+        if (!newOrg.name) return;
+        try {
+            await createCategory.mutateAsync({
+                name: newOrg.name,
+                icon: newOrg.icon
+            });
+            setIsOrgModalOpen(false);
+            setNewOrg({ name: "", icon: "Target" });
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const handleAddHabit = async () => {
         if (!newHabit.title) return;
@@ -193,7 +209,7 @@ const HabitsSection = () => {
 
     return (
         <div className="flex flex-col gap-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
                 <Button
                     onClick={() => {
                         setNewHabit({
@@ -208,6 +224,15 @@ const HabitsSection = () => {
                 >
                     <Plus className="h-4 w-4" />
                     Novo Hábito
+                </Button>
+
+                <Button
+                    variant="outline"
+                    onClick={() => setIsOrgModalOpen(true)}
+                    className="gap-2 rounded-xl h-11 px-6 border-primary/10 hover:bg-primary/5 text-foreground/80 hover:text-primary transition-all hover:scale-[1.02]"
+                >
+                    <LayoutGrid className="h-4 w-4 text-primary" />
+                    Organização
                 </Button>
             </div>
 
@@ -385,6 +410,50 @@ const HabitsSection = () => {
                     <DialogFooter>
                         <Button onClick={handleAddHabit} disabled={createHabit.isPending}>
                             {createHabit.isPending ? "Salvando..." : "Criar Hábito"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isOrgModalOpen} onOpenChange={setIsOrgModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Nova Organização</DialogTitle>
+                        <DialogDescription>Crie uma categoria para agrupar seus hábitos e rotinas.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Nome da Organização</Label>
+                            <Input
+                                placeholder="Ex: Contas Pessoais, Estudos, Saúde..."
+                                value={newOrg.name}
+                                onChange={e => setNewOrg({ ...newOrg, name: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Ícone</Label>
+                            <div className="grid grid-cols-5 gap-2">
+                                {ICON_LIST.map(iconName => {
+                                    const Icon = ICON_MAP[iconName];
+                                    return (
+                                        <button
+                                            key={iconName}
+                                            onClick={() => setNewOrg({ ...newOrg, icon: iconName })}
+                                            className={cn(
+                                                "p-3 rounded-lg border flex items-center justify-center transition-all",
+                                                newOrg.icon === iconName ? "bg-primary text-white border-primary" : "hover:bg-muted"
+                                            )}
+                                        >
+                                            <Icon className="h-4 w-4" />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={handleCreateOrg} disabled={createCategory.isPending}>
+                            {createCategory.isPending ? "Criando..." : "Criar Organização"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
