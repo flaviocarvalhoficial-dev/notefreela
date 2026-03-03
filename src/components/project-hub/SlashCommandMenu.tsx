@@ -5,7 +5,7 @@ import {
     Heading1, Heading2, Heading3,
     List, ListOrdered, CheckSquare,
     Quote, Minus, Code2, Type,
-    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox, Columns2
+    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox, Columns2, TrendingUp
 } from 'lucide-react';
 
 export interface SlashCommandItem {

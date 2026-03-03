@@ -51,7 +51,6 @@ const navItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Tarefas", url: "/tarefas", icon: CheckSquare },
   { title: "Agenda", url: "/agenda", icon: Calendar },
-  { title: "Gestão Pessoal", url: "/gestao-pessoal", icon: LayoutGrid },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Documentos", url: "/documentos", icon: FileText },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },

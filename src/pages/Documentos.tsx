@@ -11,14 +11,15 @@ import {
     MoreVertical,
     Filter,
     Trash2,
-    Loader2
+    Loader2,
+    Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useDocuments } from "@/hooks/use-documents";
+import { useDocuments, Document } from "@/hooks/use-documents";
 import { NewDocumentDialog } from "@/components/documents/NewDocumentDialog";
 import {
     DropdownMenu,
@@ -26,16 +27,26 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
 
 const Documentos = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeCategory, setActiveCategory] = useState("Todos");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+    const [editingDoc, setEditingDoc] = useState<{ id: string, title: string } | null>(null);
+    const [newTitle, setNewTitle] = useState("");
 
-    const { documents, projects, isLoading, upload, isUploading, delete: deleteDoc } = useDocuments();
+    const { documents, projects, isLoading, upload, isUploading, delete: deleteDoc, rename } = useDocuments();
 
     const filtered = useMemo(() => {
-        return documents.filter(doc => {
+        return documents.filter((doc: Document) => {
             const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 doc.projectName.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesCategory = activeCategory === "Todos" || doc.category === activeCategory.replace(/s$/, '');
@@ -54,13 +65,13 @@ const Documentos = () => {
         ];
     }, [documents]);
 
-    const handleView = (doc: any) => {
+    const handleView = (doc: Document) => {
         if (doc.url) {
             window.open(doc.url, '_blank', 'noreferrer');
         }
     };
 
-    const handleDownload = async (doc: any) => {
+    const handleDownload = async (doc: Document) => {
         try {
             const response = await fetch(doc.url);
             const blob = await response.blob();
@@ -77,6 +88,21 @@ const Documentos = () => {
             // Fallback: Just open it
             window.open(doc.url, '_blank');
         }
+    };
+
+    const handleRename = () => {
+        if (editingDoc && newTitle.trim()) {
+            rename({ id: editingDoc.id, name: newTitle.trim() });
+            setIsRenameDialogOpen(false);
+            setEditingDoc(null);
+            setNewTitle("");
+        }
+    };
+
+    const openRenameDialog = (doc: Document) => {
+        setEditingDoc({ id: doc.id, title: doc.title });
+        setNewTitle(doc.title);
+        setIsRenameDialogOpen(true);
     };
 
     return (
@@ -237,7 +263,11 @@ const Documentos = () => {
                                                                     </Button>
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent align="end" className="bg-card border-border shadow-xl">
-                                                                    <DropdownMenuItem className="text-xs font-medium gap-2 cursor-pointer">
+                                                                    <DropdownMenuItem
+                                                                        className="text-xs font-medium gap-2 cursor-pointer"
+                                                                        onClick={() => openRenameDialog(doc)}
+                                                                    >
+                                                                        <Pencil className="h-3.5 w-3.5" />
                                                                         Renomear
                                                                     </DropdownMenuItem>
                                                                     <DropdownMenuItem className="text-xs font-medium gap-2 cursor-pointer">
@@ -272,6 +302,41 @@ const Documentos = () => {
                 onUpload={upload}
                 isUploading={isUploading}
             />
+
+            <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+                <DialogContent className="bg-card border-border shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-foreground">Renomear Documento</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Input
+                            value={newTitle}
+                            onChange={(e) => setNewTitle(e.target.value)}
+                            placeholder="Novo nome do documento"
+                            className="bg-muted/5 border-border"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleRename();
+                            }}
+                            autoFocus
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setIsRenameDialogOpen(false)}
+                            className="text-muted-foreground hover:bg-muted/50"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleRename}
+                            disabled={!newTitle.trim() || newTitle === editingDoc?.title}
+                        >
+                            Salvar Alteração
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

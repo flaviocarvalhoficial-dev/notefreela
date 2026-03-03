@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { SlashCommandMenu, type SlashCommandItem } from './SlashCommandMenu';
 import { Columns, Column } from './editor-extensions/Columns';
+import { ProgressBar, TopicHeader } from './editor-extensions/PersonalWidgets';
 
 export interface BlockEditorStatus {
   hasColumns: boolean;
@@ -90,6 +91,8 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         }),
         Columns,
         Column,
+        ProgressBar,
+        TopicHeader,
       ],
       content: content,
       onUpdate: ({ editor: ed }) => {

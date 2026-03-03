@@ -9,7 +9,7 @@ import { FileUp, Loader2 } from "lucide-react";
 interface NewDocumentDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    projects: any[];
+    projects: { id: string; name: string }[];
     onUpload: (data: { file: File, name: string, category: string, projectId: string }) => void;
     isUploading: boolean;
 }

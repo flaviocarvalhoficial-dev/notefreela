@@ -4,6 +4,18 @@ import { useToast } from "@/hooks/use-toast";
 import { parseISO, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+export interface Document {
+    id: string;
+    title: string;
+    category: string;
+    lastModified: string;
+    size: string;
+    type: string;
+    url: string;
+    projectName: string;
+    projectId: string;
+}
+
 export function useDocuments() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -22,7 +34,7 @@ export function useDocuments() {
     });
 
     // 2. Fetch de Documentos
-    const { data: documents = [], isLoading } = useQuery({
+    const { data: documents = [] as Document[], isLoading } = useQuery({
         queryKey: ["documents-all"],
         queryFn: async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -94,7 +106,7 @@ export function useDocuments() {
             queryClient.invalidateQueries({ queryKey: ["documents-all"] });
             toast({ title: "Sucesso!", description: "Documento enviado com sucesso." });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({
                 title: "Erro no envio",
                 description: error.message || "Verifique se o bucket 'documents' existe no Supabase.",
@@ -118,12 +130,35 @@ export function useDocuments() {
         }
     });
 
+    // 5. Mutação para Renomear
+    const renameMutation = useMutation({
+        mutationFn: async ({ id, name }: { id: string, name: string }) => {
+            const { error } = await supabase
+                .from("project_documents")
+                .update({ name })
+                .eq("id", id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["documents-all"] });
+            toast({ title: "Documento renomeado" });
+        },
+        onError: (error: Error) => {
+            toast({
+                title: "Erro ao renomear",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    });
+
     return {
-        documents,
+        documents: documents as Document[],
         projects,
         isLoading,
         upload: uploadMutation.mutate,
         isUploading: uploadMutation.isPending,
-        delete: deleteMutation.mutate
+        delete: deleteMutation.mutate,
+        rename: renameMutation.mutate
     };
 }
