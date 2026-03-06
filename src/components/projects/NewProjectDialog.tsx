@@ -78,6 +78,10 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const [recurringServices, setRecurringServices] = useState<{ name: string; price: number }[]>([]);
     const [recServiceInput, setRecServiceInput] = useState("");
     const [recServicePriceInput, setRecServicePriceInput] = useState<number | "">("");
+    const [advancePaymentDate, setAdvancePaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [advancePaymentRefMonth, setAdvancePaymentRefMonth] = useState<string>(
+        new Date().toISOString().split('T')[0].substring(0, 7)
+    );
 
     const addRecurringService = () => {
         if (!recServiceInput) return;
@@ -100,7 +104,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
 
     // Parcelamento status
     const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
-    const [installments, setInstallments] = useState<{ amount: number; date: string }[]>([]);
+    const [installments, setInstallments] = useState<{ amount: number; date: string; status?: 'provisionado' | 'recebido'; origin_label?: string }[]>([]);
     const [installmentCount, setInstallmentCount] = useState<number>(1);
 
     // Step 3: Tarefas
@@ -143,23 +147,32 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setRecurringServices([]);
         setRecServiceInput("");
         setRecServicePriceInput("");
+        setAdvancePaymentDate(new Date().toISOString().split('T')[0]);
     };
 
     const generateInstallments = () => {
-        const remaining = (Number(newValue) || 0) - (Number(newAdvance) || 0);
-        if (remaining <= 0) return;
+        const total = (Number(newValue) || 0);
+        const advance = (Number(newAdvance) || 0);
+        const remaining = total - advance;
 
-        const amountPerParcel = Math.round((remaining / installmentCount) * 100) / 100;
         const newParcels = [];
-        const baseDate = new Date();
+        const projectStartDate = startDate ? new Date(startDate + 'T12:00:00') : new Date();
 
-        for (let i = 0; i < installmentCount; i++) {
-            const d = new Date(baseDate);
-            d.setMonth(d.getMonth() + i + 1);
-            newParcels.push({
-                amount: amountPerParcel,
-                date: d.toISOString().split('T')[0]
-            });
+        // 1. SIGNAL is now handled separately in UI and Mutation - Arthur Marques Sign
+
+        // 2. ADD INSTALLMENTS for remaining
+        if (remaining > 0 && installmentCount > 0) {
+            const amountPerParcel = Math.round((remaining / installmentCount) * 100) / 100;
+            for (let i = 0; i < installmentCount; i++) {
+                const d = new Date(projectStartDate);
+                d.setMonth(d.getMonth() + i + 1);
+                newParcels.push({
+                    amount: amountPerParcel,
+                    date: d.toISOString().split('T')[0],
+                    status: 'provisionado',
+                    origin_label: `Parcela ${i + 1}/${installmentCount}`
+                });
+            }
         }
         setInstallments(newParcels);
     };
@@ -183,6 +196,16 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         const sum = services.reduce((acc, s) => acc + s.price, 0);
         setNewValue(sum);
     }, [services]);
+
+    // Handle destructive pruning when decreasing installment count - Arthur Marques Sign
+    useEffect(() => {
+        const hasSignal = installments.length > 0 && installments[0].origin_label === 'Sinal / Adiantamento';
+        const targetRowCount = hasSignal ? installmentCount + 1 : installmentCount;
+
+        if (installments.length > targetRowCount) {
+            setInstallments(prev => prev.slice(0, targetRowCount));
+        }
+    }, [installmentCount]);
 
     // Keep preset in sync with value and date changes - Arthur Marques Sign
     useEffect(() => {
@@ -234,19 +257,30 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
 
         if (preset === 'full') {
             setNewAdvance(totalValue);
+            setAdvancePaymentDate(projectStartDate.toISOString().split('T')[0]);
+            setAdvancePaymentRefMonth(projectStartDate.toISOString().split('T')[0].substring(0, 7));
             setNewPaymentStatus('paid');
             setIsInstallmentEnabled(false);
-            setInstallments([]);
+            setInstallmentCount(1);
+            setInstallments([]); // Advance handles the 100%
             setRecurringPaymentModel('full');
             setRecurringCondition('immediate');
         } else if (preset === '50_50') {
             const half = Math.round((totalValue / 2) * 100) / 100;
             setNewAdvance(half);
+            setAdvancePaymentDate(projectStartDate.toISOString().split('T')[0]);
+            setAdvancePaymentRefMonth(projectStartDate.toISOString().split('T')[0].substring(0, 7));
             setNewPaymentStatus('partial');
             setIsInstallmentEnabled(true);
             setInstallmentCount(1);
-            const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
-            setInstallments([{ amount: half, date: endOfMonth.toISOString().split('T')[0] }]);
+            setInstallments([
+                {
+                    amount: half,
+                    date: new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0).toISOString().split('T')[0],
+                    status: 'provisionado',
+                    origin_label: 'Parcela Final'
+                }
+            ]);
             setRecurringPaymentModel('split');
             setRecurringCondition('post_installments');
         } else if (preset === 'end_of_month') {
@@ -255,14 +289,14 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             setIsInstallmentEnabled(true);
             setInstallmentCount(1);
             const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
-            setInstallments([{ amount: totalValue, date: endOfMonth.toISOString().split('T')[0] }]);
+            setInstallments([{ amount: totalValue, date: endOfMonth.toISOString().split('T')[0], status: 'provisionado', origin_label: 'Pagamento Final' }]);
         } else if (preset === 'next_month_10') {
             setNewAdvance(0);
             setNewPaymentStatus('pending');
             setIsInstallmentEnabled(true);
             setInstallmentCount(1);
             const nextMonth10 = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 10);
-            setInstallments([{ amount: totalValue, date: nextMonth10.toISOString().split('T')[0] }]);
+            setInstallments([{ amount: totalValue, date: nextMonth10.toISOString().split('T')[0], status: 'provisionado', origin_label: 'Vencimento Dia 10' }]);
         }
     };
 
@@ -397,30 +431,32 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             // 6. Create Installments
             const installmentSeeds: any[] = [];
 
-            // Advance/Sinal as a paid installment
+            // Group 0: Advance Payment (Signal) - Always prepended if exists - Arthur Marques Sign
             if (Number(newAdvance) > 0) {
                 installmentSeeds.push({
                     project_id: projectData.id,
                     billing_agreement_id: agreement.id,
                     user_id: user.id,
-                    due_date: startDate || new Date().toISOString().split('T')[0],
+                    due_date: advancePaymentDate,
                     amount: Number(newAdvance),
-                    status: 'recebido',
-                    origin_label: 'Sinal / Adiantamento'
+                    status: (newPaymentStatus === 'paid' || newPaymentStatus === 'partial') ? 'recebido' : 'provisionado',
+                    origin_label: `Sinal / Adiantamento [${advancePaymentRefMonth}]`
                 });
             }
 
-            // Planned installments
+            // Group 1: Setup parcels (excluding signal which is now Group 0)
             if (isInstallmentEnabled && installments.length > 0) {
                 installments.forEach((inst, idx) => {
+                    if (inst.origin_label === 'Sinal / Adiantamento') return;
+
                     installmentSeeds.push({
                         project_id: projectData.id,
                         billing_agreement_id: agreement.id,
                         user_id: user.id,
                         due_date: inst.date,
                         amount: inst.amount,
-                        status: 'provisionado',
-                        origin_label: `Configuração - Parcela ${idx + 1}/${installments.length}`
+                        status: inst.status || 'provisionado',
+                        origin_label: inst.origin_label || `Parcela ${idx + 1}/${installments.length}`
                     });
                 });
             }
@@ -912,6 +948,36 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {Number(newAdvance) > 0 && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    className="grid grid-cols-2 gap-4 pt-1"
+                                                >
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/70 px-1">Data do Sinal</Label>
+                                                        <div className="relative">
+                                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
+                                                            <Input
+                                                                type="date"
+                                                                value={advancePaymentDate}
+                                                                onChange={(e) => setAdvancePaymentDate(e.target.value)}
+                                                                className="h-11 pl-9 text-xs glass-light border-primary/20 focus:ring-1 focus:ring-primary/20 font-bold [color-scheme:dark]"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Mês de Competência</Label>
+                                                        <Input
+                                                            type="month"
+                                                            className="h-11 text-xs glass-light border-border focus:ring-1 focus:ring-primary/20 font-bold [color-scheme:dark]"
+                                                            value={advancePaymentRefMonth}
+                                                            onChange={(e) => setAdvancePaymentRefMonth(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </motion.div>
+                                            )}
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">

@@ -79,7 +79,10 @@ export default function Financeiro() {
     const [expandedRows, setExpandedRows] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
-    const [selectedMonth, setSelectedMonth] = useState<string>("all");
+    const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+        const todayLocal = new Date().toLocaleDateString('en-CA');
+        return todayLocal.substring(0, 7);
+    });
     const [isCostsModalOpen, setIsCostsModalOpen] = useState(false);
     const [isDetailedStatsOpen, setIsDetailedStatsOpen] = useState(false);
     const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
@@ -349,7 +352,8 @@ export default function Financeiro() {
                         onClick={() => {
                             setSearchQuery("");
                             setStatusFilter("all");
-                            setSelectedMonth("all");
+                            const todayLocal = new Date().toLocaleDateString('en-CA');
+                            setSelectedMonth(todayLocal.substring(0, 7));
                         }}
                         className="h-11 text-xs font-medium  tracking-tight text-muted-foreground px-4 hover:bg-secondary rounded-md"
                     >
@@ -450,9 +454,9 @@ export default function Financeiro() {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-muted/10 text-left border-b border-border">
-                                <th className="p-4 font-medium text-muted-foreground text-[10px]  tracking-tight">Projeto / Cliente</th>
+                                <th className="p-4 font-medium text-muted-foreground text-[10px] tracking-tight">Projeto / Cliente</th>
                                 <th className="p-4 font-medium text-muted-foreground text-[10px]">Valor Total</th>
-                                <th className="p-4 font-medium text-muted-foreground text-[10px]">Entrada / Pago</th>
+                                <th className="p-4 font-medium text-muted-foreground text-[10px]">{selectedMonth === 'all' ? 'Entrada / Pago' : 'Recebido (Mês)'}</th>
                                 <th className="p-4 font-medium text-muted-foreground text-[10px]">Restante</th>
                                 <th className="p-4 font-medium text-muted-foreground text-[10px] text-center">Status Pagto</th>
                             </tr>
@@ -467,9 +471,10 @@ export default function Financeiro() {
                                     <React.Fragment key={p.id}>
                                         <tr
                                             className={cn(
-                                                "group hover:bg-muted/10 transition-colors border-b border-border",
+                                                "group hover:bg-muted/10 transition-colors border-b border-border cursor-pointer",
                                                 expandedRows.includes(p.id) ? "bg-primary/5" : (i % 2 === 0 ? "bg-transparent" : "bg-muted/5")
                                             )}
+                                            onClick={() => toggleRow(p.id)}
                                         >
                                             <td className="p-4 font-medium  tracking-tight text-foreground" onClick={() => toggleRow(p.id)}>
                                                 <div className="flex items-center gap-3">
@@ -496,24 +501,45 @@ export default function Financeiro() {
                                             <td className="p-4 font-medium text-emerald-500/90">
                                                 {formatCurrency(
                                                     (() => {
-                                                        const todayStr = new Date().toLocaleDateString('en-CA');
-                                                        const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
-                                                        const installmentsPaid = (p as any).project_costs
-                                                            ?.filter((c: any) => c.category === "receita_parcela" && c.date <= todayStr)
-                                                            .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
-                                                        return advancePaid + installmentsPaid;
+                                                        const pData = p as any;
+                                                        // 1. Transactions for the project
+                                                        const trans = pData.transactions || [];
+                                                        const monthlyIncome = trans
+                                                            .filter((t: any) => selectedMonth === "all" || isInSelectedMonth(t.payment_date, selectedMonth))
+                                                            .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
+
+                                                        // 2. Installments marked as 'recebido' that might NOT have a transaction (fallback)
+                                                        const insts = pData.installments || [];
+                                                        const manualIncome = insts
+                                                            .filter((i: any) => i.status === 'recebido' && (selectedMonth === "all" || isInSelectedMonth(i.due_date, selectedMonth)))
+                                                            .filter((i: any) => !trans.some((t: any) => t.installment_id === i.id))
+                                                            .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
+
+                                                        // 3. Legacy project_costs (fallback for older projects)
+                                                        const legacyCosts = pData.project_costs || [];
+                                                        const legacyIncome = legacyCosts
+                                                            .filter((c: any) => c.category === "receita_parcela" && (selectedMonth === "all" || isInSelectedMonth(c.date, selectedMonth)))
+                                                            // Legacy check for "paid" - usually if date is past
+                                                            .filter((c: any) => c.date <= new Date().toISOString().split('T')[0] || p.payment_status === 'paid')
+                                                            .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
+
+                                                        return monthlyIncome + manualIncome + legacyIncome;
                                                     })()
                                                 )}
                                             </td>
                                             <td className="p-4 font-medium text-amber-500/90">
                                                 {formatCurrency(
                                                     (() => {
-                                                        const todayStr = new Date().toLocaleDateString('en-CA');
-                                                        const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
-                                                        const installmentsPaid = (p as any).project_costs
-                                                            ?.filter((c: any) => c.category === "receita_parcela" && c.date <= todayStr)
-                                                            .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0) || 0;
-                                                        return (p.value || 0) - (advancePaid + installmentsPaid);
+                                                        const pData = p as any;
+                                                        // Total Value - Everything already received (historical)
+                                                        const totalReceivedHistorical = (pData.transactions || []).reduce((acc: number, t: any) => acc + Number(t.amount), 0);
+                                                        // Plus manual received installments
+                                                        const manualReceivedHistorical = (pData.installments || [])
+                                                            .filter((i: any) => i.status === 'recebido' && !(pData.transactions || []).some((t: any) => t.installment_id === i.id))
+                                                            .reduce((acc: number, i: any) => acc + Number(i.amount), 0);
+
+                                                        const remaining = (p.value || 0) - (totalReceivedHistorical + manualReceivedHistorical);
+                                                        return Math.max(0, remaining);
                                                     })()
                                                 )}
                                             </td>
@@ -562,11 +588,33 @@ export default function Financeiro() {
                                                                 {/* 1. Setup Services (only on creation month or if 'all') */}
                                                                 {(selectedMonth === "all" || isInSelectedMonth(p.created_at, selectedMonth)) && p.services?.filter(s => s.name !== "__billing_config__").map((svc, idx) => (
                                                                     <div key={`svc-${idx}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 hover:bg-primary/5 transition-colors rounded-sm px-1">
-                                                                        <span className="text-muted-foreground font-medium">{svc.name}</span>
+                                                                        <span className="text-muted-foreground font-medium flex items-center gap-2">
+                                                                            <Briefcase className="h-3 w-3 opacity-40" /> {svc.name}
+                                                                        </span>
                                                                         <span className="text-right font-medium text-foreground">{formatCurrency(svc.price)}</span>
                                                                     </div>
                                                                 ))}
-                                                                {/* 2. Setup Installments (only if matching month) */}
+
+                                                                {/* 2. New Installment System (New Table) */}
+                                                                {((p as any).installments || [])
+                                                                    .filter((i: any) => selectedMonth === "all" || isInSelectedMonth(i.due_date, selectedMonth))
+                                                                    .map((inst: any, idx: number) => (
+                                                                        <div key={`inst-${inst.id || idx}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 bg-primary/5 hover:bg-primary/10 transition-colors rounded-sm px-1">
+                                                                            <span className="text-primary font-bold flex items-center gap-2">
+                                                                                {inst.origin_label?.toLowerCase().includes('sinal') ? (
+                                                                                    <BadgePercent className="h-3 w-3" />
+                                                                                ) : (
+                                                                                    <DollarSign className="h-3 w-3" />
+                                                                                )}
+                                                                                {inst.origin_label || 'Parcela'}
+                                                                                <span className="text-[9px] opacity-60 font-medium">({format(parseISO(inst.due_date), "dd/MM")})</span>
+                                                                                {inst.status === 'recebido' && <CheckCircle2 className="h-2.5 w-2.5 text-primary" />}
+                                                                            </span>
+                                                                            <span className="text-right font-bold text-primary">{formatCurrency(inst.amount)}</span>
+                                                                        </div>
+                                                                    ))}
+
+                                                                {/* 3. Legacy Project Costs (Legacy Setup Parcells) */}
                                                                 {(p as any).project_costs?.filter((c: any) => c.category === "receita_parcela" && (selectedMonth === "all" || isInSelectedMonth(c.date, selectedMonth))).map((parcela: any, idx: number) => (
                                                                     <div key={`parcela-${idx}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 bg-primary/5 hover:bg-primary/10 transition-colors rounded-sm px-1">
                                                                         <span className="text-primary font-bold flex items-center gap-2">
@@ -576,10 +624,15 @@ export default function Financeiro() {
                                                                         <span className="text-right font-bold text-primary">{formatCurrency(parcela.amount)}</span>
                                                                     </div>
                                                                 ))}
-                                                                {/* 3. Recurring Cycles (only if matching month) */}
+
+                                                                {/* 4. Recurring Cycles (Virtual projection if no physical installments) */}
                                                                 {(() => {
                                                                     const isRecurringActive = (p as any).billing_type === "recorrente" && (p as any).contract_status === "active";
                                                                     if (!isRecurringActive) return null;
+
+                                                                    // Only show virtual recurring if THERE ARE NO physical installments for recurring yet
+                                                                    const hasPhysicalRec = ((p as any).installments || []).some((i: any) => i.origin_label?.toLowerCase().includes('mensalidade'));
+                                                                    if (hasPhysicalRec) return null;
 
                                                                     const servicesArray = Array.isArray(p.services) ? p.services : [];
                                                                     const billingConfig = servicesArray.find((s: any) => s.name === "__billing_config__");

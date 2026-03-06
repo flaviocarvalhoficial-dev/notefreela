@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { addMonths, format } from "date-fns";
 import {
     Loader2, Save, Plus, Briefcase, DollarSign, ListTodo,
     Settings2, Check, Trash2, GripVertical, Calendar, Maximize2, Minimize2,
-    ChevronRight, ChevronLeft, User, Zap, BadgePercent, Clock
+    ChevronRight, ChevronLeft, User, Zap, BadgePercent, Clock, CheckCircle2, Circle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +106,7 @@ export function EditProjectDialog({
             : ""
     );
 
-    // â”€â”€ ConfiguraÃ§Ãµes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Configurações ────────────────────────────────────────────────────────
     const [newStatus, setNewStatus] = useState<ProjectStatus>(project.status as ProjectStatus);
     const [newPriority, setNewPriority] = useState<"high" | "medium" | "low">(project.priority as any);
     const [newProgress, setNewProgress] = useState(project.progress);
@@ -149,15 +149,17 @@ export function EditProjectDialog({
 
     // â”€â”€ Parcelamento status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
-    const [installments, setInstallments] = useState<{ amount: number; date: string }[]>([]);
+    const [installments, setInstallments] = useState<{ id?: string; amount: number; date: string; status?: 'provisionado' | 'recebido'; origin_label?: string }[]>([]);
     const [installmentCount, setInstallmentCount] = useState<number>(1);
     const [paymentPreset, setPaymentPreset] = useState<'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom'>('custom');
+    // Flag: prevents auto-recalculate effects from overwriting installment dates loaded from DB
+    const [installmentsLoadedFromDB, setInstallmentsLoadedFromDB] = useState(false);
 
     const nextStep = () => {
         if (step === 1 && !newName) {
             toast({
-                title: "Campo obrigatÃ³rio",
-                description: "Por favor, dÃª um nome ao seu projeto.",
+                title: "Campo obrigatório",
+                description: "Por favor, dê um nome ao seu projeto.",
                 variant: "destructive"
             });
             return;
@@ -170,6 +172,12 @@ export function EditProjectDialog({
     const [isEarlyPayment, setIsEarlyPayment] = useState(false);
     const [contractDuration, setContractDuration] = useState(12);
     const [recurringAmount, setRecurringAmount] = useState<number>(0);
+    const [advancePaymentDate, setAdvancePaymentDate] = useState<string>(
+        project?.created_at ? new Date(project.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]
+    );
+    const [advancePaymentRefMonth, setAdvancePaymentRefMonth] = useState<string>(
+        advancePaymentDate.substring(0, 7)
+    );
 
     // Fetch billing agreement to populate specialized fields
     const { data: billingAgreement } = useQuery({
@@ -198,29 +206,57 @@ export function EditProjectDialog({
             if (billingAgreement.recurring_services && billingAgreement.recurring_services.length > 0) {
                 setRecurringServices(billingAgreement.recurring_services);
             }
+
+            // ✅ FIX: Restore paymentPreset from saved billing agreement model
+            const modelToPreset: Record<string, 'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom'> = {
+                '100inicio': 'full',
+                '50_50': '50_50',
+                '100fim': 'end_of_month',
+                'parcelado': 'custom',
+            };
+            const restoredPreset = modelToPreset[billingAgreement.model] || 'custom';
+            setPaymentPreset(restoredPreset);
+
+            // Restore installment enabled state based on preset
+            if (restoredPreset === 'full') {
+                setIsInstallmentEnabled(false);
+            } else if (['50_50', 'end_of_month', 'next_month_10', 'custom'].includes(restoredPreset)) {
+                setIsInstallmentEnabled(true);
+            }
         }
     }, [billingAgreement]);
 
     const handlePresetChange = (preset: 'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom') => {
         setPaymentPreset(preset);
+        // ✅ User is manually changing the preset: unlock auto-recalculation
+        setInstallmentsLoadedFromDB(false);
         const totalValue = Number(newValue) || 0;
         const projectStartDate = startDate ? new Date(startDate + 'T12:00:00') : new Date();
 
         if (preset === 'full') {
             setNewAdvance(totalValue);
+            setAdvancePaymentDate(projectStartDate.toISOString().split('T')[0]);
             setNewPaymentStatus('paid');
             setIsInstallmentEnabled(false);
-            setInstallments([]);
+            setInstallmentCount(1);
+            setInstallments([]); // Advance handles the 100%
             setRecurringPaymentModel('full');
             setRecurringCondition('immediate');
         } else if (preset === '50_50') {
             const half = Math.round((totalValue / 2) * 100) / 100;
             setNewAdvance(half);
+            setAdvancePaymentDate(projectStartDate.toISOString().split('T')[0]);
             setNewPaymentStatus('partial');
             setIsInstallmentEnabled(true);
-            setInstallmentCount(1);
-            const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
-            setInstallments([{ amount: half, date: endOfMonth.toISOString().split('T')[0] }]);
+            setInstallmentCount(1); // One extra installment after the signal
+            setInstallments([
+                {
+                    amount: half,
+                    date: new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0).toISOString().split('T')[0],
+                    status: 'provisionado',
+                    origin_label: 'Parcela Final'
+                }
+            ]);
             setRecurringPaymentModel('split');
             setRecurringCondition('post_installments');
         } else if (preset === 'end_of_month') {
@@ -229,14 +265,14 @@ export function EditProjectDialog({
             setIsInstallmentEnabled(true);
             setInstallmentCount(1);
             const endOfMonth = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 0);
-            setInstallments([{ amount: totalValue, date: endOfMonth.toISOString().split('T')[0] }]);
+            setInstallments([{ amount: totalValue, date: endOfMonth.toISOString().split('T')[0], status: 'provisionado', origin_label: 'Pagamento Final' }]);
         } else if (preset === 'next_month_10') {
             setNewAdvance(0);
             setNewPaymentStatus('pending');
             setIsInstallmentEnabled(true);
             setInstallmentCount(1);
             const nextMonth10 = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth() + 1, 10);
-            setInstallments([{ amount: totalValue, date: nextMonth10.toISOString().split('T')[0] }]);
+            setInstallments([{ amount: totalValue, date: nextMonth10.toISOString().split('T')[0], status: 'provisionado', origin_label: 'Vencimento Dia 10' }]);
         }
     };
 
@@ -245,44 +281,33 @@ export function EditProjectDialog({
         const totalValue = Number(newValue) || 0;
         if (paymentPreset === 'full') {
             setNewAdvance(totalValue);
-        } else if (paymentPreset === '50_50') {
-            const half = Math.round(totalValue / 2 * 100) / 100;
-            setNewAdvance(half);
-
-            if (isInstallmentEnabled && installmentCount === 1) {
-                const today = new Date();
-                const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                setInstallments([{ amount: half, date: endOfMonth.toISOString().split('T')[0] }]);
-            }
         }
-    }, [newValue, paymentPreset, isInstallmentEnabled, installmentCount]);
-
-    // Add listener for manual entrance changes to update installments if 50/50 - Arthur Marques Sign
-    useEffect(() => {
-        if (paymentPreset === '50_50' && isInstallmentEnabled && installmentCount === 1) {
-            const totalValue = Number(newValue) || 0;
-            const advance = Number(newAdvance) || 0;
-            const remaining = Math.max(0, totalValue - advance);
-
-            setInstallments(prev => prev.map(inst => ({ ...inst, amount: remaining })));
-        }
-    }, [newAdvance]);
+        // Removed 50/50 auto-calc effect to avoid conflict with unified installment list
+    }, [newValue, paymentPreset]);
 
     const generateInstallments = () => {
-        const remaining = (Number(newValue) || 0) - (Number(newAdvance) || 0);
-        if (remaining <= 0) return;
+        const total = (Number(newValue) || 0);
+        const advance = (Number(newAdvance) || 0);
+        const remaining = total - advance;
 
-        const amountPerParcel = Math.round((remaining / installmentCount) * 100) / 100;
         const newParcels = [];
-        const baseDate = new Date();
+        const projectStartDate = startDate ? new Date(startDate + 'T12:00:00') : new Date();
 
-        for (let i = 0; i < installmentCount; i++) {
-            const d = new Date(baseDate);
-            d.setMonth(d.getMonth() + i + 1);
-            newParcels.push({
-                amount: amountPerParcel,
-                date: d.toISOString().split('T')[0]
-            });
+        // 1. We NO LONGER push the signal into the installments list - it's handled in Section 1
+
+        // 2. ADD INSTALLMENTS for the remaining value
+        if (remaining > 0 && installmentCount > 0) {
+            const amountPerParcel = Math.round((remaining / installmentCount) * 100) / 100;
+            for (let i = 0; i < installmentCount; i++) {
+                const d = new Date(projectStartDate);
+                d.setMonth(d.getMonth() + i + 1);
+                newParcels.push({
+                    amount: amountPerParcel,
+                    date: d.toISOString().split('T')[0],
+                    status: 'provisionado',
+                    origin_label: `Parcela ${i + 1}/${installmentCount}`
+                });
+            }
         }
         setInstallments(newParcels);
     };
@@ -374,25 +399,61 @@ export function EditProjectDialog({
         }
     }, [open, project]);
 
-    // Load existing installments to keep UI state consistent - Arthur Marques Sign
+    // ✅ FIX: Load existing installments from correct table 'installments' (not project_costs)
     useEffect(() => {
         const loadInstallments = async () => {
             if (!open) return;
-            const { data, error } = await supabase
-                .from("project_costs")
-                .select("amount, date")
-                .eq("project_id", project.id)
-                .eq("category", "receita_parcela")
-                .order("date", { ascending: true });
 
-            if (data && data.length > 0) {
-                setInstallments(data);
-                setInstallmentCount(data.length);
-                setIsInstallmentEnabled(true);
+            // Read from 'installments' table (where save actually writes to)
+            const { data, error } = await (supabase as any)
+                .from("installments")
+                .select("id, amount, due_date, status, origin_label")
+                .eq("project_id", project.id)
+                .order("due_date", { ascending: true });
+
+            if (!error && data && data.length > 0) {
+                // Filter out recurring installments - Setup view should only show setup costs - Arthur Marques Sign
+                const setupOnlyData = data.filter((row: any) => !row.origin_label?.startsWith('Mensalidade'));
+
+                if (setupOnlyData.length > 0) {
+                    // Map due_date -> date so installments state is consistent
+                    const mapped = setupOnlyData.map((row: any) => ({
+                        id: row.id,
+                        amount: Number(row.amount),
+                        date: row.due_date,
+                        status: row.status as 'provisionado' | 'recebido',
+                        origin_label: row.origin_label
+                    }));
+                    const hasSignal = mapped.length > 0 && mapped[0].origin_label?.startsWith('Sinal / Adiantamento');
+
+                    if (hasSignal) {
+                        setAdvancePaymentDate(mapped[0].date);
+                        // Extract ref month [YYYY-MM] from label if exists
+                        const match = mapped[0].origin_label?.match(/\[(.*?)\]/);
+                        if (match) setAdvancePaymentRefMonth(match[1]);
+                        else setAdvancePaymentRefMonth(mapped[0].date.substring(0, 7));
+                        setInstallments(mapped.slice(1));
+                        setInstallmentCount(Math.max(1, mapped.length - 1));
+                    } else {
+                        setInstallments(mapped);
+                        setInstallmentCount(mapped.length);
+                    }
+                    setIsInstallmentEnabled(true);
+                } else {
+                    setInstallments([]);
+                    setInstallmentCount(1);
+                    setIsInstallmentEnabled(false);
+                }
+
+                // Mark as loaded from DB so auto-recalculate effects don't overwrite saved dates
+                setInstallmentsLoadedFromDB(true);
             } else {
+                // No installments saved — reset, but don't override preset-based state
                 setInstallments([]);
                 setInstallmentCount(1);
-                setIsInstallmentEnabled(false);
+                setInstallmentsLoadedFromDB(false);
+                // Only disable if no preset is forcing installments
+                // paymentPreset state is restored by billingAgreement useEffect
             }
         };
         loadInstallments();
@@ -403,6 +464,16 @@ export function EditProjectDialog({
         const sum = services.reduce((acc, s) => acc + s.price, 0);
         setNewValue(sum);
     }, [services]);
+
+    // Handle destructive pruning when decreasing installment count - Arthur Marques Sign
+    useEffect(() => {
+        const hasSignal = installments.length > 0 && installments[0].origin_label === 'Sinal / Adiantamento';
+        const targetRowCount = hasSignal ? installmentCount + 1 : installmentCount;
+
+        if (installments.length > targetRowCount) {
+            setInstallments(prev => prev.slice(0, targetRowCount));
+        }
+    }, [installmentCount]);
 
     const addService = () => {
         if (!serviceInput.trim()) return;
@@ -456,7 +527,7 @@ export function EditProjectDialog({
     const updateProjectMutation = useMutation({
         mutationFn: async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("UsuÃ¡rio nÃ£o autenticado");
+            if (!user) throw new Error("Usuário não autenticado");
 
             const finalServices = [
 
@@ -511,7 +582,7 @@ export function EditProjectDialog({
             const { data: agreement, error: agreementError } = await (supabase as any)
                 .from("billing_agreements")
                 .upsert({
-                    id: billingAgreement?.id, // Se jÃ¡ existir um ID, ele atualiza o correto
+                    id: billingAgreement?.id, // Se já existir um ID, ele atualiza o correto
                     project_id: project.id,
                     user_id: user.id,
                     model: billingModel,
@@ -531,31 +602,50 @@ export function EditProjectDialog({
                 throw agreementError;
             }
 
-            // 5b. Clear OLD UNPAID installments (provisionado)
+            // 5b. Clear ALL old installments to sync with UI state
+            // We delete all to avoid duplicates when re-inserting the fresh list from user
             await (supabase as any)
                 .from("installments")
                 .delete()
-                .eq("project_id", project.id)
-                .eq("status", "provisionado");
+                .eq("project_id", project.id);
+
+            // 5d. Clear OLD Transactions for this project to re-sync income logs - Arthur Marques Sign
+            // This prevents duplication between ghost transactions and new installments
+            await (supabase as any)
+                .from("transactions")
+                .delete()
+                .eq("project_id", project.id);
 
             // 5c. Create NEW Installments
             const installmentSeeds: any[] = [];
 
-            // Advance/Sinal as a paid installment (if not already recorded)
-            // Note: In edit mode, we might want to check if it already exists, 
-            // but for simplicity, we are regenerating the planned ones.
-            // PAID installments are usually kept.
+            // Group 0: Advance Payment (Signal) - Always prepended if exists - Arthur Marques Sign
+            if (Number(newAdvance) > 0) {
+                installmentSeeds.push({
+                    project_id: project.id,
+                    billing_agreement_id: agreement.id,
+                    user_id: user.id,
+                    due_date: advancePaymentDate,
+                    amount: Number(newAdvance),
+                    status: (newPaymentStatus === 'paid' || newPaymentStatus === 'partial') ? 'recebido' : 'provisionado',
+                    origin_label: `Sinal / Adiantamento [${advancePaymentRefMonth}]`
+                });
+            }
 
+            // Group 1: Setup Installments
             if (isInstallmentEnabled && installments.length > 0) {
                 installments.forEach((inst, idx) => {
+                    // Skip if it was already manually added as signal in this loop (safety)
+                    if (inst.origin_label === 'Sinal / Adiantamento') return;
+
                     installmentSeeds.push({
                         project_id: project.id,
                         billing_agreement_id: agreement.id,
                         user_id: user.id,
                         due_date: inst.date,
                         amount: inst.amount,
-                        status: 'provisionado',
-                        origin_label: `ConfiguraÃ§Ã£o - Parcela ${idx + 1}/${installments.length}`
+                        status: inst.status || 'provisionado',
+                        origin_label: inst.origin_label || `Parcela ${idx + 1}/${installments.length}`
                     });
                 });
             }
@@ -565,7 +655,7 @@ export function EditProjectDialog({
                 const startDateStr = nextBillingDate || new Date().toISOString().split('T')[0];
                 let baseDate = new Date(startDateStr + 'T12:00:00');
 
-                // If trigger is "PÃ³s Setup" (post_installments), start after the last setup installment
+                // If trigger is "Pós Setup" (post_installments), start after the last setup installment
                 if (recurringCondition === 'post_installments' && installmentSeeds.length > 0) {
                     const lastSetupDate = new Date(installmentSeeds[installmentSeeds.length - 1].due_date + 'T12:00:00');
                     baseDate = addMonths(lastSetupDate, 1);
@@ -588,10 +678,32 @@ export function EditProjectDialog({
             }
 
             if (installmentSeeds.length > 0) {
-                const { error: instError } = await (supabase as any)
+                const { data: createdInstallments, error: instError } = await (supabase as any)
                     .from("installments")
-                    .insert(installmentSeeds);
+                    .insert(installmentSeeds)
+                    .select();
+
                 if (instError) throw instError;
+
+                // Group 7: Create Transactions for PAID installments - Consistency with NewProjectDialog
+                const paidInstallments = (createdInstallments || []).filter((i: any) => i.status === 'recebido');
+                if (paidInstallments.length > 0) {
+                    const transactionsToInsert = paidInstallments.map((i: any) => ({
+                        project_id: project.id,
+                        installment_id: i.id,
+                        user_id: user.id,
+                        amount: i.amount,
+                        payment_date: i.due_date,
+                        payment_method: newPaymentMethod,
+                        description: `Recebimento: ${i.origin_label}`
+                    }));
+
+                    const { error: transError } = await (supabase as any)
+                        .from("transactions")
+                        .insert(transactionsToInsert);
+
+                    if (transError) throw transError;
+                }
             }
 
             return { id: project.id, name: newName };
@@ -601,10 +713,14 @@ export function EditProjectDialog({
             queryClient.invalidateQueries({ queryKey: ["project", project.id] });
             queryClient.invalidateQueries({ queryKey: ["projects-index"] });
             queryClient.invalidateQueries({ queryKey: ["clients"] });
+            // ✅ Invalidate billing data so re-opening dialog loads fresh preset + installments
+            queryClient.invalidateQueries({ queryKey: ["project-costs-edit", project.id] });
+            queryClient.invalidateQueries({ queryKey: ["finance_projects"] });
+            queryClient.invalidateQueries({ queryKey: ["tool-subscriptions"] });
 
             logActivity({
                 title: "Projeto Atualizado",
-                description: `As informaÃ§Ãµes do projeto "${newName}" foram atualizadas.`,
+                description: `As informações do projeto "${newName}" foram atualizadas.`,
                 type: "project",
                 metadata: { project_id: project.id }
             });
@@ -620,7 +736,7 @@ export function EditProjectDialog({
     const addTaskMutation = useMutation({
         mutationFn: async (title: string) => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("NÃ£o autenticado");
+            if (!user) throw new Error("Não autenticado");
 
             const columnId = await resolveFirstColumnId();
 
@@ -707,9 +823,11 @@ export function EditProjectDialog({
     const handleOpenChange = (newOpen: boolean) => {
         setOpen(newOpen);
         if (!newOpen) {
-            // Limpa estados temporÃ¡rios de input ao fechar
+            // Limpa estados temporários de input ao fechar
             setRecServiceInput("");
             setRecServicePriceInput("");
+            // ✅ Reset DB-load flag so next open always refreshes from bank
+            setInstallmentsLoadedFromDB(false);
         }
     };
 
@@ -776,7 +894,7 @@ export function EditProjectDialog({
                                     className="w-full h-9 text-xs font-bold"
                                     onClick={nextStep}
                                 >
-                                    PrÃ³ximo <ChevronRight className="h-3 w-3 ml-1.5" />
+                                    Próximo <ChevronRight className="h-3 w-3 ml-1.5" />
                                 </Button>
                             ) : (
                                 <Button
@@ -789,7 +907,7 @@ export function EditProjectDialog({
                                     ) : (
                                         <>
                                             <Save className="h-3.5 w-3.5 mr-1.5" />
-                                            Salvar AlteraÃ§Ãµes
+                                            Salvar Alterações
                                         </>
                                     )}
                                 </Button>
@@ -854,7 +972,7 @@ export function EditProjectDialog({
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="text-xs text-muted-foreground">Ãcone do Projeto</Label>
+                                            <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
                                             <div className="flex items-center gap-3">
                                                 <IconPicker value={newIcon} onChange={setNewIcon} />
                                                 <span className="text-[11px] text-muted-foreground">Identidade visual no cockpit</span>
@@ -885,7 +1003,7 @@ export function EditProjectDialog({
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="edit-service-type" className="text-xs text-muted-foreground">Tipo de ServiÃ§o</Label>
+                                                <Label htmlFor="edit-service-type" className="text-xs text-muted-foreground">Tipo de Serviço</Label>
                                                 <Select value={serviceType} onValueChange={setServiceType}>
                                                     <SelectTrigger className="glass-light border-border h-9 text-xs">
                                                         <SelectValue placeholder="Selecione..." />
@@ -894,7 +1012,7 @@ export function EditProjectDialog({
                                                         <SelectItem value="design">Design</SelectItem>
                                                         <SelectItem value="dev">Desenvolvimento</SelectItem>
                                                         <SelectItem value="social_media">Social Media</SelectItem>
-                                                        <SelectItem value="traffic">TrÃ¡fego Pago</SelectItem>
+                                                        <SelectItem value="traffic">Tráfego Pago</SelectItem>
                                                         <SelectItem value="copywriting">Copywriting</SelectItem>
                                                         <SelectItem value="other">Outro</SelectItem>
                                                     </SelectContent>
@@ -915,7 +1033,7 @@ export function EditProjectDialog({
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="edit-desc" className="text-xs text-muted-foreground">DescriÃ§Ã£o RÃ¡pida (Opcional)</Label>
+                                            <Label htmlFor="edit-desc" className="text-xs text-muted-foreground">Descrição Rápida (Opcional)</Label>
                                             <Input
                                                 id="edit-desc"
                                                 className="glass-light border-border h-10 px-3"
@@ -928,12 +1046,12 @@ export function EditProjectDialog({
                                         <div className="pt-4 space-y-4 border-t border-border/50">
                                             <div className="flex items-center gap-2">
                                                 <Briefcase className="h-4 w-4 text-primary" />
-                                                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Escopo de ServiÃ§os</h4>
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Escopo de Serviços</h4>
                                             </div>
 
                                             <div className="flex gap-2">
                                                 <Input
-                                                    placeholder="ServiÃ§o (ex: Website)"
+                                                    placeholder="Serviço (ex: Website)"
                                                     className="glass-light border-border h-9 text-xs flex-1 px-3"
                                                     value={serviceInput}
                                                     onChange={(e) => setServiceInput(e.target.value)}
@@ -971,7 +1089,7 @@ export function EditProjectDialog({
                                                 ))}
                                                 {services.length === 0 && (
                                                     <p className="text-[10px] text-muted-foreground italic text-center py-4 bg-muted/5 rounded-lg border border-dashed border-border">
-                                                        Nenhum serviÃ§o adicionado. Defina o escopo para calcular o valor.
+                                                        Nenhum serviço adicionado. Defina o escopo para calcular o valor.
                                                     </p>
                                                 )}
                                             </div>
@@ -991,7 +1109,7 @@ export function EditProjectDialog({
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="edit-start" className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <Calendar className="h-3.5 w-3.5" /> Data de InÃ­cio
+                                                    <Calendar className="h-3.5 w-3.5" /> Data de Início
                                                 </Label>
                                                 <Input
                                                     id="edit-start"
@@ -1031,14 +1149,14 @@ export function EditProjectDialog({
                                                                     : "glass-light border-border text-muted-foreground hover:bg-muted"
                                                             )}
                                                         >
-                                                            {p === 'low' ? 'BAIXA' : p === 'medium' ? 'MÃ‰DIA' : 'ALTA'}
+                                                            {p === 'low' ? 'BAIXA' : p === 'medium' ? 'MÉDIA' : 'ALTA'}
                                                         </button>
                                                     ))}
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="edit-manager" className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <User className="h-3.5 w-3.5" /> ResponsÃ¡vel
+                                                    <User className="h-3.5 w-3.5" /> Responsável
                                                 </Label>
                                                 <Input
                                                     id="edit-manager"
@@ -1060,8 +1178,8 @@ export function EditProjectDialog({
                                                     <SelectContent className="glass border-border z-[100]">
                                                         <SelectItem value="active">Em Progresso</SelectItem>
                                                         <SelectItem value="planning">Planejamento</SelectItem>
-                                                        <SelectItem value="review">RevisÃ£o / Feedback</SelectItem>
-                                                        <SelectItem value="completed">ConcluÃ­do</SelectItem>
+                                                        <SelectItem value="review">Revisão / Feedback</SelectItem>
+                                                        <SelectItem value="completed">Concluído</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -1177,6 +1295,36 @@ export function EditProjectDialog({
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {newAdvance > 0 && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    className="grid grid-cols-2 gap-4 pt-2"
+                                                >
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-primary/70 px-1">Data do Sinal</Label>
+                                                        <div className="relative">
+                                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
+                                                            <Input
+                                                                type="date"
+                                                                value={advancePaymentDate}
+                                                                onChange={(e) => setAdvancePaymentDate(e.target.value)}
+                                                                className="h-11 pl-9 text-xs glass-light border-primary/20 focus:ring-1 focus:ring-primary/20 font-bold [color-scheme:dark]"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Mês de Competência</Label>
+                                                        <Input
+                                                            type="month"
+                                                            value={advancePaymentRefMonth}
+                                                            onChange={(e) => setAdvancePaymentRefMonth(e.target.value)}
+                                                            className="h-11 text-xs glass-light border-border focus:ring-1 focus:ring-primary/20 font-bold [color-scheme:dark]"
+                                                        />
+                                                    </div>
+                                                </motion.div>
+                                            )}
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
@@ -1527,9 +1675,40 @@ export function EditProjectDialog({
 
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
                                                         {installments.map((p, idx) => (
-                                                            <div key={idx} className="flex gap-3 p-4 rounded-xl bg-background/40 border border-border group hover:border-primary/30 transition-all shadow-sm">
-                                                                <div className="flex flex-col flex-1 gap-1.5">
-                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase opacity-70">{idx + 1}ª Parcela</Label>
+                                                            <div key={idx} className={cn(
+                                                                "flex items-center gap-3 p-4 rounded-xl transition-all shadow-sm border group",
+                                                                p.status === 'recebido'
+                                                                    ? "bg-primary/5 border-primary/20"
+                                                                    : "bg-background/40 border-border hover:border-primary/30"
+                                                            )}>
+                                                                <div className="flex-shrink-0 flex flex-col justify-center">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newP = [...installments];
+                                                                            newP[idx].status = newP[idx].status === 'recebido' ? 'provisionado' : 'recebido';
+                                                                            setInstallments(newP);
+                                                                        }}
+                                                                        className={cn(
+                                                                            "p-2 rounded-full transition-all",
+                                                                            p.status === 'recebido'
+                                                                                ? "text-primary bg-primary/10"
+                                                                                : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                                                        )}
+                                                                        title={p.status === 'recebido' ? "Marcar como Pendente" : "Marcar como Pago"}
+                                                                    >
+                                                                        {p.status === 'recebido' ? (
+                                                                            <CheckCircle2 className="h-5 w-5" />
+                                                                        ) : (
+                                                                            <Circle className="h-5 w-5" />
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+
+                                                                <div className="flex flex-col flex-1 min-w-0 gap-1.5">
+                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase opacity-70 whitespace-nowrap overflow-hidden text-ellipsis">
+                                                                        {idx + 1}ª Parcela {p.status === 'recebido' && "— PAGA"}
+                                                                    </Label>
                                                                     <div className="relative">
                                                                         <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground opacity-50" />
                                                                         <Input
@@ -1540,12 +1719,15 @@ export function EditProjectDialog({
                                                                                 newP[idx].amount = Number(e.target.value);
                                                                                 setInstallments(newP);
                                                                             }}
-                                                                            className="h-10 pl-9 text-xs glass-light border-border focus:ring-1 focus:ring-primary/20 font-bold"
+                                                                            className={cn(
+                                                                                "h-10 pl-9 text-xs glass-light border-border focus:ring-1 focus:ring-primary/20 font-bold no-spinners",
+                                                                                p.status === 'recebido' && "opacity-60"
+                                                                            )}
                                                                         />
                                                                     </div>
                                                                 </div>
-                                                                <div className="flex flex-col gap-1.5 w-32">
-                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase opacity-70">Vencimento</Label>
+                                                                <div className="flex flex-col gap-1.5 w-28 flex-shrink-0">
+                                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase opacity-70 whitespace-nowrap">Vencimento</Label>
                                                                     <Input
                                                                         type="date"
                                                                         value={p.date}
@@ -1554,7 +1736,10 @@ export function EditProjectDialog({
                                                                             newP[idx].date = e.target.value;
                                                                             setInstallments(newP);
                                                                         }}
-                                                                        className="h-10 text-[11px] glass-light border-border px-3 [color-scheme:dark] focus:ring-1 focus:ring-primary/20 font-medium"
+                                                                        className={cn(
+                                                                            "h-10 text-[11px] glass-light border-border px-3 [color-scheme:dark] focus:ring-1 focus:ring-primary/20 font-medium",
+                                                                            p.status === 'recebido' && "opacity-60"
+                                                                        )}
                                                                     />
                                                                 </div>
                                                             </div>

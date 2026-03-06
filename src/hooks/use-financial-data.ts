@@ -137,7 +137,12 @@ export function useFinancialData(selectedMonth: string = "all") {
 
             // 1. Transactions (Always count as income)
             projectTransactions.forEach(t => {
-                if (selectedMonth === "all" || isInSelectedMonth(t.payment_date, selectedMonth)) {
+                const linkedInstallment = projectInstallments.find(i => i.id === t.installment_id);
+                // Use installment due_date for reporting if linked, otherwise literal payment_date
+                // This allows pre-payments (Feb) to count in project month (March)
+                const reportingDate = linkedInstallment?.due_date || t.payment_date;
+
+                if (selectedMonth === "all" || isInSelectedMonth(reportingDate, selectedMonth)) {
                     const amt = Number(t.amount);
                     if (amt > 0) {
                         totalIncome += amt;
@@ -145,8 +150,33 @@ export function useFinancialData(selectedMonth: string = "all") {
                             id: t.id,
                             title: t.description || 'Recebimento',
                             amount: amt,
-                            date: t.payment_date,
+                            date: reportingDate,
                             type: projectAgreement?.cycle === 'mensal' ? 'recorrente' : 'setup',
+                            projectName: p.name
+                        });
+                    }
+                }
+            });
+
+            // 1.5 Handle 'recebido' installments without transactions
+            // This ensures manual "ticks" in UI reflect in total income automatically
+            const strictlyPaidInstallments = projectInstallments.filter(i => i.status === 'recebido');
+            strictlyPaidInstallments.forEach(inst => {
+                // Robust matching: Check ID OR (description match + same month/amount)
+                const hasTransaction = projectTransactions.some(t =>
+                    t.installment_id === inst.id ||
+                    (t.amount === inst.amount && t.description?.includes(inst.origin_label || ''))
+                );
+                if (!hasTransaction && (selectedMonth === "all" || isInSelectedMonth(inst.due_date, selectedMonth))) {
+                    const amt = Number(inst.amount) || 0;
+                    if (amt > 0) {
+                        totalIncome += amt;
+                        incomeItems.push({
+                            id: inst.id,
+                            title: inst.origin_label || 'Parcela Recebida (Manual)',
+                            amount: amt,
+                            date: inst.due_date,
+                            type: projectAgreement?.cycle === 'mensal' || inst.origin_label?.toLowerCase().includes('mensalidade') ? 'recorrente' : 'setup',
                             projectName: p.name
                         });
                     }
@@ -174,13 +204,15 @@ export function useFinancialData(selectedMonth: string = "all") {
                         type: projectAgreement?.cycle === 'mensal' || inst.origin_label?.toLowerCase().includes('mensalidade') ? 'recorrente' : 'parcela',
                         projectName: p.name
                     });
+                    totalRemaining += amt;
                 }
-                totalRemaining += amt;
             });
 
             // 3. Fallback: Legacy Items
             // Use legacy if NO physical installments exist for this project (or if it's a known legacy project)
-            if (activeInstallments.length === 0) {
+            const hasNewInstallmentSystem = projectInstallments.length > 0;
+
+            if (!hasNewInstallmentSystem) {
                 const isProjectFullyPaid = p.payment_status === "paid";
 
                 // Advanced Payment
@@ -263,16 +295,14 @@ export function useFinancialData(selectedMonth: string = "all") {
                 }
             }
 
-            // 5. Shared Costs
-            const costsTotal = p.project_costs
+            // 5. Shared Project Costs - Arthur Marques Sign
+            // We sum costs that BELONG to this month specifically
+            const monthlyCosts = p.project_costs
                 ?.filter(c => c.category !== "receita_parcela")
+                .filter(c => selectedMonth === "all" || isInSelectedMonth(c.date || p.created_at, selectedMonth))
                 .reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
 
-            if (selectedMonth === "all") {
-                totalProjectCosts += costsTotal;
-            } else if (isInSelectedMonth(p.created_at, selectedMonth)) {
-                totalProjectCosts += costsTotal;
-            }
+            totalProjectCosts += monthlyCosts;
         });
 
         // 6. Subscriptions
