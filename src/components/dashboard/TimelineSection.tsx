@@ -38,6 +38,7 @@ type TimelineActivity = {
   color?: string;
   project_id?: string;
   projectName?: string;
+  columnName?: string;
   avatars?: string[];
   extraCount?: number;
 };
@@ -119,8 +120,9 @@ export function TimelineSection({
       const { data: tasks, error: tasksError } = await (supabase as any).from("tasks").select("*").not("due_date", "is", null);
       if (tasksError) throw tasksError;
 
-      const { data: kbCols, error: kbError } = await (supabase as any).from("kanban_columns").select("id, color");
-      const colMap = new Map((kbCols as any[])?.map(cl => [cl.id, cl.color]) || []);
+      const { data: kbCols, error: kbError } = await (supabase as any).from("kanban_columns").select("id, title, color");
+      const colColorMap = new Map((kbCols as any[])?.map(cl => [cl.id, cl.color]) || []);
+      const colTitleMap = new Map((kbCols as any[])?.map(cl => [cl.id, cl.title]) || []);
       const projectMap = new Map(projects.map(p => [p.id, p.name]));
 
       const mappedEvents = (events || []).map((e: any) => {
@@ -155,9 +157,10 @@ export function TimelineSection({
           startDate: start,
           endDate: new Date(t.due_date + "T" + (t.end_time || "23:59:00")),
           durationDays: 1,
-          color: colMap.get(t.column_id) || COLUMN_COLORS[t.column_id as string] || COLUMN_COLORS["todo"],
+          color: colColorMap.get(t.column_id) || COLUMN_COLORS[t.column_id as string] || COLUMN_COLORS["todo"],
           project_id: t.project_id,
-          projectName: t.project_id ? projectMap.get(t.project_id) : "Sem Projeto"
+          projectName: t.project_id ? projectMap.get(t.project_id) : "Sem Projeto",
+          columnName: t.column_id ? colTitleMap.get(t.column_id) : undefined
         } as TimelineActivity;
       }).filter(Boolean) as TimelineActivity[];
 
@@ -421,11 +424,22 @@ export function TimelineSection({
                         </ContextMenu>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent className="bento-card border-border px-3 py-2">
-                      <p className="text-xs font-medium mb-0.5">{a.title}</p>
-                      <p className="text-[9px] font-medium text-muted-foreground  tracking-tight">
-                        {a.projectName ? `${a.meta} • ${a.projectName}` : a.meta}
-                      </p>
+                    <TooltipContent className="bento-card border-border px-3 py-2 bg-white/95 dark:bg-zinc-900 shadow-xl backdrop-blur-md">
+                      <p className="text-xs font-bold mb-1 tracking-tight text-foreground">{a.title}</p>
+                      <div className="flex flex-col gap-1">
+                        {a.projectName && (
+                          <p className="text-[10px] font-medium text-muted-foreground tracking-tight flex items-center gap-1.5 leading-tight">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+                            {a.projectName}
+                          </p>
+                        )}
+                        {a.columnName && (
+                          <p className="text-[8px] font-bold text-primary tracking-widest uppercase flex items-center gap-1.5 leading-tight opacity-90">
+                            <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
+                            Status: {a.columnName}
+                          </p>
+                        )}
+                      </div>
                     </TooltipContent>
                   </Tooltip>
                 );

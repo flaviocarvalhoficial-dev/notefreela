@@ -21,6 +21,7 @@ import Auth from "./pages/Auth";
 import Atividades from "./pages/Atividades";
 import Configuracoes from "./pages/Configuracoes";
 import Assinaturas from "./pages/Assinaturas";
+import Empresa from "./pages/Empresa";
 import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase";
 import { Session } from "@supabase/supabase-js";
@@ -53,6 +54,7 @@ const AppLayout = () => {
                 <Route path="/atividades" element={<Atividades />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/assinaturas" element={<Assinaturas />} />
+                <Route path="/empresa" element={<Empresa />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

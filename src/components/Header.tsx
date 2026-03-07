@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/hooks/use-theme";
 import { useValueVisibility } from "@/hooks/use-value-visibility";
 import { EyeClosed } from "@/components/shared/EyeClosed";
+import { GlobalSearch } from "@/components/GlobalSearch";
 import { supabase } from "@/integrations/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -28,6 +29,7 @@ export function Header() {
     const [mounted, setMounted] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<any>(null);
+    const [searchOpen, setSearchOpen] = useState(false);
     const navigate = useNavigate();
 
     const fetchProfile = async (userId: string) => {
@@ -136,16 +138,26 @@ export function Header() {
                     </DropdownMenu>
                 </div>
 
-                {/* Center Area: Centralized Search Box */}
                 <div className="flex-1 flex justify-center px-4 max-w-lg">
-                    <div className="relative group w-full">
+                    <div
+                        className="relative group w-full cursor-pointer"
+                        onClick={() => setSearchOpen(true)}
+                    >
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
-                            placeholder="Pesquisar..."
-                            className="w-full pl-10 h-10 glass-light border-border focus:border-primary/50 transition-all rounded-full bg-background/20"
+                            placeholder="Pesquisar... (⌘K)"
+                            readOnly
+                            className="w-full pl-10 h-10 glass-light border-border focus:border-primary/50 transition-all rounded-full bg-background/20 cursor-pointer pointer-events-none"
                         />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1">
+                            <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 flex">
+                                <span className="text-xs">⌘</span>K
+                            </kbd>
+                        </div>
                     </div>
                 </div>
+
+                <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
                 {/* Right Area: Timer + Mode Toggle, Notifications */}
                 <div className="flex items-center gap-2">

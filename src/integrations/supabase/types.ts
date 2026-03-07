@@ -489,6 +489,138 @@ export type Database = {
                     }
                 ]
             }
+            company_info: {
+                Row: {
+                    id: string
+                    user_id: string
+                    company_name: string | null
+                    trading_name: string | null
+                    cnpj: string | null
+                    email: string | null
+                    phone: string | null
+                    address: string | null
+                    pix_key: string | null
+                    logo_url: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    company_name?: string | null
+                    trading_name?: string | null
+                    cnpj?: string | null
+                    email?: string | null
+                    phone?: string | null
+                    address?: string | null
+                    pix_key?: string | null
+                    logo_url?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    company_name?: string | null
+                    trading_name?: string | null
+                    cnpj?: string | null
+                    email?: string | null
+                    phone?: string | null
+                    address?: string | null
+                    pix_key?: string | null
+                    logo_url?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: []
+            }
+            company_documents: {
+                Row: {
+                    id: string
+                    user_id: string
+                    name: string
+                    category: string
+                    file_url: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    name: string
+                    category: string
+                    file_url: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    name?: string
+                    category?: string
+                    file_url?: string
+                    created_at?: string
+                }
+                Relationships: []
+            }
+            invoice_history: {
+                Row: {
+                    id: string
+                    user_id: string
+                    month_year: string
+                    invoice_count: number
+                    total_amount: number
+                    taxes_amount: number
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    month_year: string
+                    invoice_count?: number
+                    total_amount?: number
+                    taxes_amount?: number
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    month_year?: string
+                    invoice_count?: number
+                    total_amount?: number
+                    taxes_amount?: number
+                    created_at?: string
+                }
+                Relationships: []
+            }
+            document_templates: {
+                Row: {
+                    id: string
+                    user_id: string
+                    title: string
+                    content: string
+                    type: string
+                    is_default: boolean
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    title: string
+                    content: string
+                    type: string
+                    is_default?: boolean
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    title?: string
+                    content?: string
+                    type?: string
+                    is_default?: boolean
+                    created_at?: string
+                }
+                Relationships: []
+            }
         }
         Views: {
             [_ in never]: never

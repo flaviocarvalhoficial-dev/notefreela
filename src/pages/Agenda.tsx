@@ -332,13 +332,13 @@ const Agenda = () => {
 
         {/* Coluna Direita: Apenas Eventos */}
         <div className="flex flex-col gap-4">
-          <div className="bento-card h-fit min-h-[300px]">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-medium tracking-tight">
+          <div className="bento-card h-fit p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="space-y-0.5">
+                <h2 className="text-xl font-medium tracking-tight">
                   {isToday(selectedDate) ? "Hoje" : format(selectedDate, "dd MMM", { locale: ptBR })}
                 </h2>
-                <p className="text-[10px] font-medium  tracking-tight text-muted-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-primary opacity-60">
                   {selectedEvents.length} {selectedEvents.length === 1 ? "evento" : "eventos"}
                 </p>
               </div>
@@ -361,16 +361,16 @@ const Agenda = () => {
                       key={event.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="bg-muted/5 border border-border p-3 rounded-md group relative"
+                      className="bg-card border border-border/80 p-4 rounded-lg group relative shadow-sm hover:shadow-md transition-all duration-300"
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-4">
                         <div
-                          className="w-1 h-10 rounded-full mt-1"
+                          className="w-1 h-8 rounded-full"
                           style={{ backgroundColor: getEventColor(event) }}
                         />
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-medium truncate tracking-tight">{event.title}</h3>
-                          <p className="text-[10px] font-medium text-muted-foreground tabular-nums  tracking-tight">
+                          <h3 className="text-sm font-semibold text-foreground truncate tracking-tight uppercase">{event.title}</h3>
+                          <p className="text-[10px] font-bold text-muted-foreground tabular-nums tracking-widest uppercase opacity-70">
                             {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
                           </p>
                         </div>

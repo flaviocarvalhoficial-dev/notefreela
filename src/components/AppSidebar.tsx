@@ -17,7 +17,8 @@ import {
   DollarSign,
   CreditCard,
   Info,
-  LayoutGrid
+  LayoutGrid,
+  Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -55,6 +56,7 @@ const navItems = [
   { title: "Documentos", url: "/documentos", icon: FileText },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
   { title: "Assinaturas", url: "/assinaturas", icon: CreditCard },
+  { title: "Minha Empresa", url: "/empresa", icon: Building2 },
 ];
 
 const APP_VERSION = "V1.1.0";

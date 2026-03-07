@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { FinancialChart } from "@/components/dashboard/FinancialChart";
+import { ProfitChart } from "@/components/dashboard/ProfitChart";
 import { CostsBreakdownModal } from "@/components/dashboard/CostsBreakdownModal";
 import {
     Dialog,
@@ -214,6 +215,33 @@ export default function Financeiro() {
             return matchesSearch && matchesStatus && matchesMonth;
         });
     }, [allProjects, searchQuery, statusFilter, selectedMonth]);
+
+    const projectsForChart = useMemo(() => {
+        if (searchQuery === "" && statusFilter === "all") return allProjects;
+
+        return allProjects.filter(p => {
+            const matchesSearch = (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.client_name?.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            if (statusFilter === "all") return matchesSearch;
+
+            // Recalculate status for filtering (Sync with filteredProjects logic)
+            const servicesArray = Array.isArray(p.services) ? p.services : [];
+            const billingConfig = servicesArray.find((s: any) => s.name === "__billing_config__");
+            const isEarlyPayment = billingConfig?.isEarlyPayment || false;
+            const isProjectFullyPaid = p.payment_status === "paid" || isEarlyPayment;
+            const installments = (p as any).project_costs?.filter((c: any) => c.category === "receita_parcela") || [];
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
+            const installmentsPaid = installments.filter((c: any) => c.date <= todayStr || isProjectFullyPaid).reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
+            const paidTotal = advancePaid + installmentsPaid;
+            const remaining = (p.value || 0) - paidTotal;
+            const hasActivity = paidTotal > 0 || installments.length > 0;
+            const payStatus = isProjectFullyPaid || remaining <= 0 ? "paid" : hasActivity ? "partial" : "pending";
+
+            return matchesSearch && payStatus === statusFilter;
+        });
+    }, [allProjects, searchQuery, statusFilter]);
 
     const stats = useMemo(() => {
         return {
@@ -425,13 +453,19 @@ export default function Financeiro() {
                 ))}
             </div>
 
-            {/* Financial Chart */}
+            {/* Charts Area */}
             <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
-                <FinancialChart projects={stats?.projects || []} />
+                <div className="h-[400px]">
+                    <FinancialChart projects={projectsForChart} />
+                </div>
+                <div className="h-[400px]">
+                    <ProfitChart projects={projectsForChart} subscriptions={subscriptions} />
+                </div>
             </motion.div>
 
             {/* Projects Financial Table */}
@@ -440,28 +474,32 @@ export default function Financeiro() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bento-card overflow-hidden"
             >
-                <div className="p-6 border-b border-border flex items-center justify-between bg-muted/5">
+                <div className="p-4 border-b border-border flex items-center justify-between bg-muted/5">
                     <div className="flex items-center gap-2">
-                        <List className="h-4 w-4 text-primary/60" />
-                        <h2 className="text-sm font-medium tracking-tight text-muted-foreground">Status de Pagamentos</h2>
+                        <List className="h-4 w-4 text-primary" />
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Status de Pagamentos</h2>
                     </div>
-                    <Badge variant="outline" className="text-[10px] bg-background border-border font-medium">
-                        {stats?.projectCount} Projetos
-                    </Badge>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-secondary border border-border">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase">{stats?.projectCount} Projetos</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm border-collapse">
                         <thead>
-                            <tr className="bg-muted/10 text-left border-b border-border">
-                                <th className="p-4 font-medium text-muted-foreground text-[10px] tracking-tight">Projeto / Cliente</th>
-                                <th className="p-4 font-medium text-muted-foreground text-[10px]">Valor Total</th>
-                                <th className="p-4 font-medium text-muted-foreground text-[10px]">{selectedMonth === 'all' ? 'Entrada / Pago' : 'Recebido (Mês)'}</th>
-                                <th className="p-4 font-medium text-muted-foreground text-[10px]">Restante</th>
-                                <th className="p-4 font-medium text-muted-foreground text-[10px] text-center">Status Pagto</th>
+                            <tr className="bg-muted/30 text-left border-b border-border h-10">
+                                <th className="w-10 border-r border-border/40"></th>
+                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40">Projeto / Cliente</th>
+                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">Valor Total</th>
+                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">{selectedMonth === 'all' ? 'Entrada / Pago' : 'Recebido (Mês)'}</th>
+                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">Restante</th>
+                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase text-center">Status Pagto</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-border/40">
                             {stats?.projects.map((p, i) => {
                                 const remaining = (p.value || 0) - (p.advance_payment || 0);
                                 const isPaid = remaining <= 0 && (p.value || 0) > 0;
@@ -471,34 +509,36 @@ export default function Financeiro() {
                                     <React.Fragment key={p.id}>
                                         <tr
                                             className={cn(
-                                                "group hover:bg-muted/10 transition-colors border-b border-border cursor-pointer",
-                                                expandedRows.includes(p.id) ? "bg-primary/5" : (i % 2 === 0 ? "bg-transparent" : "bg-muted/5")
+                                                "group hover:bg-muted/5 transition-colors cursor-pointer h-12",
+                                                expandedRows.includes(p.id) ? "bg-primary/[0.03]" : (i % 2 === 0 ? "bg-transparent" : "bg-muted/5")
                                             )}
-                                            onClick={() => toggleRow(p.id)}
                                         >
-                                            <td className="p-4 font-medium  tracking-tight text-foreground" onClick={() => toggleRow(p.id)}>
-                                                <div className="flex items-center gap-3">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => toggleRow(p.id)}
-                                                        className={cn(
-                                                            "h-6 w-6 rounded-md transition-transform flex-shrink-0",
-                                                            expandedRows.includes(p.id) && "rotate-90 text-primary"
-                                                        )}
-                                                    >
-                                                        <ChevronDown className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                    <div className="flex flex-col flex-1 min-w-0 cursor-pointer" onClick={() => toggleRow(p.id)}>
-                                                        <span className="font-medium text-foreground truncate max-w-[180px] tracking-tight">{p.name}</span>
-                                                        <span className="text-[10px] text-muted-foreground">{p.client_name || "Sem cliente"}</span>
-                                                    </div>
+                                            <td className="w-10 text-center border-r border-border/40">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleRow(p.id);
+                                                    }}
+                                                    className={cn(
+                                                        "h-6 w-6 rounded-md transition-transform",
+                                                        expandedRows.includes(p.id) && "rotate-90 text-primary"
+                                                    )}
+                                                >
+                                                    <ChevronDown className="h-3 w-3" />
+                                                </Button>
+                                            </td>
+                                            <td className="p-2 px-4 font-medium border-r border-border/40" onClick={() => toggleRow(p.id)}>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="font-semibold text-foreground truncate max-w-[220px] tracking-tight text-xs uppercase">{p.name}</span>
+                                                    <span className="text-[10px] text-muted-foreground font-medium opacity-60 tracking-tight">{p.client_name || "Mapeamento pendente"}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-4 font-medium text-foreground">
+                                            <td className="p-2 px-4 font-bold text-foreground text-right border-r border-border/40 tabular-nums text-xs">
                                                 {formatCurrency(p.value || 0)}
                                             </td>
-                                            <td className="p-4 font-medium text-emerald-500/90">
+                                            <td className="p-2 px-4 font-bold text-emerald-600 text-right border-r border-border/40 tabular-nums text-xs">
                                                 {formatCurrency(
                                                     (() => {
                                                         const pData = p as any;
@@ -527,13 +567,11 @@ export default function Financeiro() {
                                                     })()
                                                 )}
                                             </td>
-                                            <td className="p-4 font-medium text-amber-500/90">
+                                            <td className="p-2 px-4 font-bold text-orange-600 text-right border-r border-border/40 tabular-nums text-xs">
                                                 {formatCurrency(
                                                     (() => {
                                                         const pData = p as any;
-                                                        // Total Value - Everything already received (historical)
                                                         const totalReceivedHistorical = (pData.transactions || []).reduce((acc: number, t: any) => acc + Number(t.amount), 0);
-                                                        // Plus manual received installments
                                                         const manualReceivedHistorical = (pData.installments || [])
                                                             .filter((i: any) => i.status === 'recebido' && !(pData.transactions || []).some((t: any) => t.installment_id === i.id))
                                                             .reduce((acc: number, i: any) => acc + Number(i.amount), 0);
@@ -543,7 +581,7 @@ export default function Financeiro() {
                                                     })()
                                                 )}
                                             </td>
-                                            <td className="p-4 text-center">
+                                            <td className="p-2 px-4 text-center">
                                                 {(() => {
                                                     const todayStr = new Date().toLocaleDateString('en-CA');
                                                     const advancePaid = (p.created_at || "").split('T')[0] <= todayStr ? (p.advance_payment || 0) : 0;
