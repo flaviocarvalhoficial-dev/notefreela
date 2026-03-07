@@ -298,7 +298,7 @@ export function TimelineSection({
           onPointerLeave={endDrag}>
           <div className="min-w-max relative flex flex-col bg-background/20" style={{ height: Math.max(totalHeight + 100, 600) }}>
             {/* Header X-Axis */}
-            <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+            <div className="sticky top-0 z-[100] bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-sm border-b border-border shadow-sm">
               {/* Months Row */}
               <div className="flex">
                 {monthsInTrack.map((m, idx) => (
@@ -368,11 +368,7 @@ export function TimelineSection({
                       <div className="absolute cursor-pointer"
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={(e) => {
-                          // Default navigation logic
-                          // Don't stop propagation here to allow ContextMenu to potentially work if it relies on bubbling (usually capture though)
-                          // But prevent default might be needed?
-                          if (e.button === 0) { // Only Left Click
-                            console.log("Container Clicked:", a);
+                          if (e.button === 0) {
                             if (a.type === 'task') {
                               navigate(`/tarefas?taskId=${a.id}${a.project_id ? `&project=${a.project_id}` : ''}`);
                             } else {
@@ -381,34 +377,31 @@ export function TimelineSection({
                           }
                         }}
                         style={{
-                          left: `${left + 3}px`,
-                          top: `${top + 10}px`,
-                          width: 'max-content',
-                          maxWidth: '400px', // Prevent infinite width
-                          height: 28,
-                          zIndex: 50 // Increased z-index
+                          left: `${left + 2}px`,
+                          top: `${top + 8}px`,
+                          width: `${Math.max(width - 4, 120)}px`,
+                          height: 26,
+                          zIndex: 10
                         }}>
                         <ContextMenu>
                           <ContextMenuTrigger>
                             <div
-                              className="w-full h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex flex-col justify-center px-4 border border-white/5 relative overflow-hidden group shadow-sm bg-background/5 pointer-events-auto z-20"
+                              className="w-full h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex items-center px-2.5 border border-white/5 relative overflow-hidden group shadow-sm bg-background/5 pointer-events-auto"
                               style={{
                                 boxShadow: "0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)"
                               }}
                             >
-                              {/* Background Layout with Opacity */}
                               <div
                                 className="absolute inset-0 pointer-events-none"
                                 style={{
                                   backgroundColor: a.color || "hsl(var(--secondary))",
-                                  opacity: 1
+                                  opacity: 0.95
                                 }}
                               />
 
-                              {/* Gradient Overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                              <div className="absolute inset-0 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
 
-                              <p className="text-[10px] font-medium leading-none relative z-10 text-zinc-900 group-hover:text-black whitespace-nowrap drop-shadow-sm">
+                              <p className="text-[10px] font-semibold leading-none relative z-10 text-zinc-950 group-hover:text-black truncate w-full drop-shadow-sm px-1">
                                 {a.title}
                               </p>
                             </div>
