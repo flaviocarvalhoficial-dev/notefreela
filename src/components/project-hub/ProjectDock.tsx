@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import * as LucideIcons from 'lucide-react';
 import {
     CheckSquare, Inbox, DollarSign, FileText, Activity as ActivityIcon,
     X, Plus, ChevronRight, Search, Filter, ArrowUpRight, Clock, Hash,
-    Copy, Check
+    Copy, Check, ArrowRight, ChevronsRight, ArrowLeftRight, MessageSquare, Star, MoreHorizontal,
+    User, Layout, Briefcase, Calendar, CircleDot
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -14,7 +16,16 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
 interface ProjectDockProps {
-    project?: { value?: number | null; advance_payment?: number | null } | null;
+    project?: {
+        id: string;
+        name?: string | null;
+        avatar_emoji?: string | null;
+        client_name?: string | null;
+        deadline?: string | null;
+        status?: string | null;
+        value?: number | null;
+        advance_payment?: number | null
+    } | null;
     tasks: any[];
     inbox: any[];
     finance: any[];
@@ -22,6 +33,7 @@ interface ProjectDockProps {
     pages?: any[];
     activities: any[];
     onInsertReference?: (type: string, id: string) => void;
+    onConvertInboxToTask?: (item: any) => void;
     onCreateItem?: (type: string) => void;
     onSelectPage?: (id: string | null) => void;
     onAddPage?: () => void;
@@ -33,6 +45,18 @@ interface ProjectDockProps {
 
 type TabType = 'tasks' | 'inbox' | 'finance' | 'docs' | 'activity';
 
+const PropertyItem = ({ icon: Icon, label, value }: { icon: any, label: string, value: React.ReactNode }) => (
+    <div className="grid grid-cols-[140px_1fr] items-center gap-2 group cursor-pointer hover:bg-muted/30 py-1.5 px-2 rounded-md transition-colors">
+        <div className="flex items-center gap-2 text-muted-foreground">
+            <Icon className="w-4 h-4" />
+            <span className="text-[13px]">{label}</span>
+        </div>
+        <div className="text-[13px] text-foreground font-medium truncate">
+            {value}
+        </div>
+    </div>
+);
+
 export const ProjectDock = ({
     project,
     tasks = [],
@@ -42,6 +66,7 @@ export const ProjectDock = ({
     pages = [],
     activities = [],
     onInsertReference,
+    onConvertInboxToTask,
     onCreateItem,
     onSelectPage,
     onAddPage,
@@ -75,6 +100,61 @@ export const ProjectDock = ({
         { id: 'activity', label: 'ATIVIDADE', icon: ActivityIcon, count: activities.length },
     ];
 
+    // Extract UI config from services metadata
+    const uiConfig = (project?.services as any[] || []).find(s => s.name === "__ui_config__");
+    const metaphor = uiConfig?.metaphor || "roadmap";
+    const coverColor = uiConfig?.color || "accent-primary";
+
+    const getMetaphorContent = () => {
+        const colorClass = coverColor === 'accent-primary' ? 'text-accent-primary' : `text-${coverColor.split('-')[0]}-500`;
+
+        switch (metaphor) {
+            case 'growth':
+                return (
+                    <svg width="100%" height="100" viewBox="0 0 300 100" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+                        <path d="M10 90C60 90 100 80 150 50C200 20 250 10 290 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                        <circle cx="150" cy="50" r="4" fill="currentColor" />
+                        <circle cx="290" cy="10" r="5" fill="currentColor" className="animate-pulse" />
+                    </svg>
+                );
+            case 'flow':
+                return (
+                    <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+                        <path d="M0 30C50 30 70 50 120 50C170 50 190 30 240 30C290 30 310 50 360 50" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" />
+                        <path d="M0 40C50 40 70 20 120 20C170 20 190 60 240 60C290 60 310 40 360 40" stroke="currentColor" strokeWidth="2" />
+                        <path d="M0 50C50 50 70 70 120 70C170 70 190 50 240 50C290 50 310 70 360 70" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" />
+                    </svg>
+                );
+            case 'target':
+                return (
+                    <svg width="100%" height="120" viewBox="0 0 300 120" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+                        <circle cx="150" cy="60" r="40" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
+                        <circle cx="150" cy="60" r="25" stroke="currentColor" strokeWidth="1.5" />
+                        <circle cx="150" cy="60" r="10" fill="currentColor" className="animate-pulse" />
+                        <path d="M150 10V30M150 90V110M100 60H120M180 60H200" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                );
+            case 'blueprint':
+                return (
+                    <svg width="100%" height="120" viewBox="0 0 300 120" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+                        <path d="M0 20H300M0 50H300M0 80H300M0 110H300" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.3" />
+                        <path d="M30 0V120M70 0V120M110 0V120M150 0V120M190 0V120M230 0V120M270 0V120" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.3" />
+                        <path d="M50 90L250 30" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                        <rect x="50" y="30" width="200" height="60" stroke="currentColor" strokeWidth="1.5" strokeDasharray="8 4" rx="4" />
+                    </svg>
+                );
+            default: // roadmap
+                return (
+                    <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+                        <path d="M10 40C50 40 70 20 110 20C150 20 170 60 210 60C250 60 270 40 290 40" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" />
+                        <circle cx="110" cy="20" r="4" fill="currentColor" />
+                        <circle cx="210" cy="60" r="4" fill="currentColor" />
+                        <circle cx="290" cy="40" r="5" fill="currentColor" className="animate-pulse" />
+                    </svg>
+                );
+        }
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'tasks':
@@ -87,8 +167,20 @@ export const ProjectDock = ({
                             </Button>
                         </div>
                         {tasks.length === 0 ? (
-                            <div className="text-center py-10 opacity-30">
-                                <p className="text-xs">Nenhuma tarefa.</p>
+                            <div className="text-center py-12 px-4 border-2 border-dashed border-border rounded-2xl bg-muted/5 flex flex-col items-center justify-center gap-3 animate-in fade-in duration-500">
+                                <CheckSquare className="h-8 w-8 text-muted-foreground opacity-20" />
+                                <div className="space-y-1">
+                                    <p className="text-xs font-medium text-muted-foreground">Nenhuma tarefa pendente</p>
+                                    <p className="text-[10px] text-muted-foreground/60">Organize suas próximas ações aqui.</p>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-2 h-8 text-[11px] font-bold border-primary text-primary hover:bg-primary/5 shadow-glow-sm"
+                                    onClick={() => onCreateItem?.('task')}
+                                >
+                                    CRIAR PRIMEIRA TAREFA
+                                </Button>
                             </div>
                         ) : (
                             tasks.map(task => (
@@ -100,7 +192,16 @@ export const ProjectDock = ({
                                                 <Badge variant="outline" className="text-[8px] h-4 px-1.5 py-0 border-border bg-primary/5 text-primary font-medium  tracking-tight">
                                                     {task.priority || 'MEDIUM'}
                                                 </Badge>
-                                                {task.due_date && <span className="text-[9px] font-medium text-muted-foreground">{new Date(task.due_date).toLocaleDateString()}</span>}
+                                                {task.due_date && (
+                                                    <span className={cn(
+                                                        "text-[9px] font-bold",
+                                                        new Date(task.due_date) < new Date() && task.status !== 'done'
+                                                            ? "text-red-500 animate-pulse"
+                                                            : "text-muted-foreground"
+                                                    )}>
+                                                        {new Date(task.due_date).toLocaleDateString('pt-BR')}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                         <button
@@ -149,6 +250,16 @@ export const ProjectDock = ({
                                     </div>
 
                                     <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onConvertInboxToTask?.(item);
+                                            }}
+                                            className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
+                                            title="Transformar em Tarefa"
+                                        >
+                                            <ArrowRight className="w-3.5 h-3.5" />
+                                        </button>
                                         <button
                                             onClick={(e) => handleCopy(e, item.id, item.content)}
                                             className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
@@ -366,58 +477,121 @@ export const ProjectDock = ({
                         />
                     )}
                     <motion.div
-                        initial={mode === 'overlay' ? { x: '100%' } : { width: 0, opacity: 0 }}
-                        animate={mode === 'overlay' ? { x: 0 } : { width: 'auto', opacity: 1 }}
-                        exit={mode === 'overlay' ? { x: '100%' } : { width: 0, opacity: 0 }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        initial={mode === 'overlay' ? { x: '100%' } : { opacity: 0 }}
+                        animate={mode === 'overlay' ? { x: 0 } : { opacity: 1 }}
+                        exit={mode === 'overlay' ? { x: '100%' } : { opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         className={cn(
-                            "bg-card border-l border-border flex flex-col h-full",
-                            mode === 'overlay' ? "fixed right-0 top-0 bottom-0 w-80 sm:w-96 shadow-2xl z-50" : "relative border-l"
+                            "bg-card flex flex-row h-full transition-all duration-300 overflow-hidden",
+                            mode === 'overlay'
+                                ? "fixed right-0 top-0 bottom-0 w-80 sm:w-[500px] shadow-2xl z-50 border-l border-border"
+                                : "relative flex h-full bg-card"
                         )}
                         style={mode === 'sidebar' ? style : undefined}
                     >
-                        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]" />
-                                <span className="text-[11px] font-medium tracking-tight  text-foreground">PROJECT CONTEXT</span>
+                        {/* Vertical Tabs Sidebar (Full Height) */}
+                        <div className="w-12 sm:w-44 border-r border-border/40 bg-muted/10 flex flex-col shrink-0">
+                            {/* Simple Sidebar Header/Brand */}
+                            <div className="h-11 flex items-center px-4 border-b border-border/40 bg-muted/5">
+                                <span className="text-[10px] font-bold text-muted-foreground/40 tracking-widest uppercase truncate">Contexto</span>
                             </div>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={onClose}>
-                                <X className="w-4 h-4" />
-                            </Button>
+
+                            <div className="flex flex-col space-y-0.5 pt-4">
+                                {tabs.map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id as TabType)}
+                                        className={cn(
+                                            "flex items-center gap-2.5 px-4 py-2 transition-all text-left group relative",
+                                            activeTab === tab.id
+                                                ? "text-primary bg-primary/5 font-medium"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                                        )}
+                                    >
+                                        <tab.icon className={cn("w-4 h-4 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
+                                        <span className="hidden sm:inline text-[12px] font-medium truncate">{tab.label}</span>
+                                        {activeTab === tab.id && (
+                                            <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-primary rounded-full" />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        <div className="flex border-b border-border overflow-x-auto scrollbar-hide">
-                            {tabs.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as TabType)}
-                                    className={cn(
-                                        "flex-1 flex flex-col items-center gap-1.5 py-4 px-2 transition-all relative min-w-[70px]",
-                                        activeTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
-                                    )}
-                                >
-                                    <tab.icon className={cn("w-4 h-4", activeTab === tab.id && "animate-in zoom-in-75")} />
-                                    <span className={cn(
-                                        "text-[9px] font-medium tracking-tight",
-                                        activeTab === tab.id ? "opacity-100" : "opacity-40"
-                                    )}>
-                                        {tab.label}
-                                    </span>
-                                    {tab.count > 0 && (
-                                        <span className="absolute top-2 right-4 w-4 h-4 bg-primary text-primary-foreground text-[8px] flex items-center justify-center rounded-full font-medium shadow-sm">
-                                            {tab.count}
-                                        </span>
-                                    )}
-                                    {activeTab === tab.id && (
-                                        <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                                    )}
-                                </button>
-                            ))}
+                        {/* Right Surface: Toolbar + Content */}
+                        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+                            {/* Notion-style Top Toolbar */}
+                            <div className="flex items-center justify-between px-4 h-11 border-b border-border/40 bg-card/50 backdrop-blur-sm z-30 shrink-0">
+                                <div className="flex items-center gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        onClick={onClose}
+                                    >
+                                        <ChevronsRight className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 rounded-sm text-muted-foreground hover:bg-muted"
+                                    >
+                                        <ArrowLeftRight className="w-3.5 h-3.5" />
+                                    </Button>
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px] font-medium text-muted-foreground hover:bg-muted">
+                                        Compartilhar
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-muted-foreground hover:bg-muted">
+                                        <MessageSquare className="w-3.5 h-3.5" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-muted-foreground hover:bg-muted">
+                                        <Star className="w-3.5 h-3.5" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-muted-foreground hover:bg-muted">
+                                        <MoreHorizontal className="w-3.5 h-3.5" />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Main Scrollable Area */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar pb-20 bg-background/20 min-w-0">
+                                {/* Cover Image */}
+                                <div className="h-32 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative group flex items-center justify-center overflow-hidden">
+                                    <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none" />
+                                    {getMetaphorContent()}
+                                    <Button variant="ghost" size="sm" className="absolute bottom-2 right-4 opacity-0 group-hover:opacity-100 h-6 text-[10px] bg-background/50 backdrop-blur-sm">
+                                        Alterar capa
+                                    </Button>
+                                </div>
+
+                                {/* Content Area */}
+                                <div className="px-8 -mt-6 relative z-10">
+                                    {/* Icon & Title */}
+                                    <div className="space-y-4 mb-8">
+                                        <div className="w-16 h-16 bg-card rounded-2xl border border-border shadow-xl flex items-center justify-center text-3xl group cursor-pointer hover:border-primary/30 transition-all">
+                                            {project?.avatar_emoji ? (
+                                                (() => {
+                                                    const Icon = (LucideIcons as any)[project.avatar_emoji];
+                                                    return Icon ? <Icon className="h-8 w-8 text-primary" /> : "🎯";
+                                                })()
+                                            ) : "🎯"}
+                                        </div>
+                                        <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                                            {project?.name || "Projeto Sem Título"}
+                                        </h2>
+                                    </div>
+
+                                    {/* Tab Content Area */}
+                                    <div className="animate-in fade-in duration-300">
+                                        {renderContent()}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar">
-                            {renderContent()}
-                        </div>
                     </motion.div>
                 </>
             )}

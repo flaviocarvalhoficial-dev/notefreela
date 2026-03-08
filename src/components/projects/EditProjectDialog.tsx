@@ -86,6 +86,8 @@ export function EditProjectDialog({
         project?.created_at ? new Date(project.created_at).toISOString().split("T")[0] : ""
     );
     const [newDeadline, setNewDeadline] = useState(project?.deadline || "");
+    const [coverMetaphor, setCoverMetaphor] = useState<string>("roadmap");
+    const [coverColor, setCoverColor] = useState<string>("accent-primary");
 
     // â”€â”€ Financeiro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [newValue, setNewValue] = useState(project?.value || 0);
@@ -382,6 +384,16 @@ export function EditProjectDialog({
                 }
             }
 
+            // Extract UI config
+            const uiConfig = (project.services as any[] || []).find(s => s.name === "__ui_config__");
+            if (uiConfig) {
+                setCoverMetaphor(uiConfig.metaphor || "roadmap");
+                setCoverColor(uiConfig.color || "accent-primary");
+            } else {
+                setCoverMetaphor("roadmap");
+                setCoverColor("accent-primary");
+            }
+
             setBillingType((project.billing_type as any) || "pontual");
             setServiceType(project.service_type || "");
             setContractStatus(project.contract_status || "active");
@@ -541,6 +553,12 @@ export function EditProjectDialog({
                     recurring_installments: recurringInstallmentCount,
                     isEarlyPayment: isEarlyPayment,
                     contractDuration: contractDuration
+                },
+                {
+                    name: "__ui_config__",
+                    price: 0,
+                    metaphor: coverMetaphor,
+                    color: coverColor
                 }
             ];
             const { error } = await supabase
@@ -971,11 +989,46 @@ export function EditProjectDialog({
                                             />
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
-                                            <div className="flex items-center gap-3">
-                                                <IconPicker value={newIcon} onChange={setNewIcon} />
-                                                <span className="text-[11px] text-muted-foreground">Identidade visual no cockpit</span>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
+                                                <div className="flex items-center gap-3">
+                                                    <IconPicker value={newIcon} onChange={setNewIcon} />
+                                                    <span className="text-[11px] text-muted-foreground">Personalize no board</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Capa do Projeto</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <Select value={coverMetaphor} onValueChange={setCoverMetaphor}>
+                                                        <SelectTrigger className="glass-light border-border h-9 text-[10px] font-bold">
+                                                            <SelectValue placeholder="Metáfora" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="glass border-border">
+                                                            <SelectItem value="roadmap">🗺️ Roadmap</SelectItem>
+                                                            <SelectItem value="growth">📈 Growth</SelectItem>
+                                                            <SelectItem value="flow">🌊 Fluxo</SelectItem>
+                                                            <SelectItem value="target">🎯 Foco</SelectItem>
+                                                            <SelectItem value="blueprint">📐 Estrutura</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <div className="flex items-center gap-1.5 p-1 px-2 rounded-md border border-border bg-muted/20">
+                                                        {(['accent-primary', 'blue-500', 'emerald-500', 'amber-500'] as const).map((c) => (
+                                                            <button
+                                                                key={c}
+                                                                type="button"
+                                                                onClick={() => setCoverColor(c)}
+                                                                className={cn(
+                                                                    "h-4 w-4 rounded-full border border-white/20 transition-transform hover:scale-110",
+                                                                    coverColor === c && "ring-2 ring-primary ring-offset-1",
+                                                                    c === 'accent-primary' ? 'bg-accent-primary' :
+                                                                        c === 'blue-500' ? 'bg-blue-500' :
+                                                                            c === 'emerald-500' ? 'bg-emerald-500' : 'bg-amber-500'
+                                                                )}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 

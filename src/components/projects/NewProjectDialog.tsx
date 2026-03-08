@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { addMonths, format } from "date-fns";
-import { Plus, Loader2, ChevronRight, ChevronLeft, Check, ListTodo, User, Calendar, Briefcase, Building2, DollarSign, Maximize2, Minimize2, Expand, Zap, BadgePercent, Clock } from "lucide-react";
+import { Plus, Loader2, ChevronRight, ChevronLeft, Check, ListTodo, User, Calendar, Briefcase, Building2, DollarSign, Maximize2, Minimize2, Expand, Zap, BadgePercent, Clock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -43,12 +43,15 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
 
     const [step, setStep] = useState<number>(1);
     const [isMaximized, setIsMaximized] = useState(false);
+    const [isQuickMode, setIsQuickMode] = useState(false);
 
     // Step 1: Projeto & Cliente
     const [newName, setNewName] = useState("");
     const [newClient, setNewClient] = useState("");
     const [newDesc, setNewDesc] = useState("");
     const [newIcon, setNewIcon] = useState("Briefcase");
+    const [coverMetaphor, setCoverMetaphor] = useState<string>("roadmap");
+    const [coverColor, setCoverColor] = useState<string>("accent-primary");
     const [services, setServices] = useState<{ name: string; price: number }[]>([]);
     const [serviceInput, setServiceInput] = useState("");
     const [servicePriceInput, setServicePriceInput] = useState<number | "">("");
@@ -125,6 +128,8 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
         setNewPaymentMethod("pix");
         setNewPaymentStatus("pending");
         setNewIcon("Briefcase");
+        setCoverMetaphor("roadmap");
+        setCoverColor("accent-primary");
         setTasks([]);
         setTaskInput("");
         setServices([]);
@@ -343,6 +348,12 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                             isEarlyPayment: isEarlyPayment,
                             contractDuration: contractDuration,
                             recurringInstallmentCount: recurringInstallmentCount
+                        },
+                        {
+                            name: "__ui_config__",
+                            price: 0,
+                            metaphor: coverMetaphor,
+                            color: coverColor
                         }
                     ],
                     billing_type: billingType,
@@ -619,16 +630,9 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                         ))}
 
                         <div className="mt-auto pt-3 border-t border-border space-y-2">
-                            {step < 4 ? (
+                            {(isQuickMode && step === 1) || step === 4 ? (
                                 <Button
-                                    className="w-full h-9 text-xs font-bold"
-                                    onClick={nextStep}
-                                >
-                                    Próximo <ChevronRight className="h-3 w-3 ml-1.5" />
-                                </Button>
-                            ) : (
-                                <Button
-                                    className="w-full h-9 text-xs font-bold"
+                                    className="w-full h-9 text-xs font-bold bg-primary shadow-glow hover:bg-primary/90"
                                     onClick={() => createProjectMutation.mutate()}
                                     disabled={createProjectMutation.isPending || !newName}
                                 >
@@ -637,9 +641,16 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                     ) : (
                                         <>
                                             <Check className="h-3.5 w-3.5 mr-1.5" />
-                                            Finalizar
+                                            Finalizar Rápido
                                         </>
                                     )}
+                                </Button>
+                            ) : (
+                                <Button
+                                    className="w-full h-9 text-xs font-bold"
+                                    onClick={nextStep}
+                                >
+                                    Próximo <ChevronRight className="h-3 w-3 ml-1.5" />
                                 </Button>
                             )}
 
@@ -691,6 +702,26 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                 </div>
 
                                 {step === 1 && (
+                                    <div className="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-primary/5 mb-4">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-xs font-bold text-primary flex items-center gap-2">
+                                                <Rocket className="h-3 w-3" /> Modo de Projeto Rápido
+                                            </Label>
+                                            <p className="text-[10px] text-muted-foreground">Pular configurações avançadas e criar o projeto agora.</p>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                id="quick-mode"
+                                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                checked={isQuickMode}
+                                                onChange={(e) => setIsQuickMode(e.target.checked)}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {step === 1 && (
                                     <>
                                         <div className="space-y-2">
                                             <Label htmlFor="project-name" className="text-xs text-muted-foreground">Nome do Projeto</Label>
@@ -703,11 +734,46 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                 autoFocus
                                             />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
-                                            <div className="flex items-center gap-3">
-                                                <IconPicker value={newIcon} onChange={setNewIcon} />
-                                                <span className="text-[11px] text-muted-foreground">Personalize a identidade no board</span>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
+                                                <div className="flex items-center gap-3">
+                                                    <IconPicker value={newIcon} onChange={setNewIcon} />
+                                                    <span className="text-[11px] text-muted-foreground">Personalize no board</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-xs text-muted-foreground">Capa do Projeto</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <Select value={coverMetaphor} onValueChange={setCoverMetaphor}>
+                                                        <SelectTrigger className="glass-light border-border h-9 text-[10px] font-bold">
+                                                            <SelectValue placeholder="Metáfora" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="glass border-border">
+                                                            <SelectItem value="roadmap">🗺️ Roadmap</SelectItem>
+                                                            <SelectItem value="growth">📈 Growth</SelectItem>
+                                                            <SelectItem value="flow">🌊 Fluxo</SelectItem>
+                                                            <SelectItem value="target">🎯 Foco</SelectItem>
+                                                            <SelectItem value="blueprint">📐 Estrutura</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <div className="flex items-center gap-1.5 p-1 px-2 rounded-md border border-border bg-muted/20">
+                                                        {(['accent-primary', 'blue-500', 'emerald-500', 'amber-500'] as const).map((c) => (
+                                                            <button
+                                                                key={c}
+                                                                type="button"
+                                                                onClick={() => setCoverColor(c)}
+                                                                className={cn(
+                                                                    "h-4 w-4 rounded-full border border-white/20 transition-transform hover:scale-110",
+                                                                    coverColor === c && "ring-2 ring-primary ring-offset-1",
+                                                                    c === 'accent-primary' ? 'bg-accent-primary' :
+                                                                        c === 'blue-500' ? 'bg-blue-500' :
+                                                                            c === 'emerald-500' ? 'bg-emerald-500' : 'bg-amber-500'
+                                                                )}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">

@@ -32,14 +32,15 @@ const queryClient = new QueryClient();
 const AppLayout = () => {
   const { pathname } = useLocation();
   const isDashboard = pathname === "/";
+  const isFullHeightPage = isDashboard || pathname.startsWith("/projetos/");
 
   return (
     <TimerProvider>
-      <div className={`flex w-full ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
+      <div className={`flex w-full ${isFullHeightPage ? "h-screen overflow-hidden" : "min-h-screen"}`}>
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
           <Header />
-          <main className={`flex-1 overflow-x-hidden ${isDashboard ? "h-full overflow-hidden no-scrollbar" : "overflow-y-auto custom-scrollbar"}`}>
+          <main className={`flex-1 overflow-x-hidden ${isFullHeightPage ? "h-full overflow-hidden no-scrollbar" : "overflow-y-auto custom-scrollbar"}`}>
             <div className="w-full h-full">
               <Routes>
                 <Route path="/" element={<Index />} />

@@ -12,7 +12,8 @@ import {
     Filter,
     Trash2,
     Loader2,
-    Pencil
+    Pencil,
+    ArrowUpRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -215,69 +216,79 @@ const Documentos = () => {
                                                     key={doc.id}
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
-                                                    className="group hover:bg-white/[0.02] transition-colors cursor-default"
+                                                    className="group hover:bg-muted/30 transition-all cursor-default border-b border-border/50 last:border-0"
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div
                                                             className="flex items-center gap-4 cursor-pointer group/item"
                                                             onClick={() => handleView(doc)}
-                                                            title="Clique para visualizar no navegador"
                                                         >
-                                                            <div className="h-10 w-10 rounded-md bg-muted/50 flex items-center justify-center text-muted-foreground group-hover/item:bg-primary/5 group-hover/item:text-primary transition-colors border border-border">
+                                                            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center text-muted-foreground group-hover/item:bg-primary/5 group-hover/item:text-primary transition-all border border-border/50 shadow-sm">
                                                                 <FileText className="h-5 w-5" />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-medium text-foreground truncate tracking-tight group-hover/item:text-primary transition-colors">{doc.title}</p>
-                                                                <p className="text-[10px] font-medium text-primary/60  tracking-tight truncate">{doc.projectName}</p>
+                                                                <p className="text-[13px] font-semibold text-foreground truncate tracking-tight group-hover/item:text-primary transition-colors">{doc.title}</p>
+                                                                <p className="text-[10px] font-medium text-primary/60 tracking-tight truncate bg-primary/5 px-1.5 py-0.5 rounded inline-block mt-0.5">{doc.projectName}</p>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <Badge variant="outline" className="bg-primary/5 text-primary border-border text-[10px] font-medium px-2 h-5 tracking-tight">
+                                                        <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-border text-[9px] font-bold uppercase tracking-widest px-2 h-5">
                                                             {doc.category}
                                                         </Badge>
                                                     </td>
-                                                    <td className="px-6 py-4 text-[11px] font-medium text-muted-foreground tabular-nums ">{doc.lastModified}</td>
                                                     <td className="px-6 py-4">
-                                                        <span className="text-[10px] font-medium text-muted-foreground bg-muted/20 px-2 py-1 rounded-md  tracking-tight">{doc.type}</span>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{doc.lastModified}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-[9px] font-bold text-muted-foreground/60 bg-muted/30 px-2 py-0.5 rounded-full uppercase tracking-tighter">{doc.type}</span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleView(doc);
+                                                                }}
+                                                            >
+                                                                <ArrowUpRight className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleDownload(doc);
                                                                 }}
-                                                                title="Baixar arquivo"
                                                             >
                                                                 <Download className="h-4 w-4" />
                                                             </Button>
 
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-muted/50 rounded-md">
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-muted/80 rounded-lg">
                                                                         <MoreVertical className="h-4 w-4" />
                                                                     </Button>
                                                                 </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="bg-card border-border shadow-xl">
+                                                                <DropdownMenuContent align="end" className="bg-card border-border shadow-2xl min-w-[160px] p-1.5">
                                                                     <DropdownMenuItem
-                                                                        className="text-xs font-medium gap-2 cursor-pointer"
+                                                                        className="text-xs font-medium gap-2.5 p-2 rounded-md cursor-pointer"
                                                                         onClick={() => openRenameDialog(doc)}
                                                                     >
-                                                                        <Pencil className="h-3.5 w-3.5" />
+                                                                        <Pencil className="h-3.5 w-3.5 opacity-60" />
                                                                         Renomear
                                                                     </DropdownMenuItem>
-                                                                    <DropdownMenuItem className="text-xs font-medium gap-2 cursor-pointer">
-                                                                        Mover pasta
-                                                                    </DropdownMenuItem>
                                                                     <DropdownMenuItem
-                                                                        className="text-xs font-medium gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                                                                        className="text-xs font-medium gap-2.5 p-2 rounded-md text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                                                                         onClick={() => deleteDoc(doc.id)}
                                                                     >
-                                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                                        <Trash2 className="h-3.5 w-3.5 opacity-60" />
                                                                         Excluir Registro
                                                                     </DropdownMenuItem>
                                                                 </DropdownMenuContent>

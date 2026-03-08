@@ -59,7 +59,7 @@ const ProjetoHub = () => {
     const deletionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Sidebar Resizing
-    const [sidebarWidth, setSidebarWidth] = useState(384);
+    const [sidebarWidth, setSidebarWidth] = useState(window.innerWidth * 0.3);
     const [isResizing, setIsResizing] = useState(false);
 
     const startResizing = useCallback(() => {
@@ -460,6 +460,45 @@ const ProjetoHub = () => {
     });
 
 
+    const convertInboxToTaskMutation = useMutation({
+        mutationFn: async (item: any) => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Usuário não autenticado");
+
+            const { data: cols } = await supabase
+                .from("kanban_columns")
+                .select("id")
+                .eq("project_id", id)
+                .order("position", { ascending: true })
+                .limit(1);
+
+            const columnId = cols?.[0]?.id || 'todo';
+
+            const { error: taskErr } = await (supabase as any).from("tasks").insert({
+                project_id: id,
+                user_id: user.id,
+                title: item.title || "Captura convertida",
+                column_id: columnId,
+                progress: 0,
+                priority: "medium",
+                created_at: new Date().toISOString()
+            });
+
+            if (taskErr) throw taskErr;
+
+            const { error: delErr } = await supabase.from("inbox").delete().eq("id", item.id);
+            if (delErr) throw delErr;
+
+            return { projectId: id };
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project-inbox", id] });
+            queryClient.invalidateQueries({ queryKey: ["project-tasks", id] });
+            queryClient.invalidateQueries({ queryKey: ["inbox-sidebar"] });
+            toast({ title: "Convertido em tarefa!", description: "O item foi movido para a lista de tarefas do projeto." });
+        }
+    });
+
     // KPI Calculations
     const kpis = useMemo(() => {
         const nextDeadline = project?.deadline ? format(new Date(project.deadline), "dd/MM/yy", { locale: ptBR }) : null;
@@ -512,40 +551,41 @@ const ProjetoHub = () => {
 
     return (
         <div className={cn(
-            "min-h-screen bg-background flex flex-col overflow-hidden transition-colors",
+            "h-full bg-background flex overflow-hidden transition-colors",
             isResizing && "cursor-col-resize select-none"
         )}>
-            <ProjectHeader
-                project={project}
-                kpis={kpis}
-                onEdit={() => setIsEditingParam(true)}
-                onDelete={() => setIsDeleting(true)}
-                onToggleDock={() => setIsDockOpen(!isDockOpen)}
-                dockOpen={isDockOpen}
-                onCreateAction={(type) => {
-                    if (type === 'task') setIsAddTaskOpen(true);
-                    else if (type === 'inbox') setIsAddInboxOpen(true);
-                    else if (type === 'income' || type === 'expense') setIsAddCostOpen(true);
-                    else if (type === 'subpage') createPageMutation.mutate();
-                }}
-                onIconChange={(icon) => updateIconMutation.mutate(icon)}
-            />
-
-            <main className="flex-1 flex flex-col overflow-hidden relative">
-                {/* Internal Page Navigation */}
-                <PageNav
-                    projectName={project.name}
-                    pages={pages as Array<{ id: string; title: string }>}
-                    activePageId={activePageId}
-                    onSelectPage={(pageId) => setActivePageId(pageId)}
-                    onAddPage={() => createPageMutation.mutate()}
-                    onDeletePage={(pageId) => deletePageMutation.mutate(pageId)}
-                    editorRef={editorRef}
-                    editorStatus={editorStatus}
+            {/* Left Side: Main Application Surface (Header + PageNav + Editor) */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+                <ProjectHeader
+                    project={project}
+                    kpis={kpis}
+                    onEdit={() => setIsEditingParam(true)}
+                    onDelete={() => setIsDeleting(true)}
+                    onToggleDock={() => setIsDockOpen(!isDockOpen)}
+                    dockOpen={isDockOpen}
+                    onCreateAction={(type) => {
+                        if (type === 'task') setIsAddTaskOpen(true);
+                        else if (type === 'inbox') setIsAddInboxOpen(true);
+                        else if (type === 'income' || type === 'expense') setIsAddCostOpen(true);
+                        else if (type === 'subpage') createPageMutation.mutate();
+                    }}
+                    onIconChange={(icon) => updateIconMutation.mutate(icon)}
                 />
 
-                {/* Editor Area */}
-                <div className="flex-1 flex overflow-hidden relative">
+                <main className="flex-1 flex flex-col overflow-hidden relative">
+                    {/* Internal Page Navigation */}
+                    <PageNav
+                        projectName={project.name}
+                        pages={pages as Array<{ id: string; title: string }>}
+                        activePageId={activePageId}
+                        onSelectPage={(pageId) => setActivePageId(pageId)}
+                        onAddPage={() => createPageMutation.mutate()}
+                        onDeletePage={(pageId) => deletePageMutation.mutate(pageId)}
+                        editorRef={editorRef}
+                        editorStatus={editorStatus}
+                    />
+
+                    {/* Editor Area */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar transition-all duration-300">
                         <div className="pt-6">
                             {activePageId && activePage && (
@@ -599,60 +639,64 @@ const ProjetoHub = () => {
                             }}
                         />
                     </div>
+                </main>
+            </div>
 
-                    {isDockOpen && (
-                        <div
-                            onMouseDown={startResizing}
-                            className={cn(
-                                "w-1 hover:w-1.5 cursor-col-resize bg-border/40 hover:bg-primary/40 transition-all z-20 absolute top-0 bottom-0 right-[var(--sidebar-width)]",
-                                isResizing && "bg-primary w-1.5"
-                            )}
-                            style={{ right: sidebarWidth }}
-                        />
-                    )}
+            {/* Right Side: Context Dock Layout */}
+            {isDockOpen && (
+                <>
+                    <div
+                        onMouseDown={startResizing}
+                        className={cn(
+                            "w-px hover:w-1 cursor-col-resize bg-border hover:bg-primary/40 transition-all z-20 relative flex items-center justify-center",
+                            isResizing && "bg-primary/50 w-1"
+                        )}
+                        style={{ right: 0 }} // Simplified for flex-row layout
+                    >
+                        <div className="w-px h-12 bg-border/80 rounded-full" />
+                    </div>
 
-                    <ProjectDock
-                        project={project}
-                        tasks={tasks}
-                        inbox={inboxItems}
-                        finance={costs}
-                        documents={documents}
-                        pages={pages}
-                        activities={activities.map((a: any) => ({
-                            title: a.title,
-                            created_at: format(new Date(a.created_at), "dd MMM, HH:mm", { locale: ptBR }),
-                            type: a.type
-                        }))}
-                        isOpen={isDockOpen}
-                        onClose={() => setIsDockOpen(false)}
-                        onSelectPage={(pageId) => setActivePageId(pageId)}
-                        onAddPage={() => createPageMutation.mutate()}
-                        mode="sidebar"
+                    <div
+                        className="h-full bg-card transition-all duration-300 relative z-10"
                         style={{ width: sidebarWidth }}
-                        onCreateItem={(type) => {
-                            if (type === 'doc') {
-                                setSelectedDocCategory('briefing');
-                                setIsAddingDoc(true);
-                            } else if (type === 'task') {
-                                setIsAddTaskOpen(true);
-                            } else if (type === 'inbox') {
-                                setIsAddInboxOpen(true);
-                            } else if (type === 'finance') {
-                                setIsAddCostOpen(true);
-                            }
-                        }}
-                        onInsertReference={(type, itemId) => {
-                            let title = "";
-                            if (type === 'task') title = tasks.find((t: any) => t.id === itemId)?.title;
-                            else if (type === 'inbox') title = inboxItems.find((i: any) => i.id === itemId)?.title || inboxItems.find((i: any) => i.id === itemId)?.content?.substring(0, 20);
-                            else if (type === 'page') title = pages.find((p: any) => p.id === itemId)?.title;
-                            else if (type === 'doc') title = documents.find((d: any) => d.id === itemId)?.name;
+                    >
+                        <ProjectDock
+                            project={project}
+                            tasks={tasks}
+                            inbox={inboxItems}
+                            finance={costs}
+                            documents={documents}
+                            pages={pages}
+                            activities={activities}
+                            isOpen={isDockOpen}
+                            onClose={() => setIsDockOpen(false)}
+                            onConvertInboxToTask={(item) => convertInboxToTaskMutation.mutate(item)}
+                            onCreateItem={(type) => {
+                                if (type === 'task') setIsAddTaskOpen(true);
+                                if (type === 'inbox') setIsAddInboxOpen(true);
+                                if (type === 'finance') setIsAddCostOpen(true);
+                                if (type === 'doc') {
+                                    setSelectedDocCategory("ANEXO");
+                                    setIsAddingDoc(true);
+                                }
+                            }}
+                            onSelectPage={setActivePageId}
+                            onAddPage={() => createPageMutation.mutate()}
+                            onInsertReference={(type, itemId) => {
+                                let title = "";
+                                if (type === 'task') title = tasks.find((t: any) => t.id === itemId)?.title;
+                                else if (type === 'inbox') title = inboxItems.find((i: any) => i.id === itemId)?.title || inboxItems.find((i: any) => i.id === itemId)?.content?.substring(0, 20);
+                                else if (type === 'page') title = pages.find((p: any) => p.id === itemId)?.title;
+                                else if (type === 'doc') title = documents.find((d: any) => d.id === itemId)?.name;
 
-                            editorRef.current?.insertItem(type as any, itemId, title);
-                        }}
-                    />
-                </div>
-            </main>
+                                editorRef.current?.insertItem(type as any, itemId, title);
+                            }}
+                            mode="sidebar"
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+                </>
+            )}
 
             {/* Dialogs */}
             <EditProjectDialog
@@ -713,9 +757,10 @@ const ProjetoHub = () => {
             <CostRegistrationDialog
                 open={isAddCostOpen}
                 onOpenChange={setIsAddCostOpen}
+                defaultProjectId={id}
             />
 
-        </div>
+        </div >
     );
 };
 

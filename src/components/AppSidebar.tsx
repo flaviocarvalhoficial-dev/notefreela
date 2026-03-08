@@ -55,8 +55,6 @@ const navItems = [
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Documentos", url: "/documentos", icon: FileText },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
-  { title: "Assinaturas", url: "/assinaturas", icon: CreditCard },
-  { title: "Minha Empresa", url: "/empresa", icon: Building2 },
 ];
 
 const APP_VERSION = "V1.1.0";
@@ -109,6 +107,12 @@ export function AppSidebar() {
     { type: 'prompt', title: 'Prompts', icon: Terminal },
     { type: 'snippet', title: 'Fragmentos', icon: Type },
     { type: 'note', title: 'Notas', icon: FileText },
+  ];
+
+  const adminItems = [
+    { title: "Minha Empresa", url: "/empresa", icon: Building2 },
+    { title: "Assinaturas", url: "/assinaturas", icon: CreditCard },
+    { title: "Configurações", url: "/configuracoes", icon: Settings },
   ];
 
   return (
@@ -301,34 +305,56 @@ export function AppSidebar() {
                   )}
                 </SidebarMenuItem>
               </Collapsible>
+
+              {/* Gestão e Ajustes Group */}
+              <Collapsible asChild defaultOpen={false} className="group/collapsible">
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip={!open ? "Gestão e Ajustes" : undefined}
+                    className="h-10 rounded-md transition-all hover:bg-sidebar-accent"
+                  >
+                    <div className={cn(
+                      "flex items-center text-muted-foreground transition-colors w-full h-full",
+                      open ? "gap-2.5 px-3" : "justify-center"
+                    )}>
+                      <Settings className="h-[18px] w-[18px] shrink-0" />
+                      {open && <span className="text-[13px] font-medium tracking-tight">Gestão e Ajustes</span>}
+                    </div>
+                    {open && (
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
+                          <ChevronRight className="h-4 w-4" />
+                        </SidebarMenuAction>
+                      </CollapsibleTrigger>
+                    )}
+                  </SidebarMenuButton>
+
+                  {open && (
+                    <CollapsibleContent>
+                      <SidebarMenuSub className="ml-3 mt-1 border-l border-sidebar-border gap-0 pb-2">
+                        {adminItems.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <NavLink
+                              to={item.url}
+                              className="px-4 py-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2.5"
+                              activeClassName="text-foreground font-medium"
+                            >
+                              <item.icon className="h-3.5 w-3.5 shrink-0" />
+                              {item.title}
+                            </NavLink>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  )}
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className={cn("border-t border-sidebar-border space-y-2", open ? "p-3" : "p-0 py-4 items-center")}>
-        <SidebarMenu className={open ? "px-0" : "items-center"}>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip={!open ? "Configurações" : undefined}
-              className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
-            >
-              <NavLink
-                to="/configuracoes"
-                className={cn(
-                  "flex items-center text-muted-foreground transition-colors w-full h-full",
-                  open ? "gap-3 px-3" : "justify-center"
-                )}
-                activeClassName="text-foreground font-medium bg-sidebar-accent"
-              >
-                <Settings className="h-[18px] w-[18px] shrink-0" />
-                {open && <span className="text-[13px] font-medium tracking-tight">Configurações</span>}
-              </NavLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
         {open && (
           <div className="px-4 py-2 flex items-center justify-between opacity-40 hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-2">

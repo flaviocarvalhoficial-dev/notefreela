@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
@@ -27,7 +27,9 @@ import {
     Pencil,
     GripVertical,
     Clock,
-    Hash
+    Hash,
+    Zap,
+    ArrowRight
 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -110,6 +112,49 @@ const getTypeColor = (type: string) => {
     }
 };
 
+const TAG_SUGGESTIONS: Record<string, string[]> = {
+    'dev': ['react', 'next', 'js', 'javascript', 'ts', 'typescript', 'api', 'back', 'front', 'code', 'snippet'],
+    'design': ['figma', 'layout', 'ui', 'ux', 'cor', 'font', 'logo', 'design', 'protótipo'],
+    'negócio': ['contrato', 'valor', 'preco', 'proposta', 'cliente', 'pagamento', 'reunião', 'freela'],
+    'referencia': ['estudar', 'link', 'video', 'curso', 'inspira', 'tutorial', 'documentação'],
+    'prompt': ['ia', 'gpt', 'ai', 'prompt', 'engenharia', 'system', 'midjourney'],
+};
+
+const TagSuggester = ({ content, currentTags, onSelect }: { content: string, currentTags: string[], onSelect: (tag: string) => void }) => {
+    const suggestions = useMemo(() => {
+        if (!content || content.length < 3) return [];
+        const text = content.toLowerCase();
+        const found: string[] = [];
+
+        Object.entries(TAG_SUGGESTIONS).forEach(([tag, keywords]) => {
+            if (currentTags.includes(tag)) return;
+            if (keywords.some(kw => text.includes(kw))) {
+                found.push(tag);
+            }
+        });
+        return found;
+    }, [content, currentTags]);
+
+    if (suggestions.length === 0) return null;
+
+    return (
+        <div className="flex flex-wrap gap-1.5 mt-2 animate-in fade-in slide-in-from-top-1">
+            <span className="text-[10px] text-muted-foreground mr-1 flex items-center gap-1">
+                <Zap className="h-2.5 w-2.5" /> Sugestões:
+            </span>
+            {suggestions.map(tag => (
+                <button
+                    key={tag}
+                    onClick={() => onSelect(tag)}
+                    className="text-[9px] font-bold bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded hover:bg-primary/20 transition-colors"
+                >
+                    +{tag}
+                </button>
+            ))}
+        </div>
+    );
+};
+
 // Componente Visual do Item (Extraído para reuso no Overlay)
 const ItemCard = ({
     item,
@@ -158,6 +203,9 @@ const ItemCard = ({
                                         <Edit className="h-3.5 w-3.5" /> Editar
                                     </DropdownMenuItem>
                                 )}
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('open-conversion', { detail: item })); }} className="gap-2 cursor-pointer">
+                                    <ArrowRight className="h-3.5 w-3.5" /> Transformar em Tarefa
+                                </DropdownMenuItem>
                                 {onDelete && (
                                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="gap-2 text-destructive cursor-pointer">
                                         <Trash2 className="h-3.5 w-3.5" /> Excluir
@@ -354,6 +402,78 @@ const CaixaEntrada = () => {
         })
     );
 
+    const [conversionItem, setConversionItem] = useState<InboxItem | null>(null);
+    const [conversionProjectId, setConversionProjectId] = useState<string>("");
+
+    useEffect(() => {
+        const handler = (e: any) => {
+            const item = e.detail as InboxItem;
+            setConversionItem(item);
+            if (item.project_id) setConversionProjectId(item.project_id);
+        };
+        window.addEventListener('open-conversion', handler);
+        return () => window.removeEventListener('open-conversion', handler);
+    }, []);
+
+    const convertToTaskMutation = useMutation({
+        mutationFn: async ({ item, projectId }: { item: InboxItem, projectId: string }) => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Usuário não autenticado");
+
+            // 1. Get a column for the task (first column of the project)
+            const { data: cols, error: colsErr } = await (supabase as any)
+                .from("kanban_columns")
+                .select("id")
+                .eq("project_id", projectId)
+                .order("position", { ascending: true })
+                .limit(1);
+
+            if (colsErr) throw colsErr;
+            const columnId = cols?.[0]?.id;
+
+            // 2. Create the task
+            const { error: taskErr } = await (supabase as any)
+                .from("tasks")
+                .insert({
+                    project_id: projectId,
+                    user_id: user.id,
+                    title: item.title || "Captura convertida",
+                    column_id: columnId,
+                    progress: 0,
+                    priority: "medium",
+                    created_at: new Date().toISOString()
+                });
+
+            if (taskErr) throw taskErr;
+
+            // 3. Delete the inbox item
+            const { error: delErr } = await (supabase as any)
+                .from("inbox")
+                .delete()
+                .eq("id", item.id);
+
+            if (delErr) throw delErr;
+
+            return { projectId };
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["inbox"] });
+            queryClient.invalidateQueries({ queryKey: ["inbox-sidebar"] });
+            queryClient.invalidateQueries({ queryKey: ["project-tasks", data.projectId] });
+            toast({
+                title: "Convertido com sucesso!",
+                description: "O item foi removido da caixa e adicionado como tarefa no projeto.",
+            });
+            setConversionItem(null);
+        },
+        onError: (error: any) => {
+            toast({
+                title: "Erro na conversão",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    });
 
     useEffect(() => {
         localStorage.setItem("inbox_view_mode", viewMode);
@@ -854,6 +974,16 @@ const CaixaEntrada = () => {
                                                 value={newContent}
                                                 onChange={(e) => setNewContent(e.target.value)}
                                             />
+                                            <TagSuggester
+                                                content={newContent}
+                                                currentTags={newTags.split(",").map(t => t.trim())}
+                                                onSelect={(tag) => {
+                                                    const current = newTags.split(",").map(t => t.trim()).filter(t => t !== "");
+                                                    if (!current.includes(tag)) {
+                                                        setNewTags(current.length > 0 ? `${newTags}, ${tag}` : tag);
+                                                    }
+                                                }}
+                                            />
                                         </div>
 
                                         <div className="flex justify-end gap-2 pt-2">
@@ -1018,14 +1148,24 @@ const CaixaEntrada = () => {
                                     <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
                                 </div>
                             ) : filteredItems.length === 0 ? (
-                                <div className="text-center py-20 border-2 border-dashed border-border rounded-2xl bg-muted/5">
-                                    <Inbox className="h-12 w-12 mx-auto opacity-10 mb-4" />
-                                    <h3 className="text-lg font-medium text-muted-foreground">
-                                        {(searchQuery && searchQuery !== 'uncategorized') || (JSON.parse(localStorage.getItem("inbox_folders") || "[]").includes(searchQuery)) ? `Caixa "${searchQuery}" vazia` : "Caixa de entrada vazia"}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        {searchQuery ? "Arraste itens para cá ou crie novos." : "Sua caixa de entrada está limpa. Comece a capturar ideias!"}
-                                    </p>
+                                <div className="text-center py-24 px-6 border-2 border-dashed border-border rounded-2xl bg-muted/5 flex flex-col items-center gap-4 animate-in fade-in duration-700">
+                                    <div className="p-4 rounded-full bg-primary/5">
+                                        <Inbox className="h-10 w-10 text-primary opacity-20" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-xl font-medium tracking-tight text-foreground">
+                                            {(searchQuery && searchQuery !== 'uncategorized') || (JSON.parse(localStorage.getItem("inbox_folders") || "[]").includes(searchQuery)) ? `Caixa "${searchQuery}" vazia` : "Caixa de entrada vazia"}
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                                            {searchQuery ? "Arraste itens para esta caixa ou crie uma nova captura rápida." : "Sua caixa de entrada está limpa. Que tal capturar uma nova ideia agora?"}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        className="btn-gradient px-8 h-11 font-bold shadow-glow-sm"
+                                        onClick={() => setIsAdding(true)}
+                                    >
+                                        CAPTURAR AGORA
+                                    </Button>
                                 </div>
                             ) : (
                                 <div className={cn(
@@ -1146,6 +1286,16 @@ const CaixaEntrada = () => {
                                         className="min-h-[150px] glass-light"
                                         value={editingItem.content}
                                         onChange={(e) => setEditingItem({ ...editingItem, content: e.target.value })}
+                                    />
+                                    <TagSuggester
+                                        content={editingItem.content}
+                                        currentTags={editingItem.tags || []}
+                                        onSelect={(tag) => {
+                                            const current = [...(editingItem.tags || [])];
+                                            if (!current.includes(tag)) {
+                                                setEditingItem({ ...editingItem, tags: [...current, tag] });
+                                            }
+                                        }}
                                     />
                                 </div>
 
@@ -1286,6 +1436,16 @@ const CaixaEntrada = () => {
                                     <Button
                                         variant="outline"
                                         size="sm"
+                                        onClick={() => {
+                                            setConversionItem(viewingItem);
+                                            setViewingItem(null);
+                                        }}
+                                    >
+                                        <ArrowRight className="h-3.5 w-3.5 mr-2" /> Transformar em Tarefa
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         onClick={(e) => handleCopy(e, viewingItem.content)}
                                     >
                                         <Copy className="h-3.5 w-3.5 mr-2" /> Copiar Conteúdo
@@ -1315,6 +1475,46 @@ const CaixaEntrada = () => {
                                 </div>
                             </div>
                         )}
+                    </DialogContent>
+                </Dialog>
+
+                {/* Conversion Dialog */}
+                <Dialog open={!!conversionItem} onOpenChange={(open) => !open && setConversionItem(null)}>
+                    <DialogContent className="border-border bg-sidebar/95 backdrop-blur-xl">
+                        <DialogHeader>
+                            <DialogTitle>Transformar em Tarefa</DialogTitle>
+                            <DialogDescription>
+                                Escolha o projeto para onde esta captura será movida como uma nova tarefa.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label>Escolha o Projeto</Label>
+                                <Select value={conversionProjectId} onValueChange={setConversionProjectId}>
+                                    <SelectTrigger className="glass-light border-border">
+                                        <SelectValue placeholder="Selecione um projeto..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="glass border-border">
+                                        {projects.map((p: any) => (
+                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="ghost" onClick={() => setConversionItem(null)}>Cancelar</Button>
+                            <Button
+                                className="btn-gradient"
+                                disabled={!conversionProjectId || convertToTaskMutation.isPending}
+                                onClick={() => convertToTaskMutation.mutate({
+                                    item: conversionItem!,
+                                    projectId: conversionProjectId
+                                })}
+                            >
+                                {convertToTaskMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Tarefa e Remover da Caixa"}
+                            </Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>

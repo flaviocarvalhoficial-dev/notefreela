@@ -21,13 +21,15 @@ interface CostRegistrationDialogProps {
     onOpenChange?: (open: boolean) => void;
     trigger?: React.ReactNode;
     costToEdit?: any; // If provided, we are in Edit Mode
+    defaultProjectId?: string;
 }
 
 export function CostRegistrationDialog({
     open: externalOpen,
     onOpenChange: setExternalOpen,
     trigger,
-    costToEdit
+    costToEdit,
+    defaultProjectId
 }: CostRegistrationDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false);
     const isControlled = externalOpen !== undefined;
@@ -40,7 +42,7 @@ export function CostRegistrationDialog({
     const [title, setTitle] = useState("");
     const [category, setCategory] = useState("tool");
     const [amount, setAmount] = useState<number | "">("");
-    const [projectId, setProjectId] = useState<string>("general");
+    const [projectId, setProjectId] = useState<string>(defaultProjectId || "general");
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
     // Calculator state for hourly rate
@@ -64,8 +66,10 @@ export function CostRegistrationDialog({
             setProjectId(costToEdit.project_id || "general");
             setDate(costToEdit.date ? costToEdit.date.split('T')[0] : new Date().toISOString().split('T')[0]);
             setShowCalculator(false);
+        } else if (defaultProjectId) {
+            setProjectId(defaultProjectId);
         }
-    }, [costToEdit]);
+    }, [costToEdit, defaultProjectId]);
 
     useEffect(() => {
         if (showCalculator && typeof hours === 'number' && typeof hourlyRate === 'number') {
@@ -77,7 +81,7 @@ export function CostRegistrationDialog({
         setTitle("");
         setCategory("tool");
         setAmount("");
-        setProjectId("general");
+        setProjectId(defaultProjectId || "general");
         setDate(new Date().toISOString().split('T')[0]);
         setHours("");
         setHourlyRate("");

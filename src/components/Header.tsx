@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Bell, Search, ChevronDown, Moon, Sun, LogOut, User as UserIcon, Settings as SettingsIcon, Eye } from "lucide-react";
+import { Bell, Search, ChevronDown, Moon, Sun, LogOut, User as UserIcon, Settings as SettingsIcon, Eye, Zap } from "lucide-react";
 import { HeaderTimerBadge } from "@/components/timer/HeaderTimerBadge";
+import { QuickCaptureDialog } from "@/components/shared/QuickCaptureDialog";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
@@ -161,6 +162,7 @@ export function Header() {
 
                 {/* Right Area: Timer + Mode Toggle, Notifications */}
                 <div className="flex items-center gap-2">
+                    <QuickCaptureDialog />
                     <HeaderTimerBadge />
                     <div className="flex items-center gap-1">
                         <Button

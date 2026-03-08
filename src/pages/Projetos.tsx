@@ -245,17 +245,20 @@ const Projetos = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-24 flex flex-col items-center"
+            className="text-center py-28 flex flex-col items-center gap-6 animate-in fade-in duration-700"
           >
-            <div className="w-20 h-20 bg-muted/10 rounded-3xl flex items-center justify-center mb-6 border-2 border-dashed border-border">
-              <Briefcase className="text-muted-foreground h-8 w-8" />
+            <div className="w-24 h-24 bg-primary/5 rounded-[2rem] flex items-center justify-center mb-2 border-2 border-dashed border-border shadow-soft">
+              <Briefcase className="text-primary opacity-20 h-10 w-10" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Parece que ainda não há projetos aqui</h3>
-            <p className="text-muted-foreground text-sm max-w-xs mb-8">Comece criando um novo projeto para gerenciar suas tarefas e workflow.</p>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-medium tracking-tight">O horizonte está limpo</h3>
+              <p className="text-muted-foreground text-sm max-w-xs mx-auto">Sua lista de diretrizes está pronta para receber o primeiro grande projeto da jornada.</p>
+            </div>
             <NewProjectDialog
               trigger={
-                <Button size="default" className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md px-6 shadow-sm">
-                  Começar Agora
+                <Button size="lg" className="btn-gradient px-8 h-12 font-bold shadow-glow-sm transition-all active:scale-95">
+                  <Plus className="h-5 w-5 mr-2" />
+                  INICIAR PRODUÇÃO
                 </Button>
               }
             />
@@ -278,115 +281,191 @@ const Projetos = () => {
 // --- SUBCOMPONENTS ---
 
 function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onDelete: () => void, onEdit: () => void, onClick: () => void }) {
+  const ProjectIcon = (LucideIcons as any)[project.avatar_emoji] || Briefcase;
+
+  // Extract UI config from services metadata
+  const uiConfig = (project.services as any[] || []).find(s => s.name === "__ui_config__");
+  const metaphor = uiConfig?.metaphor || "roadmap";
+  const coverColor = uiConfig?.color || "accent-primary";
+
+  const statusColors: Record<string, string> = {
+    active: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20',
+    planning: 'bg-blue-500/10 text-blue-500 border border-blue-500/20',
+    review: 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
+    completed: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
+  };
+
+  const getMetaphorContent = () => {
+    const colorClass = coverColor === 'accent-primary' ? 'text-accent-primary' : `text-${coverColor.split('-')[0]}-500`;
+
+    switch (metaphor) {
+      case 'growth':
+        return (
+          <svg width="100%" height="100" viewBox="0 0 300 100" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+            <path d="M10 90C60 90 100 80 150 50C200 20 250 10 290 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="150" cy="50" r="4" fill="currentColor" />
+            <circle cx="290" cy="10" r="5" fill="currentColor" className="animate-pulse" />
+          </svg>
+        );
+      case 'flow':
+        return (
+          <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+            <path d="M0 30C50 30 70 50 120 50C170 50 190 30 240 30C290 30 310 50 360 50" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" />
+            <path d="M0 40C50 40 70 20 120 20C170 20 190 60 240 60C290 60 310 40 360 40" stroke="currentColor" strokeWidth="2" />
+            <path d="M0 50C50 50 70 70 120 70C170 70 190 50 240 50C290 50 310 70 360 70" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" />
+          </svg>
+        );
+      case 'target':
+        return (
+          <svg width="100%" height="120" viewBox="0 0 300 120" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+            <circle cx="150" cy="60" r="40" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
+            <circle cx="150" cy="60" r="25" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="150" cy="60" r="10" fill="currentColor" className="animate-pulse" />
+            <path d="M150 10V30M150 90V110M100 60H120M180 60H200" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        );
+      case 'blueprint':
+        return (
+          <svg width="100%" height="120" viewBox="0 0 300 120" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+            <path d="M0 20H300M0 50H300M0 80H300M0 110H300" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.3" />
+            <path d="M30 0V120M70 0V120M110 0V120M150 0V120M190 0V120M230 0V120M270 0V120" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.3" />
+            <path d="M50 90L250 30" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            <rect x="50" y="30" width="200" height="60" stroke="currentColor" strokeWidth="1.5" strokeDasharray="8 4" rx="4" />
+          </svg>
+        );
+      default: // roadmap
+        return (
+          <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+            <path d="M10 40C50 40 70 20 110 20C150 20 170 60 210 60C250 60 270 40 290 40" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" />
+            <circle cx="110" cy="20" r="4" fill="currentColor" />
+            <circle cx="210" cy="60" r="4" fill="currentColor" />
+            <circle cx="290" cy="40" r="5" fill="currentColor" className="animate-pulse" />
+          </svg>
+        );
+    }
+  };
+
   return (
     <motion.div
-      whileHover={{ y: -2 }}
-      className="group flex flex-col bg-card border border-border shadow-sm rounded-lg h-full min-h-[260px] cursor-pointer relative overflow-hidden transition-all duration-300"
+      whileHover={{ y: -4, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+      className="group flex flex-col bg-card border border-border/50 shadow-sm rounded-[24px] overflow-hidden cursor-pointer transition-all duration-300 relative"
       onClick={onClick}
     >
-
-
-      {/* Visual Metaphor: Roadmap Route - Arthur Marques */}
-      <div className="h-12 w-full relative overflow-hidden bg-muted/5 border-b border-border flex items-center justify-center">
-        <svg width="100%" height="60" viewBox="0 0 300 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-20 group-hover:opacity-40 transition-opacity duration-500">
-          <path d="M10 30C50 30 70 10 110 10C150 10 170 50 210 50C250 50 270 30 290 30" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-          <circle cx="40" cy="30" r="3" fill="currentColor" />
-          <circle cx="110" cy="10" r="3" fill="currentColor" />
-          <circle cx="180" cy="30" r="3" fill="currentColor" />
-          <g className="text-primary/20">
-            <circle cx="240" cy="45" r="4" fill="currentColor" />
-            <path d="M255 45L260 45M260 45L257 42M260 45L257 48" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-          </g>
-        </svg>
-      </div>
-
-      <div className="p-4 flex flex-col flex-1 justify-between relative z-10">
-        <div>
-          <div className="flex items-start justify-between gap-3 mb-5">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 flex items-center justify-center text-primary transition-transform group-hover:scale-105">
-                {(() => {
-                  const Icon = (LucideIcons as any)[project.avatar_emoji];
-                  return Icon ? <Icon className="h-8 w-8" /> : <Briefcase className="h-8 w-8" />;
-                })()}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="text-[8px] font-medium  tracking-tight h-4 bg-primary/10 text-primary border-border">
-                    {project.status || 'planning'}
-                  </Badge>
-                </div>
-                <h3 className="font-medium text-base leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors">
-                  {project.name}
-                </h3>
-              </div>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-20 group-hover:opacity-100 hover:bg-muted">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass border-border">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation(); // Trava a navegação
-                    onEdit();
-                  }}
-                >
-                  Editar
-                </DropdownMenuItem>
-                <DeleteConfirmDialog
-                  title="Excluir Projeto"
-                  description="Ação irreversível. Confirmar exclusão do projeto?"
-                  onConfirm={onDelete}
-                  trigger={
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuItem
-                        className="text-destructive font-medium focus:bg-destructive/10"
-                      >
-                        Excluir
-                      </DropdownMenuItem>
-                    </div>
-                  }
-                />
-              </DropdownMenuContent>
-            </DropdownMenu>
+      {/* Header section (Avatar + Info + Status) */}
+      <div className="p-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-foreground flex items-center justify-center text-background overflow-hidden border border-border/10">
+            <ProjectIcon className="h-5 w-5" />
           </div>
-
-          <p className="text-xs text-muted-foreground line-clamp-2 mb-6 font-normal leading-relaxed">
-            {project.description || "Mapeamento estratégico e execução criativa em andamento."}
-          </p>
+          <div className="flex flex-col">
+            <span className="text-[13px] font-bold text-foreground leading-tight truncate max-w-[120px]">
+              {project.client_name || "Autoral"}
+            </span>
+            <span className="text-[11px] text-muted-foreground font-medium">
+              {project.created_at ? format(new Date(project.created_at), "dd MMM, yyyy") : "Novo projeto"}
+            </span>
+          </div>
         </div>
 
-        <div className="space-y-3 pt-3 border-t border-border">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[9px] font-medium text-muted-foreground  tracking-tight mb-1">Faturamento</span>
-              <span className="text-sm font-medium text-foreground tabular-nums mask-value">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value || 0)}
-              </span>
-            </div>
-            <div className="flex flex-col text-right">
-              <span className="text-[9px] font-medium text-muted-foreground  tracking-tight mb-1">Prazo</span>
-              <span className="text-sm font-medium text-foreground tabular-nums">
-                {project.deadline ? format(new Date(project.deadline), "dd/MM/yy") : "--/--/--"}
-              </span>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className={cn(
+            "rounded-full px-3 h-6 text-[10px] font-bold border-none capitalize",
+            statusColors[project.status] || statusColors.active
+          )}>
+            {project.status || 'Active'}
+          </Badge>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-40 group-hover:opacity-100 transition-opacity">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass border-border">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+                Editar
+              </DropdownMenuItem>
+              <DeleteConfirmDialog
+                title="Excluir Projeto"
+                description="Ação irreversível. Confirmar exclusão do projeto?"
+                onConfirm={onDelete}
+                trigger={
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem className="text-destructive font-medium focus:bg-destructive/10">
+                      Excluir
+                    </DropdownMenuItem>
+                  </div>
+                }
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Media/Thumbnail Area (Simulated) */}
+      <div className="px-5">
+        <div className="h-44 w-full rounded-2xl bg-muted/30 border border-border/20 relative overflow-hidden group-hover:border-accent-primary/20 transition-colors">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/5 via-transparent to-accent-primary/5" />
+          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+
+          {/* Internal visual composition - Dynamic Metaphor */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {getMetaphorContent()}
+            <div className="absolute shadow-2xl scale-110">
+              <ProjectIcon className={cn(
+                "h-12 w-12 transition-colors",
+                coverColor === 'accent-primary' ? 'text-accent-primary/40 group-hover:text-accent-primary/60' :
+                  `text-${coverColor.split('-')[0]}-500/40 group-hover:text-${coverColor.split('-')[0]}-500/60`
+              )} />
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground  tracking-tight">
-              <span>{project.progress}% Evolução</span>
-              <div className="h-1 w-1 rounded-full bg-primary" />
+      {/* Content area */}
+      <div className="p-5 space-y-4">
+        <h3 className="text-lg font-bold text-foreground leading-tight tracking-tight group-hover:text-accent-primary transition-colors line-clamp-2">
+          {project.name}
+        </h3>
+
+        {/* Tags */}
+        <div className="flex flex-wrap gap-2">
+          {project.service_type && (
+            <div className="px-3 h-6 rounded-full border border-border/50 text-[10px] font-bold text-muted-foreground flex items-center">
+              {project.service_type}
             </div>
-            <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden border border-border">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${project.progress}%` }}
-                className="h-full bg-primary"
-              />
+          )}
+          <div className="px-3 h-6 rounded-full border border-border/50 text-[10px] font-bold text-muted-foreground flex items-center">
+            {project.billing_type || "Pontual"}
+          </div>
+        </div>
+
+        {/* Details list */}
+        <div className="space-y-2.5 pt-2">
+          <div className="flex items-center gap-2.5 text-muted-foreground">
+            <LucideIcons.Layers className="h-4 w-4 text-accent-primary/40" />
+            <span className="text-[12px] font-bold">{project.billing_type === 'recorrente' ? 'Assinatura Mês' : 'Projeto Único'}</span>
+          </div>
+
+          <div className="flex items-center gap-2.5 text-muted-foreground">
+            <LucideIcons.DollarSign className="h-4 w-4 text-accent-primary/40" />
+            <span className="text-[12px] font-bold text-foreground tabular-nums mask-value">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5 text-muted-foreground">
+              <LucideIcons.Calendar className="h-4 w-4 text-accent-primary/40" />
+              <span className="text-[12px] font-bold">Prazo {project.deadline ? format(new Date(project.deadline), "dd MMM, yyyy") : "--/--/--"}</span>
+            </div>
+
+            {/* Progress Micro-indicator */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-accent-primary">{project.progress}%</span>
+              <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-accent-primary" style={{ width: `${project.progress}%` }} />
+              </div>
             </div>
           </div>
         </div>
