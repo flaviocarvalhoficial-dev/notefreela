@@ -14,24 +14,21 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { Tables } from '@/integrations/supabase/types';
+import { NewClientDialog } from '@/components/clients/NewClientDialog';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase';
+import { Loader2 } from 'lucide-react';
 
 interface ProjectDockProps {
-    project?: {
-        id: string;
-        name?: string | null;
-        avatar_emoji?: string | null;
-        client_name?: string | null;
-        deadline?: string | null;
-        status?: string | null;
-        value?: number | null;
-        advance_payment?: number | null
-    } | null;
+    project?: Tables<"projects"> | null;
     tasks: any[];
     inbox: any[];
     finance: any[];
     documents: any[];
     pages?: any[];
     activities: any[];
+    client?: Tables<"clients"> | null;
     onInsertReference?: (type: string, id: string) => void;
     onConvertInboxToTask?: (item: any) => void;
     onCreateItem?: (type: string) => void;
@@ -43,19 +40,94 @@ interface ProjectDockProps {
     style?: React.CSSProperties;
 }
 
-type TabType = 'tasks' | 'inbox' | 'finance' | 'docs' | 'activity';
+type TabType = 'tasks' | 'inbox' | 'finance' | 'docs' | 'activity' | 'client';
 
-const PropertyItem = ({ icon: Icon, label, value }: { icon: any, label: string, value: React.ReactNode }) => (
-    <div className="grid grid-cols-[140px_1fr] items-center gap-2 group cursor-pointer hover:bg-muted/30 py-1.5 px-2 rounded-md transition-colors">
-        <div className="flex items-center gap-2 text-muted-foreground">
-            <Icon className="w-4 h-4" />
-            <span className="text-[13px]">{label}</span>
+const PropertyItem = ({
+    icon: Icon,
+    label,
+    value,
+    isEditable = true,
+    onSave,
+    type = 'text',
+    options = []
+}: {
+    icon: any,
+    label: string,
+    value: React.ReactNode,
+    isEditable?: boolean,
+    onSave?: (newValue: string) => void,
+    type?: 'text' | 'select' | 'date',
+    options?: { label: string, value: string }[]
+}) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [localValue, setLocalValue] = useState<string>('');
+
+    const handleStartEdit = () => {
+        if (!isEditable) return;
+        setLocalValue(typeof value === 'string' ? value : '');
+        setIsEditing(true);
+    };
+
+    const handleSave = () => {
+        if (onSave) onSave(localValue);
+        setIsEditing(false);
+    };
+
+    return (
+        <div
+            className="grid grid-cols-[140px_1fr] items-center gap-2 group cursor-pointer hover:bg-muted/30 py-1.5 px-2 rounded-md transition-colors min-h-[36px]"
+            onClick={() => !isEditing && handleStartEdit()}
+        >
+            <div className="flex items-center gap-2 text-muted-foreground select-none">
+                <Icon className="w-4 h-4" />
+                <span className="text-[13px]">{label}</span>
+            </div>
+            <div className="text-[13px] text-foreground font-medium truncate">
+                {isEditing ? (
+                    type === 'select' ? (
+                        <select
+                            autoFocus
+                            className="w-full bg-transparent border-none focus:ring-0 p-0 text-[13px] font-medium outline-none"
+                            value={localValue}
+                            onChange={(e) => {
+                                setLocalValue(e.target.value);
+                                if (onSave) onSave(e.target.value);
+                                setIsEditing(false);
+                            }}
+                            onBlur={() => setIsEditing(false)}
+                        >
+                            <option value="" disabled>Selecione...</option>
+                            {options.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                    ) : type === 'date' ? (
+                        <input
+                            type="date"
+                            autoFocus
+                            className="w-full bg-transparent border-none focus:ring-0 p-0 text-[13px] font-medium outline-none"
+                            value={localValue}
+                            onChange={(e) => setLocalValue(e.target.value)}
+                            onBlur={handleSave}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                        />
+                    ) : (
+                        <input
+                            autoFocus
+                            className="w-full bg-transparent border-none focus:ring-0 p-0 text-[13px] font-medium outline-none"
+                            value={localValue}
+                            onChange={(e) => setLocalValue(e.target.value)}
+                            onBlur={handleSave}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                        />
+                    )
+                ) : (
+                    value || <span className="text-muted-foreground/30 italic font-normal">Vazio</span>
+                )}
+            </div>
         </div>
-        <div className="text-[13px] text-foreground font-medium truncate">
-            {value}
-        </div>
-    </div>
-);
+    );
+};
 
 export const ProjectDock = ({
     project,
@@ -65,6 +137,7 @@ export const ProjectDock = ({
     documents = [],
     pages = [],
     activities = [],
+    client,
     onInsertReference,
     onConvertInboxToTask,
     onCreateItem,
@@ -77,8 +150,46 @@ export const ProjectDock = ({
 }: ProjectDockProps) => {
     const [activeTab, setActiveTab] = useState<TabType>('tasks');
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [extraProperties, setExtraProperties] = useState<string[]>([]);
     const navigate = useNavigate();
     const { toast } = useToast();
+    const queryClient = useQueryClient();
+
+    const updateProjectMutation = useMutation({
+        mutationFn: async (updates: Partial<Tables<"projects">>) => {
+            if (!project?.id) return;
+            const { error } = await supabase
+                .from("projects")
+                .update(updates)
+                .eq("id", project.id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", project?.id] });
+            toast({ title: "Atualizado", description: "Propriedade salva com sucesso." });
+        },
+        onError: (err: any) => {
+            toast({ title: "Erro", description: err.message, variant: "destructive" });
+        }
+    });
+
+    const updateClientMutation = useMutation({
+        mutationFn: async (updates: Partial<Tables<"clients">>) => {
+            if (!client?.id) return;
+            const { error } = await supabase
+                .from("clients")
+                .update(updates)
+                .eq("id", client.id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["clients", project?.client_id] });
+            toast({ title: "Atualizado", description: "Dados do cliente salvos." });
+        },
+        onError: (err: any) => {
+            toast({ title: "Erro", description: err.message, variant: "destructive" });
+        }
+    });
 
     const handleCopy = async (e: React.MouseEvent, id: string, content: string) => {
         e.stopPropagation();
@@ -96,6 +207,7 @@ export const ProjectDock = ({
         { id: 'tasks', label: 'TAREFAS', icon: CheckSquare, count: tasks.length },
         { id: 'inbox', label: 'INBOX', icon: Inbox, count: inbox.length },
         { id: 'finance', label: 'FINANCEIRO', icon: DollarSign, count: finance.length },
+        { id: 'client', label: 'CLIENTE', icon: User, count: project?.client_id ? 1 : 0 },
         { id: 'docs', label: 'DOCS', icon: FileText, count: documents.length },
         { id: 'activity', label: 'ATIVIDADE', icon: ActivityIcon, count: activities.length },
     ];
@@ -436,14 +548,212 @@ export const ProjectDock = ({
                         </div>
                     </div>
                 );
+            case 'client':
+                return (
+                    <div className="py-6 px-4 space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="flex items-center justify-between px-2">
+                            <h3 className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Propriedades</h3>
+                            <button onClick={() => navigate('/clientes')} className="text-muted-foreground/40 hover:text-primary transition-colors">
+                                <Plus className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-0.5">
+                            <PropertyItem
+                                icon={LucideIcons.AlignLeft}
+                                label="Cliente"
+                                value={project?.client_name}
+                                isEditable={false} // Linking is done via dialog or navigate
+                            />
+
+                            {/* Tipo de projeto */}
+                            <PropertyItem
+                                icon={LucideIcons.ChevronDownCircle}
+                                label="Tipo de projeto"
+                                value={
+                                    project?.service_type ? (
+                                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] font-bold px-2 py-0 h-5 uppercase">
+                                            {project.service_type}
+                                        </Badge>
+                                    ) : null
+                                }
+                                onSave={(val) => updateProjectMutation.mutate({ service_type: val })}
+                            />
+
+                            {/* Área */}
+                            <PropertyItem
+                                icon={LucideIcons.ChevronDownCircle}
+                                label="Área"
+                                value={
+                                    <Badge variant="secondary" className="bg-rose-500/10 text-rose-500 border-none text-[10px] font-bold px-2 py-0 h-5 uppercase">
+                                        Serviço
+                                    </Badge>
+                                }
+                                isEditable={false}
+                            />
+
+                            {/* Cidade */}
+                            <PropertyItem
+                                icon={LucideIcons.AlignLeft}
+                                label="Cidade"
+                                value={client?.city}
+                                onSave={(val) => updateClientMutation.mutate({ city: val })}
+                            />
+
+                            {/* Responsável */}
+                            <PropertyItem
+                                icon={LucideIcons.User}
+                                label="Responsável"
+                                value={
+                                    <div className="flex items-center gap-1.5 group/user">
+                                        <div className="w-5 h-5 rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden shrink-0">
+                                            <User className="w-3 h-3 text-muted-foreground" />
+                                        </div>
+                                        <span className="truncate">{project?.manager_name || 'Flávio Carvalho'}</span>
+                                    </div>
+                                }
+                                onSave={(val) => updateProjectMutation.mutate({ manager_name: val })}
+                            />
+
+                            {/* Meta */}
+                            <PropertyItem
+                                icon={LucideIcons.Calendar}
+                                label="Meta"
+                                type="date"
+                                value={project?.deadline ? new Date(project.deadline).toLocaleDateString('pt-BR') : null}
+                                onSave={(val) => updateProjectMutation.mutate({ deadline: val })}
+                            />
+
+                            {/* Status */}
+                            <PropertyItem
+                                icon={LucideIcons.CircleDashed}
+                                label="Status"
+                                type="select"
+                                options={[
+                                    { label: 'Planejamento', value: 'planning' },
+                                    { label: 'Em andamento', value: 'active' },
+                                    { label: 'Revisão', value: 'review' },
+                                    { label: 'Concluído', value: 'completed' }
+                                ]}
+                                value={
+                                    <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 border-none text-[10px] font-bold px-2 py-0 h-5 inline-flex items-center gap-1.5 uppercase">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                        {project?.status === 'active' ? 'Em andamento' : (project?.status || 'Em andamento')}
+                                    </Badge>
+                                }
+                                onSave={(val) => updateProjectMutation.mutate({ status: val as any })}
+                            />
+
+                            {/* Integrantes */}
+                            <PropertyItem
+                                icon={LucideIcons.ChevronDownCircle}
+                                label="Integrantes"
+                                value={
+                                    <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 border-none text-[10px] font-bold px-2 py-0 h-5 uppercase">
+                                        {project?.team_size === 1 || !project?.team_size ? 'Solo' : `${project.team_size} Membros`}
+                                    </Badge>
+                                }
+                                onSave={(val) => updateProjectMutation.mutate({ team_size: parseInt(val) || 1 })}
+                            />
+
+                            {/* Extra Properties dynamically added */}
+                            {extraProperties.includes('billing_type') && (
+                                <PropertyItem
+                                    icon={LucideIcons.Hash}
+                                    label="Faturamento"
+                                    type="select"
+                                    options={[
+                                        { label: 'Pontual', value: 'pontual' },
+                                        { label: 'Recorrente', value: 'recorrente' }
+                                    ]}
+                                    value={
+                                        project?.billing_type ? (
+                                            <Badge variant="outline" className="text-[10px] font-medium uppercase border-muted-foreground/20">
+                                                {project.billing_type}
+                                            </Badge>
+                                        ) : null
+                                    }
+                                    onSave={(val) => updateProjectMutation.mutate({ billing_type: val as any })}
+                                />
+                            )}
+
+                            {extraProperties.includes('value') && (
+                                <PropertyItem
+                                    icon={LucideIcons.DollarSign}
+                                    label="Investimento"
+                                    value={project?.value ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.value) : null}
+                                    onSave={(val) => updateProjectMutation.mutate({ value: parseFloat(val) || 0 })}
+                                />
+                            )}
+
+                            <div className="relative group/menu mt-2">
+                                <button className="flex items-center gap-2.5 px-2.5 py-2 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors w-full group">
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span className="text-[13px] font-medium">Adicionar propriedade</span>
+                                </button>
+
+                                <div className="absolute left-0 bottom-full mb-2 w-48 bg-card border border-border shadow-xl rounded-xl p-1 opacity-0 pointer-events-none group-focus-within/menu:opacity-100 group-focus-within/menu:pointer-events-auto transition-all z-50">
+                                    <button
+                                        onClick={() => setExtraProperties(p => p.includes('billing_type') ? p : [...p, 'billing_type'])}
+                                        className="w-full text-left px-3 py-1.5 text-[11px] font-medium hover:bg-muted rounded-md transition-colors"
+                                    >
+                                        Faturamento
+                                    </button>
+                                    <button
+                                        onClick={() => setExtraProperties(p => p.includes('value') ? p : [...p, 'value'])}
+                                        className="w-full text-left px-3 py-1.5 text-[11px] font-medium hover:bg-muted rounded-md transition-colors"
+                                    >
+                                        Valor Total
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Area */}
+                        <div className="pt-6 space-y-4">
+                            {project?.client_id ? (
+                                <NewClientDialog
+                                    client={client}
+                                    trigger={
+                                        <Button
+                                            className="w-full h-11 text-[11px] font-bold gap-2 bg-primary hover:bg-primary-hover shadow-glow-sm rounded-xl"
+                                        >
+                                            EDITAR PERFIL COMPLETO <LucideIcons.ArrowRight className="w-4 h-4" />
+                                        </Button>
+                                    }
+                                />
+                            ) : (
+                                <div className="text-center py-10 px-6 border-2 border-dashed border-border rounded-3xl bg-muted/5 flex flex-col items-center justify-center gap-4 animate-in zoom-in-95 duration-500">
+                                    <div className="p-4 rounded-full bg-primary/5">
+                                        <User className="h-10 w-10 text-primary opacity-20" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold tracking-tight uppercase opacity-60">Nenhum cliente vinculado</p>
+                                        <p className="text-[11px] text-muted-foreground/60 leading-relaxed max-w-[200px] mx-auto">
+                                            Vincule um cliente para centralizar contatos e informações estratégicas.
+                                        </p>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9 px-6 text-[11px] font-bold border-primary text-primary hover:bg-primary/5 rounded-full shadow-glow-sm"
+                                        onClick={() => navigate('/clientes')}
+                                    >
+                                        VINCULAR AGORA
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
             case 'activity':
                 return (
-                    <div className="space-y-6 p-6">
-                        <h3 className="text-[10px] font-medium text-muted-foreground tracking-tight ">HISTÓRICO</h3>
+                    <div className="space-y-6 p-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <h3 className="text-[10px] font-medium text-muted-foreground tracking-tight uppercase">Histórico de Atividade</h3>
                         {activities.length === 0 ? (
                             <div className="text-center py-20 opacity-20">
-                                <Search className="w-8 h-8 mx-auto mb-2" />
-                                <p className="text-[10px]">Nenhuma atividade.</p>
+                                <ActivityIcon className="w-8 h-8 mx-auto mb-2" />
+                                <p className="text-[10px]">Nenhuma atividade registrada.</p>
                             </div>
                         ) : (
                             <div className="relative space-y-6 before:absolute before:inset-0 before:ml-1.5 before:w-px before:-translate-x-1/2 before:bg-gradient-to-b before:from-border before:to-transparent">
@@ -460,6 +770,8 @@ export const ProjectDock = ({
                         )}
                     </div>
                 );
+            default:
+                return null;
         }
     };
 

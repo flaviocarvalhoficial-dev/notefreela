@@ -224,6 +224,21 @@ const ProjetoHub = () => {
         enabled: !!id && !!project,
     });
 
+    const { data: clientData } = useQuery({
+        queryKey: ["clients", project?.client_id],
+        queryFn: async () => {
+            if (!project?.client_id) return null;
+            const { data, error } = await supabase
+                .from("clients")
+                .select("*")
+                .eq("id", project.client_id)
+                .single();
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!project?.client_id
+    });
+
 
     const activePage = useMemo(() => {
         if (!activePageId) return null;
@@ -662,6 +677,7 @@ const ProjetoHub = () => {
                     >
                         <ProjectDock
                             project={project}
+                            client={clientData}
                             tasks={tasks}
                             inbox={inboxItems}
                             finance={costs}
