@@ -1,0 +1,20 @@
+{
+  "status": "init",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8081/",
+  "backendAuthType": "basic token",
+  "backendUsername": "carvalho@email.com",
+  "backendPassword": "123456",
+  "executionArgs": {
+    "projectName": "",
+    "projectPath": "y:\\CRIAÇÃO DE MICRO SAAS\\NoteFreela",
+    "testIds": [],
+    "additionalInstruction": "",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-jz4pdGvLqxJPzOzMypYEgS34YKyHqw4tAfHkf0Vy6KMT0oAf2hc6oznA3sN9W_d8zML-QnFRXWVG2H8nybkEMuJzyiO1t2lK5nqQE0ukKr5elVTBjl2QPvoBYoTGG14aeT4"
+    }
+  },
+  "serverPort": 59156
+}

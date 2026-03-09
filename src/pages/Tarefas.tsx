@@ -6,6 +6,8 @@ import {
     DragOverlay,
     PointerSensor,
     closestCorners,
+    closestCenter,
+    pointerWithin,
     useSensor,
     useSensors,
     type DragEndEvent,
@@ -14,6 +16,7 @@ import {
 import {
     SortableContext,
     verticalListSortingStrategy,
+    horizontalListSortingStrategy,
     arrayMove,
 } from "@dnd-kit/sortable";
 import {
@@ -297,8 +300,35 @@ export default function Tarefas() {
         setActiveId(null);
         if (!over) return;
 
-        const activeTaskId = String(active.id);
-        const overId = String(over.id);
+        const activeIdStr = String(active.id);
+        const overIdStr = String(over.id);
+
+        // --- Column Reordering Logic ---
+        if (active.data.current?.type === 'Column') {
+            const activeCol = columns.find(c => c.id === activeIdStr);
+            const overCol = columns.find(c => c.id === overIdStr);
+
+            if (activeCol && overCol && activeCol.id !== overCol.id) {
+                // Filtramos colunas do mesmo cenário
+                const scenarioId = activeCol.scenario_id;
+                const scenarioColumns = columns
+                    .filter(c => c.scenario_id === scenarioId || (!c.scenario_id && scenarioId === "default-scenario"))
+                    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
+                const oldIndex = scenarioColumns.findIndex(c => c.id === activeIdStr);
+                const newIndex = scenarioColumns.findIndex(c => c.id === overIdStr);
+
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    const reordered = arrayMove(scenarioColumns, oldIndex, newIndex);
+                    const updates = reordered.map((col, idx) => ({ id: col.id, position: idx }));
+                    mutations.updateColumnsOrder(updates);
+                }
+            }
+            return;
+        }
+
+        const activeTaskId = activeIdStr;
+        const overId = overIdStr;
 
         const targetColId = (columns.find(c => c.id === overId)?.id ||
             tasks.find(t => t.id === overId)?.column_id) as ColumnId;
@@ -848,10 +878,10 @@ export default function Tarefas() {
                                                     >
                                                         <DndContext
                                                             sensors={sensors}
-                                                            collisionDetection={closestCorners}
+                                                            collisionDetection={closestCenter}
                                                             onDragStart={handleDragStart}
                                                             onDragEnd={handleDragEnd}
-                                                            autoScroll={{ threshold: { x: 0.1, y: 0.1 }, acceleration: 5 }}
+                                                            autoScroll={activeId && columns.find(c => c.id === activeId) ? false : { threshold: { x: 0.1, y: 0.1 }, acceleration: 5 }}
                                                         >
                                                             <div
                                                                 ref={el => boardRefs.current[scenario.id] = el}
@@ -865,154 +895,179 @@ export default function Tarefas() {
                                                                     "flex flex-row pr-10 items-start",
                                                                     scenario.type === 'checklist' ? "gap-12" : "gap-4"
                                                                 )}>
-                                                                    {columns.filter(c => c.scenario_id === scenario.id || (!c.scenario_id && scenario.id === "default-scenario")).map((col) => {
-                                                                        const colTasks = tasksByColumn[col.id] || [];
+                                                                    {(() => {
+                                                                        const scenarioColumns = columns
+                                                                            .filter(c => c.scenario_id === scenario.id || (!c.scenario_id && scenario.id === "default-scenario"))
+                                                                            .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
                                                                         return (
                                                                             <SortableContext
-                                                                                key={col.id}
-                                                                                items={colTasks.map((t) => t.id)}
-                                                                                strategy={verticalListSortingStrategy}
+                                                                                items={scenarioColumns.map(c => c.id)}
+                                                                                strategy={horizontalListSortingStrategy}
                                                                             >
-                                                                                <div className={cn(
-                                                                                    scenario.type === 'checklist' ? "w-[300px]" : "w-[320px] shrink-0"
-                                                                                )}>
-                                                                                    <DroppableColumn
-                                                                                        columnId={col.id}
-                                                                                        title={col.title}
-                                                                                        hint={col.hint}
-                                                                                        count={colTasks.length}
-                                                                                        color={col.color}
-                                                                                        variant={scenario.type === 'checklist' ? 'minimal' : 'card'}
-                                                                                        onRename={(newTitle) => mutations.updateColumn({ id: col.id, title: newTitle })}
-                                                                                        onHintChange={(newHint) => mutations.updateColumn({ id: col.id, hint: newHint })}
-                                                                                        onDelete={() => mutations.deleteColumn(col.id)}
-                                                                                        onAddTask={() => setQuickAddColumn(col.id)}
-                                                                                        onColorChange={(newColor) => mutations.updateColumn({ id: col.id, color: newColor })}
-                                                                                    >
-                                                                                        <div className="space-y-3">
-                                                                                            {quickAddColumn === col.id && (
-                                                                                                <div className={cn(
-                                                                                                    "animate-in fade-in slide-in-from-top-2 duration-300",
-                                                                                                    scenario.type === 'kanban'
-                                                                                                        ? "bg-secondary rounded-md p-3 border border-border"
-                                                                                                        : "bg-transparent border-b-2 border-primary/10 pb-3 mb-2"
-                                                                                                )}>
-                                                                                                    <Input
-                                                                                                        autoFocus
-                                                                                                        placeholder="O que precisa ser feito?"
-                                                                                                        value={quickAddTitle}
-                                                                                                        onChange={(e) => setQuickAddTitle(e.target.value)}
-                                                                                                        className="bg-transparent border-0 border-b border-primary/5 rounded-none px-0 h-8 text-xs font-medium focus-visible:ring-0 mb-3"
-                                                                                                        onKeyDown={(e) => {
-                                                                                                            if (e.key === 'Enter' && quickAddTitle.trim()) {
-                                                                                                                mutations.createTask({
-                                                                                                                    title: quickAddTitle.trim(),
-                                                                                                                    project: projectFilter !== "all" ? projectFilter : undefined,
-                                                                                                                    // @ts-ignore
-                                                                                                                    customColumnId: col.id
-                                                                                                                });
-                                                                                                                setQuickAddColumn(null);
-                                                                                                                setQuickAddTitle("");
-                                                                                                            }
-                                                                                                            if (e.key === 'Escape') {
-                                                                                                                setQuickAddColumn(null);
-                                                                                                                setQuickAddTitle("");
-                                                                                                            }
-                                                                                                        }}
-                                                                                                    />
-                                                                                                    <div className="flex items-center gap-1.5 justify-end">
-                                                                                                        <Button
-                                                                                                            variant="ghost"
-                                                                                                            size="sm"
-                                                                                                            className="h-7 px-2 text-[10px] font-medium"
-                                                                                                            onClick={() => {
-                                                                                                                setQuickAddColumn(null);
-                                                                                                                setQuickAddTitle("");
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            Cancelar
-                                                                                                        </Button>
-                                                                                                        <Button
-                                                                                                            size="sm"
-                                                                                                            className="h-7 px-3 text-[10px] font-medium bg-primary text-primary-foreground"
-                                                                                                            onClick={() => {
-                                                                                                                if (quickAddTitle.trim()) {
-                                                                                                                    mutations.createTask({
-                                                                                                                        title: quickAddTitle.trim(),
-                                                                                                                        project: projectFilter !== "all" ? projectFilter : undefined,
-                                                                                                                        // @ts-ignore
-                                                                                                                        customColumnId: col.id
-                                                                                                                    });
-                                                                                                                    setQuickAddColumn(null);
-                                                                                                                    setQuickAddTitle("");
-                                                                                                                }
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            Criar Item
-                                                                                                        </Button>
+                                                                                {scenarioColumns.map((col, idx) => {
+                                                                                    const colTasks = tasksByColumn[col.id] || [];
+                                                                                    return (
+                                                                                        <SortableContext
+                                                                                            key={col.id}
+                                                                                            items={colTasks.map((t) => t.id)}
+                                                                                            strategy={verticalListSortingStrategy}
+                                                                                        >
+                                                                                            <div className={cn(
+                                                                                                scenario.type === 'checklist' ? "w-[300px]" : "w-[320px] shrink-0"
+                                                                                            )}>
+                                                                                                <DroppableColumn
+                                                                                                    columnId={col.id}
+                                                                                                    title={col.title}
+                                                                                                    hint={col.hint}
+                                                                                                    count={colTasks.length}
+                                                                                                    color={col.color}
+                                                                                                    variant={scenario.type === 'checklist' ? 'minimal' : 'card'}
+                                                                                                    onRename={(newTitle) => mutations.updateColumn({ id: col.id, title: newTitle })}
+                                                                                                    onHintChange={(newHint) => mutations.updateColumn({ id: col.id, hint: newHint })}
+                                                                                                    onDelete={() => mutations.deleteColumn(col.id)}
+                                                                                                    onAddTask={() => setQuickAddColumn(col.id)}
+                                                                                                    onColorChange={(newColor) => mutations.updateColumn({ id: col.id, color: newColor })}
+                                                                                                    canMoveLeft={idx > 0}
+                                                                                                    canMoveRight={idx < scenarioColumns.length - 1}
+                                                                                                    onMoveLeft={() => {
+                                                                                                        const reordered = arrayMove(scenarioColumns, idx, idx - 1);
+                                                                                                        const updates = reordered.map((c, i) => ({ id: c.id, position: i }));
+                                                                                                        mutations.updateColumnsOrder(updates);
+                                                                                                    }}
+                                                                                                    onMoveRight={() => {
+                                                                                                        const reordered = arrayMove(scenarioColumns, idx, idx + 1);
+                                                                                                        const updates = reordered.map((c, i) => ({ id: c.id, position: i }));
+                                                                                                        mutations.updateColumnsOrder(updates);
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <div className="space-y-3">
+                                                                                                        {quickAddColumn === col.id && (
+                                                                                                            <div className={cn(
+                                                                                                                "animate-in fade-in slide-in-from-top-2 duration-300",
+                                                                                                                scenario.type === 'kanban'
+                                                                                                                    ? "bg-secondary rounded-md p-3 border border-border"
+                                                                                                                    : "bg-transparent border-b-2 border-primary/10 pb-3 mb-2"
+                                                                                                            )}>
+                                                                                                                <Input
+                                                                                                                    autoFocus
+                                                                                                                    placeholder="O que precisa ser feito?"
+                                                                                                                    value={quickAddTitle}
+                                                                                                                    onChange={(e) => setQuickAddTitle(e.target.value)}
+                                                                                                                    className="bg-transparent border-0 border-b border-primary/5 rounded-none px-0 h-8 text-xs font-medium focus-visible:ring-0 mb-3"
+                                                                                                                    onKeyDown={(e) => {
+                                                                                                                        if (e.key === 'Enter' && quickAddTitle.trim()) {
+                                                                                                                            mutations.createTask({
+                                                                                                                                title: quickAddTitle.trim(),
+                                                                                                                                project: projectFilter !== "all" ? projectFilter : undefined,
+                                                                                                                                // @ts-ignore
+                                                                                                                                customColumnId: col.id
+                                                                                                                            });
+                                                                                                                            setQuickAddColumn(null);
+                                                                                                                            setQuickAddTitle("");
+                                                                                                                        }
+                                                                                                                        if (e.key === 'Escape') {
+                                                                                                                            setQuickAddColumn(null);
+                                                                                                                            setQuickAddTitle("");
+                                                                                                                        }
+                                                                                                                    }}
+                                                                                                                />
+                                                                                                                <div className="flex items-center gap-1.5 justify-end">
+                                                                                                                    <Button
+                                                                                                                        variant="ghost"
+                                                                                                                        size="sm"
+                                                                                                                        className="h-7 px-2 text-[10px] font-medium"
+                                                                                                                        onClick={() => {
+                                                                                                                            setQuickAddColumn(null);
+                                                                                                                            setQuickAddTitle("");
+                                                                                                                        }}
+                                                                                                                    >
+                                                                                                                        Cancelar
+                                                                                                                    </Button>
+                                                                                                                    <Button
+                                                                                                                        size="sm"
+                                                                                                                        className="h-7 px-3 text-[10px] font-medium bg-primary text-primary-foreground"
+                                                                                                                        onClick={() => {
+                                                                                                                            if (quickAddTitle.trim()) {
+                                                                                                                                mutations.createTask({
+                                                                                                                                    title: quickAddTitle.trim(),
+                                                                                                                                    project: projectFilter !== "all" ? projectFilter : undefined,
+                                                                                                                                    // @ts-ignore
+                                                                                                                                    customColumnId: col.id
+                                                                                                                                });
+                                                                                                                                setQuickAddColumn(null);
+                                                                                                                                setQuickAddTitle("");
+                                                                                                                            }
+                                                                                                                        }}
+                                                                                                                    >
+                                                                                                                        Criar Item
+                                                                                                                    </Button>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        )}
+                                                                                                        {colTasks.map((t) => (
+                                                                                                            <div key={t.id} className="flex items-start gap-2 group/item">
+                                                                                                                {scenario.type === 'checklist' && (
+                                                                                                                    <button
+                                                                                                                        onClick={() => mutations.updateTask({ id: t.id, progress: t.progress === 100 ? 0 : 100 })}
+                                                                                                                        className={cn(
+                                                                                                                            "mt-1 w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0",
+                                                                                                                            t.progress === 100
+                                                                                                                                ? "bg-primary border-primary text-primary-foreground"
+                                                                                                                                : "border-border hover:border-primary/60"
+                                                                                                                        )}
+                                                                                                                    >
+                                                                                                                        {t.progress === 100 && <Check className="h-3 w-3" />}
+                                                                                                                    </button>
+                                                                                                                )}
+                                                                                                                <div className="flex-1 min-w-0">
+                                                                                                                    <SortableTaskItem
+                                                                                                                        task={t}
+                                                                                                                        color={col.color || PASTEL_COLORS[0].value}
+                                                                                                                        isEditing={editingId === t.id}
+                                                                                                                        onStartEdit={() => setEditingId(t.id)}
+                                                                                                                        onCancelEdit={() => setEditingId(null)}
+                                                                                                                        variant={scenario.type === 'checklist' ? 'minimal' : 'card'}
+                                                                                                                        onSave={(values) => {
+                                                                                                                            mutations.updateTask({
+                                                                                                                                id: t.id,
+                                                                                                                                title: values.title.trim(),
+                                                                                                                                priority: values.priority,
+                                                                                                                                due_date: values.due ? format(values.due, "yyyy-MM-dd") : null,
+                                                                                                                                assignee: values.assignee,
+                                                                                                                                project_id: values.projectId || null,
+                                                                                                                                progress: values.progress,
+                                                                                                                            });
+                                                                                                                            setEditingId(null);
+                                                                                                                        }}
+                                                                                                                        onDelete={() => {
+                                                                                                                            if (window.confirm("Excluir esta tarefa?")) {
+                                                                                                                                // @ts-ignore
+                                                                                                                                mutations.deleteTask(t.id);
+                                                                                                                            }
+                                                                                                                        }}
+                                                                                                                        onDuplicate={() => {
+                                                                                                                            mutations.duplicateTask({ id: t.id });
+                                                                                                                        }}
+                                                                                                                        projects={projects}
+                                                                                                                    />
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        ))}
+                                                                                                        {colTasks.length === 0 && !quickAddColumn && (
+                                                                                                            <div className="glass-light rounded-2xl p-6 border border-dashed border-border text-center flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                                                                                                                <p className="text-[10px] text-muted-foreground">Vazio</p>
+                                                                                                            </div>
+                                                                                                        )}
                                                                                                     </div>
-                                                                                                </div>
-                                                                                            )}
-                                                                                            {colTasks.map((t) => (
-                                                                                                <div key={t.id} className="flex items-start gap-2 group/item">
-                                                                                                    {scenario.type === 'checklist' && (
-                                                                                                        <button
-                                                                                                            onClick={() => mutations.updateTask({ id: t.id, progress: t.progress === 100 ? 0 : 100 })}
-                                                                                                            className={cn(
-                                                                                                                "mt-1 w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0",
-                                                                                                                t.progress === 100
-                                                                                                                    ? "bg-primary border-primary text-primary-foreground"
-                                                                                                                    : "border-border hover:border-primary/60"
-                                                                                                            )}
-                                                                                                        >
-                                                                                                            {t.progress === 100 && <Check className="h-3 w-3" />}
-                                                                                                        </button>
-                                                                                                    )}
-                                                                                                    <div className="flex-1 min-w-0">
-                                                                                                        <SortableTaskItem
-                                                                                                            task={t}
-                                                                                                            color={col.color || PASTEL_COLORS[0].value}
-                                                                                                            isEditing={editingId === t.id}
-                                                                                                            onStartEdit={() => setEditingId(t.id)}
-                                                                                                            onCancelEdit={() => setEditingId(null)}
-                                                                                                            variant={scenario.type === 'checklist' ? 'minimal' : 'card'}
-                                                                                                            onSave={(values) => {
-                                                                                                                mutations.updateTask({
-                                                                                                                    id: t.id,
-                                                                                                                    title: values.title.trim(),
-                                                                                                                    priority: values.priority,
-                                                                                                                    due_date: values.due ? format(values.due, "yyyy-MM-dd") : null,
-                                                                                                                    assignee: values.assignee,
-                                                                                                                    project_id: values.projectId || null,
-                                                                                                                    progress: values.progress,
-                                                                                                                });
-                                                                                                                setEditingId(null);
-                                                                                                            }}
-                                                                                                            onDelete={() => {
-                                                                                                                if (window.confirm("Excluir esta tarefa?")) {
-                                                                                                                    // @ts-ignore
-                                                                                                                    mutations.deleteTask(t.id);
-                                                                                                                }
-                                                                                                            }}
-                                                                                                            onDuplicate={() => {
-                                                                                                                mutations.duplicateTask({ id: t.id });
-                                                                                                            }}
-                                                                                                            projects={projects}
-                                                                                                        />
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            ))}
-                                                                                            {colTasks.length === 0 && !quickAddColumn && (
-                                                                                                <div className="glass-light rounded-2xl p-6 border border-dashed border-border text-center flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
-                                                                                                    <p className="text-[10px] text-muted-foreground">Vazio</p>
-                                                                                                </div>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </DroppableColumn>
-                                                                                </div>
+                                                                                                </DroppableColumn>
+                                                                                            </div>
+                                                                                        </SortableContext>
+                                                                                    );
+                                                                                })}
                                                                             </SortableContext>
                                                                         );
-                                                                    })}
+                                                                    })()}
 
                                                                     {/* Nova Coluna Button inside Scenario */}
                                                                     <motion.div className={cn(
@@ -1043,16 +1098,57 @@ export default function Tarefas() {
                                                             <DragOverlay dropAnimation={null}>
                                                                 {activeId ? (
                                                                     <div className="opacity-80 rotate-3 cursor-grabbing">
-                                                                        {activeTask ? (
-                                                                            <EditableTaskCard
-                                                                                task={{ ...activeTask, project: activeTask.project_name || "Geral", dueDate: activeTask.due_date, projectId: activeTask.project_id } as any}
-                                                                                isOverlay
-                                                                                isEditing={false}
-                                                                                accentColor="hsl(220, 15%, 75%)"
-                                                                                onCancelEdit={() => { }}
-                                                                                onSave={() => { }}
-                                                                            />
-                                                                        ) : null}
+                                                                        {(() => {
+                                                                            const activeCol = columns.find(c => c.id === activeId);
+                                                                            if (activeCol) {
+                                                                                const colTasks = tasksByColumn[activeCol.id] || [];
+                                                                                return (
+                                                                                    <div className="w-[320px]">
+                                                                                        <DroppableColumn
+                                                                                            columnId={activeCol.id}
+                                                                                            title={activeCol.title}
+                                                                                            hint={activeCol.hint}
+                                                                                            count={colTasks.length}
+                                                                                            color={activeCol.color}
+                                                                                            variant="card"
+                                                                                        >
+                                                                                            <div className="space-y-3">
+                                                                                                {colTasks.slice(0, 3).map(t => (
+                                                                                                    <div key={t.id} className="opacity-40">
+                                                                                                        <SortableTaskItem
+                                                                                                            task={t}
+                                                                                                            color={activeCol.color || PASTEL_COLORS[0].value}
+                                                                                                            projects={projects}
+                                                                                                            isEditing={false}
+                                                                                                            onStartEdit={() => { }}
+                                                                                                            onCancelEdit={() => { }}
+                                                                                                            onSave={() => { }}
+                                                                                                        />
+                                                                                                    </div>
+                                                                                                ))}
+                                                                                                {colTasks.length > 3 && (
+                                                                                                    <p className="text-[10px] text-center text-muted-foreground">+{colTasks.length - 3} itens</p>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </DroppableColumn>
+                                                                                    </div>
+                                                                                );
+                                                                            }
+
+                                                                            if (activeTask) {
+                                                                                return (
+                                                                                    <EditableTaskCard
+                                                                                        task={{ ...activeTask, project: activeTask.project_name || "Geral", dueDate: activeTask.due_date, projectId: activeTask.project_id } as any}
+                                                                                        isOverlay
+                                                                                        isEditing={false}
+                                                                                        accentColor="hsl(220, 15%, 75%)"
+                                                                                        onCancelEdit={() => { }}
+                                                                                        onSave={() => { }}
+                                                                                    />
+                                                                                );
+                                                                            }
+                                                                            return null;
+                                                                        })()}
                                                                     </div>
                                                                 ) : null}
                                                             </DragOverlay>

@@ -277,6 +277,20 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
         }
     });
 
+    const updateColumnsOrderMutation = useMutation({
+        mutationFn: async (columnUpdates: { id: string, position: number }[]) => {
+            const updates = columnUpdates.map(u => {
+                return supabase.from("kanban_columns").update({ position: u.position }).eq("id", u.id);
+            });
+            const results = await Promise.all(updates);
+            const error = results.find(r => r.error)?.error;
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["kanban-columns", projectFilter] });
+        }
+    });
+
     const createColumnMutation = useMutation({
         mutationFn: async ({ title, scenario_id }: { title: string, scenario_id?: string }) => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -525,7 +539,8 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
             createScenario: createScenarioMutation.mutate,
             updateScenario: updateScenarioMutation.mutate,
             deleteColumn: deleteColumnMutation.mutate,
-            deleteScenario: deleteScenarioMutation.mutate
+            deleteScenario: deleteScenarioMutation.mutate,
+            updateColumnsOrder: updateColumnsOrderMutation.mutate
         }
     };
 }

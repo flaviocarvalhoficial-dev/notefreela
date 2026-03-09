@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { RotateCcw, Users, Loader2, ChevronLeft, ChevronRight, Plus, Maximize2, Minimize2 } from "lucide-react";
@@ -71,6 +71,7 @@ export function TimelineSection({
   const [currentDate, setCurrentDate] = useState(new Date());
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [hasCentered, setHasCentered] = useState(false);
 
   const deleteActivityMutation = useMutation({
     mutationFn: async ({ id, type }: { id: string, type: string }) => {
@@ -179,6 +180,69 @@ export function TimelineSection({
   const slotPx = DAY_WIDTH * zoom;
   const totalHeight = Math.max(positionedActivities.length * LANE_HEIGHT, 300);
 
+  const centerOnToday = useCallback(() => {
+    const todayDate = daysInRange.find(d => isToday(d));
+    const todayIdx = daysInRange.findIndex(d => isToday(d));
+
+    if (todayIdx !== -1 && viewportRef.current && todayDate) {
+      const viewport = viewportRef.current;
+
+      // Horizontal Scroll
+      const scrollAmount = todayIdx * slotPx;
+      const viewportWidth = viewport.clientWidth;
+      const targetLeft = scrollAmount - (viewportWidth / 2) + (slotPx / 2);
+
+      // Vertical Scroll - Busca a primeira atividade relevante para HOJE
+      // Critério: Atividades que começam hoje OU que estão em andamento hoje
+      // Normalizamos hoje para garantir comparação apenas de data
+      const todayStart = new Date(todayDate).setHours(0, 0, 0, 0);
+      const todayEnd = new Date(todayDate).setHours(23, 59, 59, 999);
+
+      const firstRelevantActivity = positionedActivities.find(a => {
+        const taskStart = new Date(a.startDate).getTime();
+        // Se a tarefa não tem fim, consideramos que ela ocupa o dia todo para busca
+        const taskEnd = a.endDate ? new Date(a.endDate).getTime() : new Date(a.startDate).setHours(23, 59, 59, 999);
+        // Verifica se a tarefa intersecta o dia de hoje
+        return taskStart <= todayEnd && taskEnd >= todayStart;
+      });
+
+      const targetTop = firstRelevantActivity
+        ? (firstRelevantActivity.lane || 0) * LANE_HEIGHT - 120 // Espaço para ver o cabeçalho
+        : 0;
+
+      // Scroll unificado e suave
+      viewport.scrollTo({
+        left: targetLeft,
+        top: targetTop,
+        behavior: "smooth"
+      });
+
+      // Forçar scroll se o smooth falhar ou for interrompido
+      setTimeout(() => {
+        if (viewport && Math.abs(viewport.scrollTop - targetTop) > 50) {
+          viewport.scrollTop = targetTop;
+        }
+      }, 500);
+    }
+  }, [daysInRange, slotPx, positionedActivities]);
+
+  useEffect(() => {
+    if (!isLoading && viewportRef.current && !hasCentered) {
+      const timer = setTimeout(() => {
+        if (viewportRef.current) {
+          centerOnToday();
+          setHasCentered(true);
+        }
+      }, 400); // Delay ligeiramente maior para garantir estabilidade
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, hasCentered, centerOnToday]);
+
+  // Resetar centering se mudarmos de projeto ou data base
+  useEffect(() => {
+    setHasCentered(false);
+  }, [selectedProject]);
+
   const monthsInTrack = useMemo(() => {
     // ... existing month calc ...
     const months: { label: string, width: number }[] = [];
@@ -264,7 +328,10 @@ export function TimelineSection({
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(d => {
               const n = new Date(d); n.setDate(n.getDate() - 7); return n;
             })}><ChevronLeft className="h-3 w-3" /></Button>
-            <Button variant="ghost" size="sm" className="text-[10px] font-medium px-3 h-6" onClick={() => setCurrentDate(new Date())}>Hoje</Button>
+            <Button variant="ghost" size="sm" className="text-[10px] font-medium px-3 h-6" onClick={() => {
+              setCurrentDate(new Date());
+              setHasCentered(false); // Força recentralizar pelo useEffect
+            }}>Hoje</Button>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(d => {
               const n = new Date(d); n.setDate(n.getDate() + 7); return n;
             })}><ChevronRight className="h-3 w-3" /></Button>

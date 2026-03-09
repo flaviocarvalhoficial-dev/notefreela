@@ -224,6 +224,7 @@ interface SlashCommandMenuProps {
     onSelectCommand: (command: SlashCommandItem) => void;
     position: { top: number; left: number };
     filterText: string;
+    commands?: SlashCommandItem[];
 }
 
 export const SlashCommandMenu = ({
@@ -233,13 +234,14 @@ export const SlashCommandMenu = ({
     onSelectCommand,
     position,
     filterText,
+    commands = SLASH_COMMANDS,
 }: SlashCommandMenuProps) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const menuRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
     // Filter commands based on input
-    const filteredCommands = SLASH_COMMANDS.filter((cmd) => {
+    const filteredCommands = commands.filter((cmd) => {
         const q = filterText.toLowerCase();
         return (
             cmd.label.toLowerCase().includes(q) ||

@@ -1,0 +1,89 @@
+version: "2"
+type: backend
+tech_stack:
+  - language: TypeScript
+  - framework: React (Vite)
+  - database: Supabase
+  - styling: Tailwind CSS
+  - UI: shadcn/ui
+  - state: TanStack Query
+features:
+  - name: Auth
+    description: User authentication and management
+    files:
+      - src/pages/Auth.tsx
+    endpoints:
+      - method: VIEW
+        path: /auth
+        description: Sign in or sign up page
+        auth_required: false
+  - name: Dashboard
+    description: Main application overview
+    files:
+      - src/pages/Index.tsx
+      - src/hooks/useDashboardData.ts
+    endpoints:
+      - method: VIEW
+        path: /
+        description: Main dashboard view
+        auth_required: true
+  - name: Project Management
+    description: CRUD operations and details for projects
+    files:
+      - src/pages/Projetos.tsx
+      - src/pages/ProjetoDetalhes.tsx
+    endpoints:
+      - method: VIEW
+        path: /projetos
+        description: List of projects
+        auth_required: true
+      - method: VIEW
+        path: /projetos/:id
+        description: Project details view
+        auth_required: true
+  - name: Task Management
+    description: Task tracking and Kanban board
+    files:
+      - src/pages/Tarefas.tsx
+    endpoints:
+      - method: VIEW
+        path: /tarefas
+        description: Tasks kanban and list view
+        auth_required: true
+  - name: Financial Management
+    description: Revenue and expense tracking
+    files:
+      - src/pages/Financeiro.tsx
+    endpoints:
+      - method: VIEW
+        path: /financeiro
+        description: Financial dashboard and transactions
+        auth_required: true
+  - name: Inbox (Inbox)
+    description: Communication and incoming messages
+    files:
+      - src/pages/CaixaEntrada.tsx
+    endpoints:
+      - method: VIEW
+        path: /caixa-entrada
+        description: Project inbox
+        auth_required: true
+  - name: Client Management
+    description: Client directory and profiles
+    files:
+      - src/pages/Clientes.tsx
+    endpoints:
+      - method: VIEW
+        path: /clientes
+        description: Client list
+        auth_required: true
+  - name: Settings
+    description: User and application configuration
+    files:
+      - src/pages/Configuracoes.tsx
+    endpoints:
+      - method: VIEW
+        path: /configuracoes
+        description: Application settings
+        auth_required: true
+known_limitations: []

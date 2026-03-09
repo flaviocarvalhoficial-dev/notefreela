@@ -14,7 +14,10 @@ import {
     Square,
     Activity,
     FolderOpen,
+    StickyNote,
+    LayoutGrid,
 } from "lucide-react";
+import { DashboardNotesWidget } from "./DashboardNotesWidget";
 import { Badge } from "@/components/ui/badge";
 import {
     Select,
@@ -35,6 +38,7 @@ export function DashboardTimerWidget() {
     const [filterMode, setFilterMode] = useState<FilterMode>("all");
     const [selectedProject, setSelectedProject] = useState<string | null>(null);
     const [selectedTask, setSelectedTask] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<"timer" | "notes">("timer");
 
     // Selection states for starting a NEW manual session (The Hub Logic)
     const [setupProjectId, setSetupProjectId] = useState<string>("");
@@ -100,45 +104,68 @@ export function DashboardTimerWidget() {
         <div className="bento-card p-0 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border/50 bg-card/30">
-                <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 bg-primary/8 rounded-lg border border-primary/12">
-                        <Clock className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-1.5 bg-primary/8 rounded-lg border border-primary/12 shrink-0">
+                        {activeTab === "timer" ? (
+                            <Clock className="h-4 w-4 text-primary" />
+                        ) : (
+                            <StickyNote className="h-4 w-4 text-primary" />
+                        )}
                     </div>
-                    <div>
-                        <h3 className="text-[13px] font-semibold tracking-tight text-foreground">Cockpit de Tempo</h3>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {completedEntries.length} sessões · {formatDuration(total)}
+                    <div className="min-w-0">
+                        <h3 className="text-[13px] font-semibold tracking-tight text-foreground truncate">
+                            {activeTab === "timer" ? "Cockpit de Tempo" : "Notas Rápidas"}
+                        </h3>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                            {activeTab === "timer"
+                                ? `${completedEntries.length} sessões · ${formatDuration(total)}`
+                                : "Lembretes e rascunhos"}
                         </p>
                     </div>
                 </div>
 
-                {!timer.isRunning && !isSettingUp && (
-                    <button
-                        onClick={() => setIsSettingUp(true)}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-primary text-white rounded-full text-[11px] font-semibold shadow-glow-sm hover:opacity-90 transition-all border border-primary/20"
-                    >
-                        <Play className="h-3 w-3 fill-white" />
-                        INICIAR
-                    </button>
-                )}
+                <div className="flex items-center gap-4 shrink-0">
+                    {(isSettingUp || timer.isRunning) && activeTab === "timer" && (
+                        <div className="flex items-center gap-1.5">
+                            <FilterPill
+                                active={filterMode === "all"}
+                                onClick={() => { setFilterMode("all"); setSelectedProject(null); setSelectedTask(null); }}
+                            >
+                                Tudo
+                            </FilterPill>
+                            <FilterPill
+                                active={filterMode === "project"}
+                                onClick={() => setFilterMode(filterMode === "project" ? "all" : "project")}
+                                icon={<Briefcase className="h-3 w-3" />}
+                            >
+                                Projeto
+                            </FilterPill>
+                        </div>
+                    )}
 
-                {(isSettingUp || timer.isRunning) && (
-                    <div className="flex items-center gap-1.5">
-                        <FilterPill
-                            active={filterMode === "all"}
-                            onClick={() => { setFilterMode("all"); setSelectedProject(null); setSelectedTask(null); }}
+                    <div className="flex items-center bg-muted/50 p-0.5 rounded-lg border border-border/40">
+                        <button
+                            onClick={() => setActiveTab("timer")}
+                            className={cn(
+                                "p-1.5 rounded-md transition-all",
+                                activeTab === "timer" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                            )}
+                            title="Rastreador de Tempo"
                         >
-                            Tudo
-                        </FilterPill>
-                        <FilterPill
-                            active={filterMode === "project"}
-                            onClick={() => setFilterMode(filterMode === "project" ? "all" : "project")}
-                            icon={<Briefcase className="h-3 w-3" />}
+                            <Clock className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("notes")}
+                            className={cn(
+                                "p-1.5 rounded-md transition-all",
+                                activeTab === "notes" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                            )}
+                            title="Notas Rápidas"
                         >
-                            Projeto
-                        </FilterPill>
+                            <StickyNote className="h-3.5 w-3.5" />
+                        </button>
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Manual Setup Form (The Hub Interface) */}
@@ -303,73 +330,114 @@ export function DashboardTimerWidget() {
                 </div>
             )}
 
-            {/* Entries list */}
-            <ScrollArea className="h-[210px] w-full" type="always">
-                {entries.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground opacity-40">
-                        <Activity className="h-10 w-10 stroke-[1.5px]" />
-                        <div className="text-center">
-                            <p className="text-[12px] font-bold uppercase tracking-widest">Sem Registros</p>
-                            <p className="text-[10px] font-medium">Sua produtividade começa aqui.</p>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="flex flex-col">
-                        {entries.map((entry, idx) => (
-                            <div
-                                key={entry.id}
-                                className={cn(
-                                    "px-5 py-4 flex items-center justify-between group hover:bg-primary/5 transition-colors border-b border-border/10 last:border-0",
-                                    idx % 2 === 0 ? "bg-transparent" : "bg-muted/5"
+            {/* Entries list or Notes */}
+            <div className="h-[210px] w-full relative">
+                <AnimatePresence mode="wait">
+                    {activeTab === "timer" ? (
+                        <motion.div
+                            key="timer-list"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 10 }}
+                            transition={{ duration: 0.2 }}
+                            className="h-full"
+                        >
+                            <ScrollArea className="h-full w-full" type="always">
+                                {!timer.isRunning && !isSettingUp && (
+                                    <div className="px-5 py-3 border-b border-border/10 bg-muted/5 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-tight">Pronto para começar?</span>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsSettingUp(true)}
+                                            className="flex items-center gap-1.5 px-3 py-1 bg-primary text-white rounded-full text-[11px] font-semibold shadow-glow-sm hover:opacity-90 transition-all border border-primary/20"
+                                        >
+                                            <Play className="h-3 w-3 fill-white" />
+                                            INICIAR
+                                        </button>
+                                    </div>
                                 )}
-                            >
-                                <div className="flex items-center gap-3.5 min-w-0">
-                                    <div className={cn(
-                                        "p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110",
-                                        entry.task_title ? "bg-blue-500/10 text-blue-600 dark:bg-blue-400/5" : "bg-primary/10 text-primary"
-                                    )}>
-                                        {entry.task_title
-                                            ? <CheckSquare className="h-4 w-4" />
-                                            : <Briefcase className="h-4 w-4" />}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-[13px] font-normal text-foreground truncate leading-tight mb-0.5">
-                                            {entry.task_title ?? entry.project_name ?? "Sessão Avulsa"}
-                                        </p>
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-                                                {format(new Date(entry.started_at), "dd MMM, HH:mm", { locale: ptBR })}
-                                            </p>
-                                            <span className="text-muted-foreground/30">•</span>
-                                            <p className="text-[10px] text-muted-foreground font-normal tracking-tight">
-                                                {entry.project_name ?? "Geral"}
-                                            </p>
+                                {entries.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground opacity-40">
+                                        <Activity className="h-10 w-10 stroke-[1.5px]" />
+                                        <div className="text-center">
+                                            <p className="text-[12px] font-bold uppercase tracking-widest">Sem Registros</p>
+                                            <p className="text-[10px] font-medium">Sua produtividade começa aqui.</p>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                    {entry.ended_at ? (
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-[14px] font-mono font-bold text-foreground tabular-nums tracking-tight">
-                                                {formatDuration(entry.duration_seconds ?? 0)}
-                                            </span>
-                                            <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Concluído</span>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full">
-                                            <span className="relative flex h-1.5 w-1.5">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
-                                            </span>
-                                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Vivo</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </ScrollArea>
+                                ) : (
+                                    <div className="flex flex-col">
+                                        {entries.map((entry, idx) => (
+                                            <div
+                                                key={entry.id}
+                                                className={cn(
+                                                    "px-5 py-4 flex items-center justify-between group hover:bg-primary/5 transition-colors border-b border-border/10 last:border-0",
+                                                    idx % 2 === 0 ? "bg-transparent" : "bg-muted/5"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3.5 min-w-0">
+                                                    <div className={cn(
+                                                        "p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110",
+                                                        entry.task_title ? "bg-blue-500/10 text-blue-600 dark:bg-blue-400/5" : "bg-primary/10 text-primary"
+                                                    )}>
+                                                        {entry.task_title
+                                                            ? <CheckSquare className="h-4 w-4" />
+                                                            : <Briefcase className="h-4 w-4" />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-[13px] font-normal text-foreground truncate leading-tight mb-0.5">
+                                                            {entry.task_title ?? entry.project_name ?? "Sessão Avulsa"}
+                                                        </p>
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+                                                                {format(new Date(entry.started_at), "dd MMM, HH:mm", { locale: ptBR })}
+                                                            </p>
+                                                            <span className="text-muted-foreground/30">•</span>
+                                                            <p className="text-[10px] text-muted-foreground font-normal tracking-tight">
+                                                                {entry.project_name ?? "Geral"}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="shrink-0 text-right">
+                                                    {entry.ended_at ? (
+                                                        <div className="flex flex-col items-end">
+                                                            <span className="text-[14px] font-mono font-bold text-foreground tabular-nums tracking-tight">
+                                                                {formatDuration(entry.duration_seconds ?? 0)}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Concluído</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full">
+                                                            <span className="relative flex h-1.5 w-1.5">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Vivo</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </ScrollArea>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="notes-area"
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="h-full"
+                        >
+                            <DashboardNotesWidget />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
             {/* Footer Summary */}
             {

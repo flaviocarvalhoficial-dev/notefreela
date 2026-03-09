@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useDroppable } from "@dnd-kit/core";
-import { MoreVertical, Plus, Settings2 } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { MoreVertical, Plus, Settings2, GripVertical, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,10 @@ interface DroppableColumnProps {
     onDelete?: () => void;
     onColorChange?: (color: string) => void;
     onAddTask?: () => void;
+    onMoveLeft?: () => void;
+    onMoveRight?: () => void;
+    canMoveLeft?: boolean;
+    canMoveRight?: boolean;
     variant?: 'card' | 'minimal';
 }
 
@@ -54,9 +59,32 @@ export function DroppableColumn({
     onDelete,
     onColorChange,
     onAddTask,
+    onMoveLeft,
+    onMoveRight,
+    canMoveLeft,
+    canMoveRight,
     variant = 'card',
 }: DroppableColumnProps) {
-    const { setNodeRef, isOver } = useDroppable({ id: columnId });
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isOver
+    } = useSortable({
+        id: columnId,
+        data: {
+            type: 'Column',
+            columnId,
+        }
+    });
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        transition,
+    };
+
     const [isEditing, setIsEditing] = useState(false);
     const [isConfigOpen, setIsConfigOpen] = useState(false);
     const [value, setValue] = useState(title);
@@ -89,7 +117,11 @@ export function DroppableColumn({
     };
 
     return (
-        <div ref={setNodeRef} className={cn("transition-all", isOver ? "ring-2 ring-primary/20 scale-[1.01] rounded-2xl" : "")}>
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={cn("transition-all", isOver ? "ring-2 ring-primary/20 scale-[1.01] rounded-2xl" : "")}
+        >
             <section className={cn(
                 "p-4 md:p-5 h-full min-h-[460px] group relative overflow-visible",
                 variant === 'card' ? "bento-card border-border" : "bg-transparent border-none p-0 md:p-0 min-h-0"
@@ -133,6 +165,37 @@ export function DroppableColumn({
                         {variant === 'card' && <p className="text-[10px] text-muted-foreground mt-1 font-medium opacity-50">{hint}</p>}
                     </div>
 
+                    <div className="flex items-center gap-0.5 group-hover:opacity-100 opacity-0 transition-opacity">
+                        {canMoveLeft && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground/40 hover:text-primary hover:bg-primary/10"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onMoveLeft?.();
+                                }}
+                            >
+                                <ChevronLeft className="h-3.5 w-3.5" />
+                            </Button>
+                        )}
+                        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded text-muted-foreground/30 hover:text-muted-foreground transition-colors">
+                            <GripVertical className="h-4 w-4" />
+                        </div>
+                        {canMoveRight && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground/40 hover:text-primary hover:bg-primary/10"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onMoveRight?.();
+                                }}
+                            >
+                                <ChevronRight className="h-3.5 w-3.5" />
+                            </Button>
+                        )}
+                    </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-7 w-7 opacity-40 group-hover:opacity-100 transition-opacity">
