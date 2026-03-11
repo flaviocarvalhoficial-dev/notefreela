@@ -7,8 +7,10 @@ import {
   User,
   Clock,
   Search,
-  Loader2
+  Loader2,
+  Filter
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { cn } from "@/lib/utils";
 
-type ActivityType = "project" | "task" | "comment" | "status" | "assignment";
+type ActivityType = "project" | "task" | "comment" | "status" | "assignment" | "inbox";
 
 const activityIcons: Record<ActivityType, React.ElementType> = {
   project: FolderKanban,
@@ -26,27 +28,29 @@ const activityIcons: Record<ActivityType, React.ElementType> = {
   comment: Activity,
   status: Clock,
   assignment: User,
+  inbox: Activity,
 };
 
 const activityColors: Record<ActivityType, string> = {
-  project: "hsl(158, 64%, 52%)",
-  task: "hsl(262, 52%, 65%)",
-  comment: "hsl(212, 52%, 52%)",
-  status: "hsl(45, 93%, 62%)",
-  assignment: "hsl(340, 75%, 60%)",
+  project: "hsl(var(--primary))",
+  task: "hsl(var(--primary))",
+  comment: "hsl(var(--primary))",
+  status: "hsl(var(--primary))",
+  assignment: "hsl(var(--primary))",
+  inbox: "hsl(var(--primary))",
 };
 
-const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
+const Atividades = ({ hideHeader = false, projectId }: { hideHeader?: boolean, projectId?: string }) => {
   const [filter, setFilter] = useState<"all" | ActivityType>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: activities = [], isLoading } = useQuery({
-    queryKey: ["activities"],
+    queryKey: ["activities", projectId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("activities")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await (projectId
+        ? (supabase.from("activities").select("*") as any).eq("project_id", projectId)
+        : supabase.from("activities").select("*")
+      ).order("created_at", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -64,73 +68,74 @@ const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
 
   return (
     <div className="h-full flex flex-col gap-6">
-      {!hideHeader && (
-        <header className="flex items-center justify-between gap-4 mb-8 h-12">
+      <header className="flex items-center justify-between gap-4 mb-8 h-12">
+        {!hideHeader && (
           <div>
-            <h1 className="text-2xl font-medium tracking-tight text-foreground">Atividades</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              {projectId ? "Histórico do Projeto" : "Atividades"}
+            </h1>
           </div>
-        </header>
-      )}
+        )}
+      </header>
 
-      {!hideHeader && (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-              <Input
-                placeholder="Buscar atividades..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 bg-card/50 border-border/60"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "h-9 px-3 gap-2 text-xs font-medium border-border/60",
-                  filter !== "all" && "bg-primary/5 text-primary border-primary/20"
-                )}
-                onClick={() => {
-                  const el = document.getElementById('advanced-filters-activities');
-                  if (el) el.classList.toggle('hidden');
-                }}
-              >
-                <Filter className="h-3.5 w-3.5" />
-                Filtros
-              </Button>
-            </div>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+            <Input
+              placeholder="Buscar atividades..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 bg-card/50 border-border/60"
+            />
           </div>
 
-          {/* Ghost Filters Bar */}
-          <div id="advanced-filters-activities" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
-            <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
-              <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="shrink-0">
-                <TabsList className="h-8 bg-card border border-border rounded-md p-0.5">
-                  <TabsTrigger value="all" className="h-7 text-[10px] px-3">Todas</TabsTrigger>
-                  <TabsTrigger value="project" className="h-7 text-[10px] px-3">Projetos</TabsTrigger>
-                  <TabsTrigger value="task" className="h-7 text-[10px] px-3">Tarefas</TabsTrigger>
-                  <TabsTrigger value="comment" className="h-7 text-[10px] px-3">Comentários</TabsTrigger>
-                </TabsList>
-              </Tabs>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  setSearchQuery("");
-                  setFilter("all");
-                }}
-              >
-                Limpar Filtros
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-9 px-3 gap-2 text-xs font-medium border-border/60",
+                filter !== "all" && "bg-primary/5 text-primary border-primary/20"
+              )}
+              onClick={() => {
+                const el = document.getElementById('advanced-filters-activities');
+                if (el) el.classList.toggle('hidden');
+              }}
+            >
+              <Filter className="h-3.5 w-3.5" />
+              Filtros
+            </Button>
           </div>
         </div>
-      )}
+
+        {/* Ghost Filters Bar */}
+        <div id="advanced-filters-activities" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="shrink-0">
+              <TabsList className="h-8 bg-card border border-border rounded-md p-0.5">
+                <TabsTrigger value="all" className="h-7 text-[10px] px-3">Todas</TabsTrigger>
+                <TabsTrigger value="project" className="h-7 text-[10px] px-3">Projetos</TabsTrigger>
+                <TabsTrigger value="task" className="h-7 text-[10px] px-3">Tarefas</TabsTrigger>
+                <TabsTrigger value="comment" className="h-7 text-[10px] px-3">Arquivos</TabsTrigger>
+                <TabsTrigger value="inbox" className="h-7 text-[10px] px-3">Inbox</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setSearchQuery("");
+                setFilter("all");
+              }}
+            >
+              Limpar Filtros
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <motion.div
         className={cn(
@@ -172,10 +177,10 @@ const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
                       <Icon className="h-4 w-4" style={{ color }} />
                     </div>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-left">
                       <div className="flex items-start justify-between gap-3 mb-1">
                         <div className="min-w-0">
-                          <h3 className="text-sm font-medium">{activity.title}</h3>
+                          <h3 className="text-sm font-medium text-foreground/90 tracking-tight">{activity.title}</h3>
                           <p className="text-sm text-muted-foreground truncate">
                             {activity.description}
                           </p>

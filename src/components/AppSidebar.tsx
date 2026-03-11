@@ -355,14 +355,14 @@ export function AppSidebar() {
                       <Settings className="h-[17px] w-[17px] shrink-0" />
                       {open && <span className="text-[12.5px] font-medium tracking-tight">Gestão e Ajustes</span>}
                     </div>
-                    {open && (
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
-                          <ChevronRight className="h-4 w-4" />
-                        </SidebarMenuAction>
-                      </CollapsibleTrigger>
-                    )}
                   </SidebarMenuButton>
+                  {open && (
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
+                        <ChevronRight className="h-4 w-4" />
+                      </SidebarMenuAction>
+                    </CollapsibleTrigger>
+                  )}
 
                   {open && (
                     <CollapsibleContent>

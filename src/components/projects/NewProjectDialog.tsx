@@ -540,6 +540,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                 title: "Projeto Criado",
                 description: `O projeto "${project.name}" foi iniciado.`,
                 type: "project",
+                projectId: project.id,
                 metadata: { project_id: project.id }
             });
 

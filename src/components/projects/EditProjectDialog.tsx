@@ -740,6 +740,7 @@ export function EditProjectDialog({
                 title: "Projeto Atualizado",
                 description: `As informações do projeto "${newName}" foram atualizadas.`,
                 type: "project",
+                projectId: project.id,
                 metadata: { project_id: project.id }
             });
 

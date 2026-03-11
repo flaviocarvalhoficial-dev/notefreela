@@ -1,15 +1,16 @@
 import { supabase } from "@/integrations/supabase";
 
-export type ActivityType = "project" | "task" | "comment" | "status" | "assignment";
+export type ActivityType = "project" | "task" | "comment" | "status" | "assignment" | "inbox";
 
 interface ActivityParams {
     title: string;
     description?: string;
     type: ActivityType;
     metadata?: Record<string, any>;
+    projectId?: string;
 }
 
-export async function logActivity({ title, description, type, metadata = {} }: ActivityParams) {
+export async function logActivity({ title, description, type, metadata = {}, projectId }: ActivityParams) {
     try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -17,12 +18,11 @@ export async function logActivity({ title, description, type, metadata = {} }: A
         const { error } = await supabase.from("activities").insert({
             title,
             description,
-            type,
-            metadata: {
-                ...metadata,
-                user_id: user.id,
-            },
+            type: type as any,
+            metadata,
             user_id: user.id,
+            // @ts-ignore
+            project_id: projectId
         });
 
         if (error) {

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { logActivity } from "@/utils/activities";
 
 interface CreateInboxParams {
     title?: string;
@@ -27,6 +28,15 @@ export function useInboxMutations() {
             }).select().single();
 
             if (error) throw error;
+
+            await logActivity({
+                title: `Captura criada: ${data.title} `,
+                description: `Conteúdo: ${data.content?.substring(0, 50)}...`,
+                type: "inbox",
+                projectId: data.project_id || undefined,
+                metadata: { inbox_id: data.id }
+            });
+
             return data;
         },
         onSuccess: (data: any) => {
@@ -64,6 +74,14 @@ export function useInboxMutations() {
             });
 
             if (taskErr) throw taskErr;
+
+            await logActivity({
+                title: `Captura convertida: ${item.title || "Captura convertida"} `,
+                description: `Item movido da Inbox para as tarefas`,
+                type: "task",
+                projectId: project_id,
+                metadata: { inbox_id: item.id }
+            });
 
             const { error: delErr } = await supabase.from("inbox").delete().eq("id", item.id);
             if (delErr) throw delErr;

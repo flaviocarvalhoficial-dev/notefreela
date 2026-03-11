@@ -14,6 +14,7 @@ interface DockClientProps {
     updateProject: (updates: any) => void;
     updateClient: (updates: any) => void;
     navigate: (path: string) => void;
+    onClose: () => void;
 }
 
 export const DockClient = ({
@@ -23,7 +24,8 @@ export const DockClient = ({
     setExtraProperties,
     updateProject,
     updateClient,
-    navigate
+    navigate,
+    onClose
 }: DockClientProps) => {
     return (
         <div className="py-6 px-4 space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -33,6 +35,13 @@ export const DockClient = ({
                     <Plus className="w-3.5 h-3.5" />
                 </button>
             </div>
+
+            {project?.description && (
+                <div className="px-2 py-3 bg-muted/20 rounded-xl border border-border/40">
+                    <h4 className="text-[9px] font-bold text-muted-foreground uppercase mb-1.5 opacity-60">Briefing / Descrição</h4>
+                    <p className="text-[12px] text-foreground/80 leading-relaxed italic">{project.description}</p>
+                </div>
+            )}
 
             <div className="space-y-0.5">
                 <PropertyItem
@@ -177,39 +186,27 @@ export const DockClient = ({
                 </div>
             </div>
 
-            <div className="pt-6 space-y-4">
-                {project?.client_id ? (
+            <div className="pt-6 space-y-3">
+                {project?.client_id && (
                     <NewClientDialog
                         client={client}
                         trigger={
                             <Button
-                                className="w-full h-11 text-[11px] font-bold gap-2 bg-primary hover:bg-primary-hover shadow-glow-sm rounded-xl"
+                                className="w-full h-11 text-[11px] font-bold gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 rounded-xl transition-all"
                             >
                                 EDITAR PERFIL COMPLETO <ArrowRight className="w-4 h-4" />
                             </Button>
                         }
                     />
-                ) : (
-                    <div className="text-center py-10 px-6 border-2 border-dashed border-border rounded-3xl bg-muted/5 flex flex-col items-center justify-center gap-4 animate-in zoom-in-95 duration-500">
-                        <div className="p-4 rounded-full bg-primary/5">
-                            <User className="h-10 w-10 text-primary opacity-20" />
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-xs font-bold tracking-tight uppercase opacity-60">Nenhum cliente vinculado</p>
-                            <p className="text-[11px] text-muted-foreground/60 leading-relaxed max-w-[200px] mx-auto">
-                                Vincule um cliente para centralizar contatos e informações estratégicas.
-                            </p>
-                        </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 px-6 text-[11px] font-bold border-primary text-primary hover:bg-primary/5 rounded-full shadow-glow-sm"
-                            onClick={() => navigate('/clientes')}
-                        >
-                            VINCULAR AGORA
-                        </Button>
-                    </div>
                 )}
+
+                <Button
+                    onClick={onClose}
+                    variant="outline"
+                    className="w-full h-11 text-[11px] font-bold gap-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl transition-all"
+                >
+                    <LucideIcons.ChevronRight className="w-4 h-4" /> RECOLHER CONTEXTO
+                </Button>
             </div>
         </div>
     );

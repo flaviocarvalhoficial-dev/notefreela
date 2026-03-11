@@ -22,6 +22,13 @@ import { NewTaskDialog } from "@/components/tasks/NewTaskDialog";
 import { CostRegistrationDialog } from "@/components/dashboard/CostRegistrationDialog";
 import { AddInboxDialog } from "@/components/project-hub/AddInboxDialog";
 import { type BlockEditorRef } from "@/components/project-hub/BlockEditor";
+import { ViewSwitcher, ViewOption } from "@/components/shared/ViewSwitcher";
+import { FileText, Kanban, DollarSign, FolderOpen, History } from "lucide-react";
+import Financeiro from "./Financeiro";
+import Tarefas from "./Tarefas";
+import Atividades from "./Atividades";
+import Documentos from "./Documentos";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ProjetoDetalhes = () => {
     const { id } = useParams<{ id: string }>();
@@ -39,6 +46,7 @@ const ProjetoDetalhes = () => {
     const [isAddInboxOpen, setIsAddInboxOpen] = useState(false);
     const [isAddCostOpen, setIsAddCostOpen] = useState(false);
     const [selectedDocCategory, setSelectedDocCategory] = useState<string>("");
+    const [activeTab, setActiveTab] = useState("planejamento");
 
     const editorRef = useRef<BlockEditorRef>(null);
     const [editorStatus, setEditorStatus] = useState({
@@ -185,64 +193,94 @@ const ProjetoDetalhes = () => {
                     onDelete={() => setIsDeleting(true)}
                     onToggleDock={() => setIsDockOpen(!isDockOpen)}
                     dockOpen={isDockOpen}
+                    activeView={activeTab}
+                    onViewChange={setActiveTab}
                     onIconChange={(icon) => id && updateIcon({ id, icon })}
                 />
 
                 <main className="flex-1 flex flex-col overflow-hidden relative">
-                    <PageNav
-                        projectName={project.name}
-                        pages={pages as Array<{ id: string; title: string }>}
-                        activePageId={activePageId}
-                        onSelectPage={(pageId) => setActivePageId(pageId)}
-                        onAddPage={() => createPage()}
-                        onDeletePage={(pageId) => deletePage(pageId)}
-                        editorRef={editorRef}
-                        editorStatus={editorStatus}
-                    />
+                    {activeTab === 'planejamento' && (
+                        <>
+                            <PageNav
+                                projectName={project.name}
+                                pages={pages as Array<{ id: string; title: string }>}
+                                activePageId={activePageId}
+                                onSelectPage={(pageId) => setActivePageId(pageId)}
+                                onAddPage={() => createPage()}
+                                onDeletePage={(pageId) => deletePage(pageId)}
+                                editorRef={editorRef}
+                                editorStatus={editorStatus}
+                            />
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar transition-all duration-300 bg-background/30">
-                        <div className="max-w-4xl mx-auto w-full px-6 sm:px-12 py-10">
-                            {activePageId && activePage && (
-                                <div className="mb-8 group">
-                                    <input
-                                        type="text"
-                                        value={pageTitleLocal}
-                                        onChange={(e) => handlePageTitleChange(e.target.value)}
-                                        onBlur={() => {
-                                            if (titleDebounceRef.current) {
-                                                clearTimeout(titleDebounceRef.current);
-                                                titleDebounceRef.current = null;
-                                            }
-                                            if (activePageId && pageTitleLocal !== activePage.title) {
-                                                updatePageTitle({ pageId: activePageId, title: pageTitleLocal });
+                            <div className="flex-1 overflow-y-auto custom-scrollbar transition-all duration-300 bg-background/30">
+                                <div className="max-w-4xl mx-auto w-full px-6 sm:px-12 py-10">
+                                    {activePageId && activePage && (
+                                        <div className="mb-8 group">
+                                            <input
+                                                type="text"
+                                                value={pageTitleLocal}
+                                                onChange={(e) => handlePageTitleChange(e.target.value)}
+                                                onBlur={() => {
+                                                    if (titleDebounceRef.current) {
+                                                        clearTimeout(titleDebounceRef.current);
+                                                        titleDebounceRef.current = null;
+                                                    }
+                                                    if (activePageId && pageTitleLocal !== activePage.title) {
+                                                        updatePageTitle({ pageId: activePageId, title: pageTitleLocal });
+                                                    }
+                                                }}
+                                                className="text-4xl font-medium bg-transparent border-none outline-none focus:ring-0 p-0 w-full placeholder:opacity-20 text-foreground/90 tracking-tight"
+                                                placeholder="Título da página..."
+                                            />
+                                        </div>
+                                    )}
+
+                                    <BlockEditor
+                                        ref={editorRef}
+                                        key={activePageId || 'main'}
+                                        content={activePageId ? (activePage?.content_blocks || []) : ((project as any).content_blocks || (project.description ? [{ type: 'paragraph', content: [{ type: 'text', text: project.description }] }] : []))}
+                                        onChange={handleContentChange}
+                                        onStatusChange={setEditorStatus}
+                                        onCommand={(cmd) => {
+                                            setSourceBlockId('editor_trigger');
+                                            if (cmd === 'task') setIsAddTaskOpen(true);
+                                            else if (cmd === 'inbox') setIsAddInboxOpen(true);
+                                            else if (cmd === 'page' || cmd === 'subpage') createPage();
+                                            else if (cmd === 'income' || cmd === 'expense') setIsAddCostOpen(true);
+                                            else if (['kanban', 'tasks', 'finance', 'inboxview'].includes(cmd)) {
+                                                editorRef.current?.insertItem('view', cmd, cmd);
+                                                setSourceBlockId(null);
                                             }
                                         }}
-                                        className="text-4xl font-medium bg-transparent border-none outline-none focus:ring-0 p-0 w-full placeholder:opacity-20 text-foreground tracking-tight"
-                                        placeholder="Título da página..."
                                     />
                                 </div>
-                            )}
+                            </div>
+                        </>
+                    )}
 
-                            <BlockEditor
-                                ref={editorRef}
-                                key={activePageId || 'main'}
-                                content={activePageId ? (activePage?.content_blocks || []) : ((project as any).content_blocks || (project.description ? [{ type: 'paragraph', content: [{ type: 'text', text: project.description }] }] : []))}
-                                onChange={handleContentChange}
-                                onStatusChange={setEditorStatus}
-                                onCommand={(cmd) => {
-                                    setSourceBlockId('editor_trigger');
-                                    if (cmd === 'task') setIsAddTaskOpen(true);
-                                    else if (cmd === 'inbox') setIsAddInboxOpen(true);
-                                    else if (cmd === 'page' || cmd === 'subpage') createPage();
-                                    else if (cmd === 'income' || cmd === 'expense') setIsAddCostOpen(true);
-                                    else if (['kanban', 'tasks', 'finance', 'inboxview'].includes(cmd)) {
-                                        editorRef.current?.insertItem('view', cmd, cmd);
-                                        setSourceBlockId(null);
-                                    }
-                                }}
-                            />
+                    {activeTab === 'producao' && (
+                        <div className="flex-1 overflow-hidden">
+                            <Tarefas hideHeader={true} projectId={id} />
                         </div>
-                    </div>
+                    )}
+
+                    {activeTab === 'financeiro' && (
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            <Financeiro hideHeader={true} projectId={id} />
+                        </div>
+                    )}
+
+                    {activeTab === 'arquivos' && (
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            <Documentos hideHeader={true} projectId={id} />
+                        </div>
+                    )}
+
+                    {activeTab === 'timeline' && (
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            <Atividades hideHeader={true} projectId={id} />
+                        </div>
+                    )}
                 </main>
             </div>
 
@@ -274,6 +312,7 @@ const ProjetoDetalhes = () => {
                             activities={activities}
                             isOpen={isDockOpen}
                             onClose={() => setIsDockOpen(false)}
+                            parentTab={activeTab}
                             onConvertInboxToTask={(item) => id && convertInboxToTask({ item, project_id: id })}
                             onCreateItem={(type) => {
                                 if (type === 'task') setIsAddTaskOpen(true);

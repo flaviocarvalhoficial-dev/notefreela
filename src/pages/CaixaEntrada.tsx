@@ -223,7 +223,7 @@ const ItemCard = ({
                         {getTypeIcon(item.type)}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-foreground tracking-tight text-xs truncate max-w-[140px] pr-2">
+                        <h3 className="font-medium text-foreground/90 tracking-tight text-xs truncate max-w-[140px] pr-2">
                             {item.title || "Captura"}
                         </h3>
                         {/* Meta info hidden in overlay minimal view or adjust as needed */}
@@ -234,7 +234,7 @@ const ItemCard = ({
                                 </p>
                             )}
                             {item.category && (
-                                <span className="text-[9px] text-primary/70 font-medium truncate max-w-[80px]">
+                                <span className="text-[9px] text-muted-foreground font-normal truncate max-w-[80px]">
                                     {item.category}
                                 </span>
                             )}

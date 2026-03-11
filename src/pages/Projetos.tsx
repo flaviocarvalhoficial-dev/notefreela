@@ -463,7 +463,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
 
       {/* Content area */}
       <div className="p-6 space-y-4">
-        <h3 className="text-base font-medium text-foreground leading-snug tracking-tight group-hover:text-primary transition-colors line-clamp-2">
+        <h3 className="text-base font-medium text-foreground/90 leading-snug tracking-tight group-hover:text-primary transition-colors line-clamp-2">
           {project.name}
         </h3>
 
@@ -500,9 +500,9 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
 
             {/* Progress Micro-indicator */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-primary">{project.progress}%</span>
+              <span className="text-xs font-normal text-muted-foreground">{project.progress}%</span>
               <div className="w-12 h-1 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${project.progress}%` }} />
+                <div className="h-full bg-primary/40 rounded-full" style={{ width: `${project.progress}%` }} />
               </div>
             </div>
           </div>
@@ -527,8 +527,8 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
           })()}
         </div>
         <div className="min-w-0 flex-1 pr-6">
-          <h3 className="font-medium text-sm truncate text-foreground group-hover:text-primary transition-colors underline-offset-4 hover:underline">{project.name}</h3>
-          <p className="text-[10px] text-muted-foreground font-medium truncate">{project.client_name || "Sem cliente"}</p>
+          <h3 className="font-medium text-sm truncate text-foreground/90 group-hover:text-primary transition-colors underline-offset-4 hover:underline">{project.name}</h3>
+          <p className="text-[10px] text-muted-foreground font-normal truncate">{project.client_name || "Sem cliente"}</p>
         </div>
       </div>
 

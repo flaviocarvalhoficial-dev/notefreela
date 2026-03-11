@@ -21,8 +21,13 @@ import {
     TrendingDown,
     Wallet,
     CheckCircle2,
-    Plus
+    Plus,
+    Search,
+    PieChart,
+    Table as TableIcon
 } from "lucide-react";
+import { ViewSwitcher, ViewOption } from "@/components/shared/ViewSwitcher";
+import { Input } from "@/components/ui/input";
 import { CostRegistrationDialog } from "@/components/dashboard/CostRegistrationDialog";
 import { MaskableValue } from "@/components/shared/MaskableValue";
 import { Button } from "@/components/ui/button";
@@ -77,7 +82,12 @@ interface Project {
     payment_status?: string;
 }
 
-export default function Financeiro() {
+interface FinanceiroProps {
+    hideHeader?: boolean;
+    projectId?: string;
+}
+
+export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
     const [expandedRows, setExpandedRows] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
@@ -89,6 +99,7 @@ export default function Financeiro() {
     const [isDetailedStatsOpen, setIsDetailedStatsOpen] = useState(false);
     const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
     const [activeStatDetail, setActiveStatDetail] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState("geral");
 
     const toggleRow = (id: string) => {
         setExpandedRows(prev =>
@@ -156,7 +167,12 @@ export default function Financeiro() {
     }, [allProjects]);
 
     const filteredProjects = useMemo(() => {
-        return allProjects.filter(p => {
+        let baseProjects = allProjects;
+        if (projectId) {
+            baseProjects = allProjects.filter(p => p.id === projectId);
+        }
+
+        return baseProjects.filter(p => {
             const servicesArray = Array.isArray(p.services) ? p.services : [];
             const billingConfig = servicesArray.find((s: any) => s.name === "__billing_config__");
             const isEarlyPayment = billingConfig?.isEarlyPayment || false;
@@ -218,9 +234,14 @@ export default function Financeiro() {
     }, [allProjects, searchQuery, statusFilter, selectedMonth]);
 
     const projectsForChart = useMemo(() => {
-        if (searchQuery === "" && statusFilter === "all") return allProjects;
+        let baseProjects = allProjects;
+        if (projectId) {
+            baseProjects = allProjects.filter(p => p.id === projectId);
+        }
 
-        return allProjects.filter(p => {
+        if (searchQuery === "" && statusFilter === "all") return baseProjects;
+
+        return baseProjects.filter(p => {
             const matchesSearch = (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.client_name?.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -266,6 +287,22 @@ export default function Financeiro() {
         return <span className="mask-value">{formatted}</span>;
     };
 
+    const currentProject = projectId ? filteredProjects.find(p => p.id === projectId) : null;
+
+    const projectIndicators = useMemo(() => {
+        if (!currentProject) return null;
+
+        const value = Number(currentProject.value) || 0;
+        const costs = (currentProject.project_costs || [])
+            .filter((c: any) => c.category !== "receita_parcela")
+            .reduce((acc: number, c: any) => acc + Number(c.amount), 0);
+
+        const balance = value - costs;
+        const progress = (currentProject as any).progress || 0;
+
+        return { value, costs, balance, progress };
+    }, [currentProject]);
+
     if (isFinancialLoading) {
         return (
             <div className="h-full flex items-center justify-center py-24">
@@ -274,15 +311,25 @@ export default function Financeiro() {
         );
     }
 
+    const financeViews: ViewOption[] = [
+        { id: 'geral', label: 'Visão Geral', icon: PieChart },
+        { id: 'tabela', label: 'Lançamentos', icon: TableIcon },
+    ];
+
     return (
         <div className="page-container">
             {/* Header - Cockpit Style */}
-            <header className="flex items-center justify-between gap-4 mb-8 h-12">
-                <div>
-                    <h1 className="text-2xl font-medium tracking-tight text-foreground">Gestão de Capital</h1>
+            {/* Header - Cockpit Style */}
+            <header className="flex items-center justify-between gap-4 mb-4 h-12">
+                <div className="flex items-center gap-4">
+                    {!hideHeader && (
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            {projectId ? "Financeiro" : "Gestão de Capital"}
+                        </h1>
+                    )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ml-auto">
                     <Button
                         variant="outline"
                         size="sm"
@@ -294,7 +341,7 @@ export default function Financeiro() {
                     </Button>
                     <CostRegistrationDialog
                         trigger={
-                            <Button size="sm" className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2">
+                            <Button size="sm" className="h-9 px-4 rounded-button bg-primary text-primary-foreground shadow-sm gap-2">
                                 <Plus className="h-4 w-4" />
                                 Novo Lançamento
                             </Button>
@@ -303,13 +350,64 @@ export default function Financeiro() {
                 </div>
             </header>
 
+            <ViewSwitcher
+                options={financeViews}
+                activeView={viewMode}
+                onViewChange={setViewMode}
+                className="mb-8"
+            />
+
+            {/* Financial Indicators Row for Project Hub */}
+            {projectId && projectIndicators && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+                    {/* Valro Projeto */}
+                    <div className="bg-primary/5 border border-primary/10 p-3 rounded-lg flex flex-col justify-between hover:bg-primary/[0.08] transition-all group relative overflow-hidden shadow-sm shadow-black/[0.01]">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-primary/5 rounded-bl-full -mr-6 -mt-6 pointer-events-none" />
+                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-tighter mb-2">Valor Projeto</span>
+                        <div className="flex items-end justify-between">
+                            <span className="text-xl font-bold tabular-nums text-primary">R$ {projectIndicators.value.toLocaleString()}</span>
+                            <TrendingUp className="h-3.5 w-3.5 text-primary/30" />
+                        </div>
+                    </div>
+
+                    {/* Saldo Líquido */}
+                    <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
+                        <span className="text-[9px] font-medium text-muted-foreground/40 uppercase tracking-tighter mb-2">
+                            {projectIndicators.balance >= 0 ? 'Saldo Líquido' : 'Déficit'}
+                        </span>
+                        <div className="flex items-end justify-between">
+                            <span className="text-xl font-bold tabular-nums text-foreground/80">R$ {Math.abs(projectIndicators.balance).toLocaleString()}</span>
+                            <div className={cn(
+                                "h-3.5 w-3.5 rounded-full",
+                                projectIndicators.balance >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-orange-500/10 text-orange-500"
+                            )} />
+                        </div>
+                    </div>
+
+                    {/* Trajetória / Progresso */}
+                    <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
+                        <div className="flex justify-between items-start mb-2">
+                            <span className="text-[9px] font-medium text-muted-foreground/40 uppercase tracking-tighter">Trajetória</span>
+                            <span className="text-[10px] font-bold tabular-nums text-primary">{projectIndicators.progress}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden mb-1">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${projectIndicators.progress}%` }}
+                                className="h-full bg-primary/60 rounded-full"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-4">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                         <Input
-                            placeholder="Mapear projeto ou parceiro..."
+                            placeholder={projectId ? "Buscar lançamentos neste projeto..." : "Mapear projeto ou parceiro..."}
                             className="pl-9 h-9 bg-card/50 border-border/60"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -386,79 +484,83 @@ export default function Financeiro() {
             </div>
 
             {/* KPI Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                    {
-                        id: 'income',
-                        label: "Total Recebido",
-                        value: formatCurrency(financialStats.totalIncome || 0),
-                        icon: ArrowUpRight,
-                        color: "hsl(var(--primary))",
-                        bg: "bg-primary/5",
-                        badge: financialStats.totalProvisioned > 0 ? {
-                            label: "Provisionado",
-                            value: formatCurrency(financialStats.totalProvisioned)
-                        } : null
-                    },
-                    { id: 'costs', label: "Custos Totais", value: formatCurrency(financialStats.totalCosts), icon: TrendingDown, color: "hsl(var(--foreground))", bg: "bg-secondary" },
-                    { id: 'profit', label: "Lucro Líquido", value: formatCurrency(financialStats.netProfit), icon: Wallet, color: financialStats.netProfit >= 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))", bg: "bg-primary/5" },
-                ].map((kpi, i) => (
-                    <motion.div
-                        key={kpi.label}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: i * 0.1 }}
-                        whileHover={{ y: -2, boxShadow: "var(--shadow-hover)" }}
-                        onClick={() => {
-                            if (kpi.id === 'costs') {
-                                setIsCostsModalOpen(true);
-                            } else {
-                                setActiveStatDetail(kpi.id);
-                                setIsDetailedStatsOpen(true);
-                            }
-                        }}
-                        className="relative p-6 rounded-lg border border-border bg-card shadow-sm group cursor-pointer overflow-hidden transition-all duration-300 flex flex-col items-start justify-center text-left h-[130px]"
-                    >
-                        <div className="flex items-center justify-between mb-4 relative z-10 w-full">
-                            <div className={cn("p-3 rounded-md border border-border transition-all duration-300 group-hover:scale-110", kpi.bg)}>
-                                <kpi.icon className="h-5 w-5" style={{ color: kpi.color }} />
-                            </div>
-                            {kpi.badge && (
-                                <div
-                                    className="flex flex-col items-end cursor-pointer hover:opacity-80 transition-opacity bg-primary/5 p-1.5 rounded-md border border-primary/10"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setActiveStatDetail('provisioned');
-                                        setIsDetailedStatsOpen(true);
-                                    }}
-                                >
-                                    <span className="text-[9px] font-bold text-primary tracking-tighter uppercase mb-0.5">{kpi.badge.label}</span>
-                                    <span className="text-[11px] font-semibold text-foreground tabular-nums">{kpi.badge.value}</span>
+            {!projectId && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                        {
+                            id: 'income',
+                            label: "Total Recebido",
+                            value: formatCurrency(financialStats.totalIncome || 0),
+                            icon: ArrowUpRight,
+                            color: "hsl(var(--primary))",
+                            bg: "bg-primary/5",
+                            badge: financialStats.totalProvisioned > 0 ? {
+                                label: "Provisionado",
+                                value: formatCurrency(financialStats.totalProvisioned)
+                            } : null
+                        },
+                        { id: 'costs', label: "Custos Totais", value: formatCurrency(financialStats.totalCosts), icon: TrendingDown, color: "hsl(var(--foreground))", bg: "bg-secondary" },
+                        { id: 'profit', label: "Lucro Líquido", value: formatCurrency(financialStats.netProfit), icon: Wallet, color: financialStats.netProfit >= 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))", bg: "bg-primary/5" },
+                    ].map((kpi, i) => (
+                        <motion.div
+                            key={kpi.label}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: i * 0.1 }}
+                            whileHover={{ y: -2, boxShadow: "var(--shadow-hover)" }}
+                            onClick={() => {
+                                if (kpi.id === 'costs') {
+                                    setIsCostsModalOpen(true);
+                                } else {
+                                    setActiveStatDetail(kpi.id);
+                                    setIsDetailedStatsOpen(true);
+                                }
+                            }}
+                            className="relative p-6 rounded-lg border border-border bg-card shadow-sm group cursor-pointer overflow-hidden transition-all duration-300 flex flex-col items-start justify-center text-left h-[130px]"
+                        >
+                            <div className="flex items-center justify-between mb-4 relative z-10 w-full">
+                                <div className={cn("p-3 rounded-md border border-border transition-all duration-300 group-hover:scale-110", kpi.bg)}>
+                                    <kpi.icon className="h-5 w-5" style={{ color: kpi.color }} />
                                 </div>
-                            )}
-                        </div>
-                        <div className="relative z-10">
-                            <p className="text-[10px] font-medium text-muted-foreground tracking-tight mb-0.5">{kpi.label}</p>
-                            <h3 className="text-2xl font-medium tabular-nums tracking-tight text-foreground">{kpi.value}</h3>
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
+                                {kpi.badge && (
+                                    <div
+                                        className="flex flex-col items-end cursor-pointer hover:opacity-80 transition-opacity bg-primary/5 p-1.5 rounded-md border border-primary/10"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveStatDetail('provisioned');
+                                            setIsDetailedStatsOpen(true);
+                                        }}
+                                    >
+                                        <span className="text-[9px] font-medium text-muted-foreground tracking-tighter uppercase mb-0.5">{kpi.badge.label}</span>
+                                        <span className="text-[11px] font-semibold text-foreground tabular-nums">{kpi.badge.value}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="relative z-10">
+                                <p className="text-[10px] font-medium text-muted-foreground tracking-tight mb-1">{kpi.label}</p>
+                                <h3 className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">{kpi.value}</h3>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            )}
 
             {/* Charts Area */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-            >
-                <div className="h-[400px]">
-                    <FinancialChart projects={projectsForChart} />
-                </div>
-                <div className="h-[400px]">
-                    <ProfitChart projects={projectsForChart} subscriptions={subscriptions} />
-                </div>
-            </motion.div>
+            {viewMode === 'geral' && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                >
+                    <div className="h-[400px]">
+                        <FinancialChart projects={projectsForChart} />
+                    </div>
+                    <div className="h-[400px]">
+                        <ProfitChart projects={projectsForChart} subscriptions={subscriptions} />
+                    </div>
+                </motion.div>
+            )}
 
             {/* Projects Financial Table */}
             <motion.div
@@ -469,12 +571,12 @@ export default function Financeiro() {
                 <div className="p-4 border-b border-border flex items-center justify-between bg-muted/5">
                     <div className="flex items-center gap-2">
                         <List className="h-4 w-4 text-primary" />
-                        <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Status de Pagamentos</h2>
+                        <h2 className="text-xs font-medium uppercase tracking-widest text-foreground/80">Status de Pagamentos</h2>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-secondary border border-border">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase">{stats?.projectCount} Projetos</span>
+                            <span className="text-[10px] font-medium text-muted-foreground uppercase">{stats?.projectCount} Projetos</span>
                         </div>
                     </div>
                 </div>
@@ -484,11 +586,11 @@ export default function Financeiro() {
                         <thead>
                             <tr className="bg-muted/30 text-left border-b border-border h-10">
                                 <th className="w-10 border-r border-border/40"></th>
-                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40">Projeto / Cliente</th>
-                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">Valor Total</th>
-                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">{selectedMonth === 'all' ? 'Entrada / Pago' : 'Recebido (Mês)'}</th>
-                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">Restante</th>
-                                <th className="p-2 px-4 font-bold text-muted-foreground text-[10px] tracking-widest uppercase text-center">Status Pagto</th>
+                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40">Projeto / Cliente</th>
+                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">Valor Total</th>
+                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">{selectedMonth === 'all' ? 'Entrada / Pago' : 'Recebido (Mês)'}</th>
+                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">Restante</th>
+                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase text-center">Status Pagto</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/40">
@@ -527,10 +629,10 @@ export default function Financeiro() {
                                                     <span className="text-[10px] text-muted-foreground font-medium opacity-60 tracking-tight">{p.client_name || "Mapeamento pendente"}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-2 px-4 font-bold text-foreground text-right border-r border-border/40 tabular-nums text-xs">
+                                            <td className="p-2 px-4 font-semibold text-foreground text-right border-r border-border/40 tabular-nums text-xs">
                                                 {formatCurrency(p.value || 0)}
                                             </td>
-                                            <td className="p-2 px-4 font-bold text-emerald-600 text-right border-r border-border/40 tabular-nums text-xs">
+                                            <td className="p-2 px-4 font-semibold text-primary text-right border-r border-border/40 tabular-nums text-xs">
                                                 {formatCurrency(
                                                     (() => {
                                                         const pData = p as any;
@@ -559,7 +661,7 @@ export default function Financeiro() {
                                                     })()
                                                 )}
                                             </td>
-                                            <td className="p-2 px-4 font-bold text-orange-600 text-right border-r border-border/40 tabular-nums text-xs">
+                                            <td className="p-2 px-4 font-medium text-muted-foreground text-right border-r border-border/40 tabular-nums text-xs">
                                                 {formatCurrency(
                                                     (() => {
                                                         const pData = p as any;
@@ -803,7 +905,7 @@ export default function Financeiro() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-xs font-medium text-foreground">{formatCurrency(p.value || 0)}</p>
-                                            <p className="text-[9px] text-primary/60">Vol. Financeiro</p>
+                                            <p className="text-[9px] text-muted-foreground">Vol. Financeiro</p>
                                         </div>
                                     </div>
                                 );
@@ -836,13 +938,13 @@ export default function Financeiro() {
                             <div className="space-y-4">
                                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between mb-6">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Expectativa Mensal</p>
+                                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Expectativa Mensal</p>
                                         <p className="text-2xl font-medium tabular-nums text-foreground tracking-tight">
                                             {formatCurrency(financialStats.provisionedItems.reduce((acc, curr) => acc + curr.amount, 0))}
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Total de Itens</p>
+                                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest leading-none">Total de Itens</p>
                                         <p className="text-xl font-medium text-muted-foreground">{financialStats.provisionedItems.length}</p>
                                     </div>
                                 </div>
@@ -899,13 +1001,13 @@ export default function Financeiro() {
                             <div className="space-y-4">
                                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between mb-6">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Faturamento Realizado</p>
+                                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Faturamento Realizado</p>
                                         <p className="text-2xl font-medium tabular-nums text-foreground tracking-tight">
                                             {formatCurrency(financialStats.incomeItems.reduce((acc, curr) => acc + curr.amount, 0))}
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Recebimentos</p>
+                                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest leading-none">Recebimentos</p>
                                         <p className="text-xl font-medium text-muted-foreground">{financialStats.incomeItems.length}</p>
                                     </div>
                                 </div>
@@ -919,8 +1021,8 @@ export default function Financeiro() {
                                                         <CheckCircle2 className="h-3 w-3" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-[9px] font-bold text-muted-foreground uppercase truncate tracking-wider">{item.projectName}</p>
-                                                        <p className="text-[13px] font-medium text-foreground truncate leading-none mt-0.5">{item.title}</p>
+                                                        <p className="text-[9px] font-medium text-muted-foreground uppercase truncate tracking-wider">{item.projectName}</p>
+                                                        <p className="text-[13px] font-medium text-foreground/90 truncate leading-none mt-0.5">{item.title}</p>
                                                     </div>
                                                 </div>
                                                 <p className="text-[10px] font-medium text-muted-foreground">Recebido em: {format(parseISO(item.date), "dd 'de' MMMM", { locale: ptBR })}</p>
@@ -929,7 +1031,7 @@ export default function Financeiro() {
                                                 <p className="text-base font-medium tabular-nums text-primary leading-none mb-1">
                                                     {formatCurrency(item.amount)}
                                                 </p>
-                                                <p className="text-[9px] font-bold text-primary/60 uppercase italic tracking-tighter">Liquidado</p>
+                                                <p className="text-[9px] font-medium text-muted-foreground uppercase italic tracking-tighter">Liquidado</p>
                                             </div>
                                         </div>
                                     ))

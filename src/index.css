@@ -18,7 +18,7 @@
 
 @layer base {
   :root {
-    /* Linear Design System — Clean & Intellectual */
+    /* NoteFreela Design System — Cockpit Signature */
     --background: 0 0% 99%;
     /* #FCFCFC */
     --foreground: 0 0% 0%;
@@ -29,8 +29,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
 
-    --primary: 240 54% 60%;
-    /* #5E6AD2 */
+    --primary: 25 100% 58%;
+    /* #FF6A2A - NoteFreela Orange */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 4% 97%;
@@ -42,38 +42,42 @@
     --muted-foreground: 240 4% 42%;
     /* #6B6B6B */
 
-    --accent: 240 54% 60% / 0.05;
-    --accent-foreground: 240 54% 60%;
+    --accent: 25 100% 58% / 0.05;
+    --accent-foreground: 25 100% 58%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 92%;
-    /* #EBEBEB - Very subtle */
+    /* #EBEBEB */
     --input: 0 0% 96%;
-    --ring: 240 54% 60%;
+    --ring: 25 100% 58%;
 
-    --accent-primary: 240 54% 60%;
-    --accent-hover: 240 54% 54%;
-    --accent-subtle: 240 54% 60% / 0.08;
+    --accent-primary: 25 100% 58%;
+    --accent-hover: 25 100% 50%;
+    --accent-subtle: 25 100% 58% / 0.08;
 
+    /* Semantic Radius - Arthur Marques Rules */
+    --radius-card: 16px;
+    --radius-button: 12px;
+    --radius-input: 10px;
     --radius: 8px;
+    /* Standard fallback */
 
-    /* Micro Shadows Linear - Softer */
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04);
-    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.06);
-    --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.08);
+    /* Micro Shadows Linear - Refined */
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.06);
+    --shadow-float: 0 12px 30px rgba(0, 0, 0, 0.08);
 
     /* Sidebar - Light Version */
     --sidebar-background: 0 0% 99%;
-    /* #FCFCFC */
     --sidebar-foreground: 240 4% 42%;
-    --sidebar-primary: 240 54% 60%;
+    --sidebar-primary: 25 100% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 4% 96%;
     --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 94%;
-    --sidebar-ring: 240 54% 60%;
+    --sidebar-border: 60 4.8% 95.9%;
+    --sidebar-ring: 25 100% 58%;
   }
 
   .dark {
@@ -81,17 +85,15 @@
     --foreground: 0 0% 100%;
 
     --card: 0 0% 6%;
-    /* #0F0F0F - Slightly above pure black */
     --card-foreground: 0 0% 100%;
 
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 240 44% 60%;
+    --primary: 25 100% 58%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 10%;
-    /* #1A1A1A */
     --secondary-foreground: 0 0% 54%;
 
     --muted: 0 0% 8%;
@@ -104,20 +106,17 @@
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 12%;
-    /* #1F1F1F - Softer border for dark mode */
     --input: 0 0% 10%;
-    --ring: 240 44% 60%;
+    --ring: 25 100% 58%;
 
     --sidebar-background: 0 0% 4%;
-    /* #0A0A0A */
     --sidebar-foreground: 0 0% 54%;
-    --sidebar-primary: 240 44% 60%;
+    --sidebar-primary: 25 100% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 12%;
-    /* #1F1F1F */
-    --sidebar-ring: 240 54% 60%;
+    --sidebar-ring: 25 100% 58%;
 
     *::selection {
       background-color: hsl(var(--accent));
@@ -129,6 +128,18 @@
     @apply border-border;
   }
 
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(to right, hsl(var(--muted-foreground) / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--muted-foreground) / 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 1;
+  }
+
   body,
   .page-container,
   .linear-card,
@@ -136,7 +147,7 @@
   nav,
   header,
   aside {
-    transition: background-color 100ms ease-out, border-color 100ms ease-out, box-shadow 100ms ease-out;
+    transition: background-color 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out;
   }
 
   body {
@@ -150,11 +161,11 @@
 
   /* Typography Classes - Refined Weights (300, 400, 500) */
   .heading-1 {
-    @apply text-3xl font-medium tracking-tight text-foreground;
+    @apply text-3xl font-semibold tracking-tight text-foreground;
   }
 
   .heading-2 {
-    @apply text-xl font-medium tracking-tight text-foreground;
+    @apply text-xl font-semibold tracking-tight text-foreground;
   }
 
   .body-text {

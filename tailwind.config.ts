@@ -64,9 +64,12 @@ export default {
         },
       },
       borderRadius: {
-        lg: "10px",
-        md: "8px",
-        sm: "6px",
+        card: "var(--radius-card)",
+        button: "var(--radius-button)",
+        input: "var(--radius-input)",
+        lg: "var(--radius-card)", // Map default shadcn lg to our card radius
+        md: "var(--radius-button)",
+        sm: "var(--radius-input)",
         xl: "12px",
         "2xl": "14px",
       },

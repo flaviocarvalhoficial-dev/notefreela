@@ -113,7 +113,7 @@ export function DashboardTimerWidget() {
                         )}
                     </div>
                     <div className="min-w-0">
-                        <h3 className="text-[13px] font-semibold tracking-tight text-foreground truncate">
+                        <h3 className="text-[13px] font-medium tracking-tight text-foreground truncate">
                             {activeTab === "timer" ? "Cockpit de Tempo" : "Notas Rápidas"}
                         </h3>
                         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
@@ -179,7 +179,7 @@ export function DashboardTimerWidget() {
                     >
                         <div className="p-5 space-y-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Trabalhar em qual Projeto?</label>
+                                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Trabalhar em qual Projeto?</label>
                                 <Select
                                     value={setupProjectId || "general"}
                                     onValueChange={(val) => {
@@ -210,7 +210,7 @@ export function DashboardTimerWidget() {
                                         animate={{ opacity: 1, y: 0 }}
                                         className="space-y-2"
                                     >
-                                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Vincular a uma Tarefa? <span className="lowercase font-normal opacity-60">(opcional)</span></label>
+                                        <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Vincular a uma Tarefa? <span className="lowercase font-normal opacity-60">(opcional)</span></label>
                                         <Select
                                             value={setupTaskId || "no-task"}
                                             onValueChange={(val) => setSetupTaskId(val === "no-task" ? "" : val)}
@@ -279,7 +279,7 @@ export function DashboardTimerWidget() {
                                     {timer.taskTitle ?? timer.projectName ?? "Estou focado agora"}
                                 </p>
                                 <div className="flex items-center gap-1.5">
-                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-bold uppercase border-border bg-muted/10 text-muted-foreground tracking-wider">
+                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-medium uppercase border-border bg-muted/10 text-muted-foreground tracking-wider">
                                         {timer.taskTitle ? "Tarefa" : "Projeto"}
                                     </Badge>
                                     {timer.projectName && (
@@ -309,7 +309,7 @@ export function DashboardTimerWidget() {
             {!isSettingUp && !timer.isRunning && filterMode === "project" && (
                 <div className="overflow-hidden border-b border-border/40 bg-muted/20">
                     <div className="px-5 py-3 flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-muted-foreground shrink-0 uppercase tracking-tighter">Histórico de:</span>
+                        <span className="text-[10px] font-medium text-muted-foreground shrink-0 uppercase tracking-tighter">Histórico de:</span>
                         <div className="flex-1 flex items-center gap-1.5 flex-wrap">
                             {projects.map(project => (
                                 <button
@@ -318,7 +318,7 @@ export function DashboardTimerWidget() {
                                     className={cn(
                                         "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border",
                                         selectedProject === project.id
-                                            ? "bg-primary text-white border-primary shadow-sm"
+                                            ? "bg-muted text-foreground border-border shadow-sm"
                                             : "bg-card text-muted-foreground border-border hover:border-primary/30"
                                     )}
                                 >
@@ -362,8 +362,8 @@ export function DashboardTimerWidget() {
                                     <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground opacity-40">
                                         <Activity className="h-10 w-10 stroke-[1.5px]" />
                                         <div className="text-center">
-                                            <p className="text-[12px] font-bold uppercase tracking-widest">Sem Registros</p>
-                                            <p className="text-[10px] font-medium">Sua produtividade começa aqui.</p>
+                                            <p className="text-[12px] font-medium uppercase tracking-widest text-muted-foreground">Sem Registros</p>
+                                            <p className="text-[10px] font-normal text-muted-foreground/60">Sua produtividade começa aqui.</p>
                                         </div>
                                     </div>
                                 ) : (
@@ -403,10 +403,10 @@ export function DashboardTimerWidget() {
                                                 <div className="shrink-0 text-right">
                                                     {entry.ended_at ? (
                                                         <div className="flex flex-col items-end">
-                                                            <span className="text-[14px] font-mono font-bold text-foreground tabular-nums tracking-tight">
+                                                            <span className="text-[14px] font-mono font-medium text-foreground/80 tabular-nums tracking-tight">
                                                                 {formatDuration(entry.duration_seconds ?? 0)}
                                                             </span>
-                                                            <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Concluído</span>
+                                                            <span className="text-[9px] font-medium text-muted-foreground/50 uppercase tracking-widest">Concluído</span>
                                                         </div>
                                                     ) : (
                                                         <div className="flex items-center gap-1.5 bg-muted/10 px-2 py-0.5 rounded-full">
@@ -444,15 +444,15 @@ export function DashboardTimerWidget() {
                 completedEntries.length > 0 && (
                     <div className="px-5 py-4 border-t border-border/40 flex items-center justify-between bg-card group/footer">
                         <div className="flex items-center gap-2">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary/40 group-hover/footer:scale-125 transition-transform" />
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 group-hover/footer:scale-125 transition-transform" />
+                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
                                 {filterMode === "project" && selectedProjectData
                                     ? `Filtro: ${selectedProjectData.name}`
                                     : "Filtro: Consolidado"}
                             </span>
                         </div>
                         <div className="text-right">
-                            <p className="text-[14px] font-bold text-foreground tabular-nums tracking-tighter">
+                            <p className="text-[14px] font-medium text-foreground/80 tabular-nums tracking-tighter">
                                 {formatDuration(total)}
                             </p>
                         </div>

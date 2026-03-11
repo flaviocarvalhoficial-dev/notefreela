@@ -82,7 +82,7 @@ const Index = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Projetos</p>
-                        <h2 className="text-2xl font-semibold tracking-tight tabular-nums">{projects.length}</h2>
+                        <h2 className="text-2xl font-medium tracking-tight tabular-nums text-foreground/90">{projects.length}</h2>
                     </div>
                 </motion.div>
 
@@ -101,7 +101,7 @@ const Index = () => {
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Tarefas</p>
                         <div className="flex items-end justify-between gap-4">
-                            <h2 className="text-2xl font-semibold tracking-tight tabular-nums">{tasksStats?.total || 0}</h2>
+                            <h2 className="text-2xl font-medium tracking-tight tabular-nums text-foreground/90">{tasksStats?.total || 0}</h2>
                             <Progress value={completionRate} className="h-1.5 flex-1 mb-2 bg-primary/10" />
                         </div>
                     </div>
@@ -121,7 +121,7 @@ const Index = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Clientes</p>
-                        <h2 className="text-2xl font-semibold tracking-tight tabular-nums">{uniqueClientsCount}</h2>
+                        <h2 className="text-2xl font-medium tracking-tight tabular-nums text-foreground/90">{uniqueClientsCount}</h2>
                     </div>
                 </motion.div>
 
@@ -139,7 +139,7 @@ const Index = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Faturamento Est.</p>
-                        <h2 className="text-2xl font-semibold tracking-tight tabular-nums mask-value">
+                        <h2 className="text-2xl font-medium tracking-tight tabular-nums mask-value text-foreground/90">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(
                                 projects.reduce((acc, p) => acc + (Number(p.value) || 0), 0)
                             )}
@@ -159,7 +159,7 @@ const Index = () => {
                                     <div className="p-1 rounded-md transition-colors">
                                         {isTimelineOpen ? <Minus className="h-3 w-3 text-muted-foreground/40" /> : <Plus className="h-3 w-3 text-muted-foreground/40" />}
                                     </div>
-                                    <h3 className="text-lg font-semibold tracking-tight">Cronograma de Entrega</h3>
+                                    <h3 className="text-lg font-medium tracking-tight text-foreground/90">Cronograma de Entrega</h3>
                                 </div>
                             </CollapsibleTrigger>
                         </div>
@@ -191,7 +191,7 @@ const Index = () => {
                                 <div className="p-1 rounded-md transition-colors">
                                     {isActivitiesOpen ? <Minus className="h-3 w-3 text-muted-foreground/40" /> : <Plus className="h-3 w-3 text-muted-foreground/40" />}
                                 </div>
-                                <h3 className="text-lg font-semibold tracking-tight">Atividades Recentes</h3>
+                                <h3 className="text-lg font-medium tracking-tight text-foreground/90">Atividades Recentes</h3>
                             </div>
                         </CollapsibleTrigger>
                         <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground h-7 gap-2" onClick={() => navigate('/atividades')}>

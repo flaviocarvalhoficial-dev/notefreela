@@ -30,6 +30,8 @@ interface ProjectHeaderProps {
     onToggleDock?: () => void;
     dockOpen?: boolean;
     onIconChange?: (icon: string) => void;
+    activeView: string;
+    onViewChange: (viewId: string) => void;
 }
 
 export const ProjectHeader = ({
@@ -39,7 +41,9 @@ export const ProjectHeader = ({
     onDelete,
     onToggleDock,
     dockOpen,
-    onIconChange
+    onIconChange,
+    activeView,
+    onViewChange
 }: ProjectHeaderProps) => {
     const navigate = useNavigate();
 
@@ -49,6 +53,14 @@ export const ProjectHeader = ({
         review: "bg-amber-500/10 text-amber-600 border-amber-500/20",
         completed: "bg-slate-500/10 text-slate-600 border-slate-500/20",
     };
+
+    const navOptions = [
+        { id: 'planejamento', label: 'Planejamento', icon: FilePlus },
+        { id: 'producao', label: 'Tarefas', icon: CheckSquare },
+        { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
+        { id: 'arquivos', label: 'Arquivos', icon: LucideIcons.FolderOpen },
+        { id: 'timeline', label: 'Histórico', icon: LucideIcons.History },
+    ];
 
     const ProjectIcon = (LucideIcons as any)[project?.avatar_emoji] || Briefcase;
 
@@ -85,7 +97,7 @@ export const ProjectHeader = ({
                 <div className="flex items-center gap-2">
                     <TimerButton />
 
-                    <div className="hidden lg:flex items-center gap-4 px-4 border-l border-r border-border h-8 mx-2">
+                    <div className="hidden xl:flex items-center gap-4 px-4 border-l border-r border-border h-8 mx-2">
                         <div className="flex flex-col items-center">
                             <span className="text-[9px] font-bold text-muted-foreground leading-none">{kpis.openTasks}</span>
                             <span className="text-[8px] text-muted-foreground/60 uppercase">Tarefas</span>
@@ -106,7 +118,7 @@ export const ProjectHeader = ({
                         )}
                     >
                         <LayoutDashboard className="h-4 w-4" />
-                        {dockOpen ? 'Ocultar Contexto' : 'Mostrar Contexto'}
+                        <span className="hidden sm:inline">{dockOpen ? 'Ocultar Contexto' : 'Mostrar Contexto'}</span>
                     </Button>
 
                     <DropdownMenu>
@@ -124,6 +136,36 @@ export const ProjectHeader = ({
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                </div>
+            </div>
+
+            {/* Integrated Navigation Tabs */}
+            <div className="w-full px-6 flex items-center h-10 border-t border-border/40">
+                <div className="flex items-center h-full gap-1">
+                    {navOptions.map((option) => {
+                        const Icon = option.icon;
+                        const isActive = activeView === option.id;
+
+                        return (
+                            <button
+                                key={option.id}
+                                onClick={() => onViewChange(option.id)}
+                                className={cn(
+                                    "flex items-center gap-2 px-4 h-full text-[11px] font-medium transition-all relative group",
+                                    isActive
+                                        ? "text-primary"
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <Icon className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                                {option.label}
+
+                                {isActive && (
+                                    <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-t-full shadow-[0_-1px_4px_rgba(255,106,42,0.4)]" />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
         </header>

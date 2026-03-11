@@ -58,15 +58,22 @@ import { PASTEL_COLORS } from "@/constants/kanban";
 import { supabase } from "@/integrations/supabase";
 import { TaskDisplaySettings, TaskDisplayOptions } from "@/components/tasks/TaskDisplaySettings";
 import { TaskListView } from "@/components/tasks/TaskListView";
+import { ViewSwitcher, ViewOption } from "@/components/shared/ViewSwitcher";
+import { List, LayoutDashboard, Calendar as CalendarIcon } from "lucide-react";
 
-export default function Tarefas() {
+interface TarefasProps {
+    hideHeader?: boolean;
+    projectId?: string;
+}
+
+export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
     const [query, setQuery] = useState("");
     const [priorityFilter, setPriorityFilter] = useState<"all" | Priority>("all");
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const [activeId, setActiveId] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [projectFilter, setProjectFilter] = useState(searchParams.get("project") || "all");
+    const [projectFilter, setProjectFilter] = useState(projectId || searchParams.get("project") || "all");
     const [quickAddColumn, setQuickAddColumn] = useState<string | null>(null);
     const [quickAddTitle, setQuickAddTitle] = useState("");
     const [collapsedScenarios, setCollapsedScenarios] = useState<Record<string, boolean>>({});
@@ -447,8 +454,8 @@ export default function Tarefas() {
                                         </div>
 
                                         <div className="mb-4 flex-1">
-                                            <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1">{p.name}</h3>
-                                            <p className="text-[10px] text-muted-foreground line-clamp-1 opacity-80 font-medium">
+                                            <h3 className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors line-clamp-1 mb-1">{p.name}</h3>
+                                            <p className="text-[10px] text-muted-foreground line-clamp-1 font-normal">
                                                 {p.client_name || "Mapeamento Direto"}
                                             </p>
                                         </div>
@@ -503,26 +510,40 @@ export default function Tarefas() {
     }
 
     // ═══════ KANBAN BOARD (project selected) ═══════
+    const taskViews: ViewOption[] = [
+        { id: 'board', label: 'Kanban', icon: LayoutDashboard },
+        { id: 'list', label: 'Lista', icon: List },
+        { id: 'calendar', label: 'Calendário', icon: CalendarIcon },
+    ];
+
+    const handleViewChange = (viewId: string) => {
+        setDisplayOptions(prev => ({ ...prev, viewMode: viewId as any }));
+    };
+
     return (
-        <div className="page-container">
-            <header className="flex items-center justify-between gap-4 mb-8 h-12">
+        <div className="h-full flex flex-col overflow-hidden px-4 py-2">
+            <header className="flex items-center justify-between gap-4 mb-4 h-12">
                 <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-lg bg-secondary hover:bg-primary/5 hover:text-primary transition-all border border-border shrink-0 shadow-sm"
-                        onClick={() => handleProjectFilterChange("all")}
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <div>
-                        <h1 className="text-2xl font-medium tracking-tight text-foreground">
-                            {selectedProjectData?.name || "Tarefas"}
-                        </h1>
-                    </div>
+                    {!hideHeader && !projectId && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-lg bg-secondary hover:bg-primary/5 hover:text-primary transition-all border border-border shrink-0 shadow-sm"
+                            onClick={() => handleProjectFilterChange("all")}
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                    )}
+                    {!hideHeader && (
+                        <div>
+                            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                                {projectId ? "Tarefas" : (selectedProjectData?.name || "Kanban Central")}
+                            </h1>
+                        </div>
+                    )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ml-auto">
                     <TaskDisplaySettings
                         options={displayOptions}
                         onChange={setDisplayOptions}
@@ -541,7 +562,7 @@ export default function Tarefas() {
                         }}
                         defaultProjectId={projectFilter !== 'all' ? projectFilter : undefined}
                         trigger={
-                            <Button size="sm" className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2">
+                            <Button size="sm" className="h-9 px-4 rounded-button bg-primary text-primary-foreground shadow-sm gap-2">
                                 <Plus className="h-4 w-4" />
                                 Nova Tarefa
                             </Button>
@@ -550,45 +571,34 @@ export default function Tarefas() {
                 </div>
             </header>
 
-            {projectFilter !== 'all' && (
-                <div className="flex items-center gap-2 mt-[-24px] mb-8 ml-16 relative z-20">
-                    <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors tracking-tight"
-                        onClick={() => navigate(`/projetos/${projectFilter}`)}
-                    >
-                        ← Voltar para hub do projeto
-                    </Button>
-                    <span className="text-muted-foreground">•</span>
-                    <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-[10px] font-medium text-orange-400/60 hover:text-orange-400 transition-colors tracking-tight"
-                        onClick={() => handleProjectFilterChange("all")}
-                    >
-                        Remover filtro
-                    </Button>
-                </div>
-            )}
+            <ViewSwitcher
+                options={taskViews}
+                activeView={displayOptions.viewMode}
+                onViewChange={handleViewChange}
+                className="mb-4"
+            />
+
 
             {/* Indicators Row - Refined with Financial Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
+            <div className={cn(
+                "grid gap-3 mb-4",
+                projectId ? "grid-cols-1 md:grid-cols-3" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+            )}>
+                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
                     <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Backlog Total</span>
                     <div className="flex items-end justify-between">
                         <span className="text-xl font-bold tabular-nums text-foreground/80">{tasksTotal}</span>
                         <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground/20 group-hover:text-primary/40 transition-colors" />
                     </div>
                 </div>
-                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
+                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
                     <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Sprint Ativa</span>
                     <div className="flex items-end justify-between">
                         <span className="text-xl font-bold tabular-nums text-foreground/80">{tasksOpen}</span>
                         <AlertCircle className="h-3.5 w-3.5 text-primary/20 group-hover:text-primary transition-colors" />
                     </div>
                 </div>
-                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
+                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
                     <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Gargalos</span>
                     <div className="flex items-end justify-between">
                         <span className="text-xl font-bold tabular-nums text-orange-500/80">{tasksOverdue}</span>
@@ -596,40 +606,44 @@ export default function Tarefas() {
                     </div>
                 </div>
 
-                {/* Financial Stats - Sleek Mode */}
-                <div className="bg-primary/5 border border-primary/10 p-3 rounded-lg flex flex-col justify-between hover:bg-primary/[0.08] transition-all group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-12 h-12 bg-primary/5 rounded-bl-full -mr-6 -mt-6 pointer-events-none" />
-                    <span className="text-[9px] font-bold text-primary/40 uppercase tracking-tighter mb-2">Valor Projeto</span>
-                    <div className="flex items-end justify-between">
-                        <span className="text-xl font-bold tabular-nums text-primary mask-value">R$ {projectValue.toLocaleString()}</span>
-                        <FolderKanban className="h-3.5 w-3.5 text-primary/30" />
-                    </div>
-                </div>
+                {!projectId && (
+                    <>
+                        {/* Financial Stats - Sleek Mode */}
+                        <div className="bg-primary/5 border border-primary/10 p-3 rounded-lg flex flex-col justify-between hover:bg-primary/[0.08] transition-all group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-12 h-12 bg-primary/5 rounded-bl-full -mr-6 -mt-6 pointer-events-none" />
+                            <span className="text-[9px] font-bold text-primary/40 uppercase tracking-tighter mb-2">Valor Projeto</span>
+                            <div className="flex items-end justify-between">
+                                <span className="text-xl font-bold tabular-nums text-primary mask-value">R$ {projectValue.toLocaleString()}</span>
+                                <FolderKanban className="h-3.5 w-3.5 text-primary/30" />
+                            </div>
+                        </div>
 
-                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
-                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">{projectBalance >= 0 ? 'Saldo Líquido' : 'Custo'}</span>
-                    <div className="flex items-end justify-between">
-                        <span className="text-xl font-bold tabular-nums text-foreground/80 mask-value">R$ {Math.abs(projectBalance).toLocaleString()}</span>
-                        <BarChart3 className={cn("h-3.5 w-3.5 transition-colors", projectBalance >= 0 ? "text-emerald-500/20 group-hover:text-emerald-500/40" : "text-orange-500/20 group-hover:text-orange-500/40")} />
-                    </div>
-                </div>
+                        <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
+                            <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">{projectBalance >= 0 ? 'Saldo Líquido' : 'Custo'}</span>
+                            <div className="flex items-end justify-between">
+                                <span className="text-xl font-bold tabular-nums text-foreground/80 mask-value">R$ {Math.abs(projectBalance).toLocaleString()}</span>
+                                <BarChart3 className={cn("h-3.5 w-3.5 transition-colors", projectBalance >= 0 ? "text-emerald-500/20 group-hover:text-emerald-500/40" : "text-orange-500/20 group-hover:text-orange-500/40")} />
+                            </div>
+                        </div>
 
-                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Trajetória</span>
-                        <span className="text-[10px] font-bold tabular-nums text-primary">{projectProgress}%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden mb-1">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${projectProgress}%` }}
-                            className="h-full bg-primary/60 rounded-full"
-                        />
-                    </div>
-                </div>
+                        <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Trajetória</span>
+                                <span className="text-[10px] font-bold tabular-nums text-primary">{projectProgress}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden mb-1">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${projectProgress}%` }}
+                                    className="h-full bg-primary/60 rounded-full"
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
             {/* Filters Bar with Cycle Selector */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-4">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
@@ -719,14 +733,14 @@ export default function Tarefas() {
                 </div>
             </div>
 
-            {
-                isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-32 gap-4" >
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground animate-pulse font-medium">Carregando...</p>
+            <div className="flex-1 overflow-y-auto custom-scrollbar mt-0">
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center py-20 gap-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
+                        <p className="text-[10px] font-medium tracking-tight text-muted-foreground animate-pulse">Sincronizando tarefas...</p>
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-10">
+                    <div className="flex flex-col gap-4 pb-20">
                         {displayOptions.viewMode === 'board' ? (
                             <>
                                 {scenarios.map((scenario) => {
@@ -1160,11 +1174,11 @@ export default function Tarefas() {
                             />
                         )}
                     </div>
-                )
-            }
-        </div >
+                )}
+            </div>
+        </div>
     );
-}
+};
 
 
 

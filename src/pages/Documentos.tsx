@@ -36,7 +36,12 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 
-const Documentos = () => {
+interface DocumentosProps {
+    hideHeader?: boolean;
+    projectId?: string;
+}
+
+const Documentos = ({ hideHeader, projectId }: DocumentosProps) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeCategory, setActiveCategory] = useState("Todos");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -47,13 +52,18 @@ const Documentos = () => {
     const { documents, projects, isLoading, upload, isUploading, delete: deleteDoc, rename } = useDocuments();
 
     const filtered = useMemo(() => {
-        return documents.filter((doc: Document) => {
+        let baseDocs = documents;
+        if (projectId) {
+            baseDocs = documents.filter((doc: Document) => doc.projectId === projectId);
+        }
+
+        return baseDocs.filter((doc: Document) => {
             const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 doc.projectName.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesCategory = activeCategory === "Todos" || doc.category === activeCategory.replace(/s$/, '');
             return matchesSearch && matchesCategory;
         });
-    }, [documents, searchQuery, activeCategory]);
+    }, [documents, searchQuery, activeCategory, projectId]);
 
     const categories = useMemo(() => {
         const getCount = (cat: string) => documents.filter(d => d.category === cat).length;
@@ -110,15 +120,19 @@ const Documentos = () => {
         <div className="page-container">
             {/* Header Area */}
             <header className="flex items-center justify-between gap-4 mb-8 h-12">
-                <div>
-                    <h1 className="text-2xl font-medium tracking-tight text-foreground">Documentos</h1>
+                <div className="flex items-center gap-4">
+                    {!hideHeader && (
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            {projectId ? "Arquivos" : "Documentos"}
+                        </h1>
+                    )}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto">
                     <Button
                         size="sm"
                         onClick={() => setIsDialogOpen(true)}
-                        className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2"
+                        className="h-9 px-4 rounded-button bg-primary text-primary-foreground shadow-sm gap-2"
                     >
                         <Plus className="h-4 w-4" />
                         Novo Documento
@@ -227,13 +241,13 @@ const Documentos = () => {
                                                             <FileText className="h-5 w-5" />
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="text-[13px] font-semibold text-foreground truncate tracking-tight group-hover/item:text-primary transition-colors">{doc.title}</p>
-                                                            <p className="text-[10px] font-medium text-primary/60 tracking-tight truncate bg-primary/5 px-1.5 py-0.5 rounded inline-block mt-0.5">{doc.projectName}</p>
+                                                            <p className="text-[13px] font-medium text-foreground/90 truncate tracking-tight group-hover/item:text-primary transition-colors">{doc.title}</p>
+                                                            <p className="text-[10px] font-normal text-muted-foreground tracking-tight truncate mt-1">{doc.projectName}</p>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-border text-[9px] font-bold uppercase tracking-widest px-2 h-5">
+                                                    <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-border text-[9px] font-medium uppercase tracking-widest px-2 h-5">
                                                         {doc.category}
                                                     </Badge>
                                                 </td>

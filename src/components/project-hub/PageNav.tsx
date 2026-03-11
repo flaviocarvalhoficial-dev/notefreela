@@ -32,23 +32,25 @@ export const PageNav = ({
                 {/* Single Row: Breadcrumb & Editor Actions */}
                 <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-1.5 text-[11px]">
-                        <button
-                            onClick={() => onSelectPage(null)}
-                            className={cn(
-                                "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors font-medium",
-                                !activePageId
-                                    ? "bg-primary/10 text-primary"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                            )}
-                        >
-                            <Home className="h-3 w-3" />
-                            <span className="max-w-[140px] truncate">{projectName}</span>
-                        </button>
+                        {!activePageId ? (
+                            <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/40 text-muted-foreground/60 font-medium">
+                                <LayoutGrid className="h-3 w-3" />
+                                Visão Geral
+                            </span>
+                        ) : (
+                            <button
+                                onClick={() => onSelectPage(null)}
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors font-medium"
+                            >
+                                <ChevronRight className="h-3 w-3 rotate-180" />
+                                Voltar ao Planejamento
+                            </button>
+                        )}
 
                         {activePageId && activePage && (
                             <>
                                 <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                                <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+                                <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted text-foreground/90 font-medium">
                                     <FileText className="h-3 w-3" />
                                     <span className="max-w-[180px] truncate">
                                         {activePage.title || "Sem título"}

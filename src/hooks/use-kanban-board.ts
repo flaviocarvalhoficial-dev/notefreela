@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { logActivity } from "@/utils/activities";
 import { Task, Column, Scenario, Priority, ColumnId } from "@/types/kanban";
 import { NewTaskValues } from "@/components/tasks/NewTaskDialog";
 import { DEFAULT_SCENARIOS, DEFAULT_COLUMNS, PASTEL_COLORS } from "@/constants/kanban";
@@ -205,6 +206,19 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
             }
             const { error } = await supabase.from("tasks").update(updateData).eq("id", id);
             if (error) throw error;
+
+            // Log activity
+            const { data: task } = await supabase.from("tasks").select("title, project_id").eq("id", id).single();
+            if (task) {
+                const { data: col } = await supabase.from("kanban_columns").select("title").eq("id", column_id as string).single();
+                await logActivity({
+                    title: `Tarefa movida: ${task.title}`,
+                    description: `Movida para a etapa ${col?.title || column_id}`,
+                    type: "status",
+                    projectId: task.project_id || undefined,
+                    metadata: { task_id: id, column_id }
+                });
+            }
         },
         onMutate: async ({ id, column_id, position }) => {
             await queryClient.cancelQueries({ queryKey: ["tasks"] });
@@ -260,6 +274,14 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
                 billing_period: billingPeriod || null
             });
             if (error) throw error;
+
+            await logActivity({
+                title: `Nova tarefa: ${values.title}`,
+                description: `Tarefa criada no projeto`,
+                type: "task",
+                projectId: values.project || undefined,
+                metadata: { project_id: values.project }
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tasks"] });
@@ -467,8 +489,17 @@ export function useKanbanBoard({ projectFilter, searchQuery, priorityFilter, bil
 
     const deleteTaskMutation = useMutation({
         mutationFn: async (id: string) => {
+            const { data: task } = await supabase.from("tasks").select("title, project_id").eq("id", id).single();
             const { error } = await supabase.from("tasks").delete().eq("id", id);
             if (error) throw error;
+
+            if (task) {
+                await logActivity({
+                    title: `Tarefa excluída: ${task.title}`,
+                    type: "task",
+                    projectId: task.project_id || undefined
+                });
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tasks"] });

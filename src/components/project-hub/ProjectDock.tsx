@@ -56,10 +56,11 @@ export const ProjectDock = ({
     onAddPage,
     isOpen,
     onClose,
+    parentTab,
     mode = 'overlay',
     style
-}: ProjectDockProps) => {
-    const [activeTab, setActiveTab] = useState<TabType>('tasks');
+}: ProjectDockProps & { parentTab?: string }) => {
+    const [activeTab, setActiveTab] = useState<TabType>('client');
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [extraProperties, setExtraProperties] = useState<string[]>([]);
     const navigate = useNavigate();
@@ -77,14 +78,19 @@ export const ProjectDock = ({
         }
     };
 
+    // Mapping parent cockpit tabs to dock tabs for mirroring detection
+    const mirroringMap: Record<string, string> = {
+        'producao': 'tasks',
+        'financeiro': 'finance',
+        'arquivos': 'docs',
+        'timeline': 'activity'
+    };
+
     const tabs = [
-        { id: 'tasks', label: 'TAREFAS', icon: CheckSquare, count: tasks.length },
-        { id: 'inbox', label: 'INBOX', icon: Inbox, count: inbox.length },
-        { id: 'finance', label: 'FINANCEIRO', icon: DollarSign, count: finance.length },
-        { id: 'client', label: 'CLIENTE', icon: User, count: project?.client_id ? 1 : 0 },
-        { id: 'docs', label: 'DOCS', icon: FileText, count: documents.length },
-        { id: 'activity', label: 'ATIVIDADE', icon: ActivityIcon, count: activities.length },
-    ];
+        { id: 'client', label: 'Cliente', icon: User, count: project?.client_id ? 1 : 0 },
+        { id: 'inbox', label: 'Capturas', icon: Inbox, count: inbox.length },
+        { id: 'finance', label: 'Financeiro', icon: DollarSign, count: finance.length },
+    ].filter(tab => mirroringMap[parentTab || ''] !== tab.id);
 
     const uiConfig = (project?.services as any[] || []).find(s => s.name === "__ui_config__");
     const metaphor = uiConfig?.metaphor || "roadmap";
@@ -150,7 +156,7 @@ export const ProjectDock = ({
             case 'docs':
                 return <DockDocs documents={documents} pages={pages} onSelectPage={onSelectPage} onAddPage={onAddPage} onInsertReference={onInsertReference} onCreateItem={onCreateItem} />;
             case 'client':
-                return <DockClient project={project} client={client} extraProperties={extraProperties} setExtraProperties={setExtraProperties} updateProject={updateProject} updateClient={updateClient} navigate={navigate} />;
+                return <DockClient project={project} client={client} extraProperties={extraProperties} setExtraProperties={setExtraProperties} updateProject={updateProject} updateClient={updateClient} navigate={navigate} onClose={onClose} />;
             case 'activity':
                 return <DockActivity activities={activities} />;
             default:
@@ -177,73 +183,68 @@ export const ProjectDock = ({
                         exit={mode === 'overlay' ? { x: '100%' } : { opacity: 0 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
                         className={cn(
-                            "bg-card flex flex-row h-full transition-all duration-300 overflow-hidden",
+                            "bg-card flex flex-col h-full transition-all duration-300 overflow-hidden",
                             mode === 'overlay'
                                 ? "fixed right-0 top-0 bottom-0 w-80 sm:w-[500px] shadow-2xl z-50 border-l border-border"
                                 : "relative flex h-full bg-card"
                         )}
                         style={style}
                     >
-                        {/* Tab Bar (Left Vertical) */}
-                        <div className="w-[52px] border-r border-border flex flex-col items-center py-4 bg-muted/10 shrink-0">
-                            <div className="flex flex-col gap-1 w-full px-1.5 flex-1">
-                                {tabs.map(tab => {
-                                    const Icon = tab.icon;
-                                    const isActive = activeTab === tab.id;
-                                    return (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => setActiveTab(tab.id as TabType)}
-                                            className={cn(
-                                                "relative w-full aspect-square rounded-lg flex items-center justify-center transition-all group",
-                                                isActive ? "bg-primary/10 text-primary shadow-glow-sm" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                                            )}
-                                            title={tab.label}
-                                        >
-                                            <Icon className={cn("w-[18px] h-[18px]", isActive && "stroke-[2.5px]")} />
-                                            {tab.count > 0 && (
-                                                <span className={cn(
-                                                    "absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full border-2 border-card flex items-center justify-center text-[7px] font-bold",
-                                                    isActive ? "bg-primary text-primary-foreground" : "bg-muted-foreground text-background"
-                                                )}>
-                                                    {tab.count}
-                                                </span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
+                        {/* Header Section with Context Metaphor */}
+                        <div className="relative h-32 bg-gradient-to-br from-muted/20 via-background to-background border-b border-border flex flex-col justify-end px-6 pb-4 overflow-hidden group shrink-0">
+                            {/* Metaphor Background SVG */}
+                            <div className="absolute inset-0 flex items-center justify-center -translate-y-2 pointer-events-none">
+                                {getMetaphorContent()}
                             </div>
 
-                            <button
-                                onClick={onClose}
-                                className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors mt-auto mb-2"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-
-                        {/* Content Area */}
-                        <div className="flex-1 overflow-hidden flex flex-col min-w-0">
-                            {/* Header Section with Context Metaphor */}
-                            <div className="relative h-28 bg-gradient-to-br from-muted/20 via-background to-background border-b border-border flex items-end px-6 pb-5 overflow-hidden group shrink-0">
-                                {/* Metaphor Background SVG */}
-                                <div className="absolute inset-0 flex items-center justify-center -translate-y-2 pointer-events-none">
-                                    {getMetaphorContent()}
-                                </div>
-
-                                <div className="relative z-10 flex flex-col gap-1">
+                            <div className="relative z-10 flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-bold tracking-widest text-primary uppercase">CONTEXTO</span>
-                                        <div className="h-1 w-1 rounded-full bg-primary/30" />
+                                        <div className="h-1.5 w-1.5 rounded-full bg-primary/20" />
                                         <span className="text-[10px] font-medium text-muted-foreground uppercase">{activeTab}</span>
                                     </div>
-                                    <p className="text-[10px] text-muted-foreground/60 font-medium tracking-tight">Informações e ações do projeto atual</p>
+                                    <button
+                                        onClick={onClose}
+                                        className="w-7 h-7 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
+                                    {tabs.map(tab => {
+                                        const Icon = tab.icon;
+                                        const isActive = activeTab === tab.id;
+                                        return (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id as TabType)}
+                                                className={cn(
+                                                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all whitespace-nowrap",
+                                                    isActive
+                                                        ? "bg-primary/10 text-primary"
+                                                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                                )}
+                                            >
+                                                <Icon className={cn("w-3 h-3", isActive && "stroke-[2.5px]")} />
+                                                {tab.label}
+                                                {tab.count > 0 && (
+                                                    <span className={cn(
+                                                        "ml-0.5 px-1 rounded-sm text-[8px] font-bold",
+                                                        isActive ? "bg-primary/20" : "bg-muted text-muted-foreground"
+                                                    )}>
+                                                        {tab.count}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="flex-1 overflow-y-auto custom-scrollbar bg-card/50">
-                                {renderContent()}
-                            </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar bg-card/50">
+                            {renderContent()}
                         </div>
                     </motion.div>
                 </>

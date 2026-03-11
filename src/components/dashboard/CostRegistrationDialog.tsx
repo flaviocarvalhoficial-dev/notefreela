@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { logActivity } from "@/utils/activities";
 
 interface Project {
     id: string;
@@ -113,6 +114,14 @@ export function CostRegistrationDialog({
                     .from("project_costs")
                     .insert(payload);
                 if (error) throw error;
+
+                await logActivity({
+                    title: `Custo registrado: ${title}`,
+                    description: `Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(amount))}`,
+                    type: "comment",
+                    projectId: projectId === "general" ? undefined : projectId,
+                    metadata: { amount, category }
+                });
             }
         },
         onSuccess: () => {

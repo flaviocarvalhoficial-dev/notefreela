@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { parseISO, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { logActivity } from "@/utils/activities";
 
 export interface Document {
     id: string;
@@ -101,6 +102,14 @@ export function useDocuments() {
                 });
 
             if (dbError) throw dbError;
+
+            await logActivity({
+                title: `Arquivo enviado: ${name}`,
+                description: `Documento adicionado à categoria ${category}`,
+                type: "comment",
+                projectId: projectId,
+                metadata: { category, doc_name: name }
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["documents-all"] });
