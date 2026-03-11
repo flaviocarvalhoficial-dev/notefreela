@@ -134,11 +134,11 @@ export function DroppableColumn({
                 )}
 
                 <header className={cn(
-                    "flex items-start justify-between gap-4 mb-5 pb-3 pt-2",
-                    variant === 'card' ? "border-b border-border" : "mb-3"
+                    "flex items-center justify-between gap-4 mb-4 pb-2 pt-1",
+                    variant === 'card' ? "border-b border-border/40" : "mb-3"
                 )}>
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 group/title">
+                    <div className="flex-1 flex items-center gap-2">
+                        <div className="flex items-center gap-2 group/title min-w-0">
                             {isEditing ? (
                                 <input
                                     autoFocus
@@ -146,13 +146,13 @@ export function DroppableColumn({
                                     onChange={(e) => setValue(e.target.value)}
                                     onBlur={handleBlur}
                                     onKeyDown={handleKeyDown}
-                                    className="bg-transparent border-none p-0 m-0 text-sm font-medium tracking-tight focus:ring-0 w-full outline-none"
+                                    className="bg-transparent border-none p-0 m-0 text-[11px] font-bold uppercase tracking-widest focus:ring-0 w-full outline-none text-foreground"
                                 />
                             ) : (
                                 <h2
                                     className={cn(
-                                        "text-sm font-medium tracking-tight cursor-pointer hover:text-primary transition-colors flex items-center gap-2",
-                                        variant === 'minimal' && "text-muted-foreground text-[11px]  tracking-tight"
+                                        "text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:text-primary transition-colors flex items-center gap-2 truncate text-muted-foreground/80",
+                                        variant === 'minimal' && "text-[9px]  tracking-tight"
                                     )}
                                     onClick={() => setIsEditing(true)}
                                 >
@@ -160,39 +160,38 @@ export function DroppableColumn({
                                     {title}
                                 </h2>
                             )}
-                            {variant === 'card' && <Badge variant="secondary" className="text-[10px] h-4 py-0 px-1.5 glass-light shrink-0">{count}</Badge>}
+                            {variant === 'card' && <span className="text-[10px] font-bold tabular-nums text-muted-foreground/30 ml-auto shrink-0">{count}</span>}
                         </div>
-                        {variant === 'card' && <p className="text-[10px] text-muted-foreground mt-1 font-medium opacity-50">{hint}</p>}
                     </div>
 
-                    <div className="flex items-center gap-0.5 group-hover:opacity-100 opacity-0 transition-opacity">
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         {canMoveLeft && (
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-muted-foreground/40 hover:text-primary hover:bg-primary/10"
+                                className="h-6 w-6 text-muted-foreground/20 hover:text-primary hover:bg-primary/5"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onMoveLeft?.();
                                 }}
                             >
-                                <ChevronLeft className="h-3.5 w-3.5" />
+                                <ChevronLeft className="h-3 w-3" />
                             </Button>
                         )}
-                        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded text-muted-foreground/30 hover:text-muted-foreground transition-colors">
-                            <GripVertical className="h-4 w-4" />
+                        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted/30 rounded text-muted-foreground/10 hover:text-muted-foreground/40 transition-colors">
+                            <GripVertical className="h-3.5 w-3.5" />
                         </div>
                         {canMoveRight && (
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-muted-foreground/40 hover:text-primary hover:bg-primary/10"
+                                className="h-6 w-6 text-muted-foreground/20 hover:text-primary hover:bg-primary/5"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onMoveRight?.();
                                 }}
                             >
-                                <ChevronRight className="h-3.5 w-3.5" />
+                                <ChevronRight className="h-3 w-3" />
                             </Button>
                         )}
                     </div>
@@ -291,13 +290,13 @@ export function DroppableColumn({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                        "w-full mt-4 justify-start gap-2 h-9 text-muted-foreground hover:text-primary transition-colors",
-                        variant === 'card' ? "border-t border-border pt-4" : "mt-2 opacity-50 hover:opacity-100"
+                        "w-full mt-4 justify-start gap-2 h-8 text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-all opacity-0 group-hover:opacity-100",
+                        variant === 'card' ? "border-t border-border/40 pt-4 rounded-none h-auto pb-0" : "mt-2"
                     )}
                     onClick={onAddTask}
                 >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span className="text-[11px] font-medium">Adicionar Item</span>
+                    <Plus className="h-3 w-3" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Novo Item</span>
                 </Button>
             </section>
         </div>

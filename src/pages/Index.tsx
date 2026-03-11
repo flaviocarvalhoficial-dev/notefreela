@@ -47,37 +47,20 @@ const Index = () => {
     return (
         <div className="page-container h-full overflow-y-auto custom-scrollbar">
             {/* Standard Header Section - Matching other pages */}
-            <header className="heading-container">
-                <div className="flex items-center gap-3">
-                    <div className="h-1 w-6 bg-primary rounded-full" />
-                    <span className="text-[10px] font-medium tracking-tight text-primary">Workspace / Dashboard</span>
+            <header className="flex items-center justify-between gap-4 mb-8 h-12">
+                <div>
+                    <h1 className="text-2xl font-medium tracking-tight text-foreground">Painel de Controle</h1>
                 </div>
 
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-medium tracking-tight text-foreground">Painel de Controle</h1>
-                        <p className="text-muted-foreground font-normal text-sm leading-relaxed">Visão consolidada da sua operação freelancer</p>
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 px-4 rounded-lg bg-card shadow-sm gap-2"
-                            onClick={() => navigate('/atividades')}
-                        >
-                            <Activity className="h-3.5 w-3.5" />
-                            Histórico
-                        </Button>
-                        <Button
-                            size="sm"
-                            className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2"
-                            onClick={() => navigate('/projetos')}
-                        >
-                            <Briefcase className="h-3.5 w-3.5" />
-                            Novo Projeto
-                        </Button>
-                    </div>
+                <div className="flex items-center gap-3 shrink-0">
+                    <Button
+                        size="sm"
+                        className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2"
+                        onClick={() => navigate('/projetos')}
+                    >
+                        <Plus className="h-3.5 w-3.5" />
+                        Novo Projeto
+                    </Button>
                 </div>
             </header>
 
@@ -90,10 +73,10 @@ const Index = () => {
                     className="bento-card p-5 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-primary/5 rounded-xl border border-primary/10">
-                            <Briefcase className="h-4 w-4 text-primary" />
+                        <div className="p-2 bg-muted/10 rounded-xl border border-border/40">
+                            <Briefcase className="h-4 w-4 text-muted-foreground/60" />
                         </div>
-                        <Badge variant="secondary" className="text-[10px] h-5 bg-primary/5 text-primary border-none">
+                        <Badge variant="outline" className="text-[10px] h-5 bg-muted/5 text-muted-foreground border-border/40">
                             Ativos
                         </Badge>
                     </div>
@@ -110,10 +93,10 @@ const Index = () => {
                     className="bento-card p-5 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-primary/5 rounded-xl border border-primary/10">
-                            <CheckSquare className="h-4 w-4 text-primary" />
+                        <div className="p-2 bg-muted/10 rounded-xl border border-border/40">
+                            <CheckSquare className="h-4 w-4 text-muted-foreground/60" />
                         </div>
-                        <span className="text-[10px] font-medium text-primary">{completionRate}%</span>
+                        <span className="text-[10px] font-medium text-muted-foreground/60">{completionRate}%</span>
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Tarefas</p>
@@ -131,10 +114,10 @@ const Index = () => {
                     className="bento-card p-5 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-primary/5 rounded-xl border border-primary/10">
-                            <Users className="h-4 w-4 text-primary" />
+                        <div className="p-2 bg-muted/10 rounded-xl border border-border/40">
+                            <Users className="h-4 w-4 text-muted-foreground/60" />
                         </div>
-                        <div className="h-2 w-2 rounded-full bg-primary/40 animate-pulse" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/20" />
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Clientes</p>
@@ -148,14 +131,11 @@ const Index = () => {
                     transition={{ delay: 0.4 }}
                     className="bento-card p-5 flex flex-col justify-between overflow-hidden relative"
                 >
-                    <div className="absolute top-0 right-0 p-8 transform translate-x-4 -translate-y-4 opacity-5 text-primary">
-                        <TrendingUp className="h-24 w-24" />
-                    </div>
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-primary/5 rounded-xl border border-primary/10">
-                            <TrendingUp className="h-4 w-4 text-primary" />
+                        <div className="p-2 bg-muted/10 rounded-xl border border-border/40">
+                            <TrendingUp className="h-4 w-4 text-muted-foreground/60" />
                         </div>
-                        <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
+                        <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/30" />
                     </div>
                     <div>
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Faturamento Est.</p>
@@ -176,8 +156,8 @@ const Index = () => {
                         <div className="flex items-center justify-between mb-4">
                             <CollapsibleTrigger asChild>
                                 <div className="flex items-center gap-3 cursor-pointer group">
-                                    <div className="p-1 rounded-md bg-muted/20 group-hover:bg-primary/10 transition-colors">
-                                        {isTimelineOpen ? <Minus className="h-3.5 w-3.5 text-primary/40" /> : <Plus className="h-3.5 w-3.5 text-primary/40" />}
+                                    <div className="p-1 rounded-md transition-colors">
+                                        {isTimelineOpen ? <Minus className="h-3 w-3 text-muted-foreground/40" /> : <Plus className="h-3 w-3 text-muted-foreground/40" />}
                                     </div>
                                     <h3 className="text-lg font-semibold tracking-tight">Cronograma de Entrega</h3>
                                 </div>
@@ -208,8 +188,8 @@ const Index = () => {
                     <div className="flex items-center justify-between mb-6">
                         <CollapsibleTrigger asChild>
                             <div className="flex items-center gap-3 cursor-pointer group">
-                                <div className="p-1 rounded-md bg-muted/20 group-hover:bg-primary/10 transition-colors">
-                                    {isActivitiesOpen ? <Minus className="h-3.5 w-3.5 text-primary/40" /> : <Plus className="h-3.5 w-3.5 text-primary/40" />}
+                                <div className="p-1 rounded-md transition-colors">
+                                    {isActivitiesOpen ? <Minus className="h-3 w-3 text-muted-foreground/40" /> : <Plus className="h-3 w-3 text-muted-foreground/40" />}
                                 </div>
                                 <h3 className="text-lg font-semibold tracking-tight">Atividades Recentes</h3>
                             </div>

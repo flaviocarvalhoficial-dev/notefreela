@@ -21,6 +21,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 export function Header() {
     const { theme, setTheme } = useTheme();
@@ -92,6 +94,57 @@ export function Header() {
         navigate("/auth");
     };
 
+    const { data: projectBreadcrumb } = useQuery({
+        queryKey: ["project-breadcrumb", pathname],
+        queryFn: async () => {
+            const match = pathname.match(/\/projetos\/([a-zA-Z0-9-]+)/);
+            if (!match) return null;
+            const { data } = await supabase.from("projects").select("name").eq("id", match[1]).single();
+            return data;
+        },
+        enabled: pathname.includes("/projetos/")
+    });
+
+    const getBreadcrumbs = () => {
+        if (isDashboard) return null;
+
+        const parts = pathname.split("/").filter(Boolean);
+        const breadcrumbs = [];
+
+        // Main category
+        const mainCategory = parts[0];
+        const categoryLabels: Record<string, string> = {
+            "projetos": "Projetos",
+            "tarefas": "Tarefas",
+            "agenda": "Agenda",
+            "clientes": "Clientes",
+            "caixa-entrada": "Caixa de Entrada",
+            "financeiro": "Financeiro",
+            "configuracoes": "Configurações",
+            "empresa": "Minha Empresa",
+            "atividades": "Atividades",
+            "assinaturas": "Assinaturas"
+        };
+
+        if (categoryLabels[mainCategory]) {
+            breadcrumbs.push({
+                label: categoryLabels[mainCategory],
+                path: `/${mainCategory}`
+            });
+        }
+
+        // Sub-page (e.g. Project Name)
+        if (mainCategory === "projetos" && parts[1] && projectBreadcrumb) {
+            breadcrumbs.push({
+                label: projectBreadcrumb.name,
+                path: pathname
+            });
+        }
+
+        return breadcrumbs;
+    };
+
+    const breadcrumbs = getBreadcrumbs();
     const userInitial = profile?.full_name?.[0] || user?.email?.[0] || "U";
     const userName = profile?.full_name || user?.email?.split("@")[0] || "Usuário";
 
@@ -99,44 +152,69 @@ export function Header() {
         <header className="sticky top-0 w-full h-16 border-b border-border glass-light z-[40]">
             <div className="w-full h-full flex items-center justify-between px-8 md:px-12 lg:px-20 transition-all duration-300">
 
-                {/* Left Area: Welcome Message (Photo and Name in Line) */}
+                {/* Left Area: Welcome or Breadcrumbs */}
                 <div className="flex items-center gap-4">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-10 gap-2.5 hover:bg-muted/20 transition-all pl-0 pr-3 rounded-xl group flex items-center">
-                                <Avatar className="h-8 w-8 border border-border shadow-sm shrink-0">
-                                    <AvatarImage src={profile?.avatar_url} className="object-cover" />
-                                    <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-[10px] font-semibold text-white">
-                                        {userInitial}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="h-full flex items-center gap-2 whitespace-nowrap">
-                                    <span className="text-xs text-muted-foreground hidden lg:inline">Bem-vindo(a),</span>
-                                    <span className="text-sm font-semibold truncate max-w-[150px]">{userName.split(' ')[0]}</span>
-                                    <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+                    {isDashboard ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-10 gap-2.5 hover:bg-muted/20 transition-all pl-0 pr-3 rounded-xl group flex items-center">
+                                    <Avatar className="h-8 w-8 border border-border shadow-sm shrink-0">
+                                        <AvatarImage src={profile?.avatar_url} className="object-cover" />
+                                        <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-[10px] font-semibold text-white">
+                                            {userInitial}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="h-full flex items-center gap-2 whitespace-nowrap">
+                                        <span className="text-xs text-muted-foreground hidden lg:inline">Bem-vindo(a),</span>
+                                        <span className="text-sm font-semibold truncate max-w-[150px]">{userName.split(' ')[0]}</span>
+                                        <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    </div>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="glass border-border w-56 z-[60] mt-1">
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium leading-none">{profile?.full_name || userName}</p>
+                                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-border/50" />
+                                <DropdownMenuItem className="cursor-pointer gap-2 py-2" onClick={() => navigate("/configuracoes")}>
+                                    <UserIcon className="h-4 w-4" /> Ver Perfil
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer gap-2 py-2" onClick={() => navigate("/configuracoes")}>
+                                    <SettingsIcon className="h-4 w-4" /> Configurações
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-border/50" />
+                                <DropdownMenuItem className="cursor-pointer gap-2 py-2 text-destructive focus:text-destructive" onClick={handleSignOut}>
+                                    <LogOut className="h-4 w-4" /> Sair da conta
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <nav className="flex items-center gap-2 text-[13px] font-medium tracking-tight">
+                            <span
+                                className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                                onClick={() => navigate("/")}
+                            >
+                                NoteFreela
+                            </span>
+                            {breadcrumbs?.map((crumb, i) => (
+                                <div key={crumb.path} className="flex items-center gap-2">
+                                    <ChevronDown className="h-3 w-3 text-muted-foreground -rotate-90 shrink-0" />
+                                    <span
+                                        className={cn(
+                                            "transition-colors cursor-pointer",
+                                            i === breadcrumbs.length - 1 ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                        onClick={() => navigate(crumb.path)}
+                                    >
+                                        {crumb.label}
+                                    </span>
                                 </div>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="glass border-border w-56 z-[60] mt-1">
-                            <DropdownMenuLabel className="font-normal">
-                                <div className="flex flex-col space-y-1">
-                                    <p className="text-sm font-medium leading-none">{profile?.full_name || userName}</p>
-                                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                                </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator className="bg-border/50" />
-                            <DropdownMenuItem className="cursor-pointer gap-2 py-2" onClick={() => navigate("/configuracoes")}>
-                                <UserIcon className="h-4 w-4" /> Ver Perfil
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer gap-2 py-2" onClick={() => navigate("/configuracoes")}>
-                                <SettingsIcon className="h-4 w-4" /> Configurações
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-border/50" />
-                            <DropdownMenuItem className="cursor-pointer gap-2 py-2 text-destructive focus:text-destructive" onClick={handleSignOut}>
-                                <LogOut className="h-4 w-4" /> Sair da conta
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                            ))}
+                        </nav>
+                    )}
                 </div>
 
                 <div className="flex-1 flex justify-center px-4 max-w-lg">
@@ -206,5 +284,3 @@ export function Header() {
         </header>
     );
 }
-
-

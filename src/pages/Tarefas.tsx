@@ -403,16 +403,9 @@ export default function Tarefas() {
 
         return (
             <div className="page-container">
-                <header className="heading-container">
-                    <div className="flex items-center gap-3">
-                        <div className="h-1 w-6 bg-primary rounded-full" />
-                        <span className="text-[10px] font-medium  tracking-tight text-primary">Workspace / Kanban central</span>
-                    </div>
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-medium tracking-tight text-foreground">Cockpit de Fluxo</h1>
-                        <p className="text-muted-foreground font-normal text-sm max-w-2xl leading-relaxed">
-                            Selecione a diretriz do projeto para ativar o workspace. Cada universo de trabalho possui seu próprio Kanban estruturado.
-                        </p>
+                <header className="flex items-center justify-between gap-4 mb-8 h-12">
+                    <div>
+                        <h1 className="text-2xl font-medium tracking-tight text-foreground">Kanban Central</h1>
                     </div>
                 </header>
 
@@ -422,91 +415,85 @@ export default function Tarefas() {
                         <p className="text-muted-foreground animate-pulse font-medium tracking-tight  text-[10px]">Sincronizando Fluxos...</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {(fullProjects as any[]).map((p) => {
                             const counts = taskCountsByProject[p.id] || { total: 0, open: 0 };
                             const progress = p.progress || 0;
                             const statusKey = p.status || "planning";
 
                             return (
-                                <motion.button
+                                <motion.div
                                     key={p.id}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    whileHover={{ y: -2, boxShadow: "var(--shadow-hover)" }}
                                     onClick={() => handleProjectFilterChange(p.id)}
-                                    className="group relative text-left p-6 rounded-lg border border-border bg-card shadow-sm transition-all duration-300 cursor-pointer overflow-hidden"
+                                    className="group relative flex flex-col bg-card border border-border/60 hover:border-primary/40 rounded-xl transition-all duration-300 cursor-pointer overflow-hidden p-0 h-full"
                                 >
-                                    {/* Roadmap SVG Metaphor */}
-                                    <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity -mr-8 -mt-8 rotate-12">
-                                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M10 20C40 20 60 80 90 80" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
-                                            <circle cx="10" cy="20" r="4" fill="currentColor" />
-                                            <circle cx="50" cy="50" r="4" fill="currentColor" />
-                                            <circle cx="90" cy="80" r="6" fill="hsl(var(--primary))" />
-                                        </svg>
-                                    </div>
+                                    {/* Blueprint Texture Background (Subtle) */}
+                                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:20px_20px]" />
 
-                                    <div className="flex items-start gap-4 mb-6 relative z-10">
-                                        <div className="h-14 w-14 rounded-md bg-primary/5 flex items-center justify-center text-primary text-2xl font-medium border border-border transition-transform">
-                                            {p.avatar_emoji ? (
-                                                <span className="text-xl">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
-                                            ) : (
-                                                <Briefcase className="h-6 w-6" />
-                                            )}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2 mb-1.5">
-                                                <div className={cn("w-2 h-2 rounded-full", statusColors[statusKey] || "bg-muted")} />
-                                                <span className="text-[9px] font-medium text-muted-foreground  tracking-tight">
-                                                    {statusLabels[statusKey] || statusKey}
-                                                </span>
+                                    <div className="p-5 flex flex-col flex-1 relative z-10">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="h-10 w-10 rounded-lg bg-primary/5 border border-border/40 flex items-center justify-center text-primary text-xl font-medium shrink-0 group-hover:scale-105 transition-transform">
+                                                {p.avatar_emoji ? (
+                                                    <span className="text-lg">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
+                                                ) : (
+                                                    <Briefcase className="h-5 w-5" />
+                                                )}
                                             </div>
-                                            <h3 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
-                                            <p className="text-[11px] font-normal text-muted-foreground line-clamp-1 opacity-70">
+                                            <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-wider h-5 px-2 border-border/60", statusColors[statusKey] || statusColors.planning)}>
+                                                {statusLabels[statusKey] || statusKey}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="mb-4 flex-1">
+                                            <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1">{p.name}</h3>
+                                            <p className="text-[10px] text-muted-foreground line-clamp-1 opacity-80 font-medium">
                                                 {p.client_name || "Mapeamento Direto"}
                                             </p>
                                         </div>
+
+                                        {/* Micro KPI Row */}
+                                        <div className="flex items-center gap-4 mb-5 pb-4 border-b border-border/40">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter leading-none mb-1">Ação</span>
+                                                <span className="text-xs font-semibold tabular-nums text-primary">{counts.open}</span>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter leading-none mb-1">Total</span>
+                                                <span className="text-xs font-semibold tabular-nums text-foreground/70">{counts.total}</span>
+                                            </div>
+                                            <div className="flex flex-col ml-auto text-right">
+                                                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter leading-none mb-1">Fee</span>
+                                                <span className="text-xs font-semibold tabular-nums text-foreground/40">{p.value ? `R$ ${p.value.toLocaleString()}` : '--'}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Trajetória (Progress) */}
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex items-center gap-1.5 opacity-60">
+                                                    <div className="h-1 w-3 bg-primary/40 rounded-full" />
+                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Trajetória</span>
+                                                </div>
+                                                <span className="text-[10px] font-bold tabular-nums text-primary">{progress}%</span>
+                                            </div>
+                                            <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${progress}%` }}
+                                                    className="h-full bg-primary/70 rounded-full"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* Stats Row */}
-                                    <div className="grid grid-cols-2 gap-3 mb-3 relative z-10">
-                                        <div className="bg-muted/10 p-2.5 rounded-md border border-border">
-                                            <p className="text-[9px] font-medium text-muted-foreground  mb-1">Total</p>
-                                            <p className="text-sm font-medium">{counts.total} Itens</p>
-                                        </div>
-                                        <div className="bg-primary/5 p-2.5 rounded-md border border-border">
-                                            <p className="text-[9px] font-medium text-primary/40  mb-1">Ação</p>
-                                            <p className="text-sm font-medium text-primary">{counts.open} Pendentes</p>
-                                        </div>
+                                    {/* Action Hover (Micro-Transition) */}
+                                    <div className="px-5 py-2.5 bg-muted/5 border-t border-border/40 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-[9px] font-bold text-primary tracking-widest uppercase">Abrir Cockpit</span>
+                                        <Plus className="h-3 w-3 text-primary" />
                                     </div>
-
-                                    {/* Finance Row - Added for "numbers referente ao projeto" */}
-                                    <div className="mb-6 bg-secondary/30 p-2.5 rounded-md border border-border flex justify-between items-center relative z-10">
-                                        <div className="flex flex-col">
-                                            <p className="text-[8px] font-medium text-muted-foreground  leading-none">Investimento</p>
-                                            <p className="text-[11px] font-medium tracking-tight mask-value">{p.value ? `R$ ${p.value.toLocaleString()}` : 'Sob demanda'}</p>
-                                        </div>
-                                        <Badge variant="outline" className="h-5 text-[8px] bg-primary/5 text-primary font-medium border-primary">
-                                            ROI Focus
-                                        </Badge>
-                                    </div>
-
-                                    {/* Progress */}
-                                    <div className="space-y-2 relative z-10">
-                                        <div className="flex justify-between items-center text-[10px] font-medium text-muted-foreground ">
-                                            <span>Trajetória</span>
-                                            <span className="text-primary font-medium">{progress}%</span>
-                                        </div>
-                                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${progress}%` }}
-                                                className="h-full bg-muted-foreground/30"
-                                            />
-                                        </div>
-                                    </div>
-                                </motion.button>
+                                </motion.div>
                             );
                         })}
                     </div>
@@ -518,75 +505,48 @@ export default function Tarefas() {
     // ═══════ KANBAN BOARD (project selected) ═══════
     return (
         <div className="page-container">
-            <header className="heading-container">
-                <div className="flex items-center gap-3">
-                    <div className="h-1 w-6 bg-primary rounded-full" />
-                    <span className="text-[10px] font-medium  tracking-tight text-primary">Workspace / Kanban estruturado</span>
+            <header className="flex items-center justify-between gap-4 mb-8 h-12">
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 rounded-lg bg-secondary hover:bg-primary/5 hover:text-primary transition-all border border-border shrink-0 shadow-sm"
+                        onClick={() => handleProjectFilterChange("all")}
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                        <h1 className="text-2xl font-medium tracking-tight text-foreground">
+                            {selectedProjectData?.name || "Tarefas"}
+                        </h1>
+                    </div>
                 </div>
 
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-6">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-12 w-12 rounded-md bg-muted hover:bg-primary/5 hover:text-primary transition-all border border-border shrink-0 shadow-sm"
-                            onClick={() => handleProjectFilterChange("all")}
-                        >
-                            <ArrowLeft className="h-5 w-5" />
-                        </Button>
-                        <div className="space-y-1">
-                            <h1 className="text-3xl font-medium tracking-tight text-foreground flex items-center gap-4">
-                                {selectedProjectData?.name || "Tarefas"}
-                                {projectFilter !== 'all' && (
-                                    <Badge variant="outline" className="text-[10px] font-medium bg-primary/5 text-primary border-border rounded-md">
-                                        Projeto: {selectedProjectData?.name}
-                                    </Badge>
-                                )}
-                                {projectFilter === 'all' && (
-                                    <Badge variant="outline" className="text-[10px] font-medium bg-primary/5 text-primary border-border rounded-md ">Global</Badge>
-                                )}
-                            </h1>
-                            <p className="text-muted-foreground font-normal text-sm leading-relaxed">Esteira de produção modular para execução de metas e prazos.</p>
-                        </div>
-                    </div>
+                <div className="flex items-center gap-3">
+                    <TaskDisplaySettings
+                        options={displayOptions}
+                        onChange={setDisplayOptions}
+                    />
 
-                    <div className="flex items-center gap-4">
-                        {/* Metáfora Visual: Esteira de Produção SVG */}
-                        <div className="hidden xl:flex items-center gap-4 bg-muted p-3 rounded-2xl border border-border">
-                            <svg width="120" height="30" viewBox="0 0 120 30" fill="none" className="opacity-40">
-                                <rect x="5" y="5" width="25" height="20" rx="3" fill="currentColor" className="text-muted-foreground" />
-                                <rect x="45" y="5" width="25" height="20" rx="3" fill="currentColor" className="text-muted-foreground" />
-                                <rect x="85" y="5" width="25" height="20" rx="3" fill="hsl(var(--primary))" className="opacity-40" />
-                                <line x1="30" y1="15" x2="45" y2="15" stroke="currentColor" className="text-muted-foreground" strokeWidth="1" strokeDasharray="2 2" />
-                                <line x1="70" y1="15" x2="85" y2="15" stroke="currentColor" className="text-muted-foreground" strokeWidth="1" strokeDasharray="2 2" />
-                            </svg>
-                        </div>
-
-                        <TaskDisplaySettings
-                            options={displayOptions}
-                            onChange={setDisplayOptions}
-                        />
-
-                        <NewTaskDialog
-                            projects={projects}
-                            onCreate={(values) => {
-                                mutations.createTask({
-                                    title: values.title,
-                                    priority: values.priority,
-                                    due: values.due,
-                                    assignee: values.assignee,
-                                    project: values.project === 'none' ? undefined : (values.project || undefined)
-                                });
-                            }}
-                            defaultProjectId={projectFilter !== 'all' ? projectFilter : undefined}
-                            trigger={
-                                <Button className="font-medium px-6">
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Nova Tarefa
-                                </Button>
-                            }
-                        />
-                    </div>
+                    <NewTaskDialog
+                        projects={projects}
+                        onCreate={(values) => {
+                            mutations.createTask({
+                                title: values.title,
+                                priority: values.priority,
+                                due: values.due,
+                                assignee: values.assignee,
+                                project: values.project === 'none' ? undefined : (values.project || undefined)
+                            });
+                        }}
+                        defaultProjectId={projectFilter !== 'all' ? projectFilter : undefined}
+                        trigger={
+                            <Button size="sm" className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2">
+                                <Plus className="h-4 w-4" />
+                                Nova Tarefa
+                            </Button>
+                        }
+                    />
                 </div>
             </header>
 
@@ -613,137 +573,151 @@ export default function Tarefas() {
             )}
 
             {/* Indicators Row - Refined with Financial Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shrink-0">
-                        <LayoutGrid className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 opacity-50 truncate">Backlog Total</p>
-                        <p className="text-xl font-medium tabular-nums text-foreground">{tasksTotal}</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
+                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Backlog Total</span>
+                    <div className="flex items-end justify-between">
+                        <span className="text-xl font-bold tabular-nums text-foreground/80">{tasksTotal}</span>
+                        <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground/20 group-hover:text-primary/40 transition-colors" />
                     </div>
                 </div>
-                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shrink-0">
-                        <AlertCircle className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 opacity-50 truncate">Sprint Ativa</p>
-                        <p className="text-xl font-medium tabular-nums text-foreground">{tasksOpen}</p>
+                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
+                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Sprint Ativa</span>
+                    <div className="flex items-end justify-between">
+                        <span className="text-xl font-bold tabular-nums text-foreground/80">{tasksOpen}</span>
+                        <AlertCircle className="h-3.5 w-3.5 text-primary/20 group-hover:text-primary transition-colors" />
                     </div>
                 </div>
-                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-all shrink-0">
-                        <Zap className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 opacity-50 truncate">Gargalos</p>
-                        <p className="text-xl font-medium tabular-nums text-foreground">{tasksOverdue}</p>
+                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
+                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Gargalos</span>
+                    <div className="flex items-end justify-between">
+                        <span className="text-xl font-bold tabular-nums text-orange-500/80">{tasksOverdue}</span>
+                        <Zap className="h-3.5 w-3.5 text-orange-500/20 group-hover:text-orange-500/40 transition-colors" />
                     </div>
                 </div>
 
-                {/* Financial Stats */}
-                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 flex items-center justify-center text-primary shrink-0">
-                        <FolderKanban className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-[8px] font-medium text-primary/60 tracking-tight mb-0.5 truncate">Valor Total</p>
-                        <p className="text-xl font-medium tabular-nums text-foreground tracking-tight mask-value">R$ {projectValue.toLocaleString()}</p>
-                    </div>
-                </div>
-
-                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 flex items-center justify-center text-foreground group-hover:text-primary transition-all shrink-0">
-                        <BarChart3 className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-[8px] font-medium text-muted-foreground tracking-tight mb-0.5 truncate">{projectBalance >= 0 ? 'Saldo Liq.' : 'Custo'}</p>
-                        <p className={cn("text-xl font-medium tabular-nums tracking-tight mask-value", projectBalance >= 0 ? "text-foreground" : "text-orange-500/80")}>
-                            R$ {Math.abs(projectBalance).toLocaleString()}
-                        </p>
+                {/* Financial Stats - Sleek Mode */}
+                <div className="bg-primary/5 border border-primary/10 p-3 rounded-lg flex flex-col justify-between hover:bg-primary/[0.08] transition-all group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-12 h-12 bg-primary/5 rounded-bl-full -mr-6 -mt-6 pointer-events-none" />
+                    <span className="text-[9px] font-bold text-primary/40 uppercase tracking-tighter mb-2">Valor Projeto</span>
+                    <div className="flex items-end justify-between">
+                        <span className="text-xl font-bold tabular-nums text-primary mask-value">R$ {projectValue.toLocaleString()}</span>
+                        <FolderKanban className="h-3.5 w-3.5 text-primary/30" />
                     </div>
                 </div>
 
-                <div className="bg-card border border-border p-4 rounded-lg flex items-center gap-3 hover:shadow-sm transition-all group lg:col-span-1">
-                    <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center text-muted-foreground shadow-sm shrink-0">
-                        <Settings2 className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-0.5">
-                            <p className="text-[8px] font-medium text-muted-foreground  tracking-tight opacity-50 truncate">Trajetória</p>
-                            <span className="text-[10px] font-medium text-primary">{projectProgress}%</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${projectProgress}%` }}
-                                className="h-full bg-muted-foreground/30"
-                            />
-                        </div>
+                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
+                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">{projectBalance >= 0 ? 'Saldo Líquido' : 'Custo'}</span>
+                    <div className="flex items-end justify-between">
+                        <span className="text-xl font-bold tabular-nums text-foreground/80 mask-value">R$ {Math.abs(projectBalance).toLocaleString()}</span>
+                        <BarChart3 className={cn("h-3.5 w-3.5 transition-colors", projectBalance >= 0 ? "text-emerald-500/20 group-hover:text-emerald-500/40" : "text-orange-500/20 group-hover:text-orange-500/40")} />
                     </div>
                 </div>
-            </div >
+
+                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group">
+                    <div className="flex justify-between items-start mb-2">
+                        <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Trajetória</span>
+                        <span className="text-[10px] font-bold tabular-nums text-primary">{projectProgress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden mb-1">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${projectProgress}%` }}
+                            className="h-full bg-primary/60 rounded-full"
+                        />
+                    </div>
+                </div>
+            </div>
             {/* Filters Bar with Cycle Selector */}
-            < div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center" >
-                <div className="flex-1 flex items-center bg-card p-1 rounded-xl border border-border">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                         <Input
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Buscar tarefa..."
-                            className="pl-10 bg-transparent border-none focus-visible:ring-0 w-full hover:bg-muted transition-colors h-9"
+                            className="pl-9 h-9 bg-card/50 border-border/60"
                         />
                     </div>
-                    <div className="h-6 w-px bg-border hidden lg:block" />
-                    <div className="flex gap-2 p-1">
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                                "h-9 px-3 gap-2 text-xs font-medium border-border/60",
+                                (priorityFilter !== "all" || projectFilter !== "all" || isRecurring) && "bg-primary/5 text-primary border-primary/20"
+                            )}
+                            onClick={() => {
+                                const el = document.getElementById('advanced-filters-tasks');
+                                if (el) el.classList.toggle('hidden');
+                            }}
+                        >
+                            <Filter className="h-3.5 w-3.5" />
+                            Filtros
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Ghost Filters Bar */}
+                <div id="advanced-filters-tasks" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
                         <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
-                            <SelectTrigger className="h-8 w-[180px] bg-background/50 border-border rounded-lg text-xs font-medium">
+                            <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-border rounded-md">
                                 <SelectValue placeholder="Projeto" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="glass border-border">
                                 <SelectItem value="all">Todos Projetos</SelectItem>
                                 {projects.map((p) => (
                                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
+
                         <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as any)}>
-                            <SelectTrigger className="h-8 w-[110px] bg-background/50 border-border rounded-lg text-xs font-medium">
+                            <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
                                 <SelectValue placeholder="Prioridade" />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todas</SelectItem>
+                            <SelectContent className="glass border-border">
+                                <SelectItem value="all">Todas Prioridades</SelectItem>
                                 <SelectItem value="high">Alta</SelectItem>
                                 <SelectItem value="medium">Média</SelectItem>
                                 <SelectItem value="low">Baixa</SelectItem>
                             </SelectContent>
                         </Select>
+
+                        {isRecurring && (
+                            <div className="flex items-center gap-2 bg-card border border-border px-2 rounded-md h-8">
+                                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                                <Select value={selectedCycle} onValueChange={setSelectedCycle}>
+                                    <SelectTrigger className="h-7 w-[120px] bg-transparent border-none focus:ring-0 text-[10px] font-medium p-0">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="border-border">
+                                        {availableCycles.map(cycle => (
+                                            <SelectItem key={cycle} value={cycle} className="capitalize text-[10px] font-medium">{cycle}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                                setQuery("");
+                                setPriorityFilter("all");
+                                handleProjectFilterChange("all");
+                            }}
+                        >
+                            Limpar Filtros
+                        </Button>
                     </div>
                 </div>
-
-                {
-                    isRecurring && (
-                        <div className="flex items-center gap-2 bg-secondary border border-border p-1 rounded-md">
-                            <div className="flex items-center gap-2 pl-3 py-1">
-                                <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-[10px] font-medium text-muted-foreground  tracking-tight pr-2 border-r border-border">Ciclo</span>
-                            </div>
-                            <Select value={selectedCycle} onValueChange={setSelectedCycle}>
-                                <SelectTrigger className="h-8 w-[130px] bg-transparent border-none focus:ring-0 text-xs font-medium text-foreground">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="border-border">
-                                    {availableCycles.map(cycle => (
-                                        <SelectItem key={cycle} value={cycle} className="capitalize text-xs font-medium">{cycle}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    )
-                }
-            </div >
+            </div>
 
             {
                 isLoading ? (

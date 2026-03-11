@@ -11,7 +11,11 @@ import {
     Briefcase,
     LayoutDashboard,
     ArrowRight,
-    Plus
+    Plus,
+    Moon,
+    Sun,
+    LogOut,
+    Inbox
 } from "lucide-react";
 import {
     CommandDialog,
@@ -25,6 +29,7 @@ import {
 import { supabase } from "@/integrations/supabase";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "@/hooks/use-theme";
 
 interface GlobalSearchProps {
     open: boolean;
@@ -33,9 +38,10 @@ interface GlobalSearchProps {
 
 export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
     const navigate = useNavigate();
+    const { theme, setTheme } = useTheme();
     const [search, setSearch] = useState("");
 
-    // Keyboard shortcut
+    // Keyboard shortcut handled by Header or App
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -84,7 +90,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange}>
             <CommandInput
-                placeholder="Busque por projetos, tarefas, clientes ou comandos..."
+                placeholder="Busque por comandos, projetos ou tarefas..."
                 value={search}
                 onValueChange={setSearch}
             />
@@ -92,37 +98,56 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                 <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
 
                 <CommandGroup heading="Navegação">
-                    <CommandItem onSelect={() => runCommand(() => navigate("/"))}>
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Dashboard</span>
+                    <CommandItem onSelect={() => runCommand(() => navigate("/"))} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <LayoutDashboard className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <span>Ir para Dashboard</span>
+                        </div>
+                        <kbd className="hidden md:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">G D</kbd>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate("/projetos"))}>
-                        <Briefcase className="mr-2 h-4 w-4" />
-                        <span>Projetos</span>
+                    <CommandItem onSelect={() => runCommand(() => navigate("/projetos"))} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <span>Ir para Projetos</span>
+                        </div>
+                        <kbd className="hidden md:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">G P</kbd>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate("/clientes"))}>
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>Clientes</span>
+                    <CommandItem onSelect={() => runCommand(() => navigate("/tarefas"))} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <CheckSquare className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <span>Ir para Tarefas (Kanban)</span>
+                        </div>
+                        <kbd className="hidden md:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">G T</kbd>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate("/tarefas"))}>
-                        <CheckSquare className="mr-2 h-4 w-4" />
-                        <span>Kanban de Tarefas</span>
+                    <CommandItem onSelect={() => runCommand(() => navigate("/caixa-entrada"))} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <Inbox className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <span>Ir para Caixa de Entrada</span>
+                        </div>
+                        <kbd className="hidden md:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">G I</kbd>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate("/financeiro"))}>
-                        <Calculator className="mr-2 h-4 w-4" />
-                        <span>Financeiro</span>
+                </CommandGroup>
+
+                <CommandSeparator />
+
+                <CommandGroup heading="Ações">
+                    <CommandItem onSelect={() => runCommand(() => navigate("/caixa-entrada"))} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <Plus className="mr-2 h-4 w-4 text-primary" />
+                            <span>Nova Captura (Inbox)</span>
+                        </div>
+                        <kbd className="hidden md:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">C</kbd>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate("/agenda"))}>
-                        <Calendar className="mr-2 h-4 w-4" />
-                        <span>Agenda</span>
+                    <CommandItem onSelect={() => runCommand(() => setTheme(theme === "dark" ? "light" : "dark"))}>
+                        {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-yellow-500" /> : <Moon className="mr-2 h-4 w-4 text-slate-500" />}
+                        <span>Alternar Tema (Claro/Escuro)</span>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate("/empresa"))}>
-                        <Building2 className="mr-2 h-4 w-4" />
-                        <span>Minha Empresa</span>
-                    </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate("/configuracoes"))}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Configurações</span>
+                    <CommandItem onSelect={() => runCommand(() => {
+                        supabase.auth.signOut();
+                        navigate("/auth");
+                    })}>
+                        <LogOut className="mr-2 h-4 w-4 text-rose-500" />
+                        <span>Sair da Conta</span>
                     </CommandItem>
                 </CommandGroup>
 
@@ -133,7 +158,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                             {projects.map((project) => (
                                 <CommandItem
                                     key={project.id}
-                                    onSelect={() => runCommand(() => navigate(`/projetos?id=${project.id}`))}
+                                    onSelect={() => runCommand(() => navigate(`/projetos/${project.id}`))}
                                 >
                                     <Briefcase className="mr-2 h-4 w-4 text-primary/60" />
                                     <div className="flex flex-col">
@@ -181,18 +206,6 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                         </CommandGroup>
                     </>
                 )}
-
-                <CommandSeparator />
-                <CommandGroup heading="Atalhos">
-                    <CommandItem onSelect={() => runCommand(() => navigate("/projetos"))}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        <span>Novo Projeto</span>
-                    </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate("/clientes"))}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        <span>Novo Cliente</span>
-                    </CommandItem>
-                </CommandGroup>
             </CommandList>
         </CommandDialog>
     );

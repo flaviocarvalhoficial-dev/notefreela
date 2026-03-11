@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
 import { TimerProvider } from "@/contexts/TimerContext";
@@ -26,13 +26,18 @@ import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase";
 import { Session } from "@supabase/supabase-js";
 import { ReloadPrompt } from "@/components/ReloadPrompt";
+import { useNavigationShortcuts } from "@/hooks/use-navigation-shortcuts";
 
 const queryClient = new QueryClient();
 
 const AppLayout = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const isDashboard = pathname === "/";
   const isFullHeightPage = isDashboard || pathname.startsWith("/projetos/");
+
+  // Global Keyboard Shortcuts (Linear Style)
+  useNavigationShortcuts(() => navigate("/caixa-entrada"));
 
   return (
     <TimerProvider>

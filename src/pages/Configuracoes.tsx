@@ -145,14 +145,9 @@ export default function Configuracoes() {
     return (
         <div className="page-container">
             <div className="max-w-4xl w-full mx-auto">
-                <header className="heading-container">
-                    <div className="flex items-center gap-3">
-                        <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-                        <span className="text-[10px] font-medium  tracking-tight text-primary/60">Sistema / Configurações</span>
-                    </div>
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-medium tracking-tight text-foreground">Configurações</h1>
-                        <p className="text-muted-foreground font-normal text-sm leading-relaxed">Gerencie sua identidade, preferências e assinaturas de serviço.</p>
+                <header className="flex items-center justify-between gap-4 mb-8 h-12">
+                    <div>
+                        <h1 className="text-2xl font-medium tracking-tight text-foreground">Configurações</h1>
                     </div>
                 </header>
 

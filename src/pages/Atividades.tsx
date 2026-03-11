@@ -65,40 +65,71 @@ const Atividades = ({ hideHeader = false }: { hideHeader?: boolean }) => {
   return (
     <div className="h-full flex flex-col gap-6">
       {!hideHeader && (
-        <div>
-          <h1 className="text-3xl font-medium tracking-tight mb-1">Atividades</h1>
-          <p className="text-muted-foreground text-sm">Histórico de ações e atualizações reais</p>
-        </div>
+        <header className="flex items-center justify-between gap-4 mb-8 h-12">
+          <div>
+            <h1 className="text-2xl font-medium tracking-tight text-foreground">Atividades</h1>
+          </div>
+        </header>
       )}
 
       {!hideHeader && (
-        <motion.div
-          className="bento-card bento-card--compact"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
               <Input
                 placeholder="Buscar atividades..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 glass-light"
+                className="pl-9 h-9 bg-card/50 border-border/60"
               />
             </div>
 
-            <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="shrink-0">
-              <TabsList className="glass-light border border-border">
-                <TabsTrigger value="all">Todas</TabsTrigger>
-                <TabsTrigger value="project">Projetos</TabsTrigger>
-                <TabsTrigger value="task">Tarefas</TabsTrigger>
-                <TabsTrigger value="comment">Comentários</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-9 px-3 gap-2 text-xs font-medium border-border/60",
+                  filter !== "all" && "bg-primary/5 text-primary border-primary/20"
+                )}
+                onClick={() => {
+                  const el = document.getElementById('advanced-filters-activities');
+                  if (el) el.classList.toggle('hidden');
+                }}
+              >
+                <Filter className="h-3.5 w-3.5" />
+                Filtros
+              </Button>
+            </div>
           </div>
-        </motion.div>
+
+          {/* Ghost Filters Bar */}
+          <div id="advanced-filters-activities" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+              <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="shrink-0">
+                <TabsList className="h-8 bg-card border border-border rounded-md p-0.5">
+                  <TabsTrigger value="all" className="h-7 text-[10px] px-3">Todas</TabsTrigger>
+                  <TabsTrigger value="project" className="h-7 text-[10px] px-3">Projetos</TabsTrigger>
+                  <TabsTrigger value="task" className="h-7 text-[10px] px-3">Tarefas</TabsTrigger>
+                  <TabsTrigger value="comment" className="h-7 text-[10px] px-3">Comentários</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setSearchQuery("");
+                  setFilter("all");
+                }}
+              >
+                Limpar Filtros
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       <motion.div

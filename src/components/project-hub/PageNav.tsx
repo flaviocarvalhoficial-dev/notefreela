@@ -1,16 +1,9 @@
 import { cn } from "@/lib/utils";
 import React from "react";
 import {
-    FileText, FilePlus, ChevronRight, Home,
-    MoreHorizontal, Trash2, Copy,
-    Undo, Redo, Columns2, LayoutGrid, XCircle
+    FileText, ChevronRight, Home,
+    Undo, Redo, Columns2, LayoutGrid, Trash2
 } from "lucide-react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface PageNavProps {
     projectName: string;
@@ -28,8 +21,6 @@ export const PageNav = ({
     pages,
     activePageId,
     onSelectPage,
-    onAddPage,
-    onDeletePage,
     editorRef,
     editorStatus
 }: PageNavProps) => {
@@ -38,8 +29,8 @@ export const PageNav = ({
     return (
         <div className="w-full border-b border-border bg-card/20 backdrop-blur-sm px-2 sm:px-4">
             <div className="w-full py-0">
-                {/* Top Row: Breadcrumb & Editor Actions */}
-                <div className="flex items-center justify-between py-2.5">
+                {/* Single Row: Breadcrumb & Editor Actions */}
+                <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-1.5 text-[11px]">
                         <button
                             onClick={() => onSelectPage(null)}
@@ -122,103 +113,6 @@ export const PageNav = ({
                         </div>
                     )}
                 </div>
-
-                {/* Sub-pages Navigation */}
-                {pages.length > 0 && (
-                    <div className="flex items-center gap-0.5 pb-2 overflow-x-auto scrollbar-none -mx-1 px-1 border-t border-border/40 pt-2">
-                        <button
-                            onClick={() => onSelectPage(null)}
-                            className={cn(
-                                "group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all shrink-0",
-                                !activePageId
-                                    ? "bg-foreground/10 text-foreground"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
-                            )}
-                        >
-                            <div className={cn(
-                                "w-1.5 h-1.5 rounded-full transition-colors",
-                                !activePageId ? "bg-primary" : "bg-muted-foreground/30 group-hover:bg-muted-foreground/60"
-                            )} />
-                            Página Principal
-                        </button>
-
-                        <div className="w-3 h-px bg-border shrink-0" />
-
-                        {pages.map((page, index) => (
-                            <div key={page.id} className="flex items-center shrink-0">
-                                {index > 0 && (
-                                    <div className="w-1 h-px bg-border shrink-0" />
-                                )}
-                                <div className="group relative flex items-center">
-                                    <button
-                                        onClick={() => onSelectPage(page.id)}
-                                        className={cn(
-                                            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all",
-                                            activePageId === page.id
-                                                ? "bg-primary/10 text-primary"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "w-1 h-1 rounded-full transition-colors",
-                                            activePageId === page.id
-                                                ? "bg-primary"
-                                                : "bg-muted-foreground/30 group-hover:bg-muted-foreground/60"
-                                        )} />
-                                        <span className="max-w-[120px] truncate">
-                                            {page.title || "Sem título"}
-                                        </span>
-                                    </button>
-
-                                    {onDeletePage && (
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <button className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-muted/40 rounded transition-all ml-0.5">
-                                                    <MoreHorizontal className="h-3 w-3 text-muted-foreground" />
-                                                </button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="start" className="w-36">
-                                                <DropdownMenuItem
-                                                    onClick={() => onDeletePage(page.id)}
-                                                    className="text-destructive text-xs"
-                                                >
-                                                    <Trash2 className="h-3 w-3 mr-2" />
-                                                    Excluir
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-
-                        <div className="w-2 h-px bg-border shrink-0" />
-                        <button
-                            onClick={onAddPage}
-                            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all shrink-0"
-                            title="Nova página"
-                        >
-                            <FilePlus className="h-3 w-3" />
-                        </button>
-                    </div>
-                )}
-
-                {pages.length === 0 && (
-                    <div className="flex items-center gap-2 pb-2 border-t border-border/40 pt-2">
-                        <div className={cn(
-                            "w-1.5 h-1.5 rounded-full bg-primary"
-                        )} />
-                        <span className="text-[10px] font-semibold text-foreground">Página Principal</span>
-                        <div className="w-3 h-px bg-border" />
-                        <button
-                            onClick={onAddPage}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
-                        >
-                            <FilePlus className="h-3 w-3" />
-                            <span>Adicionar Página</span>
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     );

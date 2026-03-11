@@ -1,0 +1,83 @@
+﻿
+> vite_react_shadcn_ts@0.1.0 build
+> vite build
+
+[36mvite v5.4.19 [32mbuilding for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 9 modules transformed.
+node.exe : [31mx[39m Build 
+failed in 757ms
+No C:\Program 
+Files\nodejs\npm.ps1:29 
+caractere:3
++   & $NODE_EXE $NPM_CLI_JS 
+$args
++   
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: ([31mx  
+  [39m Build failed in 757   
+ ms:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+[31merror during build:
+[31m[vite-plugin-pwa:build] 
+Transform failed with 1 
+error:
+Y:/CRIA├ç├âO DE MICRO SAAS/No
+teFreela/src/pages/Documentos
+.tsx:310:16: ERROR: Expected 
+")" but found "open"[31m
+file: [36mY:/CRIA├ç├âO DE 
+MICRO SAAS/NoteFreela/src/pag
+es/Documentos.tsx:310:16[31m
+[33m
+[33mExpected ")" but found 
+"open"[33m
+308|  
+309|              
+<NewDocumentDialog
+310|                  
+open={isDialogOpen}
+   |                  ^
+311|                  onOpenC
+hange={setIsDialogOpen}
+312|                  
+projects={projects}
+[31m
+    at failureErrorWithLog 
+(Y:\CRIA├ç├âO DE MICRO SAAS\N
+oteFreela\node_modules\esbuil
+d\lib\main.js:1472:15)
+    at Y:\CRIA├ç├âO DE MICRO 
+SAAS\NoteFreela\node_modules\
+esbuild\lib\main.js:755:50
+    at 
+responseCallbacks.<computed> 
+(Y:\CRIA├ç├âO DE MICRO SAAS\N
+oteFreela\node_modules\esbuil
+d\lib\main.js:622:9)
+    at handleIncomingPacket 
+(Y:\CRIA├ç├âO DE MICRO SAAS\N
+oteFreela\node_modules\esbuil
+d\lib\main.js:677:12)
+    at Socket.readFromStdout 
+(Y:\CRIA├ç├âO DE MICRO SAAS\N
+oteFreela\node_modules\esbuil
+d\lib\main.js:600:7)
+    at Socket.emit 
+(node:events:518:28)
+    at addChunk (node:interna
+l/streams/readable:561:12)
+    at 
+readableAddChunkPushByteMode 
+(node:internal/streams/readab
+le:512:3)
+    at Readable.push (node:in
+ternal/streams/readable:392:5
+)
+    at Pipe.onStreamRead (nod
+e:internal/stream_base_common
+s:189:23)[39m

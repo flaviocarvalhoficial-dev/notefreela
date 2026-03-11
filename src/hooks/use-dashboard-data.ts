@@ -1,7 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
 import type { NewTaskValues } from "@/components/tasks/NewTaskDialog";
+import { useProjectMutations } from "./use-project-mutations";
 
 /** Aggregated stats and actions for the Dashboard (Index) page. */
 export function useDashboardData() {
@@ -71,64 +72,7 @@ export function useDashboardData() {
         ? Math.round((tasksStats.completed / tasksStats.total) * 100)
         : 0;
 
-    // ── Mutations ────────────────────────────────────────────────────────────
-
-    const createTaskMutation = useMutation({
-        mutationFn: async (values: NewTaskValues) => {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
-            if (!user) throw new Error("Não autenticado");
-
-            const { data, error } = await supabase
-                .from("tasks")
-                .insert({
-                    title: values.title,
-                    project_id: values.project,
-                    priority: values.priority,
-                    due_date: values.due?.toISOString(),
-                    assignee: values.assignee,
-                    user_id: user.id,
-                    column_id: "todo",
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks-stats"] });
-            toast({ title: "Sucesso!", description: "Tarefa criada com sucesso." });
-        },
-        onError: (error: Error) => {
-            toast({ title: "Erro", description: error.message, variant: "destructive" });
-        },
-    });
-
-    const deleteProjectMutation = useMutation({
-        mutationFn: async (projectId: string) => {
-            const { error } = await supabase
-                .from("projects")
-                .delete()
-                .eq("id", projectId);
-            if (error) throw error;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["projects-index"] });
-            toast({
-                title: "Projeto excluído",
-                description: "O projeto foi removido com sucesso.",
-            });
-        },
-        onError: (error: Error) => {
-            toast({
-                title: "Erro ao excluir",
-                description: error.message,
-                variant: "destructive",
-            });
-        },
-    });
+    const { createTask, deleteProject } = useProjectMutations();
 
     return {
         projects,
@@ -137,7 +81,13 @@ export function useDashboardData() {
         clients: clientsData,
         isLoading,
         completionRate,
-        createTask: createTaskMutation.mutate,
-        deleteProject: deleteProjectMutation.mutate,
+        createTask: (values: NewTaskValues) => createTask({
+            title: values.title,
+            project_id: values.project,
+            priority: values.priority,
+            due_date: values.due?.toISOString(),
+            assignee: values.assignee
+        }),
+        deleteProject,
     };
 }

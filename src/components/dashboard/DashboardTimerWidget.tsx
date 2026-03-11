@@ -105,11 +105,11 @@ export function DashboardTimerWidget() {
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border/50 bg-card/30">
                 <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="p-1.5 bg-primary/8 rounded-lg border border-primary/12 shrink-0">
+                    <div className="p-1.5 bg-muted/20 rounded-lg border border-border/40 shrink-0">
                         {activeTab === "timer" ? (
-                            <Clock className="h-4 w-4 text-primary" />
+                            <Clock className="h-4 w-4 text-muted-foreground/60" />
                         ) : (
-                            <StickyNote className="h-4 w-4 text-primary" />
+                            <StickyNote className="h-4 w-4 text-muted-foreground/60" />
                         )}
                     </div>
                     <div className="min-w-0">
@@ -148,7 +148,7 @@ export function DashboardTimerWidget() {
                             onClick={() => setActiveTab("timer")}
                             className={cn(
                                 "p-1.5 rounded-md transition-all",
-                                activeTab === "timer" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                                activeTab === "timer" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                             )}
                             title="Rastreador de Tempo"
                         >
@@ -158,7 +158,7 @@ export function DashboardTimerWidget() {
                             onClick={() => setActiveTab("notes")}
                             className={cn(
                                 "p-1.5 rounded-md transition-all",
-                                activeTab === "notes" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                                activeTab === "notes" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                             )}
                             title="Notas Rápidas"
                         >
@@ -264,7 +264,7 @@ export function DashboardTimerWidget() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.2 }}
-                        className="px-5 py-5 bg-primary/5 border-b border-primary/10 flex items-center justify-between group/active"
+                        className="px-5 py-5 bg-muted/5 border-b border-border/40 flex items-center justify-between group/active"
                     >
                         <div className="flex items-center gap-3.5">
                             {/* Animated Pulse with Timer Core */}
@@ -279,7 +279,7 @@ export function DashboardTimerWidget() {
                                     {timer.taskTitle ?? timer.projectName ?? "Estou focado agora"}
                                 </p>
                                 <div className="flex items-center gap-1.5">
-                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-bold uppercase border-primary/30 bg-primary/5 text-primary tracking-wider">
+                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-bold uppercase border-border bg-muted/10 text-muted-foreground tracking-wider">
                                         {timer.taskTitle ? "Tarefa" : "Projeto"}
                                     </Badge>
                                     {timer.projectName && (
@@ -346,7 +346,7 @@ export function DashboardTimerWidget() {
                                 {!timer.isRunning && !isSettingUp && (
                                     <div className="px-5 py-3 border-b border-border/10 bg-muted/5 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                            <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
                                             <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-tight">Pronto para começar?</span>
                                         </div>
                                         <button
@@ -409,12 +409,12 @@ export function DashboardTimerWidget() {
                                                             <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Concluído</span>
                                                         </div>
                                                     ) : (
-                                                        <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full">
+                                                        <div className="flex items-center gap-1.5 bg-muted/10 px-2 py-0.5 rounded-full">
                                                             <span className="relative flex h-1.5 w-1.5">
-                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-muted-foreground opacity-30"></span>
+                                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-muted-foreground/40"></span>
                                                             </span>
-                                                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Vivo</span>
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Vivo</span>
                                                         </div>
                                                     )}
                                                 </div>

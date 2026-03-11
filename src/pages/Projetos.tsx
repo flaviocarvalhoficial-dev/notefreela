@@ -87,193 +87,232 @@ const Projetos = () => {
 
   return (
     <div className="page-container">
-      <header className="heading-container">
-        <div className="flex items-center gap-3">
-          <div className="h-1 w-6 bg-primary rounded-full" />
-          <span className="text-[10px] font-medium  tracking-tight text-primary">Workspace / Projetos</span>
+      <header className="flex items-center justify-between gap-4 mb-8 h-12">
+        <div>
+          <h1 className="text-2xl font-medium tracking-tight text-foreground">Projetos</h1>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-medium tracking-tight text-foreground">Diretrizes de Produção</h1>
-            <p className="text-muted-foreground font-normal text-sm leading-relaxed">Gerencie o ciclo de vida e a saúde estratégica de seus projetos.</p>
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Inline Stats (Compact) */}
+          <div className="hidden xl:flex items-center gap-4 px-4 border-r border-border h-8 mr-2">
+            {stats.slice(0, 3).map((stat) => (
+              <div key={stat.label} className="flex items-center gap-2 group cursor-default">
+                <stat.icon className="h-3.5 w-3.5 text-muted-foreground/40" />
+                <span className="text-sm font-medium tabular-nums">{stat.value}</span>
+              </div>
+            ))}
           </div>
 
-          <div className="flex items-center gap-6">
-            {/* Center: Inline Stats */}
-            <div className="hidden xl:flex items-center gap-6 px-6 border-x border-border h-10">
-              {stats.map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3 group cursor-default">
-                  <div className={cn("p-1.5 rounded-md bg-muted transition-colors group-hover:bg-accent", "text-primary")}>
-                    <stat.icon className="h-3.5 w-3.5" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-medium text-muted-foreground leading-none mb-1">{stat.label}</p>
-                    <p className="text-sm font-medium leading-none tabular-nums">{stat.value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <NewProjectDialog
+            trigger={
+              <Button size="sm" className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2">
+                <Plus className="h-4 w-4" />
+                Novo Projeto
+              </Button>
+            }
+          />
+        </div>
+      </header>
 
-            {/* Right: Actions */}
-            <div className="flex items-center gap-3 shrink-0">
-              <NewProjectDialog
-                trigger={
-                  <Button className="border-border font-medium rounded-md shadow-sm transition-all active:scale-95 px-6">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Projeto
-                  </Button>
-                }
-              />
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md opacity-40 hover:opacity-100">
-                <MoreVertical className="h-4 w-4" />
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+            <Input
+              placeholder="Buscar projetos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 bg-card/50 border-border/60"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-9 px-3 gap-2 text-xs font-medium border-border/60",
+                (filterBilling !== "all" || filterService !== "all" || filterClient !== "all" || selectedStatus !== "all") && "bg-primary/5 text-primary border-primary/20"
+              )}
+              onClick={() => {
+                const el = document.getElementById('advanced-filters');
+                if (el) el.classList.toggle('hidden');
+              }}
+            >
+              <Filter className="h-3.5 w-3.5" />
+              Filtros
+            </Button>
+
+            <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40 ml-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("h-7 w-7 rounded-md transition-all", viewMode === "grid" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("h-7 w-7 rounded-md transition-all", viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
         </div>
-      </header>
 
-      <div className="flex flex-col gap-12">
-        {/* Extended Filters Bar */}
-        <div className="flex flex-wrap items-center gap-4 py-2">
-          <div className="flex items-center gap-2">
-            <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-[10px] font-medium  tracking-tight text-muted-foreground">Filtros Avançados:</span>
+        {/* Extended Filters Bar (Ghost) */}
+        <div id="advanced-filters" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+            <Select value={selectedStatus} onValueChange={(v: any) => setSelectedStatus(v)}>
+              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="glass border-border">
+                <SelectItem value="all">Todos Status</SelectItem>
+                {Object.entries(statusLabels).map(([val, label]) => (
+                  <SelectItem key={val} value={val}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterBilling} onValueChange={(v: any) => setFilterBilling(v)}>
+              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
+                <SelectValue placeholder="Faturamento" />
+              </SelectTrigger>
+              <SelectContent className="glass border-border">
+                <SelectItem value="all">Faturamento</SelectItem>
+                <SelectItem value="pontual">Pontual</SelectItem>
+                <SelectItem value="recorrente">Recorrente</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterService} onValueChange={setFilterService}>
+              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
+                <SelectValue placeholder="Serviço" />
+              </SelectTrigger>
+              <SelectContent className="glass border-border">
+                <SelectItem value="all">Serviço</SelectItem>
+                {uniqueServiceTypes.map((type: any) => (
+                  <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterClient} onValueChange={setFilterClient}>
+              <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-border rounded-md">
+                <SelectValue placeholder="Cliente" />
+              </SelectTrigger>
+              <SelectContent className="glass border-border">
+                <SelectItem value="all">Cliente</SelectItem>
+                {uniqueClients.map((client: any) => (
+                  <SelectItem key={client} value={client}>{client}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setFilterBilling("all");
+                setFilterService("all");
+                setFilterClient("all");
+                setSelectedStatus("all");
+                setSearchQuery("");
+              }}
+            >
+              Limpar Filtros
+            </Button>
           </div>
-
-          <Select value={filterBilling} onValueChange={(v: any) => setFilterBilling(v)}>
-            <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
-              <SelectValue placeholder="Faturamento" />
-            </SelectTrigger>
-            <SelectContent className="glass border-border">
-              <SelectItem value="all">Faturamento</SelectItem>
-              <SelectItem value="pontual">Pontual</SelectItem>
-              <SelectItem value="recorrente">Recorrente</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={filterService} onValueChange={setFilterService}>
-            <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
-              <SelectValue placeholder="Serviço" />
-            </SelectTrigger>
-            <SelectContent className="glass border-border">
-              <SelectItem value="all">Serviço</SelectItem>
-              {uniqueServiceTypes.map((type: any) => (
-                <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={filterClient} onValueChange={setFilterClient}>
-            <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-border rounded-md">
-              <SelectValue placeholder="Cliente" />
-            </SelectTrigger>
-            <SelectContent className="glass border-border">
-              <SelectItem value="all">Cliente</SelectItem>
-              {uniqueClients.map((client: any) => (
-                <SelectItem key={client} value={client}>{client}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              setFilterBilling("all");
-              setFilterService("all");
-              setFilterClient("all");
-              setSelectedStatus("all");
-              setSearchQuery("");
-            }}
-          >
-            Limpar Filtros
-          </Button>
         </div>
-
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-6">
-            <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
-            <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">Sincronizando workspace...</p>
-          </div>
-        ) : (
-          <AnimatePresence mode="wait">
-            {viewMode === "grid" ? (
-              <motion.div
-                layout
-                key="grid-view"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              >
-                {filteredProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onDelete={() => deleteProjectMutation.mutate(project.id)}
-                    onEdit={() => setEditingProject(project)}
-                    onClick={() => navigate(`/projetos/${project.id}`)}
-                  />
-                ))}
-              </motion.div>
-            ) : (
-              <motion.div
-                layout
-                key="list-view"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-2"
-              >
-                {filteredProjects.map((project) => (
-                  <ProjectListItem
-                    key={project.id}
-                    project={project}
-                    onDelete={() => deleteProjectMutation.mutate(project.id)}
-                    onEdit={() => setEditingProject(project)}
-                    onClick={() => navigate(`/projetos/${project.id}`)}
-                  />
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
-
-        {!isLoading && filteredProjects.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-28 flex flex-col items-center gap-6 animate-in fade-in duration-700"
-          >
-            <div className="w-24 h-24 bg-primary/5 rounded-[2rem] flex items-center justify-center mb-2 border-2 border-dashed border-border shadow-soft">
-              <Briefcase className="text-primary opacity-20 h-10 w-10" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-medium tracking-tight">O horizonte está limpo</h3>
-              <p className="text-muted-foreground text-sm max-w-xs mx-auto">Sua lista de diretrizes está pronta para receber o primeiro grande projeto da jornada.</p>
-            </div>
-            <NewProjectDialog
-              trigger={
-                <Button size="lg" className="btn-gradient px-8 h-12 font-bold shadow-glow-sm transition-all active:scale-95">
-                  <Plus className="h-5 w-5 mr-2" />
-                  INICIAR PRODUÇÃO
-                </Button>
-              }
-            />
-          </motion.div>
-        )}
-
-        <EditProjectDialog
-          key={editingProject?.id}
-          project={editingProject}
-          open={!!editingProject}
-          onOpenChange={(o) => {
-            if (!o) setEditingProject(null);
-          }}
-        />
       </div>
+
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-32 gap-6">
+          <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+          <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">Sincronizando workspace...</p>
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
+          {viewMode === "grid" ? (
+            <motion.div
+              layout
+              key="grid-view"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+              {filteredProjects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onDelete={() => deleteProjectMutation.mutate(project.id)}
+                  onEdit={() => setEditingProject(project)}
+                  onClick={() => navigate(`/projetos/${project.id}`)}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              layout
+              key="list-view"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              className="space-y-2"
+            >
+              {filteredProjects.map((project) => (
+                <ProjectListItem
+                  key={project.id}
+                  project={project}
+                  onDelete={() => deleteProjectMutation.mutate(project.id)}
+                  onEdit={() => setEditingProject(project)}
+                  onClick={() => navigate(`/projetos/${project.id}`)}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {!isLoading && filteredProjects.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-28 flex flex-col items-center gap-6 animate-in fade-in duration-700"
+        >
+          <div className="w-24 h-24 bg-primary/5 rounded-[2rem] flex items-center justify-center mb-2 border-2 border-dashed border-border shadow-soft">
+            <Briefcase className="text-primary opacity-20 h-10 w-10" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-2xl font-medium tracking-tight">O horizonte está limpo</h3>
+            <p className="text-muted-foreground text-sm max-w-xs mx-auto">Sua lista de diretrizes está pronta para receber o primeiro grande projeto da jornada.</p>
+          </div>
+          <NewProjectDialog
+            trigger={
+              <Button size="lg" className="btn-gradient px-8 h-12 font-bold shadow-glow-sm transition-all active:scale-95">
+                <Plus className="h-5 w-5 mr-2" />
+                INICIAR PRODUÇÃO
+              </Button>
+            }
+          />
+        </motion.div>
+      )}
+
+      <EditProjectDialog
+        key={editingProject?.id}
+        project={editingProject}
+        open={!!editingProject}
+        onOpenChange={(o) => {
+          if (!o) setEditingProject(null);
+        }}
+      />
     </div>
   );
 };
@@ -301,7 +340,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
     switch (metaphor) {
       case 'growth':
         return (
-          <svg width="100%" height="100" viewBox="0 0 300 100" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+          <svg width="100%" height="100" viewBox="0 0 300 100" fill="none" className={cn("opacity-5 group-hover:opacity-20 transition-opacity", colorClass)}>
             <path d="M10 90C60 90 100 80 150 50C200 20 250 10 290 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
             <circle cx="150" cy="50" r="4" fill="currentColor" />
             <circle cx="290" cy="10" r="5" fill="currentColor" className="animate-pulse" />
@@ -309,7 +348,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
         );
       case 'flow':
         return (
-          <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+          <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-5 group-hover:opacity-20 transition-opacity", colorClass)}>
             <path d="M0 30C50 30 70 50 120 50C170 50 190 30 240 30C290 30 310 50 360 50" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" />
             <path d="M0 40C50 40 70 20 120 20C170 20 190 60 240 60C290 60 310 40 360 40" stroke="currentColor" strokeWidth="2" />
             <path d="M0 50C50 50 70 70 120 70C170 70 190 50 240 50C290 50 310 70 360 70" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" />
@@ -317,7 +356,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
         );
       case 'target':
         return (
-          <svg width="100%" height="120" viewBox="0 0 300 120" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+          <svg width="100%" height="120" viewBox="0 0 300 120" fill="none" className={cn("opacity-5 group-hover:opacity-20 transition-opacity", colorClass)}>
             <circle cx="150" cy="60" r="40" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
             <circle cx="150" cy="60" r="25" stroke="currentColor" strokeWidth="1.5" />
             <circle cx="150" cy="60" r="10" fill="currentColor" className="animate-pulse" />
@@ -326,7 +365,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
         );
       case 'blueprint':
         return (
-          <svg width="100%" height="120" viewBox="0 0 300 120" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+          <svg width="100%" height="120" viewBox="0 0 300 120" fill="none" className={cn("opacity-5 group-hover:opacity-20 transition-opacity", colorClass)}>
             <path d="M0 20H300M0 50H300M0 80H300M0 110H300" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.3" />
             <path d="M30 0V120M70 0V120M110 0V120M150 0V120M190 0V120M230 0V120M270 0V120" stroke="currentColor" strokeWidth="0.5" strokeOpacity="0.3" />
             <path d="M50 90L250 30" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
@@ -335,7 +374,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
         );
       default: // roadmap
         return (
-          <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-15 group-hover:opacity-25 transition-opacity", colorClass)}>
+          <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-5 group-hover:opacity-20 transition-opacity", colorClass)}>
             <path d="M10 40C50 40 70 20 110 20C150 20 170 60 210 60C250 60 270 40 290 40" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" />
             <circle cx="110" cy="20" r="4" fill="currentColor" />
             <circle cx="210" cy="60" r="4" fill="currentColor" />
@@ -347,8 +386,8 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
 
   return (
     <motion.div
-      whileHover={{ y: -4, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
-      className="group flex flex-col bg-card border border-border/50 shadow-sm rounded-[24px] overflow-hidden cursor-pointer transition-all duration-300 relative"
+      whileHover={{ y: -2, boxShadow: "var(--shadow-hover)" }}
+      className="group flex flex-col bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all duration-300 relative"
       onClick={onClick}
     >
       {/* Header section (Avatar + Info + Status) */}
@@ -358,10 +397,10 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
             <ProjectIcon className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[13px] font-bold text-foreground leading-tight truncate max-w-[120px]">
+            <span className="text-sm font-medium text-foreground leading-tight truncate max-w-[120px]">
               {project.client_name || "Autoral"}
             </span>
-            <span className="text-[11px] text-muted-foreground font-medium">
+            <span className="text-xs text-muted-foreground font-normal">
               {project.created_at ? format(new Date(project.created_at), "dd MMM, yyyy") : "Novo projeto"}
             </span>
           </div>
@@ -369,7 +408,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
 
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className={cn(
-            "rounded-full px-3 h-6 text-[10px] font-bold border-none capitalize",
+            "rounded-md px-2 h-5 text-[10px] font-medium border-none capitalize",
             statusColors[project.status] || statusColors.active
           )}>
             {project.status || 'Active'}
@@ -411,11 +450,11 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
           {/* Internal visual composition - Dynamic Metaphor */}
           <div className="absolute inset-0 flex items-center justify-center">
             {getMetaphorContent()}
-            <div className="absolute shadow-2xl scale-110">
+            <div className="absolute opacity-40">
               <ProjectIcon className={cn(
-                "h-12 w-12 transition-colors",
-                coverColor === 'accent-primary' ? 'text-accent-primary/40 group-hover:text-accent-primary/60' :
-                  `text-${coverColor.split('-')[0]}-500/40 group-hover:text-${coverColor.split('-')[0]}-500/60`
+                "h-10 w-10 transition-colors",
+                coverColor === 'accent-primary' ? 'text-accent-primary group-hover:text-accent-primary' :
+                  `text-${coverColor.split('-')[0]}-500 group-hover:text-${coverColor.split('-')[0]}-500`
               )} />
             </div>
           </div>
@@ -423,48 +462,47 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
       </div>
 
       {/* Content area */}
-      <div className="p-5 space-y-4">
-        <h3 className="text-lg font-bold text-foreground leading-tight tracking-tight group-hover:text-accent-primary transition-colors line-clamp-2">
+      <div className="p-6 space-y-4">
+        <h3 className="text-base font-medium text-foreground leading-snug tracking-tight group-hover:text-primary transition-colors line-clamp-2">
           {project.name}
         </h3>
 
-        {/* Tags */}
         <div className="flex flex-wrap gap-2">
           {project.service_type && (
-            <div className="px-3 h-6 rounded-full border border-border/50 text-[10px] font-bold text-muted-foreground flex items-center">
+            <div className="px-3 h-5 rounded-full border border-border/40 text-[9px] font-medium text-muted-foreground/80 flex items-center">
               {project.service_type}
             </div>
           )}
-          <div className="px-3 h-6 rounded-full border border-border/50 text-[10px] font-bold text-muted-foreground flex items-center">
+          <div className="px-3 h-5 rounded-full border border-border/40 text-[9px] font-medium text-muted-foreground/80 flex items-center">
             {project.billing_type || "Pontual"}
           </div>
         </div>
 
         {/* Details list */}
-        <div className="space-y-2.5 pt-2">
-          <div className="flex items-center gap-2.5 text-muted-foreground">
-            <LucideIcons.Layers className="h-4 w-4 text-accent-primary/40" />
-            <span className="text-[12px] font-bold">{project.billing_type === 'recorrente' ? 'Assinatura Mês' : 'Projeto Único'}</span>
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <LucideIcons.Layers className="h-4 w-4 opacity-70" />
+            <span className="text-sm font-normal">{project.billing_type === 'recorrente' ? 'Assinatura Mês' : 'Projeto Único'}</span>
           </div>
 
-          <div className="flex items-center gap-2.5 text-muted-foreground">
-            <LucideIcons.DollarSign className="h-4 w-4 text-accent-primary/40" />
-            <span className="text-[12px] font-bold text-foreground tabular-nums mask-value">
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <LucideIcons.DollarSign className="h-4 w-4 opacity-70" />
+            <span className="text-sm font-medium text-foreground tabular-nums mask-value">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 text-muted-foreground">
-              <LucideIcons.Calendar className="h-4 w-4 text-accent-primary/40" />
-              <span className="text-[12px] font-bold">Prazo {project.deadline ? format(new Date(project.deadline), "dd MMM, yyyy") : "--/--/--"}</span>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <LucideIcons.Calendar className="h-4 w-4 opacity-70" />
+              <span className="text-sm font-normal">Prazo {project.deadline ? format(new Date(project.deadline), "dd MMM, yyyy") : "--/--/--"}</span>
             </div>
 
             {/* Progress Micro-indicator */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-accent-primary">{project.progress}%</span>
-              <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-accent-primary" style={{ width: `${project.progress}%` }} />
+              <span className="text-xs font-medium text-primary">{project.progress}%</span>
+              <div className="w-12 h-1 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-primary" style={{ width: `${project.progress}%` }} />
               </div>
             </div>
           </div>
@@ -516,10 +554,10 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
           <span className="text-[8px] text-muted-foreground  font-medium tracking-tight">Serviço</span>
         </div>
         <div className="hidden xl:flex flex-col text-right w-24 opacity-60">
-          <span className="text-xs font-medium tabular-nums mask-value">
+          <span className="text-xs font-medium tabular-nums mask-value text-foreground/80">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
           </span>
-          <span className="text-[8px] text-muted-foreground  font-medium tracking-tight">
+          <span className="text-[8px] text-muted-foreground/60 font-medium tracking-tight">
             {project.billing_type === 'recorrente' ? 'Mensal' : 'Total'}
           </span>
         </div>

@@ -88,140 +88,160 @@ const Clientes = () => {
 
     return (
         <div className="page-container">
-            <header className="heading-container">
-                <div className="flex items-center gap-3">
-                    <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-                    <span className="text-[10px] font-medium  tracking-tight text-primary/60">Workspace / Clientes</span>
+            <header className="flex items-center justify-between gap-4 mb-8 h-12">
+                <div>
+                    <h1 className="text-2xl font-medium tracking-tight text-foreground">Carteira de Clientes</h1>
                 </div>
 
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-medium tracking-tight text-foreground">Carteira de Clientes</h1>
-                        <p className="text-muted-foreground font-normal text-sm leading-relaxed">Gerencie sua rede de parceiros e o histórico de colaborações.</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="outline"
-                            className="bg-primary/5 border-border hover:bg-primary/10 transition-all active:scale-95 font-medium rounded-md"
-                            onClick={() => {
-                                // Potencial ação de exportar ou filtros rápidos
-                            }}
-                        >
-                            Exportar Base
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 gap-2 text-xs font-medium rounded-lg border-border bg-secondary hover:bg-secondary/80 text-foreground transition-all px-4"
+                    >
+                        Exportar
+                    </Button>
+                    <NewClientDialog trigger={
+                        <Button size="sm" className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2">
+                            <Plus className="h-4 w-4" /> Novo Cliente
                         </Button>
-                        <NewClientDialog trigger={
-                            <Button className="border-border font-medium rounded-md shadow-sm transition-all active:scale-95 px-6">
-                                <Plus className="h-4 w-4 mr-2" /> Novo Cliente
-                            </Button>
-                        } />
-                    </div>
+                    } />
                 </div>
             </header>
 
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {statsConfig.map((stat, i) => (
-                    <motion.div
+            {/* Consolidated Quick Stats */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="grid grid-cols-1 md:grid-cols-3 bg-card border border-border rounded-lg shadow-sm divide-y md:divide-y-0 md:divide-x divide-border overflow-hidden"
+            >
+                {statsConfig.map((stat) => (
+                    <div
                         key={stat.title}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="p-6 rounded-lg flex flex-col items-start justify-center text-left gap-3 bg-card border border-border shadow-sm h-[110px]"
+                        className="p-6 flex items-center gap-4 transition-colors hover:bg-muted/30"
                     >
-                        <div className="text-primary">
+                        <div className={cn("p-2.5 rounded-lg", stat.bg, stat.color)}>
                             <stat.icon className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-medium text-muted-foreground tracking-tight mb-0.5">{stat.title}</p>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">{stat.title}</p>
                             <p className="text-xl font-medium tracking-tight tabular-nums text-foreground mask-value">
                                 {typeof stat.value === 'number' && stat.title.includes("Total")
                                     ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stat.value)
                                     : stat.value}
                             </p>
                         </div>
-                    </motion.div>
+                    </div>
                 ))}
-            </div>
+            </motion.div>
 
             {/* Filters Bar */}
-            <motion.div
-                className="bento-card bento-card--compact p-6 flex flex-col lg:flex-row items-center justify-between gap-6 bg-card/30 border-border"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-            >
-                <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-                    <div className="relative w-full sm:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                         <Input
                             placeholder="Buscar cliente..."
                             value={filters.searchQuery}
                             onChange={(e) => filters.setSearchQuery(e.target.value)}
-                            className="pl-9 bg-card border-border rounded-md text-sm h-10"
+                            className="pl-9 h-9 bg-card/50 border-border/60"
                         />
                     </div>
 
-                    <div className="h-8 w-px bg-border mx-1 hidden sm:block" />
-
-                    <Select value={filters.selectedYear} onValueChange={filters.setSelectedYear}>
-                        <SelectTrigger className="w-full sm:w-28 h-10 bg-card border-border rounded-md text-xs font-medium">
-                            <SelectValue placeholder="Ano" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Ano</SelectItem>
-                            {filterOptions.years.map(year => (
-                                <SelectItem key={year} value={year}>{year}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <Select value={filters.selectedMonth} onValueChange={filters.setSelectedMonth}>
-                        <SelectTrigger className="w-full sm:w-32 h-10 bg-card border-border rounded-md text-xs font-medium">
-                            <SelectValue placeholder="Mês" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Mês</SelectItem>
-                            {months.map(m => (
-                                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <Select value={filters.selectedServiceType} onValueChange={filters.setSelectedServiceType}>
-                        <SelectTrigger className="w-full sm:w-40 h-10 bg-card border-border rounded-md text-left truncate text-xs font-medium">
-                            <SelectValue placeholder="Serviço" />
-                        </SelectTrigger>
-                        <SelectContent className="max-w-[300px]">
-                            <SelectItem value="all">Serviço</SelectItem>
-                            {filterOptions.services.map(svc => (
-                                <SelectItem key={svc} value={svc} className="truncate">{svc}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border">
+                    <div className="flex items-center gap-2">
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            onClick={() => setViewMode("grid")}
-                            className={cn("h-8 w-9 p-0 rounded-md", viewMode === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+                            className={cn(
+                                "h-9 px-3 gap-2 text-xs font-medium border-border/60",
+                                (filters.selectedYear !== "all" || filters.selectedMonth !== "all" || filters.selectedServiceType !== "all") && "bg-primary/5 text-primary border-primary/20"
+                            )}
+                            onClick={() => {
+                                const el = document.getElementById('advanced-filters-clients');
+                                if (el) el.classList.toggle('hidden');
+                            }}
                         >
-                            <LayoutGrid className="h-4 w-4" />
+                            <Filter className="h-3.5 w-3.5" />
+                            Filtros
                         </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewMode("list")}
-                            className={cn("h-8 w-9 p-0 rounded-md", viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
-                        >
-                            <ListIcon className="h-4 w-4" />
-                        </Button>
+
+                        <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40 ml-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn("h-7 w-7 rounded-md transition-all", viewMode === "grid" ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
+                                onClick={() => setViewMode("grid")}
+                            >
+                                <LayoutGrid className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn("h-7 w-7 rounded-md transition-all", viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
+                                onClick={() => setViewMode("list")}
+                            >
+                                <ListIcon className="h-3.5 w-3.5" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
-                <NewClientDialog />
-            </motion.div >
+                {/* Ghost Filters Bar */}
+                <div id="advanced-filters-clients" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+                        <Select value={filters.selectedYear} onValueChange={filters.setSelectedYear}>
+                            <SelectTrigger className="h-8 w-[100px] text-[10px] font-medium bg-card border-border rounded-md">
+                                <SelectValue placeholder="Ano" />
+                            </SelectTrigger>
+                            <SelectContent className="glass border-border">
+                                <SelectItem value="all">Ano</SelectItem>
+                                {filterOptions.years.map(year => (
+                                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={filters.selectedMonth} onValueChange={filters.setSelectedMonth}>
+                            <SelectTrigger className="h-8 w-[120px] text-[10px] font-medium bg-card border-border rounded-md">
+                                <SelectValue placeholder="Mês" />
+                            </SelectTrigger>
+                            <SelectContent className="glass border-border">
+                                <SelectItem value="all">Mês</SelectItem>
+                                {months.map(m => (
+                                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={filters.selectedServiceType} onValueChange={filters.setSelectedServiceType}>
+                            <SelectTrigger className="h-8 w-[160px] text-[10px] font-medium bg-card border-border rounded-md">
+                                <SelectValue placeholder="Serviço" />
+                            </SelectTrigger>
+                            <SelectContent className="glass border-border max-w-[300px]">
+                                <SelectItem value="all">Serviço</SelectItem>
+                                {filterOptions.services.map(svc => (
+                                    <SelectItem key={svc} value={svc} className="truncate">{svc}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                                filters.setSearchQuery("");
+                                filters.setSelectedYear("all");
+                                filters.setSelectedMonth("all");
+                                filters.setSelectedServiceType("all");
+                            }}
+                        >
+                            Limpar Filtros
+                        </Button>
+                    </div>
+                </div>
+            </div >
 
             {/* Content Area */}
             {
@@ -356,23 +376,21 @@ function ClientCard({ client, onDelete, onClick, index }: { client: any, onDelet
                     )}
                 </div>
 
-                <div className="pt-6 border-t border-border grid grid-cols-2 gap-4 mt-auto">
-                    <div className="space-y-1">
-                        <p className="text-[10px] text-muted-foreground font-medium  tracking-tight">Projetos</p>
-                        <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-md bg-primary/5 flex items-center justify-center border border-border group-hover:bg-primary/10 transition-colors">
-                                <Briefcase className="h-3.5 w-3.5 text-primary" />
-                            </div>
-                            <span className="text-base font-medium tracking-tight tabular-nums">{client.projects?.length || 0}</span>
+                <div className="pt-6 border-t border-border flex items-center justify-between mt-auto">
+                    <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center border border-border group-hover:bg-primary/10 transition-colors">
+                            <Briefcase className="h-4 w-4 text-primary/70" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-medium tracking-tight tabular-nums text-foreground">{client.projects?.length || 0}</span>
+                            <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-medium">Projetos</span>
                         </div>
                     </div>
-                    <div className="space-y-1 text-right">
-                        <p className="text-[10px] text-muted-foreground font-medium  tracking-tight">Total Investido</p>
-                        <div className="flex items-center justify-end gap-2">
-                            <span className="text-base font-medium tracking-tight text-foreground tabular-nums mask-value">
-                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.totalValue || 0)}
-                            </span>
-                        </div>
+                    <div className="text-right flex flex-col">
+                        <span className="text-sm font-medium tracking-tight text-foreground tabular-nums mask-value">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.totalValue || 0)}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-medium">Investido</span>
                     </div>
                 </div>
             </div>
@@ -386,23 +404,23 @@ function ClientListItem({ client, onDelete, onClick, index }: { client: any, onD
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: Math.min(index * 0.03, 0.3) }}
-            className="group relative bg-card/40 hover:bg-card border border-border hover:border-border rounded-xl p-4 transition-all cursor-pointer flex items-center shadow-sm"
+            className="group relative bg-card/40 hover:bg-card border border-border hover:border-border rounded-xl p-3 px-5 transition-all cursor-pointer flex items-center shadow-sm"
             onClick={onClick}
         >
             <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-medium text-sm shrink-0 border border-primary/5 group-hover:bg-primary/20 transition-colors">
+                <div className="h-9 w-9 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-medium text-sm shrink-0 border border-border group-hover:bg-primary/10 transition-colors">
                     {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col min-w-0 pr-6 gap-0.5 flex-1">
                     <div className="flex items-center gap-2">
                         <h3 className="font-medium text-sm text-foreground truncate">{client.name}</h3>
                         {client.company_name && (
-                            <Badge variant="outline" className="text-[9px] font-medium border-border text-muted-foreground  tracking-tight h-5 px-1.5 bg-muted/20">
+                            <Badge variant="outline" className="text-[9px] font-medium border-border text-muted-foreground tracking-tight h-4 px-1.5 bg-muted/20">
                                 {client.company_name}
                             </Badge>
                         )}
                     </div>
-                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium whitespace-nowrap overflow-hidden">
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-normal whitespace-nowrap overflow-hidden opacity-70">
                         {client.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3 opacity-50" /> {client.email}</span>}
                         {client.phone && <span className="hidden sm:flex items-center gap-1"><Phone className="h-3 w-3 opacity-50" /> {client.phone}</span>}
                         {client.city && <span className="hidden md:flex items-center gap-1"><MapPin className="h-3 w-3 opacity-50" /> {client.city}</span>}
@@ -410,19 +428,18 @@ function ClientListItem({ client, onDelete, onClick, index }: { client: any, onD
                 </div>
             </div>
 
-            <div className="flex items-center gap-8 md:gap-14 mr-8">
-                <div className="hidden sm:flex flex-col items-end w-20">
-                    <span className="text-[10px] text-muted-foreground font-medium  tracking-tight">Projetos</span>
-                    <div className="flex items-center gap-2 font-medium text-sm text-foreground tabular-nums">
-                        <Briefcase className="h-3 w-3 text-primary/70" />
-                        {client.projects?.length || 0}
+            <div className="flex items-center gap-10 md:gap-14 mr-8">
+                <div className="hidden sm:flex items-center gap-3 w-20">
+                    <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center border border-border/50">
+                        <Briefcase className="h-3 w-3 text-muted-foreground" />
                     </div>
+                    <span className="font-medium text-sm text-foreground tabular-nums">{client.projects?.length || 0}</span>
                 </div>
                 <div className="flex flex-col items-end w-28">
-                    <span className="text-[10px] text-muted-foreground font-medium  tracking-tight">Investido</span>
                     <span className="text-sm font-medium text-foreground tracking-tight tabular-nums mask-value">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.totalValue || 0)}
                     </span>
+                    <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-medium">Investido</span>
                 </div>
             </div>
 

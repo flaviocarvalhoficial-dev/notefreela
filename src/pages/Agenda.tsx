@@ -136,64 +136,56 @@ const Agenda = () => {
 
   return (
     <div className="page-container">
-      <header className="heading-container">
-        <div className="flex items-center gap-3">
-          <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-          <span className="text-[10px] font-medium  tracking-tight text-primary/60">Workspace / Agenda</span>
+      <header className="flex items-center justify-between gap-4 mb-8 h-12">
+        <div>
+          <h1 className="text-2xl font-medium tracking-tight text-foreground">Agenda Estratégica</h1>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-medium tracking-tight text-foreground">Agenda Estratégica</h1>
-            <p className="text-muted-foreground font-normal text-sm leading-relaxed">Gerencie seus compromissos e marcos de execução temporal.</p>
-          </div>
-
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="border-primary transition-all active:scale-95 font-medium rounded-md shadow-sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Evento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-border max-w-sm rounded-lg shadow-xl">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-medium">Novo Compromisso</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Título</Label>
-                  <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Call com Cliente" className="bg-muted/5 border-border rounded-md" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Tipo</Label>
-                  <Select value={newType} onValueChange={(v: EventType) => setNewType(v)}>
-                    <SelectTrigger className="bg-muted/5 border-border rounded-md">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border">
-                      <SelectItem value="project">Projeto</SelectItem>
-                      <SelectItem value="task">Tarefa</SelectItem>
-                      <SelectItem value="personal">Pessoal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground">Início</Label>
-                    <Input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} className="bg-muted/5 border-border rounded-md" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground">Fim</Label>
-                    <Input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} className="bg-muted/5 border-border rounded-md" />
-                  </div>
-                </div>
-                <Button className="w-full border-primary font-medium rounded-md shadow-sm" onClick={() => createEventMutation.mutate()} disabled={!newTitle}>
-                  Salvar Evento
-                </Button>
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2">
+              <Plus className="h-4 w-4" />
+              Novo Evento
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-card border-border max-w-sm rounded-lg shadow-xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-medium">Novo Compromisso</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Título</Label>
+                <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Call com Cliente" className="bg-muted/5 border-border rounded-md" />
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Tipo</Label>
+                <Select value={newType} onValueChange={(v: EventType) => setNewType(v)}>
+                  <SelectTrigger className="bg-muted/5 border-border rounded-md">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="project">Projeto</SelectItem>
+                    <SelectItem value="task">Tarefa</SelectItem>
+                    <SelectItem value="personal">Pessoal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Início</Label>
+                  <Input type="time" value={newStartTime} onChange={(e) => setNewStartTime(e.target.value)} className="bg-muted/5 border-border rounded-md" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Fim</Label>
+                  <Input type="time" value={newEndTime} onChange={(e) => setNewEndTime(e.target.value)} className="bg-muted/5 border-border rounded-md" />
+                </div>
+              </div>
+              <Button className="w-full border-primary font-medium rounded-md shadow-sm" onClick={() => createEventMutation.mutate()} disabled={!newTitle}>
+                Salvar Evento
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-3">

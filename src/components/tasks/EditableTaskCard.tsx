@@ -178,25 +178,21 @@ export function EditableTaskCard({
   const rootClass = variant === 'minimal'
     ? "group bg-transparent px-0 py-1.5 transition-all duration-200"
     : (isOverlay
-      ? "bg-card rounded-2xl p-4 shadow-xl border-2 border-primary/10"
-      : "bg-card rounded-xl p-4 transition-all duration-300 hover:shadow-glow-sm border border-border hover:border-border cursor-pointer group");
+      ? "bg-card rounded-xl p-4 shadow-xl border border-primary/20"
+      : "bg-card rounded-xl p-3.5 transition-all duration-300 border border-border/60 hover:border-primary/30 cursor-pointer group");
 
   const dueInfo = formatDue(task.due);
   const priorityStyle = getPriorityStyles(task.priority);
 
   return (
     <div
-      className={cn(rootClass, "flex flex-col gap-2.5 relative overflow-hidden")}
+      className={cn(rootClass, "flex flex-col gap-2 relative overflow-hidden")}
       onClick={!isEditing ? onStartEdit : undefined}
-      style={variant === 'card' ? {
-        borderLeftWidth: '4px',
-        borderLeftColor: accentColor || 'hsl(var(--primary))',
-      } : {}}
     >
       {/* Subtle background glow for the accent color */}
       {!isEditing && variant === 'card' && accentColor && (
         <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.06]"
+          className="absolute inset-0 opacity-[0.02] pointer-events-none transition-opacity group-hover:opacity-[0.04]"
           style={{ backgroundColor: accentColor }}
         />
       )}
@@ -208,15 +204,16 @@ export function EditableTaskCard({
             <div className="space-y-1">
               <h3
                 className={cn(
-                  "text-sm font-medium leading-tight text-foreground tracking-tight transition-colors group-hover:text-foreground",
-                  task.progress === 100 && "text-muted-foreground font-normal"
+                  "text-sm font-semibold leading-snug text-foreground/90 tracking-tight transition-colors group-hover:text-primary",
+                  task.progress === 100 && "text-muted-foreground/60 font-medium line-through decoration-muted-foreground/30"
                 )}
               >
                 {task.title}
               </h3>
               {variant === 'card' && (
-                <div className="flex items-center gap-2">
-                  <p className="text-[10px] font-medium text-muted-foreground  tracking-tight truncate">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-1 w-2.5 rounded-full opacity-40 shrink-0" style={{ backgroundColor: accentColor || 'hsl(var(--primary))' }} />
+                  <p className="text-[9px] font-bold text-muted-foreground/50  tracking-widest uppercase truncate">
                     {task.project || "Geral"}
                   </p>
                 </div>
@@ -487,11 +484,10 @@ export function EditableTaskCard({
         {!isEditing && variant === 'card' && (
           <Badge
             variant="outline"
-            className="text-[9px] font-medium px-1.5 h-5 shrink-0 border transition-colors  tracking-tight"
+            className="text-[8px] font-bold uppercase px-1.5 h-4.5 shrink-0 border-none transition-colors tracking-tighter"
             style={{
               color: priorityStyle.color,
               backgroundColor: priorityStyle.backgroundColor,
-              borderColor: priorityStyle.borderColor
             }}
           >
             {priorityLabel[task.priority]}
@@ -504,35 +500,31 @@ export function EditableTaskCard({
           {variant === 'card' && (
             <>
               {/* Progress visual */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center text-[9px] font-medium text-muted-foreground  tracking-tight">
-                  <span>Conclusão</span>
-                  <span className={cn(task.progress === 100 ? "text-emerald-500" : "text-muted-foreground")}>{task.progress}%</span>
-                </div>
-                <div className="h-1 w-full bg-muted/40 rounded-full overflow-hidden">
+              <div className="space-y-1 mt-1">
+                <div className="h-0.5 w-full bg-muted/20 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${task.progress}%` }}
-                    className={cn("h-full transition-colors", task.progress === 100 ? "bg-muted-foreground/40" : "bg-muted-foreground/20")}
+                    className={cn("h-full transition-colors", task.progress === 100 ? "bg-muted-foreground/30" : "bg-primary/40")}
                   />
                 </div>
               </div>
 
               {/* Footer labels */}
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center gap-3">
                   {dueInfo && (
                     <div className={cn(
-                      "flex items-center gap-1 text-[10px] font-medium tracking-tight",
-                      dueInfo.isOverdue ? "text-muted-foreground/80" : "text-muted-foreground"
+                      "flex items-center gap-1 text-[9px] font-bold tracking-tighter opacity-40 group-hover:opacity-80 transition-opacity",
+                      dueInfo.isOverdue ? "text-orange-500" : "text-muted-foreground"
                     )}>
-                      <CalendarIcon className="h-3 w-3" />
+                      <CalendarIcon className="h-2.5 w-2.5" />
                       <span>{dueInfo.label}</span>
                     </div>
                   )}
                   {task.assignee && (
-                    <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground tracking-tight">
-                      <User className="h-3 w-3" />
+                    <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter group-hover:opacity-100 transition-opacity">
+                      <User className="h-2.5 w-2.5" />
                       <span>{task.assignee.split(' ')[0]}</span>
                     </div>
                   )}
@@ -550,36 +542,36 @@ export function EditableTaskCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10"
+                    className="h-5 w-5 text-muted-foreground/20 hover:text-orange-500/60 hover:bg-orange-500/5 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete?.();
                     }}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-2.5 w-2.5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
+                    className="h-5 w-5 text-muted-foreground/20 hover:text-primary transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDuplicate?.();
                     }}
                     title="Duplicar Tarefa"
                   >
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-2.5 w-2.5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
+                    className="h-5 w-5 text-muted-foreground/20 hover:text-primary transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onStartEdit?.();
                     }}
                   >
-                    <Pencil className="h-3 w-3" />
+                    <Pencil className="h-2.5 w-2.5" />
                   </Button>
                 </div>
               </div>

@@ -365,12 +365,12 @@ export function TimelineSection({
           onPointerLeave={endDrag}>
           <div className="min-w-max relative flex flex-col bg-background/20" style={{ height: Math.max(totalHeight + 100, 600) }}>
             {/* Header X-Axis */}
-            <div className="sticky top-0 z-[100] bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-sm border-b border-border shadow-sm">
+            <div className="sticky top-0 z-[100] bg-background-elevated/95 backdrop-blur-sm border-b border-border shadow-sm">
               {/* Months Row */}
               <div className="flex">
                 {monthsInTrack.map((m, idx) => (
                   <div key={idx} className="h-7 flex items-center px-4 border-r border-border overflow-hidden" style={{ width: m.width }}>
-                    <span className="text-[9px] font-medium text-muted-foreground whitespace-nowrap  tracking-tight">
+                    <span className="text-[10px] font-normal text-muted-foreground whitespace-nowrap tracking-tight">
                       {m.label}
                     </span>
                   </div>
@@ -381,11 +381,11 @@ export function TimelineSection({
                 {daysInRange.map((d, idx) => (
                   <div key={idx} className={cn(
                     "shrink-0 flex items-center justify-center border-r border-border h-8",
-                    isToday(d) && "bg-primary/5 shadow-[inset_0_0_0_1px_rgba(var(--primary),0.1)]"
+                    isToday(d) && "bg-primary/5"
                   )} style={{ width: slotPx }}>
                     <span className={cn(
                       "text-[10px] font-medium tabular-nums",
-                      isToday(d) ? "text-foreground font-semibold" : "text-muted-foreground"
+                      isToday(d) ? "text-primary" : "text-muted-foreground"
                     )}>
                       {d.getDate()}
                     </span>
@@ -414,8 +414,8 @@ export function TimelineSection({
               <div className="absolute inset-y-0 left-0 right-0 flex pointer-events-none">
                 {daysInRange.map((d, idx) => (
                   <div key={`v-${idx}`} className={cn(
-                    "h-full border-r border-border/10 shrink-0",
-                    isToday(d) && "bg-primary/[0.01] border-primary/20"
+                    "h-full border-r border-border/5 shrink-0",
+                    isToday(d) && "bg-primary/[0.01] border-primary/10"
                   )} style={{ width: slotPx }} />
                 ))}
               </div>
@@ -432,7 +432,8 @@ export function TimelineSection({
                 return (
                   <Tooltip key={a.id}>
                     <TooltipTrigger asChild>
-                      <div className="absolute cursor-pointer"
+                      <div
+                        className="absolute cursor-pointer"
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={(e) => {
                           if (e.button === 0) {
@@ -446,29 +447,25 @@ export function TimelineSection({
                         style={{
                           left: `${left + 2}px`,
                           top: `${top + 8}px`,
-                          width: `${Math.max(width - 4, 120)}px`,
+                          width: "fit-content",
+                          minWidth: `${Math.max(width - 4, 40)}px`,
                           height: 26,
                           zIndex: 10
                         }}>
                         <ContextMenu>
                           <ContextMenuTrigger>
                             <div
-                              className="w-full h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex items-center px-2.5 border border-white/5 relative overflow-hidden group shadow-sm bg-background/5 pointer-events-auto"
-                              style={{
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)"
-                              }}
+                              className="h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex items-center px-3 border border-border relative group bg-background/5 pointer-events-auto"
                             >
                               <div
-                                className="absolute inset-0 pointer-events-none"
+                                className="absolute inset-0 pointer-events-none rounded-md"
                                 style={{
                                   backgroundColor: a.color || "hsl(var(--secondary))",
-                                  opacity: 0.95
+                                  opacity: 0.85
                                 }}
                               />
 
-                              <div className="absolute inset-0 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
-
-                              <p className="text-[10px] font-semibold leading-none relative z-10 text-zinc-950 group-hover:text-black truncate w-full drop-shadow-sm px-1">
+                              <p className="text-[10px] font-medium leading-none relative z-10 text-foreground group-hover:text-primary-foreground truncate w-full px-1">
                                 {a.title}
                               </p>
                             </div>

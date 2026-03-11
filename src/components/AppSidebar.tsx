@@ -63,6 +63,15 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [recentProjectIds, setRecentProjectIds] = useState<string[]>([]);
+
+  // Load recent projects from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("recent_projects");
+    if (stored) {
+      setRecentProjectIds(JSON.parse(stored));
+    }
+  }, []);
 
   useEffect(() => {
     const lastVersion = localStorage.getItem("notefreela_version");
@@ -102,6 +111,8 @@ export function AppSidebar() {
     }
   });
 
+  const recentProjects = sidebarProjects.filter(p => recentProjectIds.includes(p.id)).slice(0, 3);
+
   const inboxGroups = [
     { type: 'idea', title: 'Ideias', icon: Lightbulb },
     { type: 'prompt', title: 'Prompts', icon: Terminal },
@@ -123,22 +134,22 @@ export function AppSidebar() {
       )}
       collapsible="icon"
     >
-      {/* Header Area */}
-      <div className="h-20 flex items-center justify-center border-b border-sidebar-border px-4 shrink-0">
+      {/* Header Area - More Compact */}
+      <div className="h-14 flex items-center justify-center border-b border-sidebar-border px-4 shrink-0">
         {open ? (
           <div className="w-full flex items-center justify-between">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-6 h-6 shrink-0" />
-              <span className="font-medium text-foreground tracking-tight text-[13px] ">NoteFreela</span>
+              <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-5 h-5 shrink-0" />
+              <span className="font-semibold text-foreground tracking-tight text-[13px] ">NoteFreela</span>
             </div>
-            <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-all h-7 w-7" />
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-all h-6 w-6" />
           </div>
         ) : (
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-all h-9 w-9 rounded-md" />
+          <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-all h-8 w-8 rounded-md" />
         )}
       </div>
 
-      <SidebarContent>
+      <SidebarContent className="custom-scrollbar">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className={cn("gap-0.5", open ? "px-2" : "px-0 items-center")}>
@@ -148,7 +159,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       tooltip={!open ? item.title : undefined}
-                      className="h-10 rounded-md transition-all hover:bg-sidebar-accent"
+                      className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
                     >
                       <NavLink
                         to={item.url}
@@ -159,11 +170,35 @@ export function AppSidebar() {
                         )}
                         activeClassName="text-foreground font-medium bg-sidebar-accent"
                       >
-                        <item.icon className="h-[18px] w-[18px] shrink-0" />
-                        {open && <span className="text-[13px] font-medium tracking-tight">{item.title}</span>}
+                        <item.icon className="h-[17px] w-[17px] shrink-0" />
+                        {open && <span className="text-[12.5px] font-medium tracking-tight">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+
+                  {/* Recentes Section after Dashboard */}
+                  {index === 0 && open && recentProjects.length > 0 && (
+                    <div className="mt-2 mb-1 px-3">
+                      <span className="text-[10px] uppercase font-semibold text-muted-foreground/50 tracking-wider">Recentes</span>
+                      <div className="mt-1 space-y-0.5">
+                        {recentProjects.map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => navigate(`/projetos/${p.id}`)}
+                            className="w-full flex items-center gap-2 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-all truncate"
+                          >
+                            <Circle className={cn(
+                              "h-1 w-1 rounded-full shrink-0",
+                              p.status === 'completed' ? "bg-emerald-500" :
+                                p.status === 'active' ? "bg-blue-500" :
+                                  "bg-muted-foreground/30"
+                            )} />
+                            <span className="truncate">{p.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Render Projects Tree after Dashboard (index 0) */}
                   {index === 0 && (
@@ -172,7 +207,7 @@ export function AppSidebar() {
                         <SidebarMenuButton
                           asChild
                           tooltip={!open ? "Projetos" : undefined}
-                          className="h-10 rounded-md transition-all hover:bg-sidebar-accent"
+                          className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
                         >
                           <NavLink
                             to="/projetos"
@@ -182,8 +217,8 @@ export function AppSidebar() {
                             )}
                             activeClassName="text-foreground font-medium bg-sidebar-accent"
                           >
-                            <FolderKanban className="h-[18px] w-[18px] shrink-0" />
-                            {open && <span className="text-[13px] font-medium tracking-tight">Projetos</span>}
+                            <FolderKanban className="h-[17px] w-[17px] shrink-0" />
+                            {open && <span className="text-[12.5px] font-medium tracking-tight">Projetos</span>}
                           </NavLink>
                         </SidebarMenuButton>
 
@@ -206,7 +241,7 @@ export function AppSidebar() {
                                         <div className={cn(
                                           "h-1.5 w-1.5 rounded-full shrink-0",
                                           project.status === 'completed' ? "bg-emerald-500" :
-                                            project.status === 'in_progress' ? "bg-blue-500" :
+                                            project.status === 'active' ? "bg-blue-500" :
                                               "bg-muted-foreground/30"
                                         )} />
                                         <span className="truncate">{project.name}</span>
@@ -232,7 +267,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     tooltip={!open ? "Caixa de Entrada" : undefined}
-                    className="h-10 rounded-md transition-all hover:bg-sidebar-accent"
+                    className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
                   >
                     <NavLink
                       to="/caixa-entrada"
@@ -242,8 +277,8 @@ export function AppSidebar() {
                       )}
                       activeClassName="text-foreground font-medium bg-sidebar-accent"
                     >
-                      <Inbox className="h-[18px] w-[18px] shrink-0" />
-                      {open && <span className="text-[13px] font-medium tracking-tight">Caixa de Entrada</span>}
+                      <Inbox className="h-[17px] w-[17px] shrink-0" />
+                      {open && <span className="text-[12.5px] font-medium tracking-tight">Caixa de Entrada</span>}
                     </NavLink>
                   </SidebarMenuButton>
 
@@ -264,10 +299,10 @@ export function AppSidebar() {
                                   <div className="flex items-center group">
                                     <NavLink
                                       to={`/caixa-entrada?type=${group.type}`}
-                                      className="flex items-center gap-2 px-3 py-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors flex-1"
+                                      className="flex items-center gap-2 px-3 py-1.5 text-[11.5px] text-muted-foreground hover:text-foreground transition-colors flex-1"
                                       activeClassName="text-foreground font-medium"
                                     >
-                                      <group.icon className="h-3.5 w-3.5" />
+                                      <group.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
                                       {group.title}
                                     </NavLink>
                                     <CollapsibleTrigger asChild>
@@ -284,7 +319,7 @@ export function AppSidebar() {
                                           <button
                                             key={i.id}
                                             onClick={() => navigate(`/caixa-entrada?id=${i.id}`)}
-                                            className="px-4 py-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2 w-full"
+                                            className="px-4 py-1 text-[10.5px] text-muted-foreground hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2 w-full"
                                           >
                                             <Circle className="h-1 w-1 fill-current opacity-30" />
                                             {i.title || "Sem título"}
@@ -311,14 +346,14 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     tooltip={!open ? "Gestão e Ajustes" : undefined}
-                    className="h-10 rounded-md transition-all hover:bg-sidebar-accent"
+                    className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
                   >
                     <div className={cn(
                       "flex items-center text-muted-foreground transition-colors w-full h-full",
                       open ? "gap-2.5 px-3" : "justify-center"
                     )}>
-                      <Settings className="h-[18px] w-[18px] shrink-0" />
-                      {open && <span className="text-[13px] font-medium tracking-tight">Gestão e Ajustes</span>}
+                      <Settings className="h-[17px] w-[17px] shrink-0" />
+                      {open && <span className="text-[12.5px] font-medium tracking-tight">Gestão e Ajustes</span>}
                     </div>
                     {open && (
                       <CollapsibleTrigger asChild>
@@ -336,10 +371,10 @@ export function AppSidebar() {
                           <SidebarMenuSubItem key={item.title}>
                             <NavLink
                               to={item.url}
-                              className="px-4 py-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2.5"
+                              className="px-4 py-1.5 text-[11.5px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2.5"
                               activeClassName="text-foreground font-medium"
                             >
-                              <item.icon className="h-3.5 w-3.5 shrink-0" />
+                              <item.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                               {item.title}
                             </NavLink>
                           </SidebarMenuSubItem>
@@ -356,15 +391,15 @@ export function AppSidebar() {
 
       <SidebarFooter className={cn("border-t border-sidebar-border space-y-2", open ? "p-3" : "p-0 py-4 items-center")}>
         {open && (
-          <div className="px-4 py-2 flex items-center justify-between opacity-40 hover:opacity-100 transition-opacity">
+          <div className="px-4 py-1.5 flex items-center justify-between opacity-30 hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500/50"></div>
-              <span className="text-[11px] font-medium tracking-tight text-muted-foreground ">NoteFreela {APP_VERSION}</span>
+              <div className="h-1 w-1 rounded-full bg-emerald-500"></div>
+              <span className="text-[10px] font-medium tracking-tight text-muted-foreground uppercase ">NoteFreela {APP_VERSION}</span>
             </div>
           </div>
         )}
         {!open && (
-          <div className="flex justify-center text-[10px] font-normal text-muted-foreground py-1">
+          <div className="flex justify-center text-[9px] font-normal text-muted-foreground/50 py-1">
             {APP_VERSION}
           </div>
         )}

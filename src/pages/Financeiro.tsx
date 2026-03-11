@@ -20,7 +20,8 @@ import {
     List,
     TrendingDown,
     Wallet,
-    CheckCircle2
+    CheckCircle2,
+    Plus
 } from "lucide-react";
 import { CostRegistrationDialog } from "@/components/dashboard/CostRegistrationDialog";
 import { MaskableValue } from "@/components/shared/MaskableValue";
@@ -276,120 +277,111 @@ export default function Financeiro() {
     return (
         <div className="page-container">
             {/* Header - Cockpit Style */}
-            <header className="heading-container">
-                <div className="flex items-center gap-3">
-                    <div className="h-1 w-6 bg-primary rounded-full opacity-60" />
-                    <span className="text-[10px] font-medium  tracking-tight text-primary/60">Workspace / Gestão Capital</span>
+            <header className="flex items-center justify-between gap-4 mb-8 h-12">
+                <div>
+                    <h1 className="text-2xl font-medium tracking-tight text-foreground">Gestão de Capital</h1>
                 </div>
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="stack-gap-sm">
-                        <h1 className="text-3xl font-medium tracking-tight text-foreground">Gestão de Capital</h1>
-                        <p className="text-muted-foreground font-normal text-sm leading-relaxed">Visão estratégica de liquidez e projeção de diretrizes financeiras.</p>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="outline"
-                            className="h-11 gap-2 text-xs font-medium rounded-md border-border bg-secondary hover:bg-secondary/80 text-foreground transition-all px-6"
-                            onClick={() => setIsReportsModalOpen(true)}
-                        >
-                            <TrendingUp className="h-4 w-4" />
-                            Relatórios Mensais
-                        </Button>
-                        <CostRegistrationDialog
-                            trigger={
-                                <Button variant="outline" className="h-11 border-border text-foreground hover:text-foreground hover:bg-secondary gap-2 text-xs font-medium rounded-md px-6">
-                                    <TrendingDown className="h-4 w-4" /> Registrar Custo
-                                </Button>
-                            }
-                        />
-                    </div>
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 gap-2 text-xs font-medium rounded-lg border-border bg-secondary hover:bg-secondary/80 text-foreground transition-all px-4"
+                        onClick={() => setIsReportsModalOpen(true)}
+                    >
+                        <TrendingUp className="h-4 w-4" />
+                        Relatórios
+                    </Button>
+                    <CostRegistrationDialog
+                        trigger={
+                            <Button size="sm" className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2">
+                                <Plus className="h-4 w-4" />
+                                Novo Lançamento
+                            </Button>
+                        }
+                    />
                 </div>
             </header>
 
-            {/* Metáfora Visual: Fluxo Financeiro Arthur Marques */}
-            <div className="relative w-full h-32 bg-card border border-border rounded-lg overflow-hidden group shadow-sm">
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" />
 
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-2 relative z-10">
-                        <span className="text-[10px] font-medium  tracking-tight text-muted-foreground">Lucro Consolidado</span>
-                        <div className="text-3xl font-medium tabular-nums text-foreground tracking-tight">{formatCurrency(netProfit)}</div>
-                    </div>
-
-                    <svg width="100%" height="100%" viewBox="0 0 600 120" fill="none" className="absolute pointer-events-none opacity-20">
-                        {/* Converging Flows */}
-                        <path d="M50 60C150 60 200 20 300 60" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" className="text-primary/20" />
-                        <path d="M550 60C450 60 400 100 300 60" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" className="text-primary/10" />
-
-                        {/* Central Pulse */}
-                        <motion.circle
-                            cx="300" cy="60" r="8"
-                            stroke="hsl(var(--primary))" strokeWidth="1"
-                            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                        />
-                        <circle cx="300" cy="60" r="3" fill="hsl(var(--primary))" className="opacity-40" />
-                    </svg>
-                </div>
-            </div>
-
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-secondary/50 p-5 rounded-lg border border-border">
-                <div className="flex flex-1 flex-wrap items-center gap-4">
-                    <div className="relative flex-1 min-w-[280px]">
-                        <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <input
-                            type="text"
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                        <Input
                             placeholder="Mapear projeto ou parceiro..."
-                            className="w-full bg-background border border-border rounded-md h-11 pl-12 pr-4 text-sm font-medium focus:border-primary/40 focus:ring-1 focus:ring-primary/10 outline-none transition-all"
+                            className="pl-9 h-9 bg-card/50 border-border/60"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
 
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="h-11 w-[180px] rounded-md border-border font-medium text-xs">
-                            <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Linha do Tempo</SelectItem>
-                            <SelectItem value="paid">Quitados</SelectItem>
-                            <SelectItem value="partial">Aporte Inicial</SelectItem>
-                            <SelectItem value="pending">Pendentes</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                                "h-9 px-3 gap-2 text-xs font-medium border-border/60",
+                                (statusFilter !== "all" || selectedMonth !== "all") && "bg-primary/5 text-primary border-primary/20"
+                            )}
+                            onClick={() => {
+                                const el = document.getElementById('advanced-filters-fin');
+                                if (el) el.classList.toggle('hidden');
+                            }}
+                        >
+                            <Filter className="h-3.5 w-3.5" />
+                            Filtros
+                        </Button>
 
-                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                        <SelectTrigger className="h-11 w-[200px] rounded-md border-border font-medium text-xs">
-                            <Calendar className="mr-2 h-4 w-4 text-primary/40" />
-                            <SelectValue placeholder="Período" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Filtro Temporal Off</SelectItem>
-                            {monthOptions.map(m => (
-                                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                                setSearchQuery("");
+                                setStatusFilter("all");
+                                const todayLocal = new Date().toLocaleDateString('en-CA');
+                                setSelectedMonth(todayLocal.substring(0, 7));
+                            }}
+                        >
+                            Limpar
+                        </Button>
+
+                        <Button size="sm" variant="outline" className="h-9 border-border/60 gap-2 text-xs font-medium px-4">
+                            <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                            Exportar
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                            setSearchQuery("");
-                            setStatusFilter("all");
-                            const todayLocal = new Date().toLocaleDateString('en-CA');
-                            setSelectedMonth(todayLocal.substring(0, 7));
-                        }}
-                        className="h-11 text-xs font-medium  tracking-tight text-muted-foreground px-4 hover:bg-secondary rounded-md"
-                    >
-                        Resetar
-                    </Button>
-                    <Button className="h-11 bg-primary text-primary-foreground hover:opacity-90 gap-2 text-xs font-medium  tracking-tight rounded-md px-6 transition-all active:scale-95 shadow-sm">
-                        <Download className="h-4 w-4" /> Exportar .CSV
-                    </Button>
+                {/* Ghost Filters Bar */}
+                <div id="advanced-filters-fin" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="h-8 w-[160px] text-[10px] font-medium bg-card border-border rounded-md">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent className="glass border-border">
+                                <SelectItem value="all">Linha do Tempo</SelectItem>
+                                <SelectItem value="paid">Quitados</SelectItem>
+                                <SelectItem value="partial">Aporte Inicial</SelectItem>
+                                <SelectItem value="pending">Pendentes</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                            <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-border rounded-md">
+                                <Calendar className="mr-2 h-3.5 w-3.5 text-primary/40" />
+                                <SelectValue placeholder="Período" />
+                            </SelectTrigger>
+                            <SelectContent className="glass border-border">
+                                <SelectItem value="all">Filtro Temporal Off</SelectItem>
+                                {monthOptions.map(m => (
+                                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
 
