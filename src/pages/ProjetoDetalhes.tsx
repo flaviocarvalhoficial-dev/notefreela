@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -36,7 +36,6 @@ const ProjetoDetalhes = () => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
-    const [activePageId, setActivePageId] = useState<string | null>(null);
     const [sourceBlockId, setSourceBlockId] = useState<string | null>(null);
     const [isDockOpen, setIsDockOpen] = useState(true);
     const [isEditingParam, setIsEditingParam] = useState(false);
@@ -46,7 +45,36 @@ const ProjetoDetalhes = () => {
     const [isAddInboxOpen, setIsAddInboxOpen] = useState(false);
     const [isAddCostOpen, setIsAddCostOpen] = useState(false);
     const [selectedDocCategory, setSelectedDocCategory] = useState<string>("");
+    const [activePageId, setActivePageId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState("planejamento");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tabFromUrl = searchParams.get("tab");
+    const pageFromUrl = searchParams.get("page");
+
+    // Sync page with URL
+    useEffect(() => {
+        if (pageFromUrl && pageFromUrl !== activePageId) {
+            setActivePageId(pageFromUrl);
+            setActiveTab('planejamento'); // Ensure we are on planning tab
+        }
+    }, [pageFromUrl, activePageId]);
+
+    // Sync tab with URL
+    useEffect(() => {
+        if (tabFromUrl) {
+            const tabMap: Record<string, string> = {
+                tasks: 'producao',
+                finance: 'financeiro',
+                docs: 'arquivos',
+                approval: 'timeline', // Timeline as feedback/approval
+                overview: 'planejamento'
+            };
+            const newTab = tabMap[tabFromUrl] || 'planejamento';
+            if (newTab !== activeTab) {
+                setActiveTab(newTab);
+            }
+        }
+    }, [tabFromUrl, activeTab]);
 
     const editorRef = useRef<BlockEditorRef>(null);
     const [editorStatus, setEditorStatus] = useState({
@@ -205,7 +233,15 @@ const ProjetoDetalhes = () => {
                                 projectName={project.name}
                                 pages={pages as Array<{ id: string; title: string }>}
                                 activePageId={activePageId}
-                                onSelectPage={(pageId) => setActivePageId(pageId)}
+                                onSelectPage={(pageId) => {
+                                    if (pageId) {
+                                        setSearchParams({ ...Object.fromEntries(searchParams), page: pageId });
+                                    } else {
+                                        const params = Object.fromEntries(searchParams);
+                                        delete params.page;
+                                        setSearchParams(params);
+                                    }
+                                }}
                                 onAddPage={() => createPage()}
                                 onDeletePage={(pageId) => deletePage(pageId)}
                                 editorRef={editorRef}
@@ -213,9 +249,9 @@ const ProjetoDetalhes = () => {
                             />
 
                             <div className="flex-1 overflow-y-auto custom-scrollbar transition-all duration-300 bg-background/30">
-                                <div className="max-w-4xl mx-auto w-full px-6 sm:px-12 py-10">
+                                <div className="w-full px-6 sm:px-16 py-12">
                                     {activePageId && activePage && (
-                                        <div className="mb-8 group">
+                                        <div className="mb-4 group">
                                             <input
                                                 type="text"
                                                 value={pageTitleLocal}
@@ -229,7 +265,7 @@ const ProjetoDetalhes = () => {
                                                         updatePageTitle({ pageId: activePageId, title: pageTitleLocal });
                                                     }
                                                 }}
-                                                className="text-4xl font-medium bg-transparent border-none outline-none focus:ring-0 p-0 w-full placeholder:opacity-20 text-foreground/90 tracking-tight"
+                                                className="text-4xl font-semibold bg-transparent border-none outline-none focus:ring-0 p-0 w-full placeholder:opacity-20 text-foreground tracking-tight"
                                                 placeholder="Título da página..."
                                             />
                                         </div>

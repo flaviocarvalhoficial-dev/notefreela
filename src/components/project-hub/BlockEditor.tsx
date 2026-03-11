@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SlashCommandMenu, type SlashCommandItem } from './SlashCommandMenu';
 import { Columns, Column } from './editor-extensions/Columns';
 import { ProgressBar, TopicHeader } from './editor-extensions/PersonalWidgets';
+import { ProjectView } from './editor-extensions/ProjectView';
 
 export interface BlockEditorStatus {
   hasColumns: boolean;
@@ -93,6 +94,7 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         Column,
         ProgressBar,
         TopicHeader,
+        ProjectView,
       ],
       content: content,
       onUpdate: ({ editor: ed }) => {
@@ -193,19 +195,6 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
       const handleMouseDown = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
 
-        // 1. Handle Delete Column
-        if (target.classList.contains('column-delete')) {
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Move selection to the column being deleted first
-          const pos = editor.view.posAtDOM(target, 0);
-          if (pos !== undefined) {
-            editor.commands.setTextSelection(pos);
-            editor.chain().focus().deleteColumn().run();
-          }
-          return;
-        }
 
         // 2. Handle Add Column (via CSS pseudo-element click zone)
         if (target.classList.contains('columns-container')) {
@@ -306,6 +295,10 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
 
     useImperativeHandle(ref, () => ({
       insertItem: (type: string, id: string, title?: string) => {
+        if (type === 'view') {
+          editor?.chain().focus().insertProjectView({ type: id, title: title }).run();
+          return;
+        }
         const label = title || id;
         const emoji = type === 'task' ? '✅' : type === 'inbox' ? '📥' : type === 'doc' ? '📄' : '🔗';
         const htmlValue = `<a href="/${type}/${id}" class="mention"> ${emoji} ${label}</a> `;
@@ -376,7 +369,12 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
         slashStartPos.current = null;
 
-        if (cmd.id === 'task' || cmd.id === 'page') {
+        const externalCommands = [
+          'task', 'inbox', 'income', 'expense', 'subpage', 'page',
+          'kanban', 'tasks', 'finance', 'inboxview'
+        ];
+
+        if (externalCommands.includes(cmd.id)) {
           onCommand?.(cmd.id);
         } else {
           requestAnimationFrame(() => {
@@ -401,7 +399,7 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
     return (
       <div
         ref={containerRef}
-        className={cn("relative min-h-[500px] w-full px-4 sm:px-8 py-10 pt-16", className)}
+        className={cn("relative min-h-[500px] w-full px-0 py-0", className)}
       >
         <EditorContent
           editor={editor}
@@ -465,10 +463,41 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         .ProseMirror li p { margin-bottom: 0; }
 
         /* ── Task Lists ── */
-        .ProseMirror ul[data-type="taskList"] { list-style: none; padding: 0; }
-        .ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.25rem; }
-        .ProseMirror ul[data-type="taskList"] li > label { flex: 0 0 auto; user-select: none; margin-top: 0.25rem; }
+        .ProseMirror ul[data-type="taskList"] { list-style: none; padding: 0; margin-top: 0.5rem; }
+        .ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.4rem; }
+        .ProseMirror ul[data-type="taskList"] li > label { flex: 0 0 auto; user-select: none; margin-top: 0.2rem; }
         .ProseMirror ul[data-type="taskList"] li > div { flex: 1 1 auto; }
+        .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+          appearance: none;
+          background-color: transparent;
+          margin: 0;
+          font: inherit;
+          color: currentColor;
+          width: 15px;
+          height: 15px;
+          border: 2px solid hsl(var(--muted-foreground) / 0.7);
+          border-radius: 4px;
+          display: grid;
+          place-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .ProseMirror ul[data-type="taskList"] input[type="checkbox"]:hover {
+          border-color: hsl(var(--primary));
+          background: hsl(var(--primary) / 0.05);
+        }
+        .ProseMirror ul[data-type="taskList"] input[type="checkbox"]:checked {
+          background-color: hsl(var(--primary));
+          border-color: hsl(var(--primary));
+        }
+        .ProseMirror ul[data-type="taskList"] input[type="checkbox"]:checked::before {
+          content: "";
+          width: 8px;
+          height: 8px;
+          clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+          transform: scale(1);
+          background-color: white;
+        }
 
         /* ── Blockquote ── */
         .ProseMirror blockquote { border-left: 3px solid hsl(var(--primary)); padding-left: 1rem; font-style: italic; opacity: 0.8; margin: 0.75rem 0; }
@@ -596,35 +625,6 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         .column:focus-within { background: hsl(var(--primary) / 0.04); }
 
         /* ── Delete Column Button ── */
-        .column-delete {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          width: 20px;
-          height: 20px;
-          background: hsl(var(--destructive) / 0.1);
-          color: hsl(var(--destructive));
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 10px;
-          cursor: pointer;
-          opacity: 0;
-          transition: all 0.2s ease;
-          z-index: 60;
-          border: 1px solid transparent;
-        }
-
-        .column:hover .column-delete {
-          opacity: 1;
-        }
-
-        .column-delete:hover {
-          background: hsl(var(--destructive));
-          color: white;
-          transform: scale(1.1);
-        }
 
         /* ── Add Column Indicator ── */
         .columns-container {

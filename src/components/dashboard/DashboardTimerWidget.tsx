@@ -289,7 +289,7 @@ export function DashboardTimerWidget() {
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-2.5">
-                            <span className="text-[22px] font-mono font-bold text-primary tabular-nums leading-none tracking-tight">
+                            <span className="text-[22px] font-mono font-bold text-foreground tabular-nums leading-none tracking-tight">
                                 {formatDuration(timer.elapsed)}
                             </span>
                             <TimerButton
@@ -379,7 +379,7 @@ export function DashboardTimerWidget() {
                                                 <div className="flex items-center gap-3.5 min-w-0">
                                                     <div className={cn(
                                                         "p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110",
-                                                        entry.task_title ? "bg-blue-500/10 text-blue-600 dark:bg-blue-400/5" : "bg-primary/10 text-primary"
+                                                        entry.task_title ? "bg-blue-500/10 text-blue-600 dark:bg-blue-400/5" : "bg-muted text-muted-foreground/60"
                                                     )}>
                                                         {entry.task_title
                                                             ? <CheckSquare className="h-4 w-4" />
@@ -481,8 +481,8 @@ function FilterPill({
             className={cn(
                 "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border",
                 active
-                    ? "bg-primary text-white border-primary"
-                    : "bg-transparent text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
+                    ? "bg-muted text-foreground border-border shadow-sm font-semibold"
+                    : "bg-transparent text-muted-foreground border-transparent hover:text-foreground"
             )}
         >
             {icon}

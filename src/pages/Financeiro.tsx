@@ -365,7 +365,7 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                         <div className="absolute top-0 right-0 w-12 h-12 bg-primary/5 rounded-bl-full -mr-6 -mt-6 pointer-events-none" />
                         <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-tighter mb-2">Valor Projeto</span>
                         <div className="flex items-end justify-between">
-                            <span className="text-xl font-bold tabular-nums text-primary">R$ {projectIndicators.value.toLocaleString()}</span>
+                            <span className="text-xl font-semibold tabular-nums text-primary">R$ {projectIndicators.value.toLocaleString()}</span>
                             <TrendingUp className="h-3.5 w-3.5 text-primary/30" />
                         </div>
                     </div>
@@ -376,7 +376,7 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                             {projectIndicators.balance >= 0 ? 'Saldo Líquido' : 'Déficit'}
                         </span>
                         <div className="flex items-end justify-between">
-                            <span className="text-xl font-bold tabular-nums text-foreground/80">R$ {Math.abs(projectIndicators.balance).toLocaleString()}</span>
+                            <span className="text-xl font-semibold tabular-nums text-foreground/80">R$ {Math.abs(projectIndicators.balance).toLocaleString()}</span>
                             <div className={cn(
                                 "h-3.5 w-3.5 rounded-full",
                                 projectIndicators.balance >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-orange-500/10 text-orange-500"
@@ -388,7 +388,7 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                     <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
                         <div className="flex justify-between items-start mb-2">
                             <span className="text-[9px] font-medium text-muted-foreground/40 uppercase tracking-tighter">Trajetória</span>
-                            <span className="text-[10px] font-bold tabular-nums text-primary">{projectIndicators.progress}%</span>
+                            <span className="text-[10px] font-semibold tabular-nums text-primary">{projectIndicators.progress}%</span>
                         </div>
                         <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden mb-1">
                             <motion.div
@@ -732,7 +732,7 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                                                                     .filter((i: any) => selectedMonth === "all" || isInSelectedMonth(i.due_date, selectedMonth))
                                                                     .map((inst: any, idx: number) => (
                                                                         <div key={`inst-${inst.id || idx}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 bg-primary/5 hover:bg-primary/10 transition-colors rounded-sm px-1">
-                                                                            <span className="text-primary font-bold flex items-center gap-2">
+                                                                            <span className="text-primary font-semibold flex items-center gap-2">
                                                                                 {inst.origin_label?.toLowerCase().includes('sinal') ? (
                                                                                     <BadgePercent className="h-3 w-3" />
                                                                                 ) : (
@@ -742,7 +742,7 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                                                                                 <span className="text-[9px] opacity-60 font-medium">({format(parseISO(inst.due_date), "dd/MM")})</span>
                                                                                 {inst.status === 'recebido' && <CheckCircle2 className="h-2.5 w-2.5 text-primary" />}
                                                                             </span>
-                                                                            <span className="text-right font-bold text-primary">{formatCurrency(inst.amount)}</span>
+                                                                            <span className="text-right font-semibold text-primary">{formatCurrency(inst.amount)}</span>
                                                                         </div>
                                                                     ))}
 
@@ -777,11 +777,11 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                                                                         if (selectedMonth === "all" || isInSelectedMonth(currDate, selectedMonth)) {
                                                                             cycles.push(
                                                                                 <div key={`rec-${p.id}-${i}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 bg-primary/[0.08] hover:bg-primary/[0.12] transition-colors rounded-sm px-1">
-                                                                                    <span className="text-primary font-bold flex items-center gap-2">
+                                                                                    <span className="text-primary font-semibold flex items-center gap-2">
                                                                                         <Clock className="h-3 w-3" /> Faturamento Recorrente ({i + 1}º ciclo)
                                                                                         <span className="text-[9px] opacity-60 font-medium">({format(parseISO(currDate), "dd/MM")})</span>
                                                                                     </span>
-                                                                                    <span className="text-right font-bold text-primary">{formatCurrency(p.value)}</span>
+                                                                                    <span className="text-right font-semibold text-primary">{formatCurrency(p.value)}</span>
                                                                                 </div>
                                                                             );
                                                                         }

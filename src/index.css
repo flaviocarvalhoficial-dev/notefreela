@@ -19,9 +19,9 @@
 @layer base {
   :root {
     /* NoteFreela Design System — Cockpit Signature */
-    --background: 0 0% 99%;
-    /* #FCFCFC */
-    --foreground: 0 0% 0%;
+    --background: 220 20% 98%;
+    /* #F7F8FA - Refined Light Gray */
+    --foreground: 240 10% 4%;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 0%;
@@ -57,11 +57,11 @@
     --accent-hover: 25 100% 50%;
     --accent-subtle: 25 100% 58% / 0.08;
 
-    /* Semantic Radius - Arthur Marques Rules */
-    --radius-card: 16px;
-    --radius-button: 12px;
-    --radius-input: 10px;
-    --radius: 8px;
+    /* Semantic Radius - Refined Signature Geometry */
+    --radius-card: 10px;
+    --radius-button: 8px;
+    --radius-tiny: 6px;
+    --radius: 6px;
     /* Standard fallback */
 
     /* Micro Shadows Linear - Refined */
@@ -81,14 +81,16 @@
   }
 
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    --background: 220 18% 7%;
+    /* #0F1115 - Silenced Dark Gray */
+    --foreground: 210 20% 92%;
+    /* #E6E8EC */
+    --card: 220 18% 10%;
+    /* #151821 approx */
+    --card-foreground: 210 20% 92%;
 
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 100%;
-
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 210 20% 92%;
 
     --primary: 25 100% 58%;
     --primary-foreground: 0 0% 100%;

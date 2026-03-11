@@ -234,8 +234,8 @@ const Projetos = () => {
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-32 gap-6">
-          <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
-          <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">Sincronizando workspace...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-muted-foreground opacity-20" />
+          <p className="text-sm font-medium text-muted-foreground/60 animate-pulse tracking-wide">Sincronizando workspace...</p>
         </div>
       ) : (
         <AnimatePresence mode="wait">
@@ -287,8 +287,8 @@ const Projetos = () => {
           animate={{ opacity: 1 }}
           className="text-center py-28 flex flex-col items-center gap-6 animate-in fade-in duration-700"
         >
-          <div className="w-24 h-24 bg-primary/5 rounded-[2rem] flex items-center justify-center mb-2 border-2 border-dashed border-border shadow-soft">
-            <Briefcase className="text-primary opacity-20 h-10 w-10" />
+          <div className="w-24 h-24 bg-muted/30 rounded-[2rem] flex items-center justify-center mb-2 border-2 border-dashed border-border shadow-soft">
+            <Briefcase className="text-muted-foreground opacity-20 h-10 w-10" />
           </div>
           <div className="space-y-2">
             <h3 className="text-2xl font-medium tracking-tight">O horizonte está limpo</h3>
@@ -326,6 +326,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
   const uiConfig = (project.services as any[] || []).find(s => s.name === "__ui_config__");
   const metaphor = uiConfig?.metaphor || "roadmap";
   const coverColor = uiConfig?.color || "accent-primary";
+  const coverUrl = uiConfig?.coverUrl || "";
 
   const statusColors: Record<string, string> = {
     active: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20',
@@ -393,8 +394,8 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
       {/* Header section (Avatar + Info + Status) */}
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-foreground flex items-center justify-center text-background overflow-hidden border border-border/10">
-            <ProjectIcon className="h-5 w-5" />
+          <div className="h-10 w-10 flex items-center justify-center text-foreground shrink-0">
+            <ProjectIcon className="h-7 w-7" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground leading-tight truncate max-w-[120px]">
@@ -447,23 +448,29 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
           <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/5 via-transparent to-accent-primary/5" />
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
 
-          {/* Internal visual composition - Dynamic Metaphor */}
+          {/* Internal visual composition - Dynamic Metaphor or Cover Image */}
           <div className="absolute inset-0 flex items-center justify-center">
-            {getMetaphorContent()}
-            <div className="absolute opacity-40">
-              <ProjectIcon className={cn(
-                "h-10 w-10 transition-colors",
-                coverColor === 'accent-primary' ? 'text-accent-primary group-hover:text-accent-primary' :
-                  `text-${coverColor.split('-')[0]}-500 group-hover:text-${coverColor.split('-')[0]}-500`
-              )} />
-            </div>
+            {coverUrl ? (
+              <img src={coverUrl} alt={project.name} className="w-full h-full object-cover" />
+            ) : (
+              <>
+                {getMetaphorContent()}
+                <div className="absolute opacity-40">
+                  <ProjectIcon className={cn(
+                    "h-10 w-10 transition-colors",
+                    coverColor === 'accent-primary' ? 'text-muted-foreground' :
+                      `text-${coverColor.split('-')[0]}-500 group-hover:text-${coverColor.split('-')[0]}-500`
+                  )} />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* Content area */}
       <div className="p-6 space-y-4">
-        <h3 className="text-base font-medium text-foreground/90 leading-snug tracking-tight group-hover:text-primary transition-colors line-clamp-2">
+        <h3 className="text-base font-medium text-foreground/90 leading-snug tracking-tight group-hover:text-foreground transition-colors line-clamp-2">
           {project.name}
         </h3>
 
@@ -502,7 +509,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
             <div className="flex items-center gap-2">
               <span className="text-xs font-normal text-muted-foreground">{project.progress}%</span>
               <div className="w-12 h-1 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-primary/40 rounded-full" style={{ width: `${project.progress}%` }} />
+                <div className="h-full bg-muted-foreground/30 rounded-full" style={{ width: `${project.progress}%` }} />
               </div>
             </div>
           </div>
@@ -520,14 +527,14 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
       onClick={onClick}
     >
       <div className="flex items-center gap-4 flex-1 min-w-0">
-        <div className="h-8 w-8 flex items-center justify-center text-primary shrink-0 transition-transform group-hover:scale-105">
+        <div className="h-8 w-8 flex items-center justify-center text-muted-foreground/60 shrink-0 transition-transform group-hover:scale-105 group-hover:text-foreground">
           {(() => {
             const Icon = (LucideIcons as any)[project.avatar_emoji];
             return Icon ? <Icon className="h-5 w-5" /> : <Briefcase className="h-5 w-5" />;
           })()}
         </div>
         <div className="min-w-0 flex-1 pr-6">
-          <h3 className="font-medium text-sm truncate text-foreground/90 group-hover:text-primary transition-colors underline-offset-4 hover:underline">{project.name}</h3>
+          <h3 className="font-medium text-sm truncate text-foreground/90 group-hover:text-foreground transition-colors underline-offset-4 hover:underline">{project.name}</h3>
           <p className="text-[10px] text-muted-foreground font-normal truncate">{project.client_name || "Sem cliente"}</p>
         </div>
       </div>

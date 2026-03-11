@@ -381,11 +381,11 @@ export function TimelineSection({
                 {daysInRange.map((d, idx) => (
                   <div key={idx} className={cn(
                     "shrink-0 flex items-center justify-center border-r border-border h-8",
-                    isToday(d) && "bg-primary/5"
+                    isToday(d) && "bg-muted/40"
                   )} style={{ width: slotPx }}>
                     <span className={cn(
                       "text-[10px] font-medium tabular-nums",
-                      isToday(d) ? "text-primary" : "text-muted-foreground"
+                      isToday(d) ? "text-foreground font-bold" : "text-muted-foreground"
                     )}>
                       {d.getDate()}
                     </span>
@@ -415,7 +415,7 @@ export function TimelineSection({
                 {daysInRange.map((d, idx) => (
                   <div key={`v-${idx}`} className={cn(
                     "h-full border-r border-border/5 shrink-0",
-                    isToday(d) && "bg-primary/[0.01] border-primary/10"
+                    isToday(d) && "bg-muted/[0.1] border-muted-foreground/10"
                   )} style={{ width: slotPx }} />
                 ))}
               </div>
@@ -486,13 +486,13 @@ export function TimelineSection({
                       <div className="flex flex-col gap-1">
                         {a.projectName && (
                           <p className="text-[10px] font-medium text-muted-foreground tracking-tight flex items-center gap-1.5 leading-tight">
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
                             {a.projectName}
                           </p>
                         )}
                         {a.columnName && (
-                          <p className="text-[8px] font-bold text-primary tracking-widest uppercase flex items-center gap-1.5 leading-tight opacity-90">
-                            <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
+                          <p className="text-[8px] font-bold text-muted-foreground tracking-widest uppercase flex items-center gap-1.5 leading-tight opacity-90">
+                            <span className="w-1 h-1 rounded-full bg-muted-foreground/40 shrink-0" />
                             Status: {a.columnName}
                           </p>
                         )}

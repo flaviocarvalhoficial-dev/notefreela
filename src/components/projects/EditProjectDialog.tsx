@@ -14,6 +14,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { IconPicker } from "./IconPicker";
+import { ProjectCoverInput } from "./ProjectCoverInput";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { logActivity } from "@/utils/activities";
@@ -88,6 +89,7 @@ export function EditProjectDialog({
     const [newDeadline, setNewDeadline] = useState(project?.deadline || "");
     const [coverMetaphor, setCoverMetaphor] = useState<string>("roadmap");
     const [coverColor, setCoverColor] = useState<string>("accent-primary");
+    const [coverUrl, setCoverUrl] = useState("");
 
     // â”€â”€ Financeiro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [newValue, setNewValue] = useState(project?.value || 0);
@@ -389,9 +391,11 @@ export function EditProjectDialog({
             if (uiConfig) {
                 setCoverMetaphor(uiConfig.metaphor || "roadmap");
                 setCoverColor(uiConfig.color || "accent-primary");
+                setCoverUrl(uiConfig.coverUrl || "");
             } else {
                 setCoverMetaphor("roadmap");
                 setCoverColor("accent-primary");
+                setCoverUrl("");
             }
 
             setBillingType((project.billing_type as any) || "pontual");
@@ -406,8 +410,6 @@ export function EditProjectDialog({
             setStartDate(
                 project.created_at ? new Date(project.created_at).toISOString().split("T")[0] : ""
             );
-
-
         }
     }, [open, project]);
 
@@ -558,7 +560,8 @@ export function EditProjectDialog({
                     name: "__ui_config__",
                     price: 0,
                     metaphor: coverMetaphor,
-                    color: coverColor
+                    color: coverColor,
+                    coverUrl: coverUrl
                 }
             ];
             const { error } = await supabase
@@ -878,10 +881,10 @@ export function EditProjectDialog({
                     {/* â”€â”€ Sidebar Nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                     <div className="w-44 shrink-0 border-r border-border bg-muted/20 flex flex-col p-3 gap-1">
                         <div className="px-2 pb-3 pt-1 border-b border-border mb-2">
-                            <p className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
+                            <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">
                                 Editar Projeto
                             </p>
-                            <p className="text-[9px] font-medium text-primary mt-1">
+                            <p className="text-[9px] font-medium text-muted-foreground mt-1">
                                 Passo {step} de 4
                             </p>
                         </div>
@@ -893,14 +896,14 @@ export function EditProjectDialog({
                                 className={cn(
                                     "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-all text-left",
                                     step === tab.id
-                                        ? "bg-primary/10 text-primary border border-primary/20"
-                                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                        ? "bg-foreground/[0.03] text-foreground border border-border"
+                                        : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
                                 )}
                             >
                                 <tab.icon className="h-3.5 w-3.5 shrink-0" />
                                 {tab.label}
                                 {tab.id === 4 && projectTasks.length > 0 && (
-                                    <span className="ml-auto text-[9px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                                    <span className="ml-auto text-[9px] font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full border border-border">
                                         {projectTasks.length}
                                     </span>
                                 )}
@@ -910,14 +913,14 @@ export function EditProjectDialog({
                         <div className="mt-auto pt-3 border-t border-border space-y-2">
                             {step < 4 ? (
                                 <Button
-                                    className="w-full h-9 text-xs font-bold"
+                                    className="w-full h-9 text-xs font-medium"
                                     onClick={nextStep}
                                 >
                                     Próximo <ChevronRight className="h-3 w-3 ml-1.5" />
                                 </Button>
                             ) : (
                                 <Button
-                                    className="w-full h-9 text-xs font-bold"
+                                    className="w-full h-9 text-xs font-medium"
                                     onClick={() => updateProjectMutation.mutate()}
                                     disabled={updateProjectMutation.isPending || !newName}
                                 >
@@ -949,7 +952,7 @@ export function EditProjectDialog({
                         {/* Progress line at top of content area */}
                         <div className="h-1 w-full bg-muted/20 rounded-full mb-6 overflow-hidden">
                             <motion.div
-                                className="h-full bg-primary shadow-glow"
+                                className="h-full bg-primary"
                                 initial={{ width: "25%" }}
                                 animate={{ width: `${(step / 4) * 100}%` }}
                             />
@@ -965,7 +968,7 @@ export function EditProjectDialog({
                                 className="space-y-6"
                             >
                                 <div className="space-y-1">
-                                    <h3 className="text-base font-bold tracking-tight">
+                                    <h3 className="text-base font-semibold tracking-tight text-foreground">
                                         {step === 1 && "Identidade do Projeto"}
                                         {step === 2 && "Cronograma e Prazos"}
                                         {step === 3 && "Acordo Financeiro"}
@@ -984,7 +987,7 @@ export function EditProjectDialog({
                                             <Label htmlFor="edit-name" className="text-xs text-muted-foreground">Nome do Projeto</Label>
                                             <Input
                                                 id="edit-name"
-                                                className="glass-light border-border h-11 text-lg font-medium focus:ring-1 focus:ring-primary/20"
+                                                className="glass-light border-border h-11 text-lg font-medium focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
                                                 value={newName}
                                                 onChange={(e) => setNewName(e.target.value)}
                                             />
@@ -1002,7 +1005,7 @@ export function EditProjectDialog({
                                                 <Label className="text-xs text-muted-foreground">Capa do Projeto</Label>
                                                 <div className="flex items-center gap-2">
                                                     <Select value={coverMetaphor} onValueChange={setCoverMetaphor}>
-                                                        <SelectTrigger className="glass-light border-border h-9 text-[10px] font-bold">
+                                                        <SelectTrigger className="glass-light border-border h-9 text-[10px] font-bold min-w-[100px]">
                                                             <SelectValue placeholder="Metáfora" />
                                                         </SelectTrigger>
                                                         <SelectContent className="glass border-border">
@@ -1020,7 +1023,7 @@ export function EditProjectDialog({
                                                                 type="button"
                                                                 onClick={() => setCoverColor(c)}
                                                                 className={cn(
-                                                                    "h-4 w-4 rounded-full border border-white/20 transition-transform hover:scale-110",
+                                                                    "h-4 w-4 rounded-full border border-white/20 transition-transform hover:scale-110 shrink-0",
                                                                     coverColor === c && "ring-2 ring-primary ring-offset-1",
                                                                     c === 'accent-primary' ? 'bg-accent-primary' :
                                                                         c === 'blue-500' ? 'bg-blue-500' :
@@ -1031,6 +1034,14 @@ export function EditProjectDialog({
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="edit-project-cover-url" className="text-xs text-muted-foreground">URL da Imagem de Capa (Opcional)</Label>
+                                            <ProjectCoverInput
+                                                value={coverUrl}
+                                                onChange={setCoverUrl}
+                                            />
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
@@ -1045,9 +1056,9 @@ export function EditProjectDialog({
                                                             size="sm"
                                                             onClick={() => setBillingType(t)}
                                                             className={cn(
-                                                                "h-9 text-[10px] font-bold tracking-wider transition-all",
+                                                                "h-9 text-[10px] font-medium tracking-wider transition-all",
                                                                 billingType === t
-                                                                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                                                                    ? "bg-foreground text-background"
                                                                     : "glass-light border-border hover:bg-muted text-muted-foreground"
                                                             )}
                                                         >

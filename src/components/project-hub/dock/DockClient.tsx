@@ -14,7 +14,6 @@ interface DockClientProps {
     updateProject: (updates: any) => void;
     updateClient: (updates: any) => void;
     navigate: (path: string) => void;
-    onClose: () => void;
 }
 
 export const DockClient = ({
@@ -24,8 +23,7 @@ export const DockClient = ({
     setExtraProperties,
     updateProject,
     updateClient,
-    navigate,
-    onClose
+    navigate
 }: DockClientProps) => {
     return (
         <div className="py-6 px-4 space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -186,7 +184,7 @@ export const DockClient = ({
                 </div>
             </div>
 
-            <div className="pt-6 space-y-3">
+            <div className="pt-6">
                 {project?.client_id && (
                     <NewClientDialog
                         client={client}
@@ -199,14 +197,6 @@ export const DockClient = ({
                         }
                     />
                 )}
-
-                <Button
-                    onClick={onClose}
-                    variant="outline"
-                    className="w-full h-11 text-[11px] font-bold gap-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl transition-all"
-                >
-                    <LucideIcons.ChevronRight className="w-4 h-4" /> RECOLHER CONTEXTO
-                </Button>
             </div>
         </div>
     );

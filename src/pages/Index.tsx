@@ -49,7 +49,7 @@ const Index = () => {
             {/* Standard Header Section - Matching other pages */}
             <header className="flex items-center justify-between gap-4 mb-8 h-12">
                 <div>
-                    <h1 className="text-2xl font-medium tracking-tight text-foreground">Painel de Controle</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Painel de Controle</h1>
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
@@ -70,19 +70,19 @@ const Index = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bento-card p-5 flex flex-col justify-between"
+                    className="bento-card p-4 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-2 bg-muted/10 rounded-xl border border-border/40">
                             <Briefcase className="h-4 w-4 text-muted-foreground/60" />
                         </div>
-                        <Badge variant="outline" className="text-[10px] h-5 bg-muted/5 text-muted-foreground border-border/40">
+                        <Badge variant="outline" className="text-[10px] h-5 bg-muted/5 text-muted-foreground/60 border-border/40 font-medium font-mono">
                             Ativos
                         </Badge>
                     </div>
                     <div>
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Projetos</p>
-                        <h2 className="text-2xl font-medium tracking-tight tabular-nums text-foreground/90">{projects.length}</h2>
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-50">Projetos</p>
+                        <h2 className="text-2xl font-semibold tracking-tight tabular-nums text-foreground/90">{projects.length}</h2>
                     </div>
                 </motion.div>
 
@@ -90,18 +90,18 @@ const Index = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bento-card p-5 flex flex-col justify-between"
+                    className="bento-card p-4 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-2 bg-muted/10 rounded-xl border border-border/40">
                             <CheckSquare className="h-4 w-4 text-muted-foreground/60" />
                         </div>
-                        <span className="text-[10px] font-medium text-muted-foreground/60">{completionRate}%</span>
+                        <span className="text-[10px] font-semibold text-muted-foreground/60 font-mono italic">{completionRate}%</span>
                     </div>
                     <div>
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Tarefas</p>
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-50">Tarefas</p>
                         <div className="flex items-end justify-between gap-4">
-                            <h2 className="text-2xl font-medium tracking-tight tabular-nums text-foreground/90">{tasksStats?.total || 0}</h2>
+                            <h2 className="text-2xl font-semibold tracking-tight tabular-nums text-foreground/90">{tasksStats?.total || 0}</h2>
                             <Progress value={completionRate} className="h-1.5 flex-1 mb-2 bg-primary/10" />
                         </div>
                     </div>
@@ -111,7 +111,7 @@ const Index = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bento-card p-5 flex flex-col justify-between"
+                    className="bento-card p-4 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-2 bg-muted/10 rounded-xl border border-border/40">
@@ -120,8 +120,8 @@ const Index = () => {
                         <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/20" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Clientes</p>
-                        <h2 className="text-2xl font-medium tracking-tight tabular-nums text-foreground/90">{uniqueClientsCount}</h2>
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-50">Clientes</p>
+                        <h2 className="text-2xl font-semibold tracking-tight tabular-nums text-foreground/90">{uniqueClientsCount}</h2>
                     </div>
                 </motion.div>
 
@@ -129,7 +129,7 @@ const Index = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="bento-card p-5 flex flex-col justify-between overflow-hidden relative"
+                    className="bento-card p-4 flex flex-col justify-between overflow-hidden relative"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-2 bg-muted/10 rounded-xl border border-border/40">
@@ -138,8 +138,8 @@ const Index = () => {
                         <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/30" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1">Faturamento Est.</p>
-                        <h2 className="text-2xl font-medium tracking-tight tabular-nums mask-value text-foreground/90">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-50">Faturamento Est.</p>
+                        <h2 className="text-2xl font-semibold tracking-tight tabular-nums mask-value text-foreground/90">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(
                                 projects.reduce((acc, p) => acc + (Number(p.value) || 0), 0)
                             )}
@@ -149,9 +149,9 @@ const Index = () => {
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            < div className="grid grid-cols-1 lg:grid-cols-3 gap-6" >
                 {/* Timeline - Main Focus */}
-                <div className="lg:col-span-2">
+                < div className="lg:col-span-2" >
                     <Collapsible open={isTimelineOpen} onOpenChange={setIsTimelineOpen} className="h-full flex flex-col">
                         <div className="flex items-center justify-between mb-4">
                             <CollapsibleTrigger asChild>
@@ -169,21 +169,21 @@ const Index = () => {
                             </div>
                         </CollapsibleContent>
                     </Collapsible>
-                </div>
+                </div >
 
                 {/* Right column: Timer + Financial Chart */}
-                <div className="lg:col-span-1 flex flex-col pt-11">
+                < div className="lg:col-span-1 flex flex-col pt-11" >
                     <div className="flex flex-col gap-4 h-[650px]">
                         <DashboardTimerWidget />
                         <div className="flex-1 min-h-[300px]">
                             <FinancialChart projects={projects} />
                         </div>
                     </div>
-                </div>
-            </div>
+                </div >
+            </div >
 
             {/* Recent Activities Section */}
-            <div className="mt-8 pb-12">
+            < div className="mt-8 pb-12" >
                 <Collapsible open={isActivitiesOpen} onOpenChange={setIsActivitiesOpen}>
                     <div className="flex items-center justify-between mb-6">
                         <CollapsibleTrigger asChild>
@@ -205,8 +205,8 @@ const Index = () => {
                         </div>
                     </CollapsibleContent>
                 </Collapsible>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

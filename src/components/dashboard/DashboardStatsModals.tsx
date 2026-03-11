@@ -47,15 +47,15 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
                 >
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
-                                <TrendingUp className="h-4 w-4 text-primary" />
+                            <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center border border-border/50">
+                                <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-medium group-hover:text-primary transition-colors tracking-tight">{p.name}</h4>
+                                <h4 className="text-sm font-medium group-hover:text-foreground transition-colors tracking-tight">{p.name}</h4>
                                 <p className="text-[10px] font-medium text-muted-foreground  tracking-tight">{p.client_name || "PROJETO AUTORAL"}</p>
                             </div>
                         </div>
-                        <Badge variant="outline" className="text-[9px] font-medium  tracking-tight h-5 border-primary/20 bg-primary/5 text-primary rounded-md">
+                        <Badge variant="secondary" className="text-[9px] font-medium tracking-tight h-5 border-border bg-muted/60 text-muted-foreground rounded-md uppercase">
                             {p.status}
                         </Badge>
                     </div>
@@ -76,7 +76,7 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
             <div className="grid grid-cols-2 gap-4 mb-2">
                 <div className="p-4 rounded-lg border border-border bg-secondary/10 flex flex-col items-center text-center">
                     <p className="text-[9px] text-muted-foreground  font-medium tracking-tight mb-2">CONCLUÍDAS</p>
-                    <p className="text-3xl font-medium text-primary tabular-nums">{data.tasksStats?.completed || 0}</p>
+                    <p className="text-3xl font-medium text-foreground tabular-nums">{data.tasksStats?.completed || 0}</p>
                 </div>
                 <div className="p-4 rounded-lg border border-border bg-secondary/10 flex flex-col items-center text-center">
                     <p className="text-[9px] text-muted-foreground  font-medium tracking-tight mb-2">TOTAL</p>
@@ -122,7 +122,7 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
                         className="p-4 rounded-lg border border-border bg-secondary/10 hover:bg-secondary/20 transition-all flex items-center justify-between"
                     >
                         <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/10 capitalize font-medium text-primary">
+                            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border border-border text-muted-foreground capitalize font-bold">
                                 {client.charAt(0) || "?"}
                             </div>
                             <div>
@@ -131,7 +131,7 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-base font-medium text-primary tabular-nums">{projectsCount}</p>
+                            <p className="text-base font-bold text-foreground tabular-nums">{projectsCount}</p>
                             <p className="text-[9px] font-medium text-muted-foreground  tracking-tight">PROJETOS</p>
                         </div>
                     </div>
@@ -160,9 +160,9 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
 
     const getIcon = () => {
         switch (type) {
-            case "projects": return <TrendingUp className="h-5 w-5 text-primary" />;
-            case "tasks": return <CheckCircle2 className="h-5 w-5 text-primary" />;
-            case "clients": return <Users className="h-5 w-5 text-primary" />;
+            case "projects": return <TrendingUp className="h-5 w-5 text-muted-foreground" />;
+            case "tasks": return <CheckCircle2 className="h-5 w-5 text-muted-foreground" />;
+            case "clients": return <Users className="h-5 w-5 text-muted-foreground" />;
             default: return null;
         }
     };
@@ -172,7 +172,7 @@ export function DashboardStatsModals({ type, open, onOpenChange, data }: Dashboa
             <DialogContent className="max-w-md border-border bg-sidebar/95 backdrop-blur-xl">
                 <DialogHeader className="pb-6 border-b border-border">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-lg bg-primary/10 shadow-inner">
+                        <div className="p-3 rounded-lg bg-muted shadow-sm border border-border/50">
                             {getIcon()}
                         </div>
                         <div>

@@ -25,7 +25,6 @@ export const Column = Node.create({
         return ['div',
             mergeAttributes(HTMLAttributes, { 'data-type': 'column', class: 'column' }),
             ['div', { class: 'column-resizer', contenteditable: 'false' }],
-            ['div', { class: 'column-delete', contenteditable: 'false', title: 'Excluir coluna' }, '✕'],
             ['div', { class: 'column-content' }, 0]
         ];
     },

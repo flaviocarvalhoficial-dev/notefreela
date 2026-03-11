@@ -32,13 +32,17 @@ export function DeleteConfirmDialog({
 }: DeleteConfirmDialogProps) {
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
-            <AlertDialogTrigger asChild>
-                {trigger || (
+            {trigger ? (
+                <AlertDialogTrigger asChild>
+                    {trigger}
+                </AlertDialogTrigger>
+            ) : !onOpenChange && (
+                <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-600 hover:bg-orange-500/10">
                         <Trash2 className="h-4 w-4" />
                     </Button>
-                )}
-            </AlertDialogTrigger>
+                </AlertDialogTrigger>
+            )}
             <AlertDialogContent
                 className="bg-card border border-border max-w-[400px]"
                 onClick={(e) => e.stopPropagation()}

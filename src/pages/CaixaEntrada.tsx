@@ -29,7 +29,8 @@ import {
     Clock,
     Hash,
     Zap,
-    ArrowRight
+    ArrowRight,
+    Filter
 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -146,7 +147,7 @@ const TagSuggester = ({ content, currentTags, onSelect }: { content: string, cur
                 <button
                     key={tag}
                     onClick={() => onSelect(tag)}
-                    className="text-[9px] font-bold bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded hover:bg-primary/20 transition-colors"
+                    className="text-[9px] font-semibold bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-[var(--radius-tiny)] hover:bg-primary/20 transition-colors"
                 >
                     +{tag}
                 </button>
@@ -175,7 +176,7 @@ const ItemCard = ({
 }) => {
     return (
         <div className={cn(
-            "bento-card group transition-all bg-card border border-border shadow-sm relative overflow-hidden",
+            "group transition-all bg-card border border-border/60 shadow-[var(--shadow-card)] relative overflow-hidden rounded-[var(--radius-card)]",
             viewMode === 'grid' ? "p-4 flex flex-col justify-between gap-2 h-[200px]" : "p-2 flex items-center justify-between",
             isOverlay ? "shadow-xl border-primary/50 scale-105 rotate-2 cursor-grabbing" : "hover:border-primary/30 cursor-grab active:cursor-grabbing"
         )}>

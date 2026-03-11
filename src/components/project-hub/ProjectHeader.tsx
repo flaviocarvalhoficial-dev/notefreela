@@ -82,8 +82,8 @@ export const ProjectHeader = ({
                             value={project?.avatar_emoji || "Briefcase"}
                             onChange={(icon) => onIconChange?.(icon)}
                             trigger={
-                                <div className="w-8 h-8 rounded-md bg-primary/5 border border-border flex items-center justify-center text-lg shadow-sm cursor-pointer hover:bg-primary/10 transition-all shrink-0">
-                                    <ProjectIcon className="w-4 h-4 text-primary" />
+                                <div className="w-8 h-8 rounded-md bg-muted/50 border border-border flex items-center justify-center text-lg shadow-sm cursor-pointer hover:bg-muted transition-all shrink-0">
+                                    <ProjectIcon className="w-4 h-4 text-muted-foreground/80" />
                                 </div>
                             }
                         />
@@ -114,10 +114,10 @@ export const ProjectHeader = ({
                         onClick={onToggleDock}
                         className={cn(
                             "h-9 px-3 gap-2 text-xs font-medium rounded-lg",
-                            dockOpen ? "bg-primary/10 text-primary hover:bg-primary/20" : "text-muted-foreground hover:text-foreground"
+                            dockOpen ? "bg-muted text-foreground border border-border/50" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        <LayoutDashboard className="h-4 w-4" />
+                        <LucideIcons.PanelRightOpen className="h-4 w-4" />
                         <span className="hidden sm:inline">{dockOpen ? 'Ocultar Contexto' : 'Mostrar Contexto'}</span>
                     </Button>
 
@@ -153,15 +153,15 @@ export const ProjectHeader = ({
                                 className={cn(
                                     "flex items-center gap-2 px-4 h-full text-[11px] font-medium transition-all relative group",
                                     isActive
-                                        ? "text-primary"
+                                        ? "text-foreground font-semibold"
                                         : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
-                                <Icon className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                                <Icon className={cn("h-3.5 w-3.5", isActive ? "text-foreground" : "text-muted-foreground/60 group-hover:text-foreground")} />
                                 {option.label}
 
                                 {isActive && (
-                                    <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-t-full shadow-[0_-1px_4px_rgba(255,106,42,0.4)]" />
+                                    <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary/60 rounded-t-full" />
                                 )}
                             </button>
                         );
