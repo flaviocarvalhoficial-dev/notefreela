@@ -31,6 +31,7 @@ import { useNavigationShortcuts } from "@/hooks/use-navigation-shortcuts";
 import { AIAssistantSidebar } from "@/components/AIAssistantSidebar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 const queryClient = new QueryClient();
 
@@ -128,7 +129,11 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Ensuring animation visibility with a minimum of 4 seconds loading state
+    const minLoadingTime = new Promise(resolve => setTimeout(resolve, 4000));
+    const sessionFetch = supabase.auth.getSession();
+
+    Promise.all([minLoadingTime, sessionFetch]).then(([_, { data: { session } }]) => {
       setSession(session);
       setLoading(false);
     });
@@ -142,43 +147,54 @@ const App = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+
+
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route
-              path="/auth"
-              element={!session ? <Auth /> : <Navigate to="/" replace />}
-            />
-            <Route
-              path="/*"
-              element={
-                session ? (
-                  <SidebarProvider defaultOpen={true}>
-                    <AppLayout />
-                  </SidebarProvider>
-                ) : (
-                  <Navigate to="/auth" replace />
-                )
-              }
-            />
-          </Routes>
-          <Toaster />
-          <Sonner />
-          <ReloadPrompt />
-        </BrowserRouter>
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <LoadingScreen key="loading" />
+          ) : (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="w-full h-full"
+            >
+              <BrowserRouter>
+                <Routes>
+                  <Route
+                    path="/auth"
+                    element={!session ? <Auth /> : <Navigate to="/" replace />}
+                  />
+                  <Route
+                    path="/*"
+                    element={
+                      session ? (
+                        <SidebarProvider defaultOpen={true}>
+                          <AppLayout />
+                        </SidebarProvider>
+                      ) : (
+                        <Navigate to="/auth" replace />
+                      )
+                    }
+                  />
+                </Routes>
+                <Toaster />
+                <Sonner />
+                <ReloadPrompt />
+              </BrowserRouter>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </TooltipProvider>
     </QueryClientProvider>
   );
 };
+
 
 export default App;
