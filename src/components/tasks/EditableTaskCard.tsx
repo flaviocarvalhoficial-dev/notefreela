@@ -204,16 +204,16 @@ export function EditableTaskCard({
             <div className="space-y-1">
               <h3
                 className={cn(
-                  "text-sm font-semibold leading-snug text-foreground/90 tracking-tight transition-colors group-hover:text-primary",
-                  task.progress === 100 && "text-muted-foreground/60 font-medium line-through decoration-muted-foreground/30"
+                  "text-sm font-medium leading-snug text-foreground/90 tracking-tight transition-colors group-hover:text-primary",
+                  task.progress === 100 && "text-muted-foreground/40 font-normal line-through decoration-muted-foreground/20"
                 )}
               >
                 {task.title}
               </h3>
               {variant === 'card' && (
                 <div className="flex items-center gap-1.5">
-                  <div className="h-1 w-2.5 rounded-full opacity-40 shrink-0" style={{ backgroundColor: accentColor || 'hsl(var(--primary))' }} />
-                  <p className="text-[9px] font-bold text-muted-foreground/50  tracking-widest uppercase truncate">
+                  <div className="h-0.5 w-2 bg-foreground/10 rounded-full shrink-0" style={{ backgroundColor: accentColor || 'hsl(var(--primary))', opacity: 0.3 }} />
+                  <p className="text-[9px] font-medium text-muted-foreground/40 tracking-wide truncate">
                     {task.project || "Geral"}
                   </p>
                 </div>
@@ -243,7 +243,7 @@ export function EditableTaskCard({
                     <Button type="submit" size="icon" variant="ghost" className="h-6 w-6 text-primary hover:text-primary hover:bg-primary/10">
                       <Check className="h-4 w-4" />
                     </Button>
-                    <Button type="button" size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-orange-500" onClick={() => onCancelEdit?.()}>
+                    <Button type="button" size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => onCancelEdit?.()}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -484,7 +484,7 @@ export function EditableTaskCard({
         {!isEditing && variant === 'card' && (
           <Badge
             variant="outline"
-            className="text-[8px] font-bold uppercase px-1.5 h-4.5 shrink-0 border-none transition-colors tracking-tighter"
+            className="text-[8px] font-medium px-1.5 h-4.5 shrink-0 border-none transition-colors tracking-tight"
             style={{
               color: priorityStyle.color,
               backgroundColor: priorityStyle.backgroundColor,
@@ -505,7 +505,7 @@ export function EditableTaskCard({
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${task.progress}%` }}
-                    className={cn("h-full transition-colors", task.progress === 100 ? "bg-muted-foreground/30" : "bg-primary/40")}
+                    className={cn("h-full transition-colors", task.progress === 100 ? "bg-muted-foreground/20" : "bg-foreground/5 group-hover:bg-primary/20")}
                   />
                 </div>
               </div>
@@ -515,15 +515,15 @@ export function EditableTaskCard({
                 <div className="flex items-center gap-3">
                   {dueInfo && (
                     <div className={cn(
-                      "flex items-center gap-1 text-[9px] font-bold tracking-tighter opacity-40 group-hover:opacity-80 transition-opacity",
-                      dueInfo.isOverdue ? "text-orange-500" : "text-muted-foreground"
+                      "flex items-center gap-1 text-[9px] font-medium tracking-tight opacity-40 group-hover:opacity-80 transition-opacity",
+                      dueInfo.isOverdue ? "text-primary/80" : "text-muted-foreground"
                     )}>
                       <CalendarIcon className="h-2.5 w-2.5" />
                       <span>{dueInfo.label}</span>
                     </div>
                   )}
                   {task.assignee && (
-                    <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 text-[9px] font-medium text-muted-foreground/30 tracking-tight group-hover:opacity-100 transition-opacity">
                       <User className="h-2.5 w-2.5" />
                       <span>{task.assignee.split(' ')[0]}</span>
                     </div>
@@ -542,7 +542,7 @@ export function EditableTaskCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-5 w-5 text-muted-foreground/20 hover:text-orange-500/60 hover:bg-orange-500/5 transition-colors"
+                    className="h-5 w-5 text-muted-foreground/20 hover:text-primary/60 hover:bg-primary/5 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete?.();
@@ -597,7 +597,7 @@ export function EditableTaskCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-5 w-5 text-muted-foreground hover:text-orange-500"
+                  className="h-5 w-5 text-muted-foreground hover:text-primary"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete?.();

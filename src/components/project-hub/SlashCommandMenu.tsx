@@ -5,7 +5,7 @@ import {
     Heading1, Heading2, Heading3,
     List, ListOrdered, CheckSquare,
     Quote, Minus, Code2, Type,
-    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox, Columns2, TrendingUp
+    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox, Columns2, TrendingUp, Terminal, Lightbulb
 } from 'lucide-react';
 
 export interface SlashCommandItem {
@@ -15,6 +15,7 @@ export interface SlashCommandItem {
     icon: React.ReactNode;
     group: string;
     action: (editor: Editor) => void;
+    disabled?: boolean;
 }
 
 export const SLASH_COMMANDS: SlashCommandItem[] = [
@@ -149,12 +150,31 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: <CheckSquare className="w-4 h-4" />,
         group: 'Ações de Projeto',
         action: () => { },
+        disabled: true,
     },
     {
         id: 'inbox',
-        label: 'Criar Inbox',
-        description: 'Vincular item de inbox',
+        label: 'Captação Inbox',
+        description: 'Blodo de registro rápido',
         icon: <Inbox className="w-4 h-4" />,
+        group: 'Ações de Projeto',
+        action: () => { },
+        disabled: true,
+    },
+    {
+        id: 'prompt',
+        label: 'Registrar Prompt',
+        description: 'Card para comandos de IA',
+        icon: <Terminal className="h-4 w-4 text-primary" />,
+        group: 'Ações de Projeto',
+        action: () => { },
+        disabled: true,
+    },
+    {
+        id: 'idea',
+        label: 'Registrar Ideia',
+        description: 'Card para insights criativos',
+        icon: <Lightbulb className="h-4 w-4 text-primary" />,
         group: 'Ações de Projeto',
         action: () => { },
     },
@@ -165,6 +185,7 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: <DollarSign className="w-4 h-4 text-emerald-500" />,
         group: 'Ações de Projeto',
         action: () => { },
+        disabled: true,
     },
     {
         id: 'expense',
@@ -173,6 +194,7 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: <DollarSign className="w-4 h-4 text-rose-500" />,
         group: 'Ações de Projeto',
         action: () => { },
+        disabled: true,
     },
     {
         id: 'subpage',
@@ -181,6 +203,7 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: <FilePlus className="w-4 h-4" />,
         group: 'Ações de Projeto',
         action: () => { },
+        disabled: true,
     },
     // --- VISUALIZAÇÕES ---
     {
@@ -190,6 +213,7 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: <LayoutGrid className="w-4 h-4" />,
         group: 'Visualizações',
         action: () => { },
+        disabled: true,
     },
     {
         id: 'tasks',
@@ -198,6 +222,7 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: <ListTodo className="w-4 h-4" />,
         group: 'Visualizações',
         action: () => { },
+        disabled: true,
     },
     {
         id: 'finance',
@@ -206,14 +231,16 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
         icon: <Wallet className="w-4 h-4" />,
         group: 'Visualizações',
         action: () => { },
+        disabled: true,
     },
     {
         id: 'inboxview',
         label: 'Inbox View',
         description: 'Inserir view de capturas',
-        icon: <Inbox className="w-4 h-4 text-orange-500" />,
+        icon: <Inbox className="w-4 h-4 text-primary" />,
         group: 'Visualizações',
         action: () => { },
+        disabled: true,
     },
 ];
 
@@ -252,8 +279,9 @@ export const SlashCommandMenu = ({
 
     // Reset selected index when filter changes
     useEffect(() => {
-        setSelectedIndex(0);
-    }, [filterText]);
+        const firstEnabled = filteredCommands.findIndex((cmd) => !cmd.disabled);
+        setSelectedIndex(firstEnabled >= 0 ? firstEnabled : 0);
+    }, [filterText, filteredCommands]);
 
     // Scroll active item into view
     useEffect(() => {
@@ -273,21 +301,29 @@ export const SlashCommandMenu = ({
                 case 'ArrowDown':
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedIndex((prev) =>
-                        prev < filteredCommands.length - 1 ? prev + 1 : 0
-                    );
+                    setSelectedIndex((prev) => {
+                        let next = prev < filteredCommands.length - 1 ? prev + 1 : 0;
+                        while (next !== prev && filteredCommands[next]?.disabled) {
+                            next = next < filteredCommands.length - 1 ? next + 1 : 0;
+                        }
+                        return next;
+                    });
                     break;
                 case 'ArrowUp':
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedIndex((prev) =>
-                        prev > 0 ? prev - 1 : filteredCommands.length - 1
-                    );
+                    setSelectedIndex((prev) => {
+                        let next = prev > 0 ? prev - 1 : filteredCommands.length - 1;
+                        while (next !== prev && filteredCommands[next]?.disabled) {
+                            next = next > 0 ? next - 1 : filteredCommands.length - 1;
+                        }
+                        return next;
+                    });
                     break;
                 case 'Enter':
                     e.preventDefault();
                     e.stopPropagation();
-                    if (filteredCommands[selectedIndex]) {
+                    if (filteredCommands[selectedIndex] && !filteredCommands[selectedIndex].disabled) {
                         onSelectCommand(filteredCommands[selectedIndex]);
                     }
                     break;
@@ -364,6 +400,7 @@ export const SlashCommandMenu = ({
                                 onMouseEnter={() => setSelectedIndex(currentIndex)}
                                 className={cn(
                                     'w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-left transition-colors',
+                                    cmd.disabled && 'opacity-30 grayscale-[0.4] pointer-events-none',
                                     currentIndex === selectedIndex
                                         ? 'bg-primary/10 text-primary'
                                         : 'text-foreground hover:bg-muted/40'

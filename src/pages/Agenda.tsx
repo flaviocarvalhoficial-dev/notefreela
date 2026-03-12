@@ -28,15 +28,15 @@ interface AgendaEvent {
 }
 
 const typeColors: Record<EventType, string> = {
-  project: "hsl(158, 64%, 52%)",
-  task: "hsl(262, 52%, 65%)", // Fallback
-  personal: "hsl(212, 52%, 52%)",
+  project: "hsl(158, 65%, 45%)", // Emerald for success/delivery
+  task: "#0080FF", // Nimbus Blue
+  personal: "hsl(var(--muted-foreground) / 0.5)", // Muted for personal
 };
 
 const columnColors: Record<string, string> = {
-  todo: "hsl(220, 15%, 75%)",
-  inprogress: "hsl(200, 85%, 82%)",
-  done: "hsl(150, 65%, 82%)",
+  todo: "hsl(var(--muted-foreground) / 0.3)", // Silento/Planning
+  inprogress: "#0080FF", // Nimbus Blue
+  done: "hsl(150, 65%, 45%)", // Emerald Success
 };
 
 const Agenda = () => {
@@ -234,7 +234,7 @@ const Agenda = () => {
 
             <div className="grid md:grid-cols-2 gap-8 items-start">
               <div className="space-y-4">
-                <h3 className="font-medium text-[10px]  tracking-tight text-muted-foreground ml-2">
+                <h3 className="font-medium text-[10px]  tracking-tight text-muted-foreground ml-2 uppercase">
                   {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                 </h3>
                 <Calendar
@@ -254,19 +254,19 @@ const Agenda = () => {
                     DayContent: ({ date }) => {
                       const dayEvents = allEvents.filter((e) => isSameDay(new Date(e.date + "T12:00:00"), date));
                       return (
-                        <div className="flex flex-col items-center justify-start h-full w-full pt-1 relative z-10">
-                          <span className="text-sm font-normal mb-1 tabular-nums">{date.getDate()}</span>
-                          <div className="flex items-center justify-center gap-1 w-full px-0.5 mt-1">
-                            {dayEvents.slice(0, 4).map((ev) => (
+                        <div className="flex flex-col items-center justify-center h-full w-full relative z-10">
+                          <span className="text-sm font-normal tabular-nums leading-none mb-0.5">{date.getDate()}</span>
+                          <div className="flex items-center justify-center gap-0.5 w-full px-0.5">
+                            {dayEvents.slice(0, 3).map((ev) => (
                               <div
                                 key={ev.id}
-                                className="h-1.5 w-1.5 rounded-full shrink-0"
+                                className="h-1 w-1 rounded-full shrink-0"
                                 style={{ backgroundColor: getEventColor(ev) }}
                                 title={ev.title}
                               />
                             ))}
-                            {dayEvents.length > 4 && (
-                              <div className="h-1 w-1 rounded-full bg-muted-foreground shrink-0" />
+                            {dayEvents.length > 3 && (
+                              <div className="h-0.5 w-0.5 rounded-full bg-muted-foreground shrink-0" />
                             )}
                           </div>
                         </div>
@@ -283,7 +283,7 @@ const Agenda = () => {
               </div>
 
               <div className="hidden md:block space-y-4 border-l border-border pl-8">
-                <h3 className="font-medium text-[10px]  tracking-tight text-muted-foreground ml-2">
+                <h3 className="font-medium text-[10px]  tracking-tight text-muted-foreground ml-2 uppercase">
                   {format(nextMonth, "MMMM yyyy", { locale: ptBR })}
                 </h3>
                 <Calendar

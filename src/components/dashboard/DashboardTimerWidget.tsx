@@ -239,16 +239,16 @@ export function DashboardTimerWidget() {
                             <div className="flex items-center gap-3 pt-2">
                                 <button
                                     onClick={handleManualStart}
-                                    className="flex-1 h-9 bg-primary text-white rounded-lg text-[12px] font-bold shadow-glow-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95"
+                                    className="flex-1 h-9 bg-primary/90 text-white rounded-lg text-xs font-medium shadow-sm flex items-center justify-center gap-2 hover:bg-primary transition-all active:scale-95 group"
                                 >
-                                    <Play className="h-3.5 w-3.5 fill-white" />
-                                    DAR O PLAY
+                                    <Play className="h-3.5 w-3.5 fill-white group-hover:scale-110 transition-transform" />
+                                    Dar o Play
                                 </button>
                                 <button
                                     onClick={() => { setIsSettingUp(false); setSetupProjectId(""); setSetupTaskId(""); }}
-                                    className="h-9 px-4 border border-border rounded-lg text-[11px] font-medium text-muted-foreground hover:bg-card transition-all"
+                                    className="h-9 px-4 border border-border rounded-lg text-[11px] font-medium text-muted-foreground hover:bg-muted/10 transition-all"
                                 >
-                                    AGORA NÃO
+                                    Agora não
                                 </button>
                             </div>
                         </div>
@@ -288,8 +288,8 @@ export function DashboardTimerWidget() {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2.5">
-                            <span className="text-[22px] font-mono font-bold text-foreground tabular-nums leading-none tracking-tight">
+                        <div className="flex flex-col items-end gap-1.5">
+                            <span className="text-[22px] font-mono font-medium text-foreground tabular-nums leading-none tracking-tight">
                                 {formatDuration(timer.elapsed)}
                             </span>
                             <TimerButton
@@ -298,7 +298,7 @@ export function DashboardTimerWidget() {
                                 taskId={timer.taskId}
                                 taskTitle={timer.taskTitle}
                                 variant="compact"
-                                className="h-7 px-4 rounded-full bg-primary text-white border-0 shadow-md hover:scale-105"
+                                className="h-7 px-4 rounded-lg bg-primary text-white border-0 shadow-sm hover:scale-105 transition-all"
                             />
                         </div>
                     </motion.div>
@@ -351,9 +351,9 @@ export function DashboardTimerWidget() {
                                         </div>
                                         <button
                                             onClick={() => setIsSettingUp(true)}
-                                            className="flex items-center gap-1.5 px-3 py-1 bg-primary text-white rounded-full text-[11px] font-semibold shadow-glow-sm hover:opacity-90 transition-all border border-primary/20"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[11px] font-medium shadow-sm hover:bg-primary/90 transition-all border border-primary/20 group"
                                         >
-                                            <Play className="h-3 w-3 fill-white" />
+                                            <Play className="h-3 w-3 fill-white group-hover:scale-110 transition-transform" />
                                             INICIAR
                                         </button>
                                     </div>
@@ -379,7 +379,7 @@ export function DashboardTimerWidget() {
                                                 <div className="flex items-center gap-3.5 min-w-0">
                                                     <div className={cn(
                                                         "p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110",
-                                                        entry.task_title ? "bg-blue-500/10 text-blue-600 dark:bg-blue-400/5" : "bg-muted text-muted-foreground/60"
+                                                        entry.task_title ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground/40"
                                                     )}>
                                                         {entry.task_title
                                                             ? <CheckSquare className="h-4 w-4" />

@@ -408,10 +408,10 @@ export default function Assinaturas() {
                     className="bento-card p-6 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-blue-500/5 rounded-xl border border-blue-500/10">
-                            <Calendar className="h-5 w-5 text-blue-500" />
+                        <div className="p-2 bg-muted/20 rounded-xl border border-border">
+                            <Calendar className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <span className="text-[10px] font-medium text-blue-500 opacity-60">Próximos 30 dias</span>
+                        <span className="text-[10px] font-medium text-muted-foreground opacity-60">Próximos 30 dias</span>
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 ">PRÓXIMO VENCIMENTO</p>
@@ -435,8 +435,8 @@ export default function Assinaturas() {
                     className="bento-card p-6 flex flex-col justify-between"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-purple-500/5 rounded-xl border border-purple-500/10">
-                            <Briefcase className="h-5 w-5 text-purple-500" />
+                        <div className="p-2 bg-muted/20 rounded-xl border border-border">
+                            <Briefcase className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     </div>

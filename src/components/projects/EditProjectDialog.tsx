@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { addMonths, format } from "date-fns";
 import {
     Loader2, Save, Plus, Briefcase, DollarSign, ListTodo,
@@ -77,7 +77,7 @@ export function EditProjectDialog({
     const [step, setStep] = useState<number>(1);
     const [isMaximized, setIsMaximized] = useState(false);
 
-    // â”€â”€ Geral â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Geral ────────────────────────────────────────────────
     const [newName, setNewName] = useState(project?.name || "");
     const [newDesc, setNewDesc] = useState(project?.description || "");
     const [newClient, setNewClient] = useState(project?.client_name || "");
@@ -91,7 +91,7 @@ export function EditProjectDialog({
     const [coverColor, setCoverColor] = useState<string>("accent-primary");
     const [coverUrl, setCoverUrl] = useState("");
 
-    // â”€â”€ Financeiro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Financeiro ───────────────────────────────────────────
     const [newValue, setNewValue] = useState(project?.value || 0);
     const [newAdvance, setNewAdvance] = useState(project?.advance_payment || 0);
     const [newPaymentMethod, setNewPaymentMethod] = useState(project?.payment_method || "pix");
@@ -110,7 +110,7 @@ export function EditProjectDialog({
             : ""
     );
 
-    // ── Configurações ────────────────────────────────────────────────────────
+    // -- Configura��es --------------------------------------------------------
     const [newStatus, setNewStatus] = useState<ProjectStatus>(project.status as ProjectStatus);
     const [newPriority, setNewPriority] = useState<"high" | "medium" | "low">(project.priority as any);
     const [newProgress, setNewProgress] = useState(project.progress);
@@ -118,10 +118,10 @@ export function EditProjectDialog({
         (project.contract_status as any) || "active"
     );
 
-    // â”€â”€ Tasks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Tasks ────────────────────────────────────────────────
     const [newTaskTitle, setNewTaskTitle] = useState("");
 
-    // â”€â”€ Advanced Billing Rules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Advanced Billing Rules ────────────────────────────────
     const [recurringFluxo, setRecurringFluxo] = useState<'start' | 'end'>('start');
     const [recurringCondition, setRecurringCondition] = useState<'immediate' | 'post_installments'>('immediate');
     const [recurringPaymentModel, setRecurringPaymentModel] = useState<'full' | 'split' | 'installments'>('full');
@@ -151,7 +151,7 @@ export function EditProjectDialog({
         }
     }, [recurringServices]);
 
-    // â”€â”€ Parcelamento status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Parcelamento status ───────────────────────────────────
     const [isInstallmentEnabled, setIsInstallmentEnabled] = useState(false);
     const [installments, setInstallments] = useState<{ id?: string; amount: number; date: string; status?: 'provisionado' | 'recebido'; origin_label?: string }[]>([]);
     const [installmentCount, setInstallmentCount] = useState<number>(1);
@@ -162,8 +162,8 @@ export function EditProjectDialog({
     const nextStep = () => {
         if (step === 1 && !newName) {
             toast({
-                title: "Campo obrigatório",
-                description: "Por favor, dê um nome ao seu projeto.",
+                title: "Campo obrigat�rio",
+                description: "Por favor, d� um nome ao seu projeto.",
                 variant: "destructive"
             });
             return;
@@ -211,7 +211,7 @@ export function EditProjectDialog({
                 setRecurringServices(billingAgreement.recurring_services);
             }
 
-            // ✅ FIX: Restore paymentPreset from saved billing agreement model
+            // ? FIX: Restore paymentPreset from saved billing agreement model
             const modelToPreset: Record<string, 'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom'> = {
                 '100inicio': 'full',
                 '50_50': '50_50',
@@ -232,7 +232,7 @@ export function EditProjectDialog({
 
     const handlePresetChange = (preset: 'full' | '50_50' | 'end_of_month' | 'next_month_10' | 'custom') => {
         setPaymentPreset(preset);
-        // ✅ User is manually changing the preset: unlock auto-recalculation
+        // ? User is manually changing the preset: unlock auto-recalculation
         setInstallmentsLoadedFromDB(false);
         const totalValue = Number(newValue) || 0;
         const projectStartDate = startDate ? new Date(startDate + 'T12:00:00') : new Date();
@@ -413,7 +413,7 @@ export function EditProjectDialog({
         }
     }, [open, project]);
 
-    // ✅ FIX: Load existing installments from correct table 'installments' (not project_costs)
+    // ? FIX: Load existing installments from correct table 'installments' (not project_costs)
     useEffect(() => {
         const loadInstallments = async () => {
             if (!open) return;
@@ -462,7 +462,7 @@ export function EditProjectDialog({
                 // Mark as loaded from DB so auto-recalculate effects don't overwrite saved dates
                 setInstallmentsLoadedFromDB(true);
             } else {
-                // No installments saved — reset, but don't override preset-based state
+                // No installments saved � reset, but don't override preset-based state
                 setInstallments([]);
                 setInstallmentCount(1);
                 setInstallmentsLoadedFromDB(false);
@@ -500,7 +500,7 @@ export function EditProjectDialog({
         setServices(services.filter((_, i) => i !== index));
     };
 
-    // â”€â”€ Helper: resolve first column ID for this project â”€â”€â”€â”€
+    // ── Helper: resolve first column ID for this project ────
     const resolveFirstColumnId = async (): Promise<string> => {
         // Strategy 1: direct link via project_id on kanban_columns
         const { data: directCols } = await supabase
@@ -536,12 +536,12 @@ export function EditProjectDialog({
         return "todo";
     };
 
-    // â”€â”€ Mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Mutations ────────────────────────────────────────────
 
     const updateProjectMutation = useMutation({
         mutationFn: async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Usuário não autenticado");
+            if (!user) throw new Error("Usu�rio n�o autenticado");
 
             const finalServices = [
 
@@ -603,7 +603,7 @@ export function EditProjectDialog({
             const { data: agreement, error: agreementError } = await (supabase as any)
                 .from("billing_agreements")
                 .upsert({
-                    id: billingAgreement?.id, // Se já existir um ID, ele atualiza o correto
+                    id: billingAgreement?.id, // Se j� existir um ID, ele atualiza o correto
                     project_id: project.id,
                     user_id: user.id,
                     model: billingModel,
@@ -676,7 +676,7 @@ export function EditProjectDialog({
                 const startDateStr = nextBillingDate || new Date().toISOString().split('T')[0];
                 let baseDate = new Date(startDateStr + 'T12:00:00');
 
-                // If trigger is "Pós Setup" (post_installments), start after the last setup installment
+                // If trigger is "P�s Setup" (post_installments), start after the last setup installment
                 if (recurringCondition === 'post_installments' && installmentSeeds.length > 0) {
                     const lastSetupDate = new Date(installmentSeeds[installmentSeeds.length - 1].due_date + 'T12:00:00');
                     baseDate = addMonths(lastSetupDate, 1);
@@ -734,14 +734,14 @@ export function EditProjectDialog({
             queryClient.invalidateQueries({ queryKey: ["project", project.id] });
             queryClient.invalidateQueries({ queryKey: ["projects-index"] });
             queryClient.invalidateQueries({ queryKey: ["clients"] });
-            // ✅ Invalidate billing data so re-opening dialog loads fresh preset + installments
+            // ? Invalidate billing data so re-opening dialog loads fresh preset + installments
             queryClient.invalidateQueries({ queryKey: ["project-costs-edit", project.id] });
             queryClient.invalidateQueries({ queryKey: ["finance_projects"] });
             queryClient.invalidateQueries({ queryKey: ["tool-subscriptions"] });
 
             logActivity({
                 title: "Projeto Atualizado",
-                description: `As informações do projeto "${newName}" foram atualizadas.`,
+                description: `As informa��es do projeto "${newName}" foram atualizadas.`,
                 type: "project",
                 projectId: project.id,
                 metadata: { project_id: project.id }
@@ -758,7 +758,7 @@ export function EditProjectDialog({
     const addTaskMutation = useMutation({
         mutationFn: async (title: string) => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Não autenticado");
+            if (!user) throw new Error("N�o autenticado");
 
             const columnId = await resolveFirstColumnId();
 
@@ -845,10 +845,10 @@ export function EditProjectDialog({
     const handleOpenChange = (newOpen: boolean) => {
         setOpen(newOpen);
         if (!newOpen) {
-            // Limpa estados temporários de input ao fechar
+            // Limpa estados tempor�rios de input ao fechar
             setRecServiceInput("");
             setRecServicePriceInput("");
-            // ✅ Reset DB-load flag so next open always refreshes from bank
+            // ? Reset DB-load flag so next open always refreshes from bank
             setInstallmentsLoadedFromDB(false);
         }
     };
@@ -878,7 +878,7 @@ export function EditProjectDialog({
                         </Button>
                     </div>
 
-                    {/* â”€â”€ Sidebar Nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                    {/* ── Sidebar Nav ─────────────────────────────── */}
                     <div className="w-44 shrink-0 border-r border-border bg-muted/20 flex flex-col p-3 gap-1">
                         <div className="px-2 pb-3 pt-1 border-b border-border mb-2">
                             <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">
@@ -916,7 +916,7 @@ export function EditProjectDialog({
                                     className="w-full h-9 text-xs font-medium"
                                     onClick={nextStep}
                                 >
-                                    Próximo <ChevronRight className="h-3 w-3 ml-1.5" />
+                                    Pr�ximo <ChevronRight className="h-3 w-3 ml-1.5" />
                                 </Button>
                             ) : (
                                 <Button
@@ -929,7 +929,7 @@ export function EditProjectDialog({
                                     ) : (
                                         <>
                                             <Save className="h-3.5 w-3.5 mr-1.5" />
-                                            Salvar Alterações
+                                            Salvar Altera��es
                                         </>
                                     )}
                                 </Button>
@@ -947,7 +947,7 @@ export function EditProjectDialog({
                         </div>
                     </div>
 
-                    {/* â”€â”€ Content Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                    {/* ── Content Area ────────────────────────────── */}
                     <div className="flex-1 overflow-y-scroll custom-scrollbar p-6 pb-60 space-y-8 min-h-0 bg-background/30">
                         {/* Progress line at top of content area */}
                         <div className="h-1 w-full bg-muted/20 rounded-full mb-6 overflow-hidden">
@@ -995,7 +995,7 @@ export function EditProjectDialog({
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <Label className="text-xs text-muted-foreground">Ícone do Projeto</Label>
+                                                <Label className="text-xs text-muted-foreground">�cone do Projeto</Label>
                                                 <div className="flex items-center gap-3">
                                                     <IconPicker value={newIcon} onChange={setNewIcon} />
                                                     <span className="text-[11px] text-muted-foreground">Personalize no board</span>
@@ -1006,18 +1006,18 @@ export function EditProjectDialog({
                                                 <div className="flex items-center gap-2">
                                                     <Select value={coverMetaphor} onValueChange={setCoverMetaphor}>
                                                         <SelectTrigger className="glass-light border-border h-9 text-[10px] font-bold min-w-[100px]">
-                                                            <SelectValue placeholder="Metáfora" />
+                                                            <SelectValue placeholder="Met�fora" />
                                                         </SelectTrigger>
                                                         <SelectContent className="glass border-border">
-                                                            <SelectItem value="roadmap">🗺️ Roadmap</SelectItem>
-                                                            <SelectItem value="growth">📈 Growth</SelectItem>
-                                                            <SelectItem value="flow">🌊 Fluxo</SelectItem>
-                                                            <SelectItem value="target">🎯 Foco</SelectItem>
-                                                            <SelectItem value="blueprint">📐 Estrutura</SelectItem>
+                                                            <SelectItem value="roadmap">??? Roadmap</SelectItem>
+                                                            <SelectItem value="growth">?? Growth</SelectItem>
+                                                            <SelectItem value="flow">?? Fluxo</SelectItem>
+                                                            <SelectItem value="target">?? Foco</SelectItem>
+                                                            <SelectItem value="blueprint">?? Estrutura</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                     <div className="flex items-center gap-1.5 p-1 px-2 rounded-md border border-border bg-muted/20">
-                                                        {(['accent-primary', 'blue-500', 'emerald-500', 'amber-500'] as const).map((c) => (
+                                                        {(['accent-primary', 'slate-500', 'emerald-500', 'amber-500'] as const).map((c) => (
                                                             <button
                                                                 key={c}
                                                                 type="button"
@@ -1026,8 +1026,7 @@ export function EditProjectDialog({
                                                                     "h-4 w-4 rounded-full border border-white/20 transition-transform hover:scale-110 shrink-0",
                                                                     coverColor === c && "ring-2 ring-primary ring-offset-1",
                                                                     c === 'accent-primary' ? 'bg-accent-primary' :
-                                                                        c === 'blue-500' ? 'bg-blue-500' :
-                                                                            c === 'emerald-500' ? 'bg-emerald-500' : 'bg-amber-500'
+                                                                        `bg-${c}`
                                                                 )}
                                                             />
                                                         ))}
@@ -1068,7 +1067,7 @@ export function EditProjectDialog({
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="edit-service-type" className="text-xs text-muted-foreground">Tipo de Serviço</Label>
+                                                <Label htmlFor="edit-service-type" className="text-xs text-muted-foreground">Tipo de Servi�o</Label>
                                                 <Select value={serviceType} onValueChange={setServiceType}>
                                                     <SelectTrigger className="glass-light border-border h-9 text-xs">
                                                         <SelectValue placeholder="Selecione..." />
@@ -1077,7 +1076,7 @@ export function EditProjectDialog({
                                                         <SelectItem value="design">Design</SelectItem>
                                                         <SelectItem value="dev">Desenvolvimento</SelectItem>
                                                         <SelectItem value="social_media">Social Media</SelectItem>
-                                                        <SelectItem value="traffic">Tráfego Pago</SelectItem>
+                                                        <SelectItem value="traffic">Tr�fego Pago</SelectItem>
                                                         <SelectItem value="copywriting">Copywriting</SelectItem>
                                                         <SelectItem value="other">Outro</SelectItem>
                                                     </SelectContent>
@@ -1098,7 +1097,7 @@ export function EditProjectDialog({
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="edit-desc" className="text-xs text-muted-foreground">Descrição Rápida (Opcional)</Label>
+                                            <Label htmlFor="edit-desc" className="text-xs text-muted-foreground">Descri��o R�pida (Opcional)</Label>
                                             <Input
                                                 id="edit-desc"
                                                 className="glass-light border-border h-10 px-3"
@@ -1111,12 +1110,12 @@ export function EditProjectDialog({
                                         <div className="pt-4 space-y-4 border-t border-border/50">
                                             <div className="flex items-center gap-2">
                                                 <Briefcase className="h-4 w-4 text-primary" />
-                                                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Escopo de Serviços</h4>
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Escopo de Servi�os</h4>
                                             </div>
 
                                             <div className="flex gap-2">
                                                 <Input
-                                                    placeholder="Serviço (ex: Website)"
+                                                    placeholder="Servi�o (ex: Website)"
                                                     className="glass-light border-border h-9 text-xs flex-1 px-3"
                                                     value={serviceInput}
                                                     onChange={(e) => setServiceInput(e.target.value)}
@@ -1154,7 +1153,7 @@ export function EditProjectDialog({
                                                 ))}
                                                 {services.length === 0 && (
                                                     <p className="text-[10px] text-muted-foreground italic text-center py-4 bg-muted/5 rounded-lg border border-dashed border-border">
-                                                        Nenhum serviço adicionado. Defina o escopo para calcular o valor.
+                                                        Nenhum servi�o adicionado. Defina o escopo para calcular o valor.
                                                     </p>
                                                 )}
                                             </div>
@@ -1174,7 +1173,7 @@ export function EditProjectDialog({
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="edit-start" className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <Calendar className="h-3.5 w-3.5" /> Data de Início
+                                                    <Calendar className="h-3.5 w-3.5" /> Data de In�cio
                                                 </Label>
                                                 <Input
                                                     id="edit-start"
@@ -1214,14 +1213,14 @@ export function EditProjectDialog({
                                                                     : "glass-light border-border text-muted-foreground hover:bg-muted"
                                                             )}
                                                         >
-                                                            {p === 'low' ? 'BAIXA' : p === 'medium' ? 'MÉDIA' : 'ALTA'}
+                                                            {p === 'low' ? 'BAIXA' : p === 'medium' ? 'M�DIA' : 'ALTA'}
                                                         </button>
                                                     ))}
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="edit-manager" className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <User className="h-3.5 w-3.5" /> Responsável
+                                                    <User className="h-3.5 w-3.5" /> Respons�vel
                                                 </Label>
                                                 <Input
                                                     id="edit-manager"
@@ -1243,8 +1242,8 @@ export function EditProjectDialog({
                                                     <SelectContent className="glass border-border z-[100]">
                                                         <SelectItem value="active">Em Progresso</SelectItem>
                                                         <SelectItem value="planning">Planejamento</SelectItem>
-                                                        <SelectItem value="review">Revisão / Feedback</SelectItem>
-                                                        <SelectItem value="completed">Concluído</SelectItem>
+                                                        <SelectItem value="review">Revis�o / Feedback</SelectItem>
+                                                        <SelectItem value="completed">Conclu�do</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -1278,13 +1277,13 @@ export function EditProjectDialog({
                                     </div>
                                 )}
 
-                                {/* ▬▬ FINANCEIRO ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ */}
+                                {/* ?? FINANCEIRO ?????????????????????????????????????????? */}
                                 {step === 3 && (
                                     <div className="space-y-6">
-                                        {/* SEÇÃO 0: PRESETS DE PAGAMENTO */}
+                                        {/* SE��O 0: PRESETS DE PAGAMENTO */}
                                         <div className="space-y-4">
                                             <Label className="text-[10px] font-bold uppercase tracking-widest text-primary px-1 flex items-center gap-2">
-                                                <Zap className="h-3 w-3" /> Condições Sugeridas
+                                                <Zap className="h-3 w-3" /> Condi��es Sugeridas
                                             </Label>
                                             <div className="grid grid-cols-5 gap-2">
                                                 {(['full', '50_50', 'end_of_month', 'next_month_10', 'custom'] as const).map((preset) => (
@@ -1307,7 +1306,7 @@ export function EditProjectDialog({
                                                                         preset === 'next_month_10' ? 'M+1' : 'USR'}
                                                         </span>
                                                         <span className="text-[7px] font-bold opacity-80">
-                                                            {preset === 'full' ? 'À VISTA' :
+                                                            {preset === 'full' ? '� VISTA' :
                                                                 preset === '50_50' ? 'SINAL' :
                                                                     preset === 'end_of_month' ? 'FECH' :
                                                                         preset === 'next_month_10' ? 'DIA 10' : 'FIXO'}
@@ -1317,14 +1316,14 @@ export function EditProjectDialog({
                                             </div>
                                         </div>
 
-                                        {/* SEÇÃO 1: PAGAMENTO DO PROJETO */}
+                                        {/* SE��O 1: PAGAMENTO DO PROJETO */}
                                         <div className="space-y-6 p-6 rounded-2xl border border-border bg-card relative overflow-hidden group shadow-sm shadow-black/5">
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20 group-hover:bg-primary transition-all duration-300" />
                                             <div className="flex items-center gap-3">
                                                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-[10px] font-bold shadow-lg shadow-primary/10">1</span>
                                                 <div className="space-y-0.5">
                                                     <h3 className="text-sm font-bold tracking-tight text-foreground">Pagamento do Projeto</h3>
-                                                    <p className="text-[10px] text-muted-foreground">Defina o valor base e a condição de entrada.</p>
+                                                    <p className="text-[10px] text-muted-foreground">Defina o valor base e a condi��o de entrada.</p>
                                                 </div>
                                             </div>
 
@@ -1380,7 +1379,7 @@ export function EditProjectDialog({
                                                         </div>
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Mês de Competência</Label>
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">M�s de Compet�ncia</Label>
                                                         <Input
                                                             type="month"
                                                             value={advancePaymentRefMonth}
@@ -1393,7 +1392,7 @@ export function EditProjectDialog({
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Método de Pagamento</Label>
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">M�todo de Pagamento</Label>
                                                     <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
                                                         <SelectTrigger className="glass-light border-border h-11 text-xs font-medium focus:ring-1 focus:ring-primary/20">
                                                             <SelectValue />
@@ -1401,8 +1400,8 @@ export function EditProjectDialog({
                                                         <SelectContent className="glass border-border z-[100]">
                                                             <SelectItem value="pix">PIX</SelectItem>
                                                             <SelectItem value="boleto">Boleto</SelectItem>
-                                                            <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-                                                            <SelectItem value="transfer">Transferência</SelectItem>
+                                                            <SelectItem value="credit_card">Cart�o de Cr�dito</SelectItem>
+                                                            <SelectItem value="transfer">Transfer�ncia</SelectItem>
                                                             <SelectItem value="other">Outro Meio</SelectItem>
                                                         </SelectContent>
                                                     </Select>
@@ -1419,7 +1418,7 @@ export function EditProjectDialog({
                                                         </SelectTrigger>
                                                         <SelectContent className="glass border-border z-[100]">
                                                             <SelectItem value="pending">Pendente</SelectItem>
-                                                            <SelectItem value="paid">Já Pago (Quitado)</SelectItem>
+                                                            <SelectItem value="paid">J� Pago (Quitado)</SelectItem>
                                                             <SelectItem value="partial">Parcial / Parcelado</SelectItem>
                                                         </SelectContent>
                                                     </Select>
@@ -1452,7 +1451,7 @@ export function EditProjectDialog({
                                             )}
                                         </div>
 
-                                        {/* SEÇÃO 2: MENSALIDADE / MANUTENÇÃO */}
+                                        {/* SE��O 2: MENSALIDADE / MANUTEN��O */}
                                         <div className={cn(
                                             "space-y-6 p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden group shadow-sm shadow-black/5",
                                             billingType === "recorrente" ? "bg-primary/[0.02] border-primary/20" : "bg-card border-border"
@@ -1462,8 +1461,8 @@ export function EditProjectDialog({
                                                 <div className="flex items-center gap-3">
                                                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold leading-none">2</span>
                                                     <div className="space-y-0.5">
-                                                        <h3 className="text-sm font-bold tracking-tight text-foreground">Mensalidade / Manutenção</h3>
-                                                        <p className="text-[10px] text-muted-foreground">Ative para serviços recorrentes ou suporte mensal.</p>
+                                                        <h3 className="text-sm font-bold tracking-tight text-foreground">Mensalidade / Manuten��o</h3>
+                                                        <p className="text-[10px] text-muted-foreground">Ative para servi�os recorrentes ou suporte mensal.</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex bg-background/50 p-1 rounded-xl border border-border">
@@ -1497,12 +1496,12 @@ export function EditProjectDialog({
                                                     <div className="pt-2 space-y-4">
                                                         <div className="flex items-center gap-2">
                                                             <Briefcase className="h-3.5 w-3.5 text-primary/60" />
-                                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 px-1">Escopo do Serviço</h4>
+                                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 px-1">Escopo do Servi�o</h4>
                                                         </div>
 
                                                         <div className="flex gap-2">
                                                             <Input
-                                                                placeholder="Nome do serviço (ex: Manutenção)"
+                                                                placeholder="Nome do servi�o (ex: Manuten��o)"
                                                                 className="glass-light border-primary/10 h-10 text-xs flex-1 px-4"
                                                                 value={recServiceInput}
                                                                 onChange={(e) => setRecServiceInput(e.target.value)}
@@ -1544,7 +1543,7 @@ export function EditProjectDialog({
                                                                 ))
                                                             ) : (
                                                                 <div className="text-center py-6 border border-dashed border-primary/20 rounded-xl bg-primary/5">
-                                                                    <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-widest">Nenhum serviço adicionado</p>
+                                                                    <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-widest">Nenhum servi�o adicionado</p>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1566,7 +1565,7 @@ export function EditProjectDialog({
                                                             </Select>
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">Início</Label>
+                                                            <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-1">In�cio</Label>
                                                             <Input
                                                                 type="date"
                                                                 className="glass-light border-border h-10 text-[11px] [color-scheme:dark] font-medium"
@@ -1602,14 +1601,14 @@ export function EditProjectDialog({
                                                     </div>
 
                                                     <div className="space-y-4">
-                                                        <Label className="text-[10px] font-bold text-muted-foreground/60 px-1 uppercase tracking-widest text-center block opacity-70">Configuração de Cobrança</Label>
+                                                        <Label className="text-[10px] font-bold text-muted-foreground/60 px-1 uppercase tracking-widest text-center block opacity-70">Configura��o de Cobran�a</Label>
                                                         <div className="grid grid-cols-3 gap-3">
                                                             {/* FLUXO */}
                                                             <div className="p-3 rounded-2xl border border-border bg-background/40 space-y-3 shadow-inner">
                                                                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center opacity-60">Fluxo</span>
                                                                 <div className="grid grid-cols-1 gap-1.5">
                                                                     {[
-                                                                        { value: 'start', label: 'No Início' },
+                                                                        { value: 'start', label: 'No In�cio' },
                                                                         { value: 'end', label: 'No Final' }
                                                                     ].map((t) => (
                                                                         <button
@@ -1655,13 +1654,13 @@ export function EditProjectDialog({
                                                                 </div>
                                                             </div>
 
-                                                            {/* INÍCIO */}
+                                                            {/* IN�CIO */}
                                                             <div className="p-3 rounded-2xl border border-border bg-background/40 space-y-3 shadow-inner">
-                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center opacity-60">Início</span>
+                                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block text-center opacity-60">In�cio</span>
                                                                 <div className="grid grid-cols-1 gap-1.5">
                                                                     {[
                                                                         { value: 'immediate', label: 'Imediato' },
-                                                                        { value: 'post_installments', label: 'Pós Entrega' }
+                                                                        { value: 'post_installments', label: 'P�s Entrega' }
                                                                     ].map((t) => (
                                                                         <button
                                                                             key={t.value}
@@ -1685,7 +1684,7 @@ export function EditProjectDialog({
                                             )}
                                         </div>
 
-                                        {/* SEÇÃO 3: PARCELAMENTO DE SETUP */}
+                                        {/* SE��O 3: PARCELAMENTO DE SETUP */}
                                         <div className="space-y-6 p-6 rounded-2xl border border-border bg-card relative overflow-hidden group shadow-sm shadow-black/5">
                                             <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20 group-hover:bg-primary transition-all duration-300" />
                                             <div className="flex items-center justify-between">
@@ -1718,7 +1717,7 @@ export function EditProjectDialog({
                                                 >
                                                     <div className="flex gap-3 items-end">
                                                         <div className="flex-1 space-y-2">
-                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">Número de Parcelas</Label>
+                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">N�mero de Parcelas</Label>
                                                             <Input
                                                                 type="number"
                                                                 min={1}
@@ -1772,7 +1771,7 @@ export function EditProjectDialog({
 
                                                                 <div className="flex flex-col flex-1 min-w-0 gap-1.5">
                                                                     <Label className="text-[9px] font-bold text-muted-foreground uppercase opacity-70 whitespace-nowrap overflow-hidden text-ellipsis">
-                                                                        {idx + 1}ª Parcela {p.status === 'recebido' && "— PAGA"}
+                                                                        {idx + 1}� Parcela {p.status === 'recebido' && "� PAGA"}
                                                                     </Label>
                                                                     <div className="relative">
                                                                         <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground opacity-50" />
@@ -1816,7 +1815,7 @@ export function EditProjectDialog({
                                     </div>
                                 )}
 
-                                {/* â•â• TAREFAS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+                                {/* ══ TAREFAS ══════════════════════════════ */}
                                 {step === 4 && (
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-2 px-1">
@@ -1865,7 +1864,7 @@ export function EditProjectDialog({
                                             ) : projectTasks.length === 0 ? (
                                                 <div className="text-center py-16 border border-dashed border-border rounded-[24px] bg-muted/5 group">
                                                     <div className="relative w-16 h-16 mx-auto mb-4 grayscale opacity-20 group-hover:grayscale-0 group-hover:opacity-40 transition-all duration-500">
-                                                        {/* METÁFORA VISUAL: MESA VAZIA */}
+                                                        {/* MET�FORA VISUAL: MESA VAZIA */}
                                                         <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-primary">
                                                             <path d="M3 18h18M5 18v-4a2 2 0 012-2h10a2 2 0 012 2v4M8 12V8a1 1 0 011-1h6a1 1 0 011 1v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                                                             <rect x="10" y="9" width="4" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.5" className="opacity-40" />
@@ -1873,7 +1872,7 @@ export function EditProjectDialog({
                                                     </div>
                                                     <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Mesa de trabalho limpa</p>
                                                     <p className="text-[10px] text-muted-foreground/50 mt-1">
-                                                        Adicione a primeira tarefa para começar.
+                                                        Adicione a primeira tarefa para come�ar.
                                                     </p>
                                                 </div>
                                             ) : (
@@ -1938,10 +1937,10 @@ export function EditProjectDialog({
                                                                     task.priority === "high"
                                                                         ? "bg-red-500/5 border-red-500/10 text-red-500"
                                                                         : task.priority === "medium"
-                                                                            ? "bg-orange-500/5 border-orange-500/10 text-orange-500"
+                                                                            ? "bg-primary/5 border-primary/10 text-primary"
                                                                             : "bg-muted/40 border-border text-muted-foreground"
                                                                 )}>
-                                                                    {task.priority === "high" ? "ALTA" : task.priority === "medium" ? "MÉD" : "BAIXA"}
+                                                                    {task.priority === "high" ? "ALTA" : task.priority === "medium" ? "M�D" : "BAIXA"}
                                                                 </div>
 
                                                                 <button
@@ -1963,7 +1962,7 @@ export function EditProjectDialog({
                                                     <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{projectTasks.length} TAREFAS ATIVAS</span>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
-                                                            {projectTasks.filter((t: any) => t.progress >= 100).length} CONCLUÍDAS
+                                                            {projectTasks.filter((t: any) => t.progress >= 100).length} CONCLU�DAS
                                                         </span>
                                                     </div>
                                                 </div>

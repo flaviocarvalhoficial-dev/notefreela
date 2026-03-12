@@ -21,7 +21,7 @@ interface TimerContextValue {
     isStopping: boolean;
 }
 
-const STORAGE_KEY = "notefreela_active_timer";
+const STORAGE_KEY = "Nimbus_active_timer";
 
 const defaultTimer: ActiveTimerState = {
     entryId: null,

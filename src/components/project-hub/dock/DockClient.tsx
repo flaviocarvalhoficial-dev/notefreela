@@ -113,8 +113,8 @@ export const DockClient = ({
                         { label: 'Concluído', value: 'completed' }
                     ]}
                     value={
-                        <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 border-none text-[10px] font-bold px-2 py-0 h-5 inline-flex items-center gap-1.5 uppercase">
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground border-none text-[10px] font-bold px-2 py-0 h-5 inline-flex items-center gap-1.5 uppercase">
+                            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                             {project?.status === 'active' ? 'Em andamento' : (project?.status || 'Em andamento')}
                         </Badge>
                     }
@@ -125,7 +125,7 @@ export const DockClient = ({
                     icon={LucideIcons.ChevronDownCircle}
                     label="Integrantes"
                     value={
-                        <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 border-none text-[10px] font-bold px-2 py-0 h-5 uppercase">
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] font-bold px-2 py-0 h-5 uppercase">
                             {project?.team_size === 1 || !project?.team_size ? 'Solo' : `${project.team_size} Membros`}
                         </Badge>
                     }

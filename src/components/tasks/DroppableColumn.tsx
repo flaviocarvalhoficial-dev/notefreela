@@ -276,7 +276,7 @@ export function DroppableColumn({
                             </DropdownMenuSub>
                             <DropdownMenuSeparator className="bg-border/20" />
                             <DropdownMenuItem
-                                className="text-orange-500 focus:text-orange-600 focus:bg-orange-500/10"
+                                className="text-primary focus:text-primary focus:bg-primary/10"
                                 onClick={onDelete}
                             >
                                 Excluir Coluna

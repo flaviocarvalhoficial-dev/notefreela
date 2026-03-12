@@ -345,10 +345,10 @@ export function ClientDetailsDialog({ client, open, onOpenChange }: ClientDetail
 function getStatusColor(status: string) {
     switch (status) {
         case 'active':
-        case 'inprogress': return 'text-emerald-500 bg-emerald-500/10';
+        case 'inprogress': return 'text-primary bg-primary/10';
         case 'completed':
-        case 'done': return 'text-blue-500 bg-blue-500/10';
-        case 'planning': return 'text-purple-500 bg-purple-500/10';
+        case 'done': return 'text-emerald-500 bg-emerald-500/10';
+        case 'planning': return 'text-muted-foreground bg-muted/20';
         case 'review': return 'text-amber-500 bg-amber-500/10';
         default: return 'text-muted-foreground bg-muted/20';
     }

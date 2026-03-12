@@ -38,7 +38,7 @@ export function DeleteConfirmDialog({
                 </AlertDialogTrigger>
             ) : !onOpenChange && (
                 <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-600 hover:bg-orange-500/10">
+                    <Button variant="ghost" size="icon" className="text-primary hover:text-primary hover:bg-primary/10">
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 </AlertDialogTrigger>
@@ -63,7 +63,7 @@ export function DeleteConfirmDialog({
                             e.stopPropagation();
                             onConfirm();
                         }}
-                        className={cn(buttonVariants({ variant: "default" }), "rounded-md font-medium text-xs h-9 bg-orange-500 hover:bg-orange-600 text-white")}
+                        className={cn(buttonVariants({ variant: "default" }), "rounded-md font-medium text-xs h-9 bg-primary hover:bg-primary/90 text-white")}
                     >
                         Excluir
                     </AlertDialogAction>

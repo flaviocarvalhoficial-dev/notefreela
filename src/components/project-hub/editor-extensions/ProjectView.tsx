@@ -39,7 +39,7 @@ const ProjectViewComponent = ({ node }: any) => {
             <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card/40 hover:bg-card/60 transition-all hover:shadow-md cursor-default relative overflow-hidden">
                 <div className={cn(
                     "h-12 w-12 rounded-xl flex items-center justify-center shrink-0 border transition-colors shadow-sm",
-                    type === 'inbox' || type === 'inboxview' ? "bg-orange-500/10 border-orange-500/20 text-orange-500" :
+                    type === 'inbox' || type === 'inboxview' ? "bg-primary/10 border-primary/20 text-primary" :
                         type === 'finance' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" :
                             "bg-primary/10 border-primary/20 text-primary"
                 )}>

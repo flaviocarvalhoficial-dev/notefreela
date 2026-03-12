@@ -32,12 +32,12 @@ const activityIcons: Record<ActivityType, React.ElementType> = {
 };
 
 const activityColors: Record<ActivityType, string> = {
-  project: "hsl(var(--primary))",
-  task: "hsl(var(--primary))",
-  comment: "hsl(var(--primary))",
-  status: "hsl(var(--primary))",
-  assignment: "hsl(var(--primary))",
-  inbox: "hsl(var(--primary))",
+  project: "hsl(var(--muted-foreground))",
+  task: "hsl(var(--muted-foreground))",
+  comment: "hsl(var(--muted-foreground))",
+  status: "hsl(var(--muted-foreground))",
+  assignment: "hsl(var(--muted-foreground))",
+  inbox: "hsl(var(--muted-foreground))",
 };
 
 const Atividades = ({ hideHeader = false, projectId }: { hideHeader?: boolean, projectId?: string }) => {
@@ -171,10 +171,9 @@ const Atividades = ({ hideHeader = false, projectId }: { hideHeader?: boolean, p
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className="p-2 rounded-xl glass-light shrink-0"
-                      style={{ boxShadow: `0 0 20px ${color}10` }}
+                      className="p-2 rounded-xl bg-muted/30 text-muted-foreground shrink-0 transition-colors"
                     >
-                      <Icon className="h-4 w-4" style={{ color }} />
+                      <Icon className="h-4 w-4" />
                     </div>
 
                     <div className="flex-1 min-w-0 text-left">

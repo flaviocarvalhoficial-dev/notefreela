@@ -11,6 +11,7 @@ import { SlashCommandMenu, type SlashCommandItem } from './SlashCommandMenu';
 import { Columns, Column } from './editor-extensions/Columns';
 import { ProgressBar, TopicHeader } from './editor-extensions/PersonalWidgets';
 import { ProjectView } from './editor-extensions/ProjectView';
+import { CaptureCard } from './editor-extensions/CaptureCard';
 
 export interface BlockEditorStatus {
   hasColumns: boolean;
@@ -28,7 +29,7 @@ interface BlockEditorProps {
 }
 
 export interface BlockEditorRef {
-  insertItem: (type: string, id: string, title?: string) => void;
+  insertItem: (type: string, id: string, meta?: any) => void;
   getJson: () => any | undefined;
   getHtml: () => string | undefined;
   undo: () => void;
@@ -95,6 +96,7 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         ProgressBar,
         TopicHeader,
         ProjectView,
+        CaptureCard,
       ],
       content: content,
       onUpdate: ({ editor: ed }) => {
@@ -294,12 +296,21 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
     }, [editor]);
 
     useImperativeHandle(ref, () => ({
-      insertItem: (type: string, id: string, title?: string) => {
+      insertItem: (type: string, id: string, meta?: any) => {
         if (type === 'view') {
-          editor?.chain().focus().insertProjectView({ type: id, title: title }).run();
+          (editor?.chain().focus() as any).insertProjectView({ type: id, title: typeof meta === 'string' ? meta : meta?.title }).run();
           return;
         }
-        const label = title || id;
+        if (type === 'capture') {
+          (editor?.chain().focus() as any).insertCaptureCard({
+            type: id,
+            title: meta?.title || '',
+            content: meta?.content || '',
+            date: meta?.date || ''
+          }).run();
+          return;
+        }
+        const label = typeof meta === 'string' ? meta : (meta?.title || id);
         const emoji = type === 'task' ? '✅' : type === 'inbox' ? '📥' : type === 'doc' ? '📄' : '🔗';
         const htmlValue = `<a href="/${type}/${id}" class="mention"> ${emoji} ${label}</a> `;
         editor?.chain().focus().insertContent(htmlValue).run();

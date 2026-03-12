@@ -39,9 +39,25 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
 import { useClientsData } from "@/hooks/use-clients-data";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Clientes = () => {
-    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+    const [viewMode, setViewMode] = useState<"grid" | "list">("list");
     const [selectedClient, setSelectedClient] = useState<any | null>(null);
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -287,24 +303,20 @@ const Clientes = () => {
                         ) : (
                             <motion.div
                                 key="list"
-                                className="space-y-3"
+                                className="bg-card border border-border rounded-xl overflow-hidden shadow-sm"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {clients.map((client: any, i: number) => (
-                                    <ClientListItem
-                                        key={client.id}
-                                        client={client}
-                                        index={i}
-                                        onDelete={deleteClientMutation.mutate}
-                                        onClick={() => {
-                                            toast({ title: "Detalhes do Cliente", description: `Abrindo painel de ${client.name}` });
-                                            setSelectedClient(client);
-                                        }}
-                                    />
-                                ))}
+                                <ClientTableView
+                                    clients={clients}
+                                    onDelete={deleteClientMutation.mutate}
+                                    onSelect={(client) => {
+                                        toast({ title: "Detalhes do Cliente", description: `Abrindo painel de ${client.name}` });
+                                        setSelectedClient(client);
+                                    }}
+                                />
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -398,55 +410,135 @@ function ClientCard({ client, onDelete, onClick, index }: { client: any, onDelet
     );
 }
 
-function ClientListItem({ client, onDelete, onClick, index }: { client: any, onDelete: (id: string) => void, onClick: () => void, index: number }) {
+function ClientTableView({ clients, onDelete, onSelect }: { clients: any[], onDelete: (id: string) => void, onSelect: (client: any) => void }) {
     return (
-        <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: Math.min(index * 0.03, 0.3) }}
-            className="group relative bg-card/40 hover:bg-card border border-border hover:border-border rounded-xl p-3 px-5 transition-all cursor-pointer flex items-center shadow-sm"
-            onClick={onClick}
-        >
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="h-9 w-9 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-medium text-sm shrink-0 border border-border group-hover:bg-primary/10 transition-colors">
-                    {client.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex flex-col min-w-0 pr-6 gap-0.5 flex-1">
-                    <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-sm text-foreground truncate">{client.name}</h3>
-                        {client.company_name && (
-                            <Badge variant="outline" className="text-[9px] font-medium border-border text-muted-foreground tracking-tight h-4 px-1.5 bg-muted/20">
-                                {client.company_name}
-                            </Badge>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-normal whitespace-nowrap overflow-hidden opacity-70">
-                        {client.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3 opacity-50" /> {client.email}</span>}
-                        {client.phone && <span className="hidden sm:flex items-center gap-1"><Phone className="h-3 w-3 opacity-50" /> {client.phone}</span>}
-                        {client.city && <span className="hidden md:flex items-center gap-1"><MapPin className="h-3 w-3 opacity-50" /> {client.city}</span>}
-                    </div>
-                </div>
-            </div>
+        <TooltipProvider>
+            <Table>
+                <TableHeader className="bg-muted/30">
+                    <TableRow className="hover:bg-transparent border-border/50">
+                        <TableHead className="w-[40px] pl-5">
+                            <Checkbox className="rounded-[4px] border-muted-foreground/30" />
+                        </TableHead>
+                        <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground py-4">Cliente</TableHead>
+                        <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground py-4">Projetos</TableHead>
+                        <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground py-4">Serviços</TableHead>
+                        <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground py-4 hidden md:table-cell">Local</TableHead>
+                        <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground py-4">Status</TableHead>
+                        <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground py-4 text-right pr-5">Investimento</TableHead>
+                        <TableHead className="w-[50px] pr-5"></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {clients.map((client) => {
+                        const allServices = Array.from(new Set(
+                            client.allProjects?.flatMap((p: any) =>
+                                (p.services || []).map((s: any) => typeof s === 'string' ? s : s.name)
+                            )
+                        )).filter(Boolean) as string[];
 
-            <div className="flex items-center gap-10 md:gap-14 mr-8">
-                <div className="hidden sm:flex items-center gap-3 w-20">
-                    <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center border border-border/50">
-                        <Briefcase className="h-3 w-3 text-muted-foreground" />
-                    </div>
-                    <span className="font-medium text-sm text-foreground tabular-nums">{client.projects?.length || 0}</span>
-                </div>
-                <div className="flex flex-col items-end w-28">
-                    <span className="text-sm font-medium text-foreground tracking-tight tabular-nums mask-value">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.totalValue || 0)}
-                    </span>
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-medium">Investido</span>
-                </div>
-            </div>
+                        const activeProjects = client.projects?.filter((p: any) => p.status !== 'completed').length || 0;
 
-            <div className="pl-4 border-l border-border opacity-40 group-hover:opacity-100 transition-opacity">
-                <ClientActions client={client} onDelete={onDelete} />
-            </div>
-        </motion.div>
+                        return (
+                            <TableRow
+                                key={client.id}
+                                className="group cursor-pointer border-border/40 hover:bg-muted/20 transition-colors"
+                                onClick={() => onSelect(client)}
+                            >
+                                <TableCell className="pl-5" onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox className="rounded-[4px] border-muted-foreground/30" />
+                                </TableCell>
+                                <TableCell className="py-4">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-9 w-9 border border-border/60 rounded-lg shadow-sm">
+                                            <AvatarImage src={client.avatar_url} />
+                                            <AvatarFallback className="bg-primary/5 text-primary text-xs font-semibold rounded-lg">
+                                                {client.name.charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                                                {client.name}
+                                            </span>
+                                            <span className="text-[11px] text-muted-foreground truncate opacity-70">
+                                                {client.company_name || client.email || "Pessoa Física"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium text-foreground tabular-nums">
+                                            {client.allProjects?.length || 0}
+                                        </span>
+                                        <span className="text-[11px] text-muted-foreground">jobs</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-1 flex-wrap max-w-[200px]">
+                                        {allServices.slice(0, 2).map((service, idx) => (
+                                            <Badge
+                                                key={idx}
+                                                variant="outline"
+                                                className="text-[10px] font-medium py-0 h-5 px-2 bg-muted/30 border-border/50 text-muted-foreground whitespace-nowrap"
+                                            >
+                                                {service}
+                                            </Badge>
+                                        ))}
+                                        {allServices.length > 2 && (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Badge variant="outline" className="text-[10px] font-medium py-0 h-5 px-1.5 bg-primary/5 border-primary/10 text-primary cursor-help">
+                                                        +{allServices.length - 2}
+                                                    </Badge>
+                                                </TooltipTrigger>
+                                                <TooltipContent className="p-2 border-border shadow-md">
+                                                    <div className="flex flex-col gap-1">
+                                                        {allServices.slice(2).map((s, i) => (
+                                                            <span key={i} className="text-[10px]">{s}</span>
+                                                        ))}
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )}
+                                        {allServices.length === 0 && <span className="text-[11px] text-muted-foreground/40 italic">Nenhum</span>}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell">
+                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <MapPin className="h-3 w-3 opacity-50" />
+                                        {client.city || "—"}
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    {activeProjects > 0 ? (
+                                        <Badge className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/15 border-none text-[10px] font-semibold px-2 h-5">
+                                            <Clock className="h-2.5 w-2.5 mr-1" />
+                                            {activeProjects} Ativo{activeProjects > 1 ? 's' : ''}
+                                        </Badge>
+                                    ) : (
+                                        <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15 border-none text-[10px] font-semibold px-2 h-5">
+                                            <CheckCircle2 className="h-2.5 w-2.5 mr-1" />
+                                            Concluído
+                                        </Badge>
+                                    )}
+                                </TableCell>
+                                <TableCell className="text-right pr-5">
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-sm font-semibold text-foreground tracking-tight tabular-nums">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.totalValue || 0)}
+                                        </span>
+                                        <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-tighter opacity-60">Total Bruto</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="pr-5 text-right" onClick={(e) => e.stopPropagation()}>
+                                    <ClientActions client={client} onDelete={onDelete} />
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
+                </TableBody>
+            </Table>
+        </TooltipProvider>
     );
 }
 

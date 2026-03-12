@@ -24,7 +24,8 @@ import {
   CheckCircle2,
   FileSearch,
   Plus,
-  X
+  X,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
@@ -62,6 +63,7 @@ const navItems = [
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Documentos", url: "/documentos", icon: FileText },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
+  { title: "Parceiro IA", icon: Sparkles, action: () => window.dispatchEvent(new CustomEvent("toggle-ai-assistant")) },
 ];
 
 const APP_VERSION = "V1.1.0";
@@ -87,17 +89,17 @@ export function AppSidebar() {
   }, []);
 
   useEffect(() => {
-    const lastVersion = localStorage.getItem("notefreela_version");
+    const lastVersion = localStorage.getItem("Nimbus_version");
     if (lastVersion && lastVersion !== APP_VERSION) {
       setTimeout(() => {
         toast({
           title: "🎉 Atualização Disponível!",
-          description: `NoteFreela foi atualizado de ${lastVersion} para ${APP_VERSION}. Aproveite as novas funcionalidades!`,
+          description: `Nimbus foi atualizado de ${lastVersion} para ${APP_VERSION}. Aproveite as novas funcionalidades!`,
           duration: 6000,
         });
       }, 1000);
     }
-    localStorage.setItem("notefreela_version", APP_VERSION);
+    localStorage.setItem("Nimbus_version", APP_VERSION);
   }, [toast]);
 
   const { data: activeProject } = useQuery({
@@ -184,8 +186,8 @@ export function AppSidebar() {
         {open ? (
           <div className="w-full flex items-center justify-between">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-5 h-5 shrink-0" />
-              <span className="font-semibold text-foreground tracking-tight text-[13px] ">NoteFreela</span>
+              <img src="/nimbus-logo.webp" alt="Nimbus" className="w-5 h-5 shrink-0" />
+              <span className="font-semibold text-foreground tracking-tight text-[13px] ">Nimbus</span>
             </div>
             <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-all h-6 w-6" />
           </div>
@@ -229,7 +231,7 @@ export function AppSidebar() {
                         <div className={cn(
                           "h-1.5 w-1.5 rounded-full shrink-0",
                           activeProject.status === 'completed' ? "bg-emerald-500" :
-                            activeProject.status === 'active' ? "bg-blue-500" :
+                            activeProject.status === 'active' ? "bg-primary" :
                               "bg-muted-foreground/30"
                         )} />
                         {open && (
@@ -357,22 +359,38 @@ export function AppSidebar() {
                     <div key={item.title}>
                       <SidebarMenuItem>
                         <SidebarMenuButton
-                          asChild
+                          asChild={!!item.url}
+                          onClick={item.action}
                           tooltip={!open ? item.title : undefined}
-                          className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
+                          className={cn(
+                            "h-9 rounded-md transition-all hover:bg-sidebar-accent",
+                            item.title === "Parceiro IA" && "text-primary hover:text-primary active:scale-95"
+                          )}
                         >
-                          <NavLink
-                            to={item.url}
-                            end={item.url === "/"}
-                            className={cn(
-                              "flex items-center text-muted-foreground transition-colors w-full h-full",
+                          {item.url ? (
+                            <NavLink
+                              to={item.url}
+                              end={item.url === "/"}
+                              className={cn(
+                                "flex items-center text-muted-foreground transition-colors w-full h-full",
+                                open ? "gap-2.5 px-3" : "justify-center"
+                              )}
+                              activeClassName="text-foreground font-semibold"
+                            >
+                              <item.icon className="h-[17px] w-[17px] shrink-0" />
+                              {open && <span className="text-[12.5px] font-normal tracking-tight">{item.title}</span>}
+                            </NavLink>
+                          ) : (
+                            <div className={cn(
+                              "flex items-center transition-colors w-full h-full cursor-pointer",
                               open ? "gap-2.5 px-3" : "justify-center"
-                            )}
-                            activeClassName="text-foreground font-semibold"
-                          >
-                            <item.icon className="h-[17px] w-[17px] shrink-0" />
-                            {open && <span className="text-[12.5px] font-normal tracking-tight">{item.title}</span>}
-                          </NavLink>
+                            )}>
+                              <div className={cn("h-[17px] w-[17px] shrink-0 rounded-full overflow-hidden border border-primary/20 bg-white/50", item.title === "Parceiro IA" && "animate-pulse")}>
+                                <img src="/ai-partner.png" alt="IA" className="w-full h-full object-cover" />
+                              </div>
+                              {open && <span className="text-[12.5px] font-semibold tracking-tight">{item.title}</span>}
+                            </div>
+                          )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
 
@@ -390,7 +408,7 @@ export function AppSidebar() {
                                 <Circle className={cn(
                                   "h-1.5 w-1.5 rounded-full shrink-0 transition-transform group-hover:scale-125",
                                   p.status === 'completed' ? "bg-emerald-500" :
-                                    p.status === 'active' ? "bg-blue-500" :
+                                    p.status === 'active' ? "bg-primary" :
                                       "bg-muted-foreground/30"
                                 )} />
                                 <span className="truncate">{p.name}</span>
@@ -441,7 +459,7 @@ export function AppSidebar() {
                                             <div className={cn(
                                               "h-1.5 w-1.5 rounded-full shrink-0",
                                               project.status === 'completed' ? "bg-emerald-500" :
-                                                project.status === 'active' ? "bg-blue-500" :
+                                                project.status === 'active' ? "bg-primary" :
                                                   "bg-muted-foreground/30"
                                             )} />
                                             <span className="truncate">{project.name}</span>
@@ -598,7 +616,7 @@ export function AppSidebar() {
           <div className="px-4 py-1.5 flex items-center justify-between opacity-30 hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-emerald-500"></div>
-              <span className="text-[10px] font-medium tracking-tight text-muted-foreground uppercase ">NoteFreela {APP_VERSION}</span>
+              <span className="text-[10px] font-medium tracking-tight text-muted-foreground uppercase ">Nimbus {APP_VERSION}</span>
             </div>
           </div>
         )}

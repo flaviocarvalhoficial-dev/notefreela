@@ -18,7 +18,7 @@
 
 @layer base {
   :root {
-    /* NoteFreela Design System — Cockpit Signature */
+    /* Nimbus Design System — Cockpit Signature */
     --background: 220 20% 98%;
     /* #F7F8FA - Refined Light Gray */
     --foreground: 240 10% 4%;
@@ -29,8 +29,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
 
-    --primary: 25 100% 58%;
-    /* #FF6A2A - NoteFreela Orange */
+    --primary: 210 100% 52%;
+    /* #0080FF - Nimbus Blue */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 4% 97%;
@@ -42,8 +42,8 @@
     --muted-foreground: 240 4% 42%;
     /* #6B6B6B */
 
-    --accent: 25 100% 58% / 0.05;
-    --accent-foreground: 25 100% 58%;
+    --accent: 210 100% 52% / 0.05;
+    --accent-foreground: 210 100% 52%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
@@ -51,11 +51,11 @@
     --border: 0 0% 92%;
     /* #EBEBEB */
     --input: 0 0% 96%;
-    --ring: 25 100% 58%;
+    --ring: 210 100% 52%;
 
-    --accent-primary: 25 100% 58%;
-    --accent-hover: 25 100% 50%;
-    --accent-subtle: 25 100% 58% / 0.08;
+    --accent-primary: 210 100% 52%;
+    --accent-hover: 210 100% 45%;
+    --accent-subtle: 210 100% 52% / 0.08;
 
     /* Semantic Radius - Refined Signature Geometry */
     --radius-card: 10px;
@@ -72,12 +72,12 @@
     /* Sidebar - Light Version */
     --sidebar-background: 0 0% 99%;
     --sidebar-foreground: 240 4% 42%;
-    --sidebar-primary: 25 100% 58%;
+    --sidebar-primary: 210 100% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 4% 96%;
     --sidebar-accent-foreground: 0 0% 0%;
     --sidebar-border: 60 4.8% 95.9%;
-    --sidebar-ring: 25 100% 58%;
+    --sidebar-ring: 210 100% 52%;
   }
 
   .dark {
@@ -92,7 +92,7 @@
     --popover: 220 18% 12%;
     --popover-foreground: 210 20% 92%;
 
-    --primary: 25 100% 58%;
+    --primary: 210 100% 52%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 10%;
@@ -109,16 +109,16 @@
 
     --border: 0 0% 12%;
     --input: 0 0% 10%;
-    --ring: 25 100% 58%;
+    --ring: 210 100% 52%;
 
     --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 54%;
-    --sidebar-primary: 25 100% 58%;
+    --sidebar-primary: 210 100% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 25 100% 58%;
+    --sidebar-ring: 210 100% 52%;
 
     *::selection {
       background-color: hsl(var(--accent));
@@ -134,9 +134,9 @@
     content: '';
     position: fixed;
     inset: 0;
-    background-image: linear-gradient(to right, hsl(var(--muted-foreground) / 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--muted-foreground) / 0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
+    background-image: linear-gradient(to right, hsl(var(--muted-foreground) / 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--muted-foreground) / 0.02) 1px, transparent 1px);
+    background-size: 80px 80px;
     z-index: -1;
     pointer-events: none;
     opacity: 1;
@@ -272,7 +272,7 @@
 
   /* Dark mode support for scrollbar-color if supported by browser */
   .dark .custom-scrollbar {
-    scrollbar-color: hsl(239 78% 74.3% / 0.4) transparent;
+    scrollbar-color: hsl(var(--primary) / 0.4) transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -303,10 +303,12 @@
     border-radius: 10px;
     border: 2px solid transparent;
     background-clip: content-box;
+    background: hsl(var(--primary) / 0.4) !important;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: rgba(0, 0, 0, 0.7) !important;
+    background: hsl(var(--primary) / 0.6) !important;
   }
 
   .dark .custom-scrollbar::-webkit-scrollbar-track {
@@ -315,10 +317,12 @@
 
   .dark .custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.4) !important;
+    background: hsl(var(--primary) / 0.3) !important;
   }
 
   .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.6) !important;
+    background: hsl(var(--primary) / 0.5) !important;
   }
 }
 

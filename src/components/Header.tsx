@@ -197,7 +197,7 @@ export function Header() {
                                 className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
                                 onClick={() => navigate("/")}
                             >
-                                NoteFreela
+                                Nimbus
                             </span>
                             {breadcrumbs?.map((crumb, i) => (
                                 <div key={crumb.path} className="flex items-center gap-2">

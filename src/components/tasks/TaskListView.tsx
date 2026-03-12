@@ -156,8 +156,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
                                                 <div className="flex items-center gap-2">
                                                     <Zap className={cn(
                                                         "h-3 w-3",
-                                                        task.priority === 'high' ? "text-orange-500 fill-orange-500" :
-                                                            task.priority === 'medium' ? "text-blue-500" : "text-muted-foreground"
+                                                        task.priority === 'high' ? "text-primary fill-primary" : "text-muted-foreground"
                                                     )} />
                                                     <span className="text-[10px] font-medium  text-muted-foreground tracking-tight">
                                                         {task.priority || 'no-priority'}

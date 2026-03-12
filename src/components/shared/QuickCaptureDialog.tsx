@@ -73,7 +73,7 @@ export function QuickCaptureDialog() {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-glow-subtle border border-primary/20"
+                    className="h-9 w-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-glow-subtle border border-primary/20"
                     title="Captura Rápida (Alt+C)"
                 >
                     <Zap className="h-4 w-4 fill-primary/10" />

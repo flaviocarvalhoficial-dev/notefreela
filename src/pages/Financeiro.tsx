@@ -379,7 +379,7 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                             <span className="text-xl font-semibold tabular-nums text-foreground/80">R$ {Math.abs(projectIndicators.balance).toLocaleString()}</span>
                             <div className={cn(
                                 "h-3.5 w-3.5 rounded-full",
-                                projectIndicators.balance >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-orange-500/10 text-orange-500"
+                                projectIndicators.balance >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
                             )} />
                         </div>
                     </div>

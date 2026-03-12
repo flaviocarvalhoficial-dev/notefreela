@@ -88,7 +88,9 @@ export default function Auth() {
                 className="bento-card max-w-md w-full py-16 px-12 relative z-10"
             >
                 <div className="text-center mb-10">
-                    <img src="/iconnotefreela.svg" alt="NoteFreela" className="w-14 h-14 mx-auto mb-4" />
+                    <div className="w-16 h-16 mx-auto mb-4 p-1 rounded-2xl bg-white shadow-sm border border-border flex items-center justify-center overflow-hidden">
+                        <img src="/nimbus-logo.webp" alt="Nimbus" className="w-full h-full object-cover" />
+                    </div>
                     <h1 className="text-2xl font-medium tracking-tight">{isSignUp ? "Criar conta" : "Bem-vindo de volta"}</h1>
                     <p className="text-muted-foreground text-sm mt-2">
                         {isSignUp

@@ -329,10 +329,10 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
   const coverUrl = uiConfig?.coverUrl || "";
 
   const statusColors: Record<string, string> = {
-    active: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20',
-    planning: 'bg-blue-500/10 text-blue-500 border border-blue-500/20',
+    active: 'bg-primary/10 text-primary border border-primary/20',
+    planning: 'bg-muted text-muted-foreground border border-border',
     review: 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
-    completed: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
+    completed: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20',
   };
 
   const getMetaphorContent = () => {
@@ -542,10 +542,10 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
       <div className="flex items-center gap-8 px-6">
         <div className="hidden lg:flex flex-col w-32">
           <Badge variant="outline" className={cn(
-            "text-[8px] font-medium  tracking-tight h-4 w-fit mb-1",
+            "text-[8px] font-medium tracking-tight h-4 w-fit mb-1 border-border/60",
             project.billing_type === 'recorrente'
-              ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+              ? "bg-secondary text-foreground"
+              : "bg-transparent text-muted-foreground"
           )}>
             {project.billing_type || 'pontual'}
           </Badge>

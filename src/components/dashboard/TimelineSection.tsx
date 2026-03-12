@@ -44,9 +44,9 @@ type TimelineActivity = {
 };
 
 const COLUMN_COLORS: Record<string, string> = {
-  todo: "hsl(220, 15%, 75%)",
-  inprogress: "hsl(200, 85%, 82%)",
-  done: "hsl(150, 65%, 82%)"
+  todo: "hsl(var(--muted-foreground) / 0.3)",
+  inprogress: "#0080FF", // Nimbus Blue
+  done: "hsl(158, 65%, 45%)" // Brand Emerald
 };
 
 const DAY_WIDTH = 45; // Compact like the image

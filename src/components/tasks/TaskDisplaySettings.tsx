@@ -80,7 +80,7 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
             <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-9 gap-2 bg-muted/20 border-border hover:bg-muted/40 transition-all font-medium rounded-lg">
                     <Settings2 className="h-4 w-4" />
-                    Display
+                    Visualização
                     <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -95,11 +95,11 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                     >
                         <ToggleGroupItem value="list" className="rounded-md gap-2 data-[state=on]:bg-card data-[state=on]:shadow-sm">
                             <LayoutList className="h-4 w-4" />
-                            <span className="text-xs font-medium">List</span>
+                            <span className="text-xs font-medium">Lista</span>
                         </ToggleGroupItem>
                         <ToggleGroupItem value="board" className="rounded-md gap-2 data-[state=on]:bg-card data-[state=on]:shadow-sm">
                             <LayoutGrid className="h-4 w-4" />
-                            <span className="text-xs font-medium">Board</span>
+                            <span className="text-xs font-medium">Quadro</span>
                         </ToggleGroupItem>
                     </ToggleGroup>
 
@@ -108,7 +108,7 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <LayoutList className="h-4 w-4" />
-                                <Label className="text-xs font-medium tracking-tight">Grouping</Label>
+                                <Label className="text-xs font-medium tracking-tight">Agrupamento</Label>
                             </div>
                             <Select value={options.grouping} onValueChange={(v) => updateOption('grouping', v as TaskGrouping)}>
                                 <SelectTrigger className="w-32 h-8 text-xs bg-muted/20 border-transparent rounded-lg">
@@ -116,9 +116,9 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                                 </SelectTrigger>
                                 <SelectContent className="glass">
                                     <SelectItem value="status">Status</SelectItem>
-                                    <SelectItem value="priority">Priority</SelectItem>
-                                    <SelectItem value="project">Project</SelectItem>
-                                    <SelectItem value="none">None</SelectItem>
+                                    <SelectItem value="priority">Prioridade</SelectItem>
+                                    <SelectItem value="project">Projeto</SelectItem>
+                                    <SelectItem value="none">Nenhum</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -126,16 +126,16 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <LayoutGrid className="h-4 w-4" />
-                                <Label className="text-xs font-medium tracking-tight">Sub-grouping</Label>
+                                <Label className="text-xs font-medium tracking-tight">Sub-agrupamento</Label>
                             </div>
                             <Select value={options.subGrouping} onValueChange={(v) => updateOption('subGrouping', v as TaskGrouping)}>
                                 <SelectTrigger className="w-32 h-8 text-xs bg-muted/20 border-transparent rounded-lg">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="glass">
-                                    <SelectItem value="none">No grouping</SelectItem>
-                                    <SelectItem value="priority">Priority</SelectItem>
-                                    <SelectItem value="project">Project</SelectItem>
+                                    <SelectItem value="none">Sem agrupamento</SelectItem>
+                                    <SelectItem value="priority">Prioridade</SelectItem>
+                                    <SelectItem value="project">Projeto</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -143,7 +143,7 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <ArrowUpDown className="h-4 w-4" />
-                                <Label className="text-xs font-medium tracking-tight">Ordering</Label>
+                                <Label className="text-xs font-medium tracking-tight">Ordenação</Label>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Select value={options.ordering} onValueChange={(v) => updateOption('ordering', v as TaskOrdering)}>
@@ -151,10 +151,10 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="glass">
-                                        <SelectItem value="priority">Priority</SelectItem>
-                                        <SelectItem value="due">Due date</SelectItem>
-                                        <SelectItem value="created">Created</SelectItem>
-                                        <SelectItem value="title">Title</SelectItem>
+                                        <SelectItem value="priority">Prioridade</SelectItem>
+                                        <SelectItem value="due">Data de Entrega</SelectItem>
+                                        <SelectItem value="created">Data de Criação</SelectItem>
+                                        <SelectItem value="title">Título</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Button
@@ -171,12 +171,12 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
 
                     <div className="space-y-4 pt-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-[10px]  tracking-tight text-muted-foreground font-medium">Order completed by recency</Label>
+                            <Label className="text-[10px]  tracking-tight text-muted-foreground font-medium">Ordenar concluídos por recência</Label>
                             <Switch checked={options.orderCompletedByRecency} onCheckedChange={(v) => updateOption('orderCompletedByRecency', v)} />
                         </div>
                         <Separator className="bg-border/30" />
                         <div className="flex items-center justify-between">
-                            <Label className="text-[10px]  tracking-tight text-muted-foreground font-medium">Show sub-tasks</Label>
+                            <Label className="text-[10px]  tracking-tight text-muted-foreground font-medium">Mostrar sub-tarefas</Label>
                             <Switch checked={options.showSubTasks} onCheckedChange={(v) => updateOption('showSubTasks', v)} />
                         </div>
                     </div>
@@ -184,21 +184,21 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
 
                 <div className="bg-muted/30 p-4 border-t border-border space-y-4">
                     <div>
-                        <h4 className="text-[10px] font-medium  tracking-tight text-muted-foreground mb-3">List Options</h4>
+                        <h4 className="text-[10px] font-medium  tracking-tight text-muted-foreground mb-3">Opções de Lista</h4>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <Label className="text-xs font-medium text-foreground tracking-tight">Nested sub-issues</Label>
+                                <Label className="text-xs font-medium text-foreground tracking-tight">Agrupar sub-tarefas</Label>
                                 <Switch className="scale-75" checked={options.nestedSubTasks} onCheckedChange={(v) => updateOption('nestedSubTasks', v)} />
                             </div>
                             <div className="flex items-center justify-between">
-                                <Label className="text-xs font-medium text-foreground tracking-tight">Show empty groups</Label>
+                                <Label className="text-xs font-medium text-foreground tracking-tight">Mostrar grupos vazios</Label>
                                 <Switch className="scale-75" checked={options.showEmptyGroups} onCheckedChange={(v) => updateOption('showEmptyGroups', v)} />
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <h4 className="text-[10px] font-medium  tracking-tight text-muted-foreground mb-3">Display Properties</h4>
+                        <h4 className="text-[10px] font-medium  tracking-tight text-muted-foreground mb-3">Propriedades Visíveis</h4>
                         <div className="flex flex-wrap gap-1.5">
                             {properties.map(prop => (
                                 <button

@@ -457,7 +457,7 @@ const Empresa = () => {
                                                 <p className="font-bold text-sm text-foreground leading-none">{formData.trading_name || "Sua Empresa"}</p>
                                                 <p className="text-[10px] text-muted-foreground mt-1">{formData.cnpj || "00.000.000/0000-00"}</p>
                                             </div>
-                                            <img src="/iconnotefreela.svg" alt="Logo" className="w-6 h-6 grayscale opacity-20 z-10" />
+                                            <img src="/nimbus-logo.webp" alt="Logo" className="w-6 h-6 grayscale opacity-20 z-10" />
                                         </div>
 
                                         <div className="space-y-1 z-10">
@@ -565,7 +565,7 @@ const Empresa = () => {
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => deleteDocument(doc.id)}
-                                                className="h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-600 p-0"
+                                                className="h-8 w-8 text-destructive hover:bg-destructive/10 p-0"
                                             >
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </Button>
@@ -696,13 +696,13 @@ const Empresa = () => {
                             </div>
 
                             <div className="lg:col-span-4 space-y-6">
-                                <div className="linear-card p-6 bg-amber-500/[0.02] border-amber-500/10">
-                                    <div className="flex items-center gap-2 text-amber-500 mb-4">
+                                <div className="linear-card p-6 bg-primary/[0.02] border-primary/10">
+                                    <div className="flex items-center gap-2 text-primary mb-4">
                                         <Info className="h-4 w-4" />
                                         <h4 className="text-xs font-bold uppercase tracking-wider">Lembrete Fiscal</h4>
                                     </div>
                                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                        Não esqueça de emitir a nota fiscal no momento do recebimento para evitar multas. O NoteFreela não emite a nota automaticamente, ele serve como ponte e registro histórico.
+                                        Não esqueça de emitir a nota fiscal no momento do recebimento para evitar multas. O Nimbus não emite a nota automaticamente, ele serve como ponte e registro histórico.
                                     </p>
                                 </div>
 
@@ -730,10 +730,10 @@ const Empresa = () => {
                         >
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {[
-                                    { id: 'contract', title: "Contrato Prestação", icon: FileSignature, color: "text-blue-500" },
-                                    { id: 'proposal', title: "Proposta Comercial", icon: Briefcase, color: "text-amber-500" },
-                                    { id: 'receipt', title: "Recibo de Pagamento", icon: Receipt, color: "text-emerald-500" },
-                                    { id: 'nda', title: "Termo Confidencial", icon: ShieldCheck, color: "text-indigo-500" },
+                                    { id: 'contract', title: "Contrato Prestação", icon: FileSignature, color: "text-primary" },
+                                    { id: 'proposal', title: "Proposta Comercial", icon: Briefcase, color: "text-muted-foreground/60" },
+                                    { id: 'receipt', title: "Recibo de Pagamento", icon: Receipt, color: "text-muted-foreground/60" },
+                                    { id: 'nda', title: "Termo Confidencial", icon: ShieldCheck, color: "text-muted-foreground/60" },
                                 ].map((model) => (
                                     <button
                                         key={model.id}

@@ -326,7 +326,7 @@ export default function Configuracoes() {
                             >
                                 <div>
                                     <h3 className="text-lg font-medium tracking-tight mb-1">Personalização</h3>
-                                    <p className="text-sm text-muted-foreground font-normal">Ajuste o visual da NoteFreela ao seu gosto.</p>
+                                    <p className="text-sm text-muted-foreground font-normal">Ajuste o visual do Nimbus ao seu gosto.</p>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -367,7 +367,7 @@ export default function Configuracoes() {
                                 </div>
                                 <div>
                                     <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 mb-2 font-medium  text-[10px] tracking-tight">Plano Atual: Free Beta</Badge>
-                                    <h3 className="text-2xl font-medium tracking-tight">NoteFreela Pro</h3>
+                                    <h3 className="text-2xl font-medium tracking-tight">Nimbus Pro</h3>
                                     <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-2 font-normal leading-relaxed">
                                         Acesso ilimitado a projetos, relatórios avançados e integração total com o calendário.
                                     </p>

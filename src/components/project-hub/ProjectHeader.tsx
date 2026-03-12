@@ -48,10 +48,10 @@ export const ProjectHeader = ({
     const navigate = useNavigate();
 
     const statusColors: Record<string, string> = {
-        active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        planning: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+        active: "bg-primary/10 text-primary border-primary/20",
+        planning: "bg-muted text-muted-foreground border-border",
         review: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        completed: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+        completed: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
     };
 
     const navOptions = [

@@ -397,29 +397,29 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
     if (projectFilter === "all") {
         const statusLabels: Record<string, string> = {
             active: "Em Execução",
-            planning: "Blueprint",
-            review: "Checkpoint",
+            planning: "Planejamento",
+            review: "Revisão",
             completed: "Concluído"
         };
         const statusColors: Record<string, string> = {
-            active: "bg-primary",
-            planning: "bg-muted-foreground/30",
-            review: "bg-primary/40",
-            completed: "bg-emerald-500"
+            active: "bg-primary/10 text-primary border-primary/20",
+            planning: "bg-muted text-muted-foreground border-border",
+            review: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+            completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
         };
 
         return (
             <div className="page-container">
                 <header className="flex items-center justify-between gap-4 mb-8 h-12">
                     <div>
-                        <h1 className="text-2xl font-medium tracking-tight text-foreground">Kanban Central</h1>
+                        <h1 className="text-2xl font-medium tracking-tight text-foreground">Cockpit de Projetos</h1>
                     </div>
                 </header>
 
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-40 gap-6">
                         <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                        <p className="text-muted-foreground animate-pulse font-medium tracking-tight  text-[10px]">Sincronizando Fluxos...</p>
+                        <p className="text-muted-foreground animate-pulse font-medium tracking-tight text-[10px]">Sincronizando Fluxos...</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -434,71 +434,71 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     onClick={() => handleProjectFilterChange(p.id)}
-                                    className="group relative flex flex-col bg-card border border-border/60 hover:border-primary/40 rounded-xl transition-all duration-300 cursor-pointer overflow-hidden p-0 h-full"
+                                    className="group relative flex flex-col bg-card border border-border/60 hover:border-primary/30 rounded-xl transition-all duration-300 cursor-pointer overflow-hidden p-0 h-full hover:shadow-lg hover:shadow-primary/[0.02]"
                                 >
-                                    {/* Blueprint Texture Background (Subtle) */}
-                                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:20px_20px]" />
+                                    {/* Blueprint Texture Background (Even more subtle) */}
+                                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:30px_30px]" />
 
                                     <div className="p-5 flex flex-col flex-1 relative z-10">
                                         <div className="flex items-start justify-between mb-4">
-                                            <div className="h-10 w-10 rounded-lg bg-primary/5 border border-border/40 flex items-center justify-center text-primary text-xl font-medium shrink-0 group-hover:scale-105 transition-transform">
+                                            <div className="h-10 w-10 rounded-lg bg-muted/30 border border-border/40 flex items-center justify-center text-muted-foreground text-xl font-medium shrink-0 group-hover:scale-105 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300">
                                                 {p.avatar_emoji ? (
                                                     <span className="text-lg">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
                                                 ) : (
                                                     <Briefcase className="h-5 w-5" />
                                                 )}
                                             </div>
-                                            <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-wider h-5 px-2 border-border/60", statusColors[statusKey] || statusColors.planning)}>
+                                            <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-wider h-5 px-2", statusColors[statusKey] || statusColors.planning)}>
                                                 {statusLabels[statusKey] || statusKey}
                                             </Badge>
                                         </div>
 
                                         <div className="mb-4 flex-1">
                                             <h3 className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors line-clamp-1 mb-1">{p.name}</h3>
-                                            <p className="text-[10px] text-muted-foreground line-clamp-1 font-normal">
+                                            <p className="text-[10px] text-muted-foreground line-clamp-1 font-normal opacity-60">
                                                 {p.client_name || "Mapeamento Direto"}
                                             </p>
                                         </div>
 
-                                        {/* Micro KPI Row */}
+                                        {/* Micro KPI Row - More Neutral */}
                                         <div className="flex items-center gap-4 mb-5 pb-4 border-b border-border/40">
                                             <div className="flex flex-col">
-                                                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter leading-none mb-1">Ação</span>
-                                                <span className="text-xs font-semibold tabular-nums text-primary">{counts.open}</span>
+                                                <span className="text-[9px] font-medium text-muted-foreground/50 uppercase tracking-tight leading-none mb-1">Passos</span>
+                                                <span className="text-xs font-semibold tabular-nums text-foreground/80">{counts.open}</span>
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter leading-none mb-1">Total</span>
-                                                <span className="text-xs font-semibold tabular-nums text-foreground/70">{counts.total}</span>
+                                                <span className="text-[9px] font-medium text-muted-foreground/50 uppercase tracking-tight leading-none mb-1">Total</span>
+                                                <span className="text-xs font-medium tabular-nums text-muted-foreground/70">{counts.total}</span>
                                             </div>
                                             <div className="flex flex-col ml-auto text-right">
-                                                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter leading-none mb-1">Fee</span>
+                                                <span className="text-[9px] font-medium text-muted-foreground/50 uppercase tracking-tight leading-none mb-1">Fee</span>
                                                 <span className="text-xs font-semibold tabular-nums text-foreground/40">{p.value ? `R$ ${p.value.toLocaleString()}` : '--'}</span>
                                             </div>
                                         </div>
 
-                                        {/* Trajetória (Progress) */}
+                                        {/* Trajetória (Progress) - More Subtle */}
                                         <div className="space-y-2">
                                             <div className="flex justify-between items-center">
-                                                <div className="flex items-center gap-1.5 opacity-60">
-                                                    <div className="h-1 w-3 bg-primary/40 rounded-full" />
-                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Trajetória</span>
+                                                <div className="flex items-center gap-1.5 opacity-40">
+                                                    <div className="h-0.5 w-3 bg-foreground/20 rounded-full" />
+                                                    <span className="text-[9px] font-medium uppercase tracking-widest text-muted-foreground">Progresso</span>
                                                 </div>
-                                                <span className="text-[10px] font-bold tabular-nums text-primary">{progress}%</span>
+                                                <span className="text-[10px] font-semibold tabular-nums text-foreground/70">{progress}%</span>
                                             </div>
                                             <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
                                                 <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${progress}%` }}
-                                                    className="h-full bg-primary/70 rounded-full"
+                                                    className="h-full bg-foreground/10 group-hover:bg-primary/40 transition-colors duration-500"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Action Hover (Micro-Transition) */}
-                                    <div className="px-5 py-2.5 bg-muted/5 border-t border-border/40 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="text-[9px] font-bold text-primary tracking-widest uppercase">Abrir Cockpit</span>
-                                        <Plus className="h-3 w-3 text-primary" />
+                                    <div className="px-5 py-2.5 bg-muted/5 border-t border-border/40 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                        <span className="text-[9px] font-bold text-muted-foreground tracking-widest uppercase">Entrar no Cockpit</span>
+                                        <Plus className="h-3 w-3 text-muted-foreground" />
                                     </div>
                                 </motion.div>
                             );
@@ -601,8 +601,8 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                 <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
                     <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Gargalos</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-xl font-bold tabular-nums text-orange-500/80">{tasksOverdue}</span>
-                        <Zap className="h-3.5 w-3.5 text-orange-500/20 group-hover:text-orange-500/40 transition-colors" />
+                        <span className="text-xl font-bold tabular-nums text-primary/80">{tasksOverdue}</span>
+                        <Zap className="h-3.5 w-3.5 text-primary/20 group-hover:text-primary/40 transition-colors" />
                     </div>
                 </div>
 
@@ -622,7 +622,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                             <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">{projectBalance >= 0 ? 'Saldo Líquido' : 'Custo'}</span>
                             <div className="flex items-end justify-between">
                                 <span className="text-xl font-bold tabular-nums text-foreground/80 mask-value">R$ {Math.abs(projectBalance).toLocaleString()}</span>
-                                <BarChart3 className={cn("h-3.5 w-3.5 transition-colors", projectBalance >= 0 ? "text-emerald-500/20 group-hover:text-emerald-500/40" : "text-orange-500/20 group-hover:text-orange-500/40")} />
+                                <BarChart3 className={cn("h-3.5 w-3.5 transition-colors", projectBalance >= 0 ? "text-emerald-500/20 group-hover:text-emerald-500/40" : "text-primary/20 group-hover:text-primary/40")} />
                             </div>
                         </div>
 
@@ -805,7 +805,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-colors relative z-20 cursor-pointer"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors relative z-20 cursor-pointer"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 e.preventDefault();

@@ -19,7 +19,7 @@ export function HeaderTimerBadge() {
             <button
                 onClick={() => navigate("/")}
                 title="Ir para o cronômetro"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-muted-foreground border border-border/60 hover:border-primary/30 hover:text-foreground transition-all bg-transparent"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-muted-foreground border border-border/60 hover:border-primary/30 hover:text-foreground transition-all bg-transparent"
             >
                 <Clock className="h-3 w-3" />
                 <span className="hidden sm:inline">00:00:00</span>
@@ -33,7 +33,7 @@ export function HeaderTimerBadge() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary"
             >
                 {/* Pulsing indicator */}
                 <span className="relative flex h-2 w-2 shrink-0">

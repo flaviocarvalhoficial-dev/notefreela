@@ -732,7 +732,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <Label htmlFor="project-name" className="text-xs text-muted-foreground">Nome do Projeto</Label>
                                             <Input
                                                 id="project-name"
-                                                placeholder="Ex: Identidade Visual NoteFreela"
+                                                placeholder="Ex: Identidade Visual Nimbus"
                                                 className="glass-light border-border h-11 text-lg font-medium focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
                                                 value={newName}
                                                 onChange={(e) => setNewName(e.target.value)}
@@ -763,7 +763,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                         </SelectContent>
                                                     </Select>
                                                     <div className="flex items-center gap-1.5 p-1 px-2 rounded-md border border-border bg-muted/20">
-                                                        {(['accent-primary', 'blue-500', 'emerald-500', 'amber-500'] as const).map((c) => (
+                                                        {(['accent-primary', 'slate-500', 'emerald-500', 'amber-500'] as const).map((c) => (
                                                             <button
                                                                 key={c}
                                                                 type="button"
@@ -772,8 +772,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                                     "h-4 w-4 rounded-full border border-white/20 transition-transform hover:scale-110 shrink-0",
                                                                     coverColor === c && "ring-2 ring-primary ring-offset-1",
                                                                     c === 'accent-primary' ? 'bg-accent-primary' :
-                                                                        c === 'blue-500' ? 'bg-blue-500' :
-                                                                            c === 'emerald-500' ? 'bg-emerald-500' : 'bg-amber-500'
+                                                                        `bg-${c}`
                                                                 )}
                                                             />
                                                         ))}

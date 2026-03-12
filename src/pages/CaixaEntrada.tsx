@@ -1352,7 +1352,7 @@ const CaixaEntrada = () => {
                     </DialogHeader>
                     <DialogFooter className="gap-2 sm:justify-between">
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => handleDeleteFolder(false)} className="text-orange-500 hover:text-orange-600">
+                            <Button variant="outline" onClick={() => handleDeleteFolder(false)} className="text-primary hover:text-primary">
                                 Desfazer Caixa (Manter Itens)
                             </Button>
                             <Button variant="destructive" onClick={() => handleDeleteFolder(true)}>

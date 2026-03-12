@@ -28,6 +28,7 @@ import Financeiro from "./Financeiro";
 import Tarefas from "./Tarefas";
 import Atividades from "./Atividades";
 import Documentos from "./Documentos";
+import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ProjetoDetalhes = () => {
@@ -43,6 +44,7 @@ const ProjetoDetalhes = () => {
     const [isAddingDoc, setIsAddingDoc] = useState(false);
     const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
     const [isAddInboxOpen, setIsAddInboxOpen] = useState(false);
+    const [initialInboxType, setInitialInboxType] = useState<string>("idea");
     const [isAddCostOpen, setIsAddCostOpen] = useState(false);
     const [selectedDocCategory, setSelectedDocCategory] = useState<string>("");
     const [activePageId, setActivePageId] = useState<string | null>(null);
@@ -226,7 +228,12 @@ const ProjetoDetalhes = () => {
                     onIconChange={(icon) => id && updateIcon({ id, icon })}
                 />
 
-                <main className="flex-1 flex flex-col overflow-hidden relative">
+                <main
+                    className="flex-1 flex flex-col overflow-hidden relative"
+                    onClick={() => {
+                        if (isDockOpen) setIsDockOpen(false);
+                    }}
+                >
                     {activeTab === 'planejamento' && (
                         <>
                             <PageNav
@@ -280,7 +287,10 @@ const ProjetoDetalhes = () => {
                                         onCommand={(cmd) => {
                                             setSourceBlockId('editor_trigger');
                                             if (cmd === 'task') setIsAddTaskOpen(true);
-                                            else if (cmd === 'inbox') setIsAddInboxOpen(true);
+                                            else if (cmd === 'inbox' || cmd === 'prompt' || cmd === 'idea') {
+                                                setInitialInboxType(cmd === 'inbox' ? 'idea' : cmd);
+                                                setIsAddInboxOpen(true);
+                                            }
                                             else if (cmd === 'page' || cmd === 'subpage') createPage();
                                             else if (cmd === 'income' || cmd === 'expense') setIsAddCostOpen(true);
                                             else if (['kanban', 'tasks', 'finance', 'inboxview'].includes(cmd)) {
@@ -432,9 +442,15 @@ const ProjetoDetalhes = () => {
                 open={isAddInboxOpen}
                 onOpenChange={setIsAddInboxOpen}
                 projectId={project.id}
+                initialType={initialInboxType}
                 onConfirm={async (item) => {
-                    if (sourceBlockId) {
-                        editorRef.current?.insertItem('inbox', item.id, item.title || item.content?.substring(0, 20));
+                    if (sourceBlockId === 'editor_trigger') {
+                        editorRef.current?.insertItem('capture', item.type, {
+                            title: item.title,
+                            content: item.content,
+                            type: item.type,
+                            date: format(new Date(), 'dd/MM/yy')
+                        });
                         setSourceBlockId(null);
                     }
                 }}
