@@ -17,7 +17,6 @@ import {
   DollarSign,
   CreditCard,
   Info,
-  LayoutGrid,
   Building2,
   LayoutDashboard,
   Wallet,
@@ -25,7 +24,15 @@ import {
   FileSearch,
   Plus,
   X,
-  Sparkles
+  Sparkles,
+  Zap,
+  TrendingUp,
+  Briefcase,
+  FileCheck,
+  BrainCircuit,
+  Gauge,
+  HandCoins,
+  LayoutGrid
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
@@ -56,14 +63,32 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { useProjectPages } from "@/hooks/use-project-pages";
 
-const navItems = [
+const operacaoItems = [
   { title: "Dashboard", url: "/", icon: Home },
+  { title: "Caixa de Entrada", url: "/caixa-entrada", icon: Inbox },
   { title: "Tarefas", url: "/tarefas", icon: CheckSquare },
   { title: "Agenda", url: "/agenda", icon: Calendar },
+];
+
+const comercialItems = [
+  { title: "Leads", url: "/leads", icon: Zap },
+  { title: "Propostas", url: "/propostas", icon: FileCheck },
   { title: "Clientes", url: "/clientes", icon: Users },
-  { title: "Documentos", url: "/documentos", icon: FileText },
+  { title: "Formulários", url: "/formularios", icon: LayoutGrid },
+  { title: "Growth", url: "/growth", icon: Rocket },
+];
+
+const gestaoItems = [
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
-  { title: "Parceiro IA", icon: Sparkles, action: () => window.dispatchEvent(new CustomEvent("toggle-ai-assistant")) },
+  { title: "Documentos", url: "/documentos", icon: FileText },
+  { title: "Assinaturas", url: "/assinaturas", icon: CreditCard },
+];
+
+const intelligenceItems = [
+  { title: "Nimbus AI", url: "/nimbus-ai", icon: BrainCircuit },
+  { title: "Insights", url: "/inteligencia", icon: TrendingUp },
+  { title: "Capacity", url: "/inteligencia", icon: Gauge },
+  { title: "Rentabilidade", url: "/inteligencia", icon: HandCoins },
 ];
 
 const APP_VERSION = "V1.1.0";
@@ -354,257 +379,184 @@ export function AppSidebar() {
                 </div>
               ) : (
                 // GLOBAL MODE ITEMS
-                <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-                  {navItems.map((item, index) => (
-                    <div key={item.title}>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          asChild={!!item.url}
-                          onClick={item.action}
-                          tooltip={!open ? item.title : undefined}
-                          className={cn(
-                            "h-9 rounded-md transition-all hover:bg-sidebar-accent",
-                            item.title === "Parceiro IA" && "text-primary hover:text-primary active:scale-95"
-                          )}
-                        >
-                          {item.url ? (
-                            <NavLink
-                              to={item.url}
-                              end={item.url === "/"}
-                              className={cn(
-                                "flex items-center text-muted-foreground transition-colors w-full h-full",
-                                open ? "gap-2.5 px-3" : "justify-center"
-                              )}
-                              activeClassName="text-foreground font-semibold"
-                            >
-                              <item.icon className="h-[17px] w-[17px] shrink-0" />
-                              {open && <span className="text-[12.5px] font-normal tracking-tight">{item.title}</span>}
-                            </NavLink>
-                          ) : (
-                            <div className={cn(
-                              "flex items-center transition-colors w-full h-full cursor-pointer",
-                              open ? "gap-2.5 px-3" : "justify-center"
-                            )}>
-                              <div className={cn("h-[17px] w-[17px] shrink-0 rounded-full overflow-hidden border border-primary/20 bg-white/50", item.title === "Parceiro IA" && "animate-pulse")}>
-                                <img src="/ai-partner.png" alt="IA" className="w-full h-full object-cover" />
-                              </div>
-                              {open && <span className="text-[12.5px] font-semibold tracking-tight">{item.title}</span>}
-                            </div>
-                          )}
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300 px-2 mt-2">
+                  {/* Section: Operação */}
+                  <div className="space-y-1">
+                    {open && <h3 className="px-3 mb-2 text-[10px] uppercase font-bold text-muted-foreground/30 tracking-widest">Operação</h3>}
 
-                      {/* Recentes Section after Dashboard */}
-                      {index === 0 && open && recentProjects.length > 0 && (
-                        <div className="mt-4 mb-1 px-3">
-                          <span className="text-[10px] uppercase font-semibold text-muted-foreground/40 tracking-wider">Recentes</span>
-                          <div className="mt-1 space-y-0.5">
-                            {recentProjects.map(p => (
-                              <button
-                                key={p.id}
-                                onClick={() => navigate(`/projetos/${p.id}`)}
-                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[11.5px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-all truncate group"
-                              >
-                                <Circle className={cn(
-                                  "h-1.5 w-1.5 rounded-full shrink-0 transition-transform group-hover:scale-125",
-                                  p.status === 'completed' ? "bg-emerald-500" :
-                                    p.status === 'active' ? "bg-primary" :
-                                      "bg-muted-foreground/30"
-                                )} />
-                                <span className="truncate">{p.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Render Projects Tree after Dashboard (index 0) */}
-                      {index === 0 && (
-                        <Collapsible asChild defaultOpen={false} className="group/collapsible">
-                          <SidebarMenuItem>
-                            <SidebarMenuButton
-                              asChild
-                              tooltip={!open ? "Projetos" : undefined}
-                              className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
-                            >
-                              <NavLink
-                                to="/projetos"
-                                className={cn(
-                                  "flex items-center text-muted-foreground transition-colors w-full h-full",
-                                  open ? "gap-2.5 px-3" : "justify-center"
-                                )}
-                                activeClassName="text-foreground font-semibold"
-                              >
-                                <FolderKanban className="h-[17px] w-[17px] shrink-0" />
-                                {open && <span className="text-[12.5px] font-normal tracking-tight">Projetos</span>}
-                              </NavLink>
-                            </SidebarMenuButton>
-
-                            {open && (
-                              <>
-                                <CollapsibleTrigger asChild>
-                                  <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
-                                    <ChevronRight className="h-4 w-4" />
-                                  </SidebarMenuAction>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                  <SidebarMenuSub className="ml-3 mt-1 border-l border-sidebar-border/50 gap-0 pb-2">
-                                    {sidebarProjects.length > 0 ? (
-                                      sidebarProjects.map((project: any) => (
-                                        <SidebarMenuSubItem key={project.id}>
-                                          <button
-                                            onClick={() => navigate(`/projetos/${project.id}`)}
-                                            className="px-4 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2 w-full group/item"
-                                          >
-                                            <div className={cn(
-                                              "h-1.5 w-1.5 rounded-full shrink-0",
-                                              project.status === 'completed' ? "bg-emerald-500" :
-                                                project.status === 'active' ? "bg-primary" :
-                                                  "bg-muted-foreground/30"
-                                            )} />
-                                            <span className="truncate">{project.name}</span>
-                                          </button>
-                                        </SidebarMenuSubItem>
-                                      ))
-                                    ) : (
-                                      <span className="px-4 py-1 text-[10px] text-muted-foreground italic">Nenhum projeto</span>
-                                    )}
-                                  </SidebarMenuSub>
-                                </CollapsibleContent>
-                              </>
-                            )}
-                          </SidebarMenuItem>
-                        </Collapsible>
-                      )}
-                    </div>
-                  ))}
-
-                  {/* Caixa de Entrada with Deep Tree */}
-                  <Collapsible asChild defaultOpen={false} className="group/collapsible mt-1">
+                    {/* Dashboard */}
                     <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        tooltip={!open ? "Caixa de Entrada" : undefined}
-                        className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
-                      >
-                        <NavLink
-                          to="/caixa-entrada"
-                          className={cn(
-                            "flex items-center text-muted-foreground transition-colors w-full h-full",
-                            open ? "gap-2.5 px-3" : "justify-center"
-                          )}
-                          activeClassName="text-foreground font-semibold"
-                        >
-                          <Inbox className="h-[17px] w-[17px] shrink-0" />
-                          {open && <span className="text-[12.5px] font-normal tracking-tight">Caixa de Entrada</span>}
+                      <SidebarMenuButton asChild tooltip={!open ? "Dashboard" : undefined} className="h-9 rounded-md transition-all">
+                        <NavLink to="/" end className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
+                          <Home className="h-[17px] w-[17px] shrink-0" />
+                          {open && <span className="text-[12.5px] font-medium tracking-tight">Dashboard</span>}
                         </NavLink>
                       </SidebarMenuButton>
-
-                      {open && (
-                        <>
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
-                              <ChevronRight className="h-4 w-4" />
-                            </SidebarMenuAction>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <SidebarMenuSub className="ml-3 mt-1 border-l border-sidebar-border/50 gap-0">
-                              {inboxGroups.map((group) => {
-                                const items = inboxItems.filter((i: any) => i.type === group.type);
-                                return (
-                                  <Collapsible key={group.type} defaultOpen={false} className="group/sub-collapsible">
-                                    <SidebarMenuSubItem className="relative">
-                                      <div className="flex items-center group">
-                                        <NavLink
-                                          to={`/caixa-entrada?type=${group.type}`}
-                                          className="flex items-center gap-2 px-3 py-1.5 text-[11.5px] text-muted-foreground hover:text-foreground transition-colors flex-1"
-                                          activeClassName="text-foreground font-medium"
-                                        >
-                                          <group.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
-                                          {group.title}
-                                        </NavLink>
-                                        <CollapsibleTrigger asChild>
-                                          <button className="p-1 opacity-0 group-hover:opacity-100 transition-all transition-transform duration-200 group-data-[state=open]/sub-collapsible:rotate-90">
-                                            <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                                          </button>
-                                        </CollapsibleTrigger>
-                                      </div>
-
-                                      <CollapsibleContent>
-                                        <div className="ml-3 mt-1 border-l border-sidebar-border/50 flex flex-col gap-0.5 pb-2">
-                                          {items.length > 0 ? (
-                                            items.map((i: any) => (
-                                              <button
-                                                key={i.id}
-                                                onClick={() => navigate(`/caixa-entrada?id=${i.id}`)}
-                                                className="px-4 py-1 text-[10.5px] text-muted-foreground hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2 w-full"
-                                              >
-                                                <Circle className="h-1 w-1 fill-current opacity-30" />
-                                                {i.title || "Sem título"}
-                                              </button>
-                                            ))
-                                          ) : (
-                                            <span className="px-4 py-1 text-[10px] text-muted-foreground italic">Vazio</span>
-                                          )}
-                                        </div>
-                                      </CollapsibleContent>
-                                    </SidebarMenuSubItem>
-                                  </Collapsible>
-                                );
-                              })}
-                            </SidebarMenuSub>
-                          </CollapsibleContent>
-                        </>
-                      )}
                     </SidebarMenuItem>
-                  </Collapsible>
+
+                    {/* Projetos Collapsible */}
+                    <Collapsible asChild defaultOpen={false} className="group/collapsible">
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip={!open ? "Projetos" : undefined} className="h-9 rounded-md transition-all">
+                          <NavLink to="/projetos" className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
+                            <FolderKanban className="h-[17px] w-[17px] shrink-0" />
+                            {open && <span className="text-[12.5px] font-medium tracking-tight">Projetos</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                        {open && (
+                          <>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
+                                <ChevronRight className="h-4 w-4" />
+                              </SidebarMenuAction>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub className="ml-3 mt-1 border-l border-sidebar-border/50 gap-0 pb-2">
+                                {sidebarProjects.length > 0 ? (
+                                  sidebarProjects.map((project: any) => (
+                                    <SidebarMenuSubItem key={project.id}>
+                                      <button onClick={() => navigate(`/projetos/${project.id}`)} className="px-4 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2 w-full group/item">
+                                        <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", project.status === 'completed' ? "bg-emerald-500" : project.status === 'active' ? "bg-primary" : "bg-muted-foreground/30")} />
+                                        <span className="truncate">{project.name}</span>
+                                      </button>
+                                    </SidebarMenuSubItem>
+                                  ))
+                                ) : (
+                                  <span className="px-4 py-1 text-[10px] text-muted-foreground italic">Nenhum projeto</span>
+                                )}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </>
+                        )}
+                      </SidebarMenuItem>
+                    </Collapsible>
+
+                    {/* Caixa de Entrada Collapsible */}
+                    <Collapsible asChild defaultOpen={false} className="group/collapsible">
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip={!open ? "Caixa de Entrada" : undefined} className="h-9 rounded-md transition-all">
+                          <NavLink to="/caixa-entrada" className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
+                            <Inbox className="h-[17px] w-[17px] shrink-0" />
+                            {open && <span className="text-[12.5px] font-medium tracking-tight">Caixa de Entrada</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                        {open && (
+                          <>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
+                                <ChevronRight className="h-4 w-4" />
+                              </SidebarMenuAction>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub className="ml-3 mt-1 border-l border-sidebar-border/50 gap-0">
+                                {inboxGroups.map((group) => (
+                                  <SidebarMenuSubItem key={group.type}>
+                                    <NavLink to={`/caixa-entrada?type=${group.type}`} className="flex items-center gap-2 px-3 py-1.5 text-[11.5px] text-muted-foreground hover:text-foreground transition-colors flex-1" activeClassName="text-foreground font-medium">
+                                      <group.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
+                                      {group.title}
+                                    </NavLink>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </>
+                        )}
+                      </SidebarMenuItem>
+                    </Collapsible>
+
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip={!open ? "Tarefas" : undefined} className="h-9 rounded-md transition-all">
+                        <NavLink to="/tarefas" className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
+                          <CheckSquare className="h-[17px] w-[17px] shrink-0" />
+                          {open && <span className="text-[12.5px] font-medium tracking-tight">Tarefas</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip={!open ? "Agenda" : undefined} className="h-9 rounded-md transition-all">
+                        <NavLink to="/agenda" className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
+                          <Calendar className="h-[17px] w-[17px] shrink-0" />
+                          {open && <span className="text-[12.5px] font-medium tracking-tight">Agenda</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </div>
+
+                  {/* Section: Comercial */}
+                  <div className="space-y-1">
+                    {open && <h3 className="px-3 mb-2 text-[10px] uppercase font-bold text-muted-foreground/30 tracking-widest">Comercial</h3>}
+                    {comercialItems.map((item) => (
+                      <SidebarMenuItem key={item.url}>
+                        <SidebarMenuButton asChild tooltip={!open ? item.title : undefined} className="h-9 rounded-md transition-all">
+                          <NavLink to={item.url!} className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
+                            <item.icon className="h-[17px] w-[17px] shrink-0" />
+                            {open && <span className="text-[12.5px] font-medium tracking-tight">{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </div>
+
+                  {/* Section: Gestão */}
+                  <div className="space-y-1">
+                    {open && <h3 className="px-3 mb-2 text-[10px] uppercase font-bold text-muted-foreground/30 tracking-widest">Gestão</h3>}
+                    {gestaoItems.map((item) => (
+                      <SidebarMenuItem key={item.url}>
+                        <SidebarMenuButton asChild tooltip={!open ? item.title : undefined} className="h-9 rounded-md transition-all">
+                          <NavLink to={item.url!} className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
+                            <item.icon className="h-[17px] w-[17px] shrink-0" />
+                            {open && <span className="text-[12.5px] font-medium tracking-tight">{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </div>
+
+                  {/* Section: Sistema */}
+                  <div className="space-y-1 pb-4">
+                    {open && <h3 className="px-3 mb-2 text-[10px] uppercase font-bold text-muted-foreground/30 tracking-widest">Sistema</h3>}
+
+                    <SidebarMenuItem>
+                      <SidebarMenuButton onClick={() => window.dispatchEvent(new CustomEvent("toggle-ai-assistant"))} tooltip={!open ? "Nimbus AI" : undefined} className="h-9 rounded-md transition-all text-primary hover:text-primary hover:bg-primary/5">
+                        <div className={cn("flex items-center transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")}>
+                          <Sparkles className="h-[17px] w-[17px] shrink-0 animate-pulse" />
+                          {open && <span className="text-[12.5px] font-semibold">Nimbus AI</span>}
+                        </div>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+
+                    <Collapsible asChild defaultOpen={false} className="group/collapsible">
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip={!open ? "Configurações" : undefined} className="h-9 rounded-md transition-all hover:bg-sidebar-accent">
+                          <div className={cn("flex items-center text-muted-foreground transition-colors w-full h-full cursor-pointer", open ? "gap-2.5 px-3" : "justify-center")}>
+                            <Settings className="h-[17px] w-[17px] shrink-0" />
+                            {open && <span className="text-[12.5px] font-medium tracking-tight">Configurações</span>}
+                          </div>
+                        </SidebarMenuButton>
+                        {open && (
+                          <>
+                            <CollapsibleTrigger asChild className="group-data-[state=open]/collapsible:rotate-90 transition-transform">
+                              <SidebarMenuAction><ChevronRight className="h-4 w-4" /></SidebarMenuAction>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub className="ml-3 mt-1 border-l border-sidebar-border/50 gap-0 pb-2">
+                                {adminItems.map((item) => (
+                                  <SidebarMenuSubItem key={item.title}>
+                                    <NavLink to={item.url} className="px-4 py-1.5 text-[11.5px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2.5" activeClassName="text-foreground font-medium">
+                                      <item.icon className="h-3.5 w-3.5 shrink-0" />
+                                      {item.title}
+                                    </NavLink>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </>
+                        )}
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  </div>
                 </div>
-              )}
-
-              {/* Gestão e Ajustes Group - Only visible globally or at bottom */}
-              {!isProjectContext && (
-                <Collapsible asChild defaultOpen={false} className="group/collapsible mt-1">
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      tooltip={!open ? "Gestão e Ajustes" : undefined}
-                      className="h-9 rounded-md transition-all hover:bg-sidebar-accent"
-                    >
-                      <div className={cn(
-                        "flex items-center text-muted-foreground transition-colors w-full h-full",
-                        open ? "gap-2.5 px-3" : "justify-center"
-                      )}>
-                        <Settings className="h-[17px] w-[17px] shrink-0" />
-                        {open && <span className="text-[12.5px] font-normal tracking-tight">Gestão e Ajustes</span>}
-                      </div>
-                    </SidebarMenuButton>
-                    {open && (
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuAction className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90">
-                          <ChevronRight className="h-4 w-4" />
-                        </SidebarMenuAction>
-                      </CollapsibleTrigger>
-                    )}
-
-                    {open && (
-                      <CollapsibleContent>
-                        <SidebarMenuSub className="ml-3 mt-1 border-l border-sidebar-border/50 gap-0 pb-2">
-                          {adminItems.map((item) => (
-                            <SidebarMenuSubItem key={item.title}>
-                              <NavLink
-                                to={item.url}
-                                className="px-4 py-1.5 text-[11.5px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2.5"
-                                activeClassName="text-foreground font-medium"
-                              >
-                                <item.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                                {item.title}
-                              </NavLink>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    )}
-                  </SidebarMenuItem>
-                </Collapsible>
               )}
             </SidebarMenu>
           </SidebarGroupContent>

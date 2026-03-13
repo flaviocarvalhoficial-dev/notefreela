@@ -124,23 +124,23 @@ export function FinancialChart({ projects }: FinancialChartProps) {
     };
 
     return (
-        <div className="bento-card p-6 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-6">
+        <div className="bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl p-6 h-full flex flex-col shadow-sm">
+            <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h3 className="text-lg font-semibold tracking-tight">Fluxo Financeiro</h3>
-                    <p className="text-sm text-muted-foreground">Evolução de faturamento e recebimentos</p>
+                    <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Financial Flow</h3>
+                    <p className="text-[10px] text-muted-foreground/50 font-medium">Contratado vs. Recebido</p>
                 </div>
-                <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border">
+                <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-xl border border-border/40 backdrop-blur-sm">
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setChartType("bar")}
                         className={cn(
-                            "h-7 px-3 text-xs gap-2 rounded-md transition-all",
-                            chartType === "bar" ? "bg-background shadow-sm text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                            "h-7 px-3 text-[10px] gap-2 rounded-lg transition-all font-bold",
+                            chartType === "bar" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        <BarChart3 className="h-3.5 w-3.5" />
+                        <BarChart3 className="h-3 w-3" />
                         Barras
                     </Button>
                     <Button
@@ -148,11 +148,11 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                         size="sm"
                         onClick={() => setChartType("line")}
                         className={cn(
-                            "h-7 px-3 text-xs gap-2 rounded-md transition-all",
-                            chartType === "line" ? "bg-background shadow-sm text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                            "h-7 px-3 text-[10px] gap-2 rounded-lg transition-all font-bold",
+                            chartType === "line" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        <LineChartIcon className="h-3.5 w-3.5" />
+                        <LineChartIcon className="h-3 w-3" />
                         Linhas
                     </Button>
                 </div>
@@ -318,17 +318,6 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                         )}
                     </ResponsiveContainer>
                 )}
-            </div>
-
-            <div className="flex justify-center gap-6 mt-4">
-                <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-[hsl(var(--muted-foreground)/0.3)]"></div>
-                    <span className="text-[10px] text-muted-foreground tracking-wider font-semibold">Total Contratado</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-[#0080FF]"></div>
-                    <span className="text-[10px] text-muted-foreground tracking-wider font-semibold">Recebido</span>
-                </div>
             </div>
         </div>
     );

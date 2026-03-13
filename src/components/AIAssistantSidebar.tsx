@@ -30,9 +30,9 @@ export function AIAssistantSidebar() {
 
     useEffect(() => {
         if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            scrollRef.current.scrollIntoView({ behavior: "smooth" });
         }
-    }, [messages]);
+    }, [messages, isLoading]);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -46,6 +46,7 @@ export function AIAssistantSidebar() {
             const response = await aiService.ask([...messages, userMessage], context);
             setMessages(prev => [...prev, response]);
         } catch (error) {
+            console.error("AI Sidebar Error Details:", error);
             toast({
                 title: "Erro na IA",
                 description: "Não foi possível obter uma resposta agora. Tente novamente.",
@@ -102,75 +103,79 @@ export function AIAssistantSidebar() {
 
             {/* Chat Area */}
             <div className="flex-1 overflow-hidden flex flex-col p-4 relative">
-                <ScrollArea className="flex-1 pr-4" viewportRef={scrollRef}>
-                    <AnimatePresence initial={false}>
-                        {messages.length === 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex flex-col items-center justify-center h-full py-12 text-center"
-                            >
-                                <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center mb-4">
-                                    <Bot className="h-6 w-6 text-primary/40" />
-                                </div>
-                                <h3 className="text-[13px] font-semibold text-foreground mb-1">Como posso ajudar?</h3>
-                                <p className="text-[11px] text-muted-foreground max-w-[200px] leading-relaxed">
-                                    Estou pronto para analisar seu contexto e sugerir as melhores rotas para seu trabalho.
-                                </p>
+                <ScrollArea className="flex-1 pr-4">
+                    <div className="flex flex-col">
+                        <AnimatePresence initial={false}>
+                            {messages.length === 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex flex-col items-center justify-center h-full py-12 text-center"
+                                >
+                                    <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center mb-4">
+                                        <Bot className="h-6 w-6 text-primary/40" />
+                                    </div>
+                                    <h3 className="text-[13px] font-semibold text-foreground mb-1">Como posso ajudar?</h3>
+                                    <p className="text-[11px] text-muted-foreground max-w-[200px] leading-relaxed">
+                                        Estou pronto para analisar seu contexto e sugerir as melhores rotas para seu trabalho.
+                                    </p>
 
-                                <div className="mt-8 w-full flex flex-col gap-2">
-                                    <p className="text-[9px] uppercase font-bold text-muted-foreground/40 tracking-widest text-left px-2">Sugestões Contextuais</p>
-                                    {quickActions.map((action, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => { setInput(action.prompt); handleSend(); }}
-                                            className="text-left p-2.5 rounded-lg border border-sidebar-border hover:border-primary/30 hover:bg-primary/5 transition-all group"
-                                        >
-                                            <span className="text-[11px] text-muted-foreground group-hover:text-foreground inline-flex items-center gap-2">
-                                                <Zap className="h-3 w-3 text-primary/40 group-hover:text-primary" />
-                                                {action.label}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
+                                    <div className="mt-8 w-full flex flex-col gap-2">
+                                        <p className="text-[9px] uppercase font-bold text-muted-foreground/40 tracking-widest text-left px-2">Sugestões Contextuais</p>
+                                        {quickActions.map((action, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => { setInput(action.prompt); handleSend(); }}
+                                                className="text-left p-2.5 rounded-lg border border-sidebar-border hover:border-primary/30 hover:bg-primary/5 transition-all group"
+                                            >
+                                                <span className="text-[11px] text-muted-foreground group-hover:text-foreground inline-flex items-center gap-2">
+                                                    <Zap className="h-3 w-3 text-primary/40 group-hover:text-primary" />
+                                                    {action.label}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
 
-                        {messages.map((msg, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, x: msg.role === 'user' ? 10 : -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className={cn(
-                                    "mb-4 flex flex-col",
-                                    msg.role === 'user' ? "items-end" : "items-start"
-                                )}
-                            >
-                                <div className={cn(
-                                    "max-w-[90%] p-3 rounded-2xl text-[12px] leading-relaxed shadow-sm",
-                                    msg.role === 'user'
-                                        ? "bg-primary text-primary-foreground rounded-tr-none"
-                                        : "bg-sidebar-accent border border-sidebar-border text-foreground rounded-tl-none"
-                                )}>
-                                    {msg.content}
-                                </div>
-                                <span className="text-[9px] text-muted-foreground/50 mt-1 px-1">
-                                    {msg.role === 'user' ? 'Você' : 'Assistente'}
-                                </span>
-                            </motion.div>
-                        ))}
+                            {messages.map((msg, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, x: msg.role === 'user' ? 10 : -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className={cn(
+                                        "mb-4 flex flex-col",
+                                        msg.role === 'user' ? "items-end" : "items-start"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "max-w-[90%] p-3 rounded-2xl text-[12px] leading-relaxed shadow-sm",
+                                        msg.role === 'user'
+                                            ? "bg-primary text-primary-foreground rounded-tr-none"
+                                            : "bg-sidebar-accent border border-sidebar-border text-foreground rounded-tl-none"
+                                    )}>
+                                        {msg.content}
+                                    </div>
+                                    <span className="text-[9px] text-muted-foreground/50 mt-1 px-1">
+                                        {msg.role === 'user' ? 'Você' : 'Assistente'}
+                                    </span>
+                                </motion.div>
+                            ))}
 
-                        {isLoading && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="flex items-center gap-2 text-muted-foreground p-2"
-                            >
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                                <span className="text-[11px] italic">Pensando...</span>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                            {isLoading && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex items-center gap-2 text-muted-foreground p-2"
+                                >
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span className="text-[11px] italic">Pensando...</span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                    <div ref={scrollRef} /> {/* Dedicated scroll anchor */}
+                    <div className="h-4" />
                 </ScrollArea>
             </div>
 
@@ -198,7 +203,7 @@ export function AIAssistantSidebar() {
                     </Button>
                 </div>
                 <p className="text-[9px] text-muted-foreground/40 text-center mt-2 flex items-center justify-center gap-1">
-                    <Info className="h-2 w-2" /> Nimbus Command Center • gpt-4o-mini
+                    <Info className="h-2 w-2" /> Nimbus Command Center • Gemini 1.5
                 </p>
             </div>
         </div>

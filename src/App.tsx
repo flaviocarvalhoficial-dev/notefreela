@@ -23,6 +23,12 @@ import Atividades from "./pages/Atividades";
 import Configuracoes from "./pages/Configuracoes";
 import Assinaturas from "./pages/Assinaturas";
 import Empresa from "./pages/Empresa";
+import Leads from "./pages/Leads";
+import Growth from "./pages/Growth";
+import Propostas from "./pages/Propostas";
+import Formularios from "./pages/Formularios";
+import Intelligence from "./pages/Intelligence";
+import NimbusAI from "./pages/NimbusAI";
 import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase";
 import { Session } from "@supabase/supabase-js";
@@ -77,6 +83,12 @@ const AppLayout = () => {
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/assinaturas" element={<Assinaturas />} />
                 <Route path="/empresa" element={<Empresa />} />
+                <Route path="/leads" element={<Leads />} />
+                <Route path="/growth" element={<Growth />} />
+                <Route path="/propostas" element={<Propostas />} />
+                <Route path="/formularios" element={<Formularios />} />
+                <Route path="/inteligencia" element={<Intelligence />} />
+                <Route path="/nimbus-ai" element={<NimbusAI />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

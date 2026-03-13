@@ -221,6 +221,65 @@ export type Database = {
                 }
                 Relationships: []
             }
+            leads: {
+                Row: {
+                    id: string
+                    created_at: string
+                    user_id: string
+                    name: string
+                    company_name: string | null
+                    email: string | null
+                    phone: string | null
+                    website: string | null
+                    status: "novo" | "contato" | "proposta" | "negociacao" | "fechado" | "perdido"
+                    source: string | null
+                    notes: string | null
+                    score: number
+                    potential_value: number | null
+                    is_hot: boolean
+                }
+                Insert: {
+                    id?: string
+                    created_at?: string
+                    user_id: string
+                    name: string
+                    company_name?: string | null
+                    email?: string | null
+                    phone?: string | null
+                    website?: string | null
+                    status?: "novo" | "contato" | "proposta" | "negociacao" | "fechado" | "perdido"
+                    source?: string | null
+                    notes?: string | null
+                    score?: number
+                    potential_value?: number | null
+                    is_hot?: boolean
+                }
+                Update: {
+                    id?: string
+                    created_at?: string
+                    user_id?: string
+                    name?: string
+                    company_name?: string | null
+                    email?: string | null
+                    phone?: string | null
+                    website?: string | null
+                    status?: "novo" | "contato" | "proposta" | "negociacao" | "fechado" | "perdido"
+                    source?: string | null
+                    notes?: string | null
+                    score?: number
+                    potential_value?: number | null
+                    is_hot?: boolean
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "leads_user_id_fkey"
+                        columns: ["user_id"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             kanban_scenarios: {
                 Row: {
                     created_at: string

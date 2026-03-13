@@ -46,6 +46,18 @@ export function useDashboardData() {
         },
     });
 
+    const { data: leads = [] } = useQuery({
+        queryKey: ["leads-dashboard"],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("leads")
+                .select("*")
+                .order("created_at", { ascending: false });
+            if (error) throw error;
+            return data;
+        },
+    });
+
     // ── Derived values ───────────────────────────────────────────────────────
 
     /** Total number of unique clients (explicit + implicit from projects). */
@@ -78,6 +90,7 @@ export function useDashboardData() {
         projects,
         tasksStats,
         uniqueClientsCount,
+        leads,
         clients: clientsData,
         isLoading,
         completionRate,

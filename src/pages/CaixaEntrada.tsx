@@ -21,6 +21,7 @@ import {
     Copy,
     ExternalLink,
     Briefcase,
+    Users,
     LayoutGrid,
     List,
     MoreHorizontal,
@@ -85,7 +86,7 @@ interface InboxItem {
     created_at: string;
     title: string;
     content: string;
-    type: 'idea' | 'prompt' | 'snippet' | 'note';
+    type: 'idea' | 'prompt' | 'snippet' | 'note' | 'lead' | 'briefing' | 'link' | 'demand';
     category: string;
     tags: string[];
     project_id: string | null;
@@ -99,17 +100,25 @@ const getTypeIcon = (type: string) => {
         case 'prompt': return <Terminal className="h-4 w-4" />;
         case 'snippet': return <Type className="h-4 w-4" />;
         case 'note': return <FileText className="h-4 w-4" />;
+        case 'lead': return <Users className="h-4 w-4" />;
+        case 'briefing': return <Briefcase className="h-4 w-4" />;
+        case 'link': return <ExternalLink className="h-4 w-4" />;
+        case 'demand': return <Zap className="h-4 w-4" />;
         default: return <Inbox className="h-4 w-4" />;
     }
 };
 
 const getTypeColor = (type: string) => {
     switch (type) {
-        case 'idea': return "text-primary";
-        case 'prompt': return "text-primary";
-        case 'snippet': return "text-primary";
-        case 'note': return "text-primary";
-        default: return "text-muted-foreground";
+        case 'idea': return "text-primary bg-primary/10";
+        case 'prompt': return "text-primary bg-primary/10";
+        case 'snippet': return "text-primary bg-primary/10";
+        case 'note': return "text-primary bg-primary/10";
+        case 'lead': return "text-emerald-500 bg-emerald-500/10";
+        case 'briefing': return "text-blue-500 bg-blue-500/10";
+        case 'link': return "text-amber-500 bg-amber-500/10";
+        case 'demand': return "text-purple-500 bg-purple-500/10";
+        default: return "text-muted-foreground bg-muted/10";
     }
 };
 
@@ -416,12 +425,11 @@ const CaixaEntrada = () => {
         return () => window.removeEventListener('open-conversion', handler);
     }, []);
 
-    const convertToTaskMutation = useMutation({
-        mutationFn: async ({ item, projectId }: { item: InboxItem, projectId: string }) => {
+    const convertToTaskMutation = useMutation<any, Error, { item: InboxItem, projectId: string }>({
+        mutationFn: async ({ item, projectId }) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuário não autenticado");
 
-            // 1. Get a column for the task (first column of the project)
             const { data: cols, error: colsErr } = await (supabase as any)
                 .from("kanban_columns")
                 .select("id")
@@ -432,7 +440,6 @@ const CaixaEntrada = () => {
             if (colsErr) throw colsErr;
             const columnId = cols?.[0]?.id;
 
-            // 2. Create the task
             const { error: taskErr } = await (supabase as any)
                 .from("tasks")
                 .insert({
@@ -447,7 +454,6 @@ const CaixaEntrada = () => {
 
             if (taskErr) throw taskErr;
 
-            // 3. Delete the inbox item
             const { error: delErr } = await (supabase as any)
                 .from("inbox")
                 .delete()
@@ -476,6 +482,50 @@ const CaixaEntrada = () => {
         }
     });
 
+    const convertToClientMutation = useMutation<any, Error, InboxItem>({
+        mutationFn: async (item) => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Usuário não autenticado");
+
+            const { error: clientErr } = await (supabase as any)
+                .from("clients")
+                .insert({
+                    user_id: user.id,
+                    name: item.title || "Novo Cliente (da Caixa)",
+                    company_name: item.type === 'lead' ? item.content : null,
+                    created_at: new Date().toISOString()
+                });
+
+            if (clientErr) throw clientErr;
+
+            const { error: delErr } = await (supabase as any)
+                .from("inbox")
+                .delete()
+                .eq("id", item.id);
+
+            if (delErr) throw delErr;
+
+            return { itemName: item.title };
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["inbox"] });
+            queryClient.invalidateQueries({ queryKey: ["inbox-sidebar"] });
+            queryClient.invalidateQueries({ queryKey: ["clients-raw"] });
+            toast({
+                title: "Convertido com sucesso!",
+                description: `"${data.itemName}" agora é um cliente na sua carteira.`,
+            });
+            setViewingItem(null);
+        },
+        onError: (error: any) => {
+            toast({
+                title: "Erro na conversão",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    });
+
     useEffect(() => {
         localStorage.setItem("inbox_view_mode", viewMode);
     }, [viewMode]);
@@ -494,7 +544,7 @@ const CaixaEntrada = () => {
     const [newTitle, setNewTitle] = useState("");
     const [newCategory, setNewCategory] = useState("");
     const [newContent, setNewContent] = useState("");
-    const [newType, setNewType] = useState<'idea' | 'prompt' | 'snippet' | 'note'>('idea');
+    const [newType, setNewType] = useState<InboxItem['type']>('idea');
     const [newTags, setNewTags] = useState("");
     const [newProjectId, setNewProjectId] = useState<string | null>(projectFilter);
 
@@ -819,7 +869,14 @@ const CaixaEntrada = () => {
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="page-container">
+            <div className="page-container relative overflow-hidden">
+                {/* Blueprint Texture - Refined Structural Grid */}
+                <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.04]"
+                    style={{
+                        backgroundImage: `linear-gradient(to right, hsl(var(--muted-foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--muted-foreground)) 1px, transparent 1px)`,
+                        backgroundSize: '40px 40px'
+                    }}
+                />
                 {/* Header - Cockpit Style */}
                 <header className="flex items-center justify-between gap-4 mb-8 h-12">
                     <div>
@@ -838,7 +895,7 @@ const CaixaEntrada = () => {
                                 setNewCategory("");
                             }
                             setIsAdding(true);
-                        }} className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2"
+                        }} className="h-9 px-4 rounded-md bg-primary text-primary-foreground shadow-sm gap-2"
                     >
                         <Plus className="h-4 w-4" /> Novo Registro
                     </Button>
@@ -908,16 +965,20 @@ const CaixaEntrada = () => {
                                         <SelectItem value="prompt">Prompts</SelectItem>
                                         <SelectItem value="snippet">Snippets</SelectItem>
                                         <SelectItem value="note">Notas</SelectItem>
+                                        <SelectItem value="lead">Leads</SelectItem>
+                                        <SelectItem value="briefing">Briefings</SelectItem>
+                                        <SelectItem value="link">Links</SelectItem>
+                                        <SelectItem value="demand">Demandas</SelectItem>
                                     </SelectContent>
                                 </Select>
 
-                                <Select value={projectFilter || "all"} onValueChange={(v) => setProjectFilter(v === "all" ? null : v)}>
+                                <Select value={projectFilter || "all"} onValueChange={(v) => setSearchParams(prev => { if (v === "all") prev.delete("project"); else prev.set("project", v); return prev; })}>
                                     <SelectTrigger className="h-8 w-[160px] text-[10px] font-medium bg-card border-border rounded-md">
                                         <SelectValue placeholder="Projeto" />
                                     </SelectTrigger>
                                     <SelectContent className="glass border-border">
                                         <SelectItem value="all">Todos Projetos</SelectItem>
-                                        {projects.map((p) => (
+                                        {projects.map((p: any) => (
                                             <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -930,7 +991,7 @@ const CaixaEntrada = () => {
                                     onClick={() => {
                                         setSearchQuery("");
                                         setSelectedType("all");
-                                        setProjectFilter(null);
+                                        setSearchParams(prev => { prev.delete("project"); return prev; });
                                     }}
                                 >
                                     Limpar Filtros
@@ -959,25 +1020,22 @@ const CaixaEntrada = () => {
                                                 className="glass-light h-9 text-sm"
                                             />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-xs opacity-60">Tipo</Label>
-                                            <div className="flex gap-2">
-                                                {['idea', 'prompt', 'snippet', 'note'].map((t) => (
-                                                    <button
-                                                        key={t}
-                                                        onClick={() => setNewType(t as any)}
-                                                        className={cn(
-                                                            "p-2 rounded-md transition-all border",
-                                                            newType === t
-                                                                ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
-                                                                : "border-border hover:border-border text-muted-foreground"
-                                                        )}
-                                                        title={t}
-                                                    >
-                                                        {getTypeIcon(t)}
-                                                    </button>
-                                                ))}
-                                            </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['idea', 'prompt', 'snippet', 'note', 'lead', 'briefing', 'link', 'demand'].map((t) => (
+                                                <button
+                                                    key={t}
+                                                    onClick={() => setNewType(t as any)}
+                                                    className={cn(
+                                                        "p-2 rounded-md transition-all border",
+                                                        newType === t
+                                                            ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
+                                                            : "border-border hover:border-border text-muted-foreground"
+                                                    )}
+                                                    title={t.charAt(0).toUpperCase() + t.slice(1)}
+                                                >
+                                                    {getTypeIcon(t)}
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
 
@@ -1020,7 +1078,7 @@ const CaixaEntrada = () => {
                     {/* Seção de Caixas - Compacta */}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between px-1">
-                            <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                            <h2 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                                 <Briefcase className="h-3 w-3" /> Caixas / Projetos
                             </h2>
                             <div className="flex items-center gap-2">
@@ -1206,8 +1264,8 @@ const CaixaEntrada = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-xs opacity-60">Tipo</Label>
-                                    <div className="flex gap-2">
-                                        {['idea', 'prompt', 'snippet', 'note'].map((t) => (
+                                    <div className="flex flex-wrap gap-2">
+                                        {['idea', 'prompt', 'snippet', 'note', 'lead', 'briefing', 'link', 'demand'].map((t) => (
                                             <button
                                                 key={t}
                                                 type="button"
@@ -1218,6 +1276,7 @@ const CaixaEntrada = () => {
                                                         ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
                                                         : "border-border hover:border-border text-muted-foreground"
                                                 )}
+                                                title={t.charAt(0).toUpperCase() + t.slice(1)}
                                             >
                                                 {getTypeIcon(t)}
                                             </button>
@@ -1426,6 +1485,20 @@ const CaixaEntrada = () => {
                                     }}
                                 >
                                     <ArrowRight className="h-3.5 w-3.5 mr-2" /> Transformar em Tarefa
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
+                                    onClick={() => {
+                                        if (confirm("Deseja converter esta captura em um novo cliente?")) {
+                                            convertToClientMutation.mutate(viewingItem);
+                                        }
+                                    }}
+                                    disabled={convertToClientMutation.isPending}
+                                >
+                                    {convertToClientMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Users className="h-3.5 w-3.5 mr-2" />}
+                                    Gerar Cliente
                                 </Button>
                                 <Button
                                     variant="outline"
