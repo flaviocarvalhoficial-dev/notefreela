@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
     MessageSquare,
     Copy,
@@ -7,13 +7,17 @@ import {
     Sparkles,
     Mail,
     Smartphone,
-    Check
+    Check,
+    Maximize2,
+    Minimize2,
+    Smile
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { getGeminiResponse } from "@/services/gemini";
+import { aiService } from "@/services/ai-service";
 import { useToast } from "@/hooks/use-toast";
+import { NimbusLogoIcon } from "@/components/shared/NimbusLogoIcon";
 
 interface MessageGeneratorProps {
     context: {
@@ -21,26 +25,87 @@ interface MessageGeneratorProps {
         company?: string;
         needs?: string[];
         score?: number;
+        userName?: string;
+        serviceType?: string;
+        companyType?: 'individual' | 'collective';
     };
+    initialMessage?: string;
+    onMessageUpdate?: (message: string) => void;
     onSend?: (message: string) => void;
 }
 
-const MessageGenerator = ({ context, onSend }: MessageGeneratorProps) => {
+const MessageGenerator = ({ context, initialMessage = "", onMessageUpdate, onSend }: MessageGeneratorProps) => {
     const [isGenerating, setIsGenerating] = useState(false);
-    const [generatedMessage, setGeneratedMessage] = useState("");
+    const [generatedMessage, setGeneratedMessage] = useState(initialMessage);
     const [copied, setCopied] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [channel, setChannel] = useState<"whatsapp" | "email">("whatsapp");
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const { toast } = useToast();
+
+    const QUICK_EMOJIS = ["👋", "🚀", "✨", "📈", "🤝", "💡", "📅", "✅", "🔥", "🎯"];
+
+    const addEmoji = (emoji: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) {
+            const newMessage = generatedMessage + emoji;
+            setGeneratedMessage(newMessage);
+            onMessageUpdate?.(newMessage);
+            return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = generatedMessage;
+        const before = text.substring(0, start);
+        const after = text.substring(end);
+        const newMessage = before + emoji + after;
+
+        setGeneratedMessage(newMessage);
+        onMessageUpdate?.(newMessage);
+
+        // Reset cursor position after state update
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+        }, 0);
+    };
 
     const generate = async () => {
         setIsGenerating(true);
         try {
-            const prompt = channel === "whatsapp"
-                ? `Gere uma mensagem curta e persuasiva para WhatsApp abordando o lead ${context.name} da empresa ${context.company}. Foque nestas necessidades: ${context.needs?.join(', ')}. O tom deve ser profissional, direto e amigável.`
-                : `Gere um e-mail de prospecção profissional para ${context.name} da empresa ${context.company}. O e-mail deve incluir um assunto cativante, abordar as necessidades (${context.needs?.join(', ')}) e propor uma breve reunião.`;
+            const isCollective = context.companyType === 'collective';
+            const person = isCollective ? "NÓS (1ª pessoa do plural) - Somos uma empresa/equipe" : "EU (1ª pessoa do singular) - Sou um profissional solo";
 
-            const msg = await getGeminiResponse(prompt, { leadContext: context });
-            setGeneratedMessage(msg);
+            const prompt = channel === "whatsapp"
+                ? `GERAR MENSAGEM AGORA. 
+                PERSONA: Você escreve como ${isCollective ? 'a empresa/estúdio' : 'o profissional'} ${context.userName || 'Especialista'}.
+                CONTEXTO: Lead ${context.name} interessado em ${context.serviceType || 'serviços especializados'} para a empresa ${context.company || 'dele'}.
+                
+                REGRA GRAMATICAL OBRIGATÓRIA: Use a ${person}. Use verbos como "${isCollective ? 'Somos, Temos, Fizemos, Podemos' : 'Sou, Tenho, Fiz, Posso'}".
+                
+                ESTRUTURA DE APRESENTAÇÃO:
+                - Se for coletivo: "Olá [Nome], nós somos da ${context.userName || 'sua parceira estratégica'}..." ou "Nós da ${context.userName}..."
+                - Se for individual: "Olá [Nome], eu sou o ${context.userName || 'especialista'}..."
+                
+                CORPO DA MENSAGEM:
+                1. Saudação breve.
+                2. Apresentação (conforme regra acima).
+                3. Proposta de valor baseada em ${context.serviceType || 'expertise'}.
+                4. Chamada para ação amigável (pergunta).`
+                : `GERAR E-MAIL AGORA.
+                PERSONA: Você escreve como ${isCollective ? 'a empresa/estúdio' : 'o profissional'} ${context.userName || 'Especialista'}.
+                CONTEXTO: Lead ${context.name} interessado em ${context.serviceType || 'serviços especializados'}.
+                
+                REGRA GRAMATICAL OBRIGATÓRIA: Use a ${person}.
+                TAREFA: Escreva um e-mail de prospecção profissional e curto com um assunto matador.`;
+
+            const response = await aiService.ask([{ role: 'user', content: prompt }], {
+                ...context,
+                user_name: context.userName // Alinhando com o que o aiService espera
+            });
+            setGeneratedMessage(response.content);
+            onMessageUpdate?.(response.content);
             toast({
                 title: "Mensagem gerada",
                 description: "IA criou uma abordagem personalizada baseada no contexto do lead."
@@ -65,7 +130,7 @@ const MessageGenerator = ({ context, onSend }: MessageGeneratorProps) => {
     };
 
     return (
-        <div className="flex flex-col gap-4 p-1">
+        <div className={cn("flex flex-col gap-4 p-1 transition-all duration-300", isExpanded ? "min-h-[500px]" : "")}>
             <div className="flex items-center justify-between">
                 <div className="flex bg-muted/30 p-1 rounded-lg border border-border/40">
                     <Button
@@ -86,13 +151,22 @@ const MessageGenerator = ({ context, onSend }: MessageGeneratorProps) => {
                     </Button>
                 </div>
 
-                <Badge variant="outline" className="gap-1.5 py-1 px-2 border-primary/20 bg-primary/5 text-primary">
-                    <Sparkles className="h-3 w-3" />
-                    <span className="text-[10px] uppercase font-bold tracking-widest">IA Powered</span>
-                </Badge>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                    >
+                        {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    </Button>
+                </div>
             </div>
 
-            <div className="relative min-h-[160px] bg-muted/20 border border-border/60 rounded-xl p-4 group">
+            <div className={cn(
+                "relative bg-muted/20 border border-border/60 rounded-xl p-4 group transition-all duration-300",
+                isExpanded ? "flex-1 min-h-[400px]" : "min-h-[160px]"
+            )}>
                 {!generatedMessage && !isGenerating ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center opacity-40">
                         <MessageSquare className="h-8 w-8 mb-2" />
@@ -102,17 +176,37 @@ const MessageGenerator = ({ context, onSend }: MessageGeneratorProps) => {
 
                 {isGenerating ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/40 backdrop-blur-[1px] z-10 rounded-xl">
-                        <Sparkles className="h-6 w-6 text-primary animate-pulse mb-2" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Analisando Lead...</span>
+                        <NimbusLogoIcon reaction="loading" className="w-20 h-20 mb-2" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary mt-4">Analisando Lead...</span>
                     </div>
                 ) : null}
 
                 {generatedMessage && (
-                    <textarea
-                        value={generatedMessage}
-                        onChange={(e) => setGeneratedMessage(e.target.value)}
-                        className="w-full h-full min-h-[140px] bg-transparent border-none resize-none text-xs leading-relaxed text-foreground focus:ring-0 custom-scrollbar"
-                    />
+                    <div className="flex flex-col h-full">
+                        <textarea
+                            ref={textareaRef}
+                            value={generatedMessage}
+                            onChange={(e) => {
+                                setGeneratedMessage(e.target.value);
+                                onMessageUpdate?.(e.target.value);
+                            }}
+                            className="w-full flex-1 bg-transparent border-none resize-none text-xs leading-relaxed text-foreground focus:ring-0 outline-none custom-scrollbar p-0"
+                            placeholder="Sua mensagem aparecerá aqui..."
+                        />
+
+                        <div className="flex items-center gap-1.5 pt-3 mt-3 border-t border-border/40 overflow-x-auto no-scrollbar pb-1">
+                            <Smile className="h-3.5 w-3.5 text-muted-foreground shrink-0 mr-1" />
+                            {QUICK_EMOJIS.map(emoji => (
+                                <button
+                                    key={emoji}
+                                    onClick={() => addEmoji(emoji)}
+                                    className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-primary/10 transition-colors text-sm shrink-0"
+                                >
+                                    {emoji}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 )}
             </div>
 

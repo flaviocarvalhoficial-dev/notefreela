@@ -231,6 +231,7 @@ export type Database = {
                     email: string | null
                     phone: string | null
                     website: string | null
+                    service_type: string | null
                     status: "novo" | "contato" | "proposta" | "negociacao" | "fechado" | "perdido"
                     source: string | null
                     notes: string | null
@@ -247,6 +248,7 @@ export type Database = {
                     email?: string | null
                     phone?: string | null
                     website?: string | null
+                    service_type?: string | null
                     status?: "novo" | "contato" | "proposta" | "negociacao" | "fechado" | "perdido"
                     source?: string | null
                     notes?: string | null
@@ -263,6 +265,7 @@ export type Database = {
                     email?: string | null
                     phone?: string | null
                     website?: string | null
+                    service_type?: string | null
                     status?: "novo" | "contato" | "proposta" | "negociacao" | "fechado" | "perdido"
                     source?: string | null
                     notes?: string | null
@@ -273,6 +276,47 @@ export type Database = {
                 Relationships: [
                     {
                         foreignKeyName: "leads_user_id_fkey"
+                        columns: ["user_id"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            service_types: {
+                Row: {
+                    id: string
+                    created_at: string
+                    user_id: string
+                    name: string
+                    label: string
+                    icon: string | null
+                    color: string | null
+                    is_default: boolean
+                }
+                Insert: {
+                    id?: string
+                    created_at?: string
+                    user_id: string
+                    name: string
+                    label: string
+                    icon?: string | null
+                    color?: string | null
+                    is_default?: boolean
+                }
+                Update: {
+                    id?: string
+                    created_at?: string
+                    user_id?: string
+                    name?: string
+                    label?: string
+                    icon?: string | null
+                    color?: string | null
+                    is_default?: boolean
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "service_types_user_id_fkey"
                         columns: ["user_id"]
                         isOneToOne: false
                         referencedRelation: "users"

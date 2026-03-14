@@ -20,7 +20,9 @@ import {
     Loader2,
     TrendingUp,
     Trash2,
-    Sparkles
+    Sparkles,
+    Pencil,
+    Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +42,11 @@ import {
 } from "@/components/ui/dialog";
 import { useLeads, Lead } from "@/hooks/use-leads";
 import { useToast } from "@/hooks/use-toast";
+import { useAIContext } from "@/hooks/use-ai-context";
 import MessageGenerator from "@/components/growth/MessageGenerator";
+import { NewLeadDialog } from "@/components/leads/NewLeadDialog";
+import { NimbusLogoIcon } from "@/components/shared/NimbusLogoIcon";
+import { useCompanyData } from "@/hooks/use-company-data";
 
 const STAGES = [
     { id: 'novo', title: 'Novo Lead', color: 'bg-blue-500/10 text-blue-500', border: 'border-blue-500/20' },
@@ -51,9 +57,13 @@ const STAGES = [
 
 const Leads = () => {
     const { leads, isLoading, createLead, updateLead, deleteLead, convertToClient } = useLeads();
+    const aiContext = useAIContext();
+    const { companyInfo } = useCompanyData();
     const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
     const [searchQuery, setSearchQuery] = useState("");
     const [activeMessageLead, setActiveMessageLead] = useState<Lead | null>(null);
+    const [isNewLeadOpen, setIsNewLeadOpen] = useState(false);
+    const [editingLead, setEditingLead] = useState<Lead | null>(null);
     const { toast } = useToast();
 
     const filteredLeads = leads.filter(lead =>
@@ -61,38 +71,54 @@ const Leads = () => {
         lead.company_name?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const handleAddLead = async () => {
+    const handleAddLead = async (data: Partial<Lead>) => {
         try {
-            await createLead({
-                name: "Novo Lead",
-                status: "novo",
-                score: 50,
-                source: "Manual"
-            });
-            toast({
-                title: "Lead criado",
-                description: "O novo lead foi adicionado ao pipeline."
-            });
+            if (data.id) {
+                await updateLead(data as { id: string } & Partial<Lead>);
+                toast({
+                    title: "Lead atualizado",
+                    description: "As informações foram salvas com sucesso.",
+                });
+            } else {
+                await createLead({
+                    name: data.name || "Novo Lead",
+                    company_name: data.company_name,
+                    email: data.email,
+                    phone: data.phone,
+                    website: data.website,
+                    notes: data.notes,
+                    potential_value: data.potential_value,
+                    status: "novo",
+                    score: data.score || 50,
+                    source: "Manual"
+                });
+                toast({
+                    title: "Lead criado",
+                    description: "O novo lead foi adicionado ao pipeline."
+                });
+            }
+            setIsNewLeadOpen(false);
+            setEditingLead(null);
         } catch (error) {
             toast({
-                title: "Erro ao criar lead",
-                description: "Não foi possível adicionar o lead.",
+                title: `Erro ao ${data.id ? 'atualizar' : 'criar'} lead`,
+                description: `Não foi possível ${data.id ? 'atualizar' : 'adicionar'} o lead.`,
                 variant: "destructive"
             });
         }
     };
 
-    const handleUpdateStatus = async (id: string, status: Lead['status']) => {
+    const handleUpdateLead = async (id: string, updates: Partial<Lead>) => {
         try {
-            await updateLead({ id, status });
+            await updateLead({ id, ...updates });
             toast({
-                title: "Status atualizado",
-                description: "O lead foi movido no pipeline."
+                title: "Lead atualizado",
+                description: "As informações foram sincronizadas."
             });
         } catch (error) {
             toast({
                 title: "Erro ao atualizar",
-                description: "Não foi possível mover o lead.",
+                description: "Não foi possível processar a alteração.",
                 variant: "destructive"
             });
         }
@@ -148,12 +174,22 @@ const Leads = () => {
                     <Button
                         size="sm"
                         className="h-9 px-4 rounded-md bg-primary text-primary-foreground shadow-sm gap-2"
-                        onClick={handleAddLead}
+                        onClick={() => setIsNewLeadOpen(true)}
                     >
                         <Plus className="h-4 w-4" /> Novo Lead
                     </Button>
                 </div>
             </header>
+
+            <NewLeadDialog
+                open={isNewLeadOpen}
+                initialData={editingLead}
+                onOpenChange={(open) => {
+                    setIsNewLeadOpen(open);
+                    if (!open) setEditingLead(null);
+                }}
+                onSubmit={handleAddLead}
+            />
 
             <div className="flex flex-col gap-4 mb-6 relative z-10 shrink-0">
                 <div className="flex items-center justify-between gap-4">
@@ -222,7 +258,7 @@ const Leads = () => {
                                     <LeadCard
                                         key={lead.id}
                                         lead={lead}
-                                        onStatusChange={(status) => handleUpdateStatus(lead.id, status)}
+                                        onUpdate={(updates) => handleUpdateLead(lead.id, updates)}
                                         onDelete={() => {
                                             if (window.confirm("Deseja realmente excluir este lead?")) {
                                                 deleteLead(lead.id);
@@ -230,6 +266,10 @@ const Leads = () => {
                                         }}
                                         onConvert={() => handleConvert(lead)}
                                         onMessage={() => setActiveMessageLead(lead)}
+                                        onEdit={() => {
+                                            setEditingLead(lead);
+                                            setIsNewLeadOpen(true);
+                                        }}
                                     />
                                 ))}
                                 {filteredLeads.filter(l => l.status === stage.id).length === 0 && (
@@ -248,8 +288,8 @@ const Leads = () => {
             <Dialog open={!!activeMessageLead} onOpenChange={(open) => !open && setActiveMessageLead(null)}>
                 <DialogContent className="sm:max-w-md border-border/60 shadow-float">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-                            <Sparkles className="h-5 w-5 text-primary" />
+                        <DialogTitle className="flex items-center gap-4 text-base font-semibold tracking-tight text-muted-foreground">
+                            <NimbusLogoIcon className="w-10 h-10" />
                             Nimbus AI Message Generator
                         </DialogTitle>
                     </DialogHeader>
@@ -258,8 +298,23 @@ const Leads = () => {
                             context={{
                                 name: activeMessageLead.name,
                                 company: activeMessageLead.company_name || undefined,
-                                score: activeMessageLead.score
+                                score: activeMessageLead.score,
+                                userName: companyInfo?.trading_name || aiContext.user_name,
+                                serviceType: activeMessageLead.service_type || undefined,
+                                companyType: (
+                                    companyInfo?.trading_name?.toLowerCase().includes('studio') ||
+                                    companyInfo?.trading_name?.toLowerCase().includes('agência') ||
+                                    companyInfo?.trading_name?.toLowerCase().includes('agencia') ||
+                                    companyInfo?.trading_name?.toLowerCase().includes('agency') ||
+                                    companyInfo?.trading_name?.toLowerCase().includes('serviços') ||
+                                    companyInfo?.trading_name?.toLowerCase().includes('servicos') ||
+                                    companyInfo?.trading_name?.toLowerCase().includes('soluções') ||
+                                    companyInfo?.trading_name?.toLowerCase().includes('solucoes') ||
+                                    companyInfo?.trading_name?.toLowerCase().includes('consultoria')
+                                ) ? 'collective' : 'individual'
                             }}
+                            initialMessage={activeMessageLead.notes || ""}
+                            onMessageUpdate={(msg) => updateLead({ id: activeMessageLead.id, notes: msg })}
                             onSend={(msg) => {
                                 window.open(`https://wa.me/${activeMessageLead.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
                                 setActiveMessageLead(null);
@@ -274,16 +329,18 @@ const Leads = () => {
 
 function LeadCard({
     lead,
-    onStatusChange,
+    onUpdate,
     onDelete,
     onConvert,
-    onMessage
+    onMessage,
+    onEdit
 }: {
     lead: Lead,
-    onStatusChange: (status: Lead['status']) => void,
+    onUpdate: (updates: Partial<Lead>) => void,
     onDelete: () => void,
     onConvert: () => void,
-    onMessage: () => void
+    onMessage: () => void,
+    onEdit: () => void
 }) {
     return (
         <motion.div
@@ -317,7 +374,10 @@ function LeadCard({
                         <DropdownMenuItem className="text-xs gap-2" onClick={onMessage}>
                             <MessageSquare className="h-3.5 w-3.5" /> Abrir Chat IA
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2" onClick={() => onStatusChange('contato')}>
+                        <DropdownMenuItem className="text-xs gap-2" onClick={onEdit}>
+                            <Pencil className="h-3.5 w-3.5" /> Editar Informações
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-xs gap-2" onClick={() => onUpdate({ status: 'contato' })}>
                             <CheckCircle2 className="h-3.5 w-3.5" /> Marcar como Contato
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-xs gap-2 font-semibold text-primary" onClick={onConvert}>
@@ -343,6 +403,12 @@ function LeadCard({
                         {lead.phone}
                     </div>
                 )}
+                {lead.service_type && (
+                    <div className="flex items-center gap-2 text-[10px] text-primary/80 font-medium">
+                        <Briefcase className="h-3 w-3 opacity-60" />
+                        {lead.service_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </div>
+                )}
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t border-border/50">
@@ -364,10 +430,18 @@ function LeadCard({
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-primary"
-                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                            "h-6 w-6 transition-colors",
+                            lead.is_hot
+                                ? "text-primary fill-primary/10 hover:text-primary/80"
+                                : "text-muted-foreground hover:text-primary"
+                        )}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdate({ is_hot: !lead.is_hot });
+                        }}
                     >
-                        <Zap className="h-3 w-3" />
+                        <Zap className={cn("h-3 w-3", lead.is_hot && "fill-current")} />
                     </Button>
                 </div>
             </div>

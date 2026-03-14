@@ -9,7 +9,8 @@ import {
     Plus,
     Zap,
     Loader2,
-    ChevronUp
+    ChevronUp,
+    Terminal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,11 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { aiService, Message } from "@/services/ai-service";
 import { useAIContext } from "@/hooks/use-ai-context";
+import { AIChatMessage } from "@/components/ai/AIChatMessage";
+import { CopilotInsights } from "@/components/ai/CopilotInsights";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { NimbusLogoIcon } from "@/components/shared/NimbusLogoIcon";
 
 export function AIAssistantSidebar() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -34,12 +38,13 @@ export function AIAssistantSidebar() {
         }
     }, [messages, isLoading]);
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+    const handleSend = async (overrideInput?: string) => {
+        const text = overrideInput || input;
+        if (!text.trim() || isLoading) return;
 
-        const userMessage: Message = { role: 'user', content: input };
+        const userMessage: Message = { role: 'user', content: text };
         setMessages(prev => [...prev, userMessage]);
-        setInput("");
+        if (!overrideInput) setInput("");
         setIsLoading(true);
 
         try {
@@ -80,9 +85,7 @@ export function AIAssistantSidebar() {
             {/* Header */}
             <div className="p-4 border-b border-sidebar-border flex items-center justify-between bg-sidebar-accent/50">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-sidebar-border flex items-center justify-center overflow-hidden p-0.5 group-hover:rotate-3 transition-transform">
-                        <img src="/ai-partner.png" alt="AI Partner" className="w-full h-full object-cover" />
-                    </div>
+                    <NimbusLogoIcon className="w-10 h-10" reaction={isLoading ? "loading" : "static"} />
                     <div>
                         <h2 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-1.5">
                             Nimbus Partner
@@ -103,6 +106,24 @@ export function AIAssistantSidebar() {
 
             {/* Chat Area */}
             <div className="flex-1 overflow-hidden flex flex-col p-4 relative">
+                {/* Context Indicator */}
+                <div className="mb-4 flex items-center justify-between px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="flex items-center gap-2">
+                        <div className={cn(
+                            "w-2 h-2 rounded-full",
+                            context.global_overview ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-amber-500 animate-pulse"
+                        )} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">
+                            {context.is_project_context ? `Contexto: ${context.project?.name}` : "Contexto Global Ativo"}
+                        </span>
+                    </div>
+                    {context.global_overview && (
+                        <span className="text-[9px] font-medium text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 italic">
+                            Dados atualizados
+                        </span>
+                    )}
+                </div>
+
                 <ScrollArea className="flex-1 pr-4">
                     <div className="flex flex-col">
                         <AnimatePresence initial={false}>
@@ -110,22 +131,38 @@ export function AIAssistantSidebar() {
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="flex flex-col items-center justify-center h-full py-12 text-center"
+                                    className="flex flex-col h-full py-4 text-center"
                                 >
-                                    <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center mb-4">
+                                    {/* Proactive Insights at the top */}
+                                    <CopilotInsights context={context} onAction={(p) => handleSend(p)} />
+
+                                    <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center mb-4 mx-auto">
                                         <Bot className="h-6 w-6 text-primary/40" />
                                     </div>
-                                    <h3 className="text-[13px] font-semibold text-foreground mb-1">Como posso ajudar?</h3>
-                                    <p className="text-[11px] text-muted-foreground max-w-[200px] leading-relaxed">
-                                        Estou pronto para analisar seu contexto e sugerir as melhores rotas para seu trabalho.
+                                    <h3 className="text-[13px] font-semibold text-foreground mb-1">
+                                        Olá! Sou seu Nimbus Partner.
+                                    </h3>
+                                    <p className="text-[11px] text-muted-foreground max-w-full leading-relaxed mb-6 px-4">
+                                        {context.is_project_context
+                                            ? `Estou analisando o projeto "${context.project?.name}" e seus dados globais para te ajudar.`
+                                            : "Estou pronto para analisar seu workspace e sugerir as melhores rotas estratégicas."
+                                        }
                                     </p>
 
-                                    <div className="mt-8 w-full flex flex-col gap-2">
-                                        <p className="text-[9px] uppercase font-bold text-muted-foreground/40 tracking-widest text-left px-2">Sugestões Contextuais</p>
-                                        {quickActions.map((action, i) => (
+                                    <div className="w-full flex flex-col gap-2">
+                                        <p className="text-[9px] uppercase font-bold text-muted-foreground/40 tracking-widest text-left px-2">SugestÕES Contextuais</p>
+                                        {(context.is_project_context ? [
+                                            { label: "Resumir este projeto", prompt: `Me dê um resumo estratégico do projeto ${context.project?.name} com base nos dados que você tem.` },
+                                            { label: "Próximos passos", prompt: "Quais as tarefas prioritárias para este projeto agora?" },
+                                            { label: "Análise de saúde", prompt: "Como você avalia a saúde deste projeto (prazos e tarefas)?" }
+                                        ] : [
+                                            { label: "Resumo da Operação", prompt: "/diagnostico" },
+                                            { label: "Análise de Leads", prompt: "/radar" },
+                                            { label: "Visão Geral", prompt: "Pode me dar um diagnóstico rápido da minha operação freelancer hoje?" }
+                                        ]).map((action, i) => (
                                             <button
                                                 key={i}
-                                                onClick={() => { setInput(action.prompt); handleSend(); }}
+                                                onClick={() => handleSend(action.prompt)}
                                                 className="text-left p-2.5 rounded-lg border border-sidebar-border hover:border-primary/30 hover:bg-primary/5 transition-all group"
                                             >
                                                 <span className="text-[11px] text-muted-foreground group-hover:text-foreground inline-flex items-center gap-2">
@@ -138,29 +175,16 @@ export function AIAssistantSidebar() {
                                 </motion.div>
                             )}
 
-                            {messages.map((msg, idx) => (
-                                <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, x: msg.role === 'user' ? 10 : -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className={cn(
-                                        "mb-4 flex flex-col",
-                                        msg.role === 'user' ? "items-end" : "items-start"
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "max-w-[90%] p-3 rounded-2xl text-[12px] leading-relaxed shadow-sm",
-                                        msg.role === 'user'
-                                            ? "bg-primary text-primary-foreground rounded-tr-none"
-                                            : "bg-sidebar-accent border border-sidebar-border text-foreground rounded-tl-none"
-                                    )}>
-                                        {msg.content}
-                                    </div>
-                                    <span className="text-[9px] text-muted-foreground/50 mt-1 px-1">
-                                        {msg.role === 'user' ? 'Você' : 'Assistente'}
-                                    </span>
-                                </motion.div>
-                            ))}
+                            {messages
+                                .filter(msg => msg.role !== 'system')
+                                .map((msg, idx) => (
+                                    <AIChatMessage
+                                        key={idx}
+                                        role={msg.role as "user" | "assistant"}
+                                        content={msg.content}
+                                        isProjectContext={context.is_project_context}
+                                    />
+                                ))}
 
                             {isLoading && (
                                 <motion.div
@@ -186,7 +210,7 @@ export function AIAssistantSidebar() {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Pergunte qualquer coisa..."
+                        placeholder="Pergunte qualquer coisa ou use /comandos..."
                         className="pr-10 bg-background/50 border-sidebar-border focus-visible:ring-primary/20 h-10 text-xs rounded-xl"
                     />
                     <Button
@@ -196,15 +220,29 @@ export function AIAssistantSidebar() {
                             "absolute right-1 top-1 h-8 w-8 text-primary transition-all",
                             input.trim() ? "opacity-100 scale-100" : "opacity-0 scale-90"
                         )}
-                        onClick={handleSend}
+                        onClick={() => handleSend()}
                         disabled={isLoading || !input.trim()}
                     >
                         <Send className="h-4 w-4" />
                     </Button>
                 </div>
-                <p className="text-[9px] text-muted-foreground/40 text-center mt-2 flex items-center justify-center gap-1">
-                    <Info className="h-2 w-2" /> Nimbus Command Center • Gemini 1.5
-                </p>
+
+                <div className="flex flex-col gap-2 mt-3">
+                    <div className="flex items-center gap-3 px-1 overflow-x-auto custom-scrollbar-hide pb-0.5">
+                        <button onClick={() => { setInput("/diagnostico"); }} className="shrink-0 text-[10px] font-bold text-muted-foreground/50 hover:text-primary transition-colors flex items-center gap-1 uppercase tracking-wider">
+                            <Terminal className="h-2.5 w-2.5" /> /diagnostico
+                        </button>
+                        <button onClick={() => { setInput("/radar"); }} className="shrink-0 text-[10px] font-bold text-muted-foreground/50 hover:text-primary transition-colors flex items-center gap-1 uppercase tracking-wider">
+                            <Terminal className="h-2.5 w-2.5" /> /radar
+                        </button>
+                        <button onClick={() => { setInput("/proxima"); }} className="shrink-0 text-[10px] font-bold text-muted-foreground/50 hover:text-primary transition-colors flex items-center gap-1 uppercase tracking-wider">
+                            <Terminal className="h-2.5 w-2.5" /> /proxima
+                        </button>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground/30 text-center flex items-center justify-center gap-1 font-medium uppercase tracking-[0.1em]">
+                        <Info className="h-2 w-2" /> Nimbus Command Center • Gemini 1.5
+                    </p>
+                </div>
             </div>
         </div>
     );

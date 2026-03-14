@@ -13,6 +13,7 @@ export type Lead = {
     status: 'novo' | 'contato' | 'proposta' | 'negociacao' | 'fechado' | 'perdido';
     source: string | null;
     notes: string | null;
+    service_type: string | null;
     score: number;
     potential_value: number | null;
     is_hot: boolean;
@@ -31,6 +32,7 @@ const MOCK_LEADS: Lead[] = [
         status: "novo",
         source: "Google Maps",
         notes: "Interessado em novo site",
+        service_type: "web_site",
         score: 85,
         potential_value: 5000,
         is_hot: true
@@ -47,6 +49,7 @@ const MOCK_LEADS: Lead[] = [
         status: "contato",
         source: "Indicação",
         notes: "Rebranding completo",
+        service_type: "social_media",
         score: 92,
         potential_value: 12000,
         is_hot: true

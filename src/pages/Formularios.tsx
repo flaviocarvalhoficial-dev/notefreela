@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
     LayoutGrid,
@@ -16,7 +16,10 @@ import {
     FileText,
     Share2,
     MousePointer2,
-    ArrowRight
+    ArrowRight,
+    Loader2,
+    Pencil,
+    Archive
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,47 +32,76 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-
-const MOCK_FORMS = [
-    {
-        id: "f1",
-        title: "Solicitação de Orçamento",
-        responses: 24,
-        lastResponse: "Há 2 horas",
-        status: "ativo",
-        type: "lead"
-    },
-    {
-        id: "f2",
-        title: "Briefing de Identidade Visual",
-        responses: 12,
-        lastResponse: "Há 1 dia",
-        status: "ativo",
-        type: "briefing"
-    },
-    {
-        id: "f3",
-        title: "Feedback de Entrega",
-        responses: 45,
-        lastResponse: "Há 5 dias",
-        status: "arquivado",
-        type: "feedback"
-    }
-];
+import { useForms, NimbusForm } from "@/hooks/use-forms";
+import { NewFormDialog } from "@/components/leads/NewFormDialog";
 
 const Formularios = () => {
     const { toast } = useToast();
+    const {
+        forms,
+        isLoading,
+        createForm,
+        updateForm,
+        deleteForm
+    } = useForms();
 
-    const handleCreateForm = () => {
-        toast({
-            title: "Novo Formulário",
-            description: "Iniciando construtor de formulários Nimbus..."
-        });
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingForm, setEditingForm] = useState<NimbusForm | null>(null);
+
+    const filteredForms = useMemo(() => {
+        return forms.filter(f =>
+            f.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [forms, searchQuery]);
+
+    const stats = useMemo(() => {
+        const totalResponses = forms.reduce((acc, f) => acc + (f.response_count || 0), 0);
+        const briefings = forms.filter(f => f.type === 'briefing').reduce((acc, f) => acc + (f.response_count || 0), 0);
+
+        return {
+            leads: totalResponses,
+            briefings: briefings,
+            conversion: totalResponses > 0 ? "24.5%" : "0%" // Mocking conversion rate for now
+        };
+    }, [forms]);
+
+    const handleSaveForm = async (data: Partial<NimbusForm>) => {
+        try {
+            if (editingForm) {
+                await updateForm({ id: editingForm.id, ...data });
+                toast({ title: "Sucesso", description: "Formulário atualizado com sucesso!" });
+            } else {
+                await createForm(data);
+                toast({ title: "Sucesso", description: "Fluxo de captura criado!" });
+            }
+        } catch (error) {
+            toast({ title: "Erro", description: "Não foi possível salvar.", variant: "destructive" });
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Deseja realmente excluir este formulário?")) return;
+        try {
+            await deleteForm(id);
+            toast({ title: "Sucesso", description: "Formulário excluído." });
+        } catch (error) {
+            toast({ title: "Erro", description: "Erro ao excluir.", variant: "destructive" });
+        }
+    };
+
+    const toggleStatus = async (form: NimbusForm) => {
+        try {
+            const newStatus = form.status === 'ativo' ? 'arquivado' : 'ativo';
+            await updateForm({ id: form.id, status: newStatus });
+            toast({ title: "Status alterado", description: `Formulário agora está ${newStatus}.` });
+        } catch (error) {
+            toast({ title: "Erro", description: "Erro ao alterar status.", variant: "destructive" });
+        }
     };
 
     return (
         <div className="page-container relative overflow-hidden h-screen flex flex-col">
-            {/* Blueprint Texture */}
             <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.04]"
                 style={{
                     backgroundImage: `linear-gradient(to right, hsl(var(--muted-foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--muted-foreground)) 1px, transparent 1px)`,
@@ -87,12 +119,22 @@ const Formularios = () => {
                     <Button
                         size="sm"
                         className="h-9 px-4 rounded-md bg-primary text-primary-foreground shadow-sm gap-2"
-                        onClick={handleCreateForm}
+                        onClick={() => {
+                            setEditingForm(null);
+                            setIsDialogOpen(true);
+                        }}
                     >
                         <Plus className="h-4 w-4" /> Criar Formulário
                     </Button>
                 </div>
             </header>
+
+            <NewFormDialog
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                onSubmit={handleSaveForm}
+                initialData={editingForm}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 shrink-0 mb-8">
                 <div className="bento-card p-5 border-primary/10 bg-primary/[0.02]">
@@ -101,7 +143,7 @@ const Formularios = () => {
                         <span className="text-xs font-bold uppercase tracking-widest">Leads Capturados</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <h2 className="text-3xl font-semibold tracking-tight text-foreground">81</h2>
+                        <h2 className="text-3xl font-semibold tracking-tight text-foreground">{stats.leads}</h2>
                         <span className="text-[10px] font-bold text-emerald-500 uppercase">+12% este mês</span>
                     </div>
                 </div>
@@ -111,7 +153,7 @@ const Formularios = () => {
                         <span className="text-xs font-bold uppercase tracking-widest">Taxa de Conversão</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <h2 className="text-3xl font-semibold tracking-tight text-foreground">24.5%</h2>
+                        <h2 className="text-3xl font-semibold tracking-tight text-foreground">{stats.conversion}</h2>
                         <span className="text-[10px] font-bold text-muted-foreground uppercase">Média Geral</span>
                     </div>
                 </div>
@@ -121,8 +163,8 @@ const Formularios = () => {
                         <span className="text-xs font-bold uppercase tracking-widest">Briefings Gerados</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <h2 className="text-3xl font-semibold tracking-tight text-foreground">15</h2>
-                        <span className="text-[10px] font-bold text-amber-500 uppercase">3 pendentes</span>
+                        <h2 className="text-3xl font-semibold tracking-tight text-foreground">{stats.briefings}</h2>
+                        <span className="text-[10px] font-bold text-amber-500 uppercase">Total</span>
                     </div>
                 </div>
             </div>
@@ -132,33 +174,63 @@ const Formularios = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                     <Input
                         placeholder="Buscar formulários..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9 h-10 bg-card/50 border-border/60 rounded-md"
                     />
                 </div>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10 -mx-2 px-2 pb-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {MOCK_FORMS.map((form, i) => (
-                        <FormCard key={form.id} form={form} index={i} />
-                    ))}
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-48">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : filteredForms.length === 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <button
+                            onClick={() => setIsDialogOpen(true)}
+                            className="bento-card p-6 border-dashed border-primary/20 bg-primary/[0.01] flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-primary/[0.03] transition-all h-[180px] group"
+                        >
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                <Plus className="h-5 w-5" />
+                            </div>
+                            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Novo Fluxo de Captura</p>
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredForms.map((form, i) => (
+                            <FormCard
+                                key={form.id}
+                                form={form}
+                                index={i}
+                                onEdit={() => {
+                                    setEditingForm(form);
+                                    setIsDialogOpen(true);
+                                }}
+                                onDelete={() => handleDelete(form.id)}
+                                onToggleStatus={() => toggleStatus(form)}
+                            />
+                        ))}
 
-                    <button
-                        onClick={handleCreateForm}
-                        className="bento-card p-6 border-dashed border-primary/20 bg-primary/[0.01] flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-primary/[0.03] transition-all h-[180px]"
-                    >
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                            <Plus className="h-5 w-5" />
-                        </div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Novo Fluxo de Captura</p>
-                    </button>
-                </div>
+                        <button
+                            onClick={() => setIsDialogOpen(true)}
+                            className="bento-card p-6 border-dashed border-primary/20 bg-primary/[0.01] flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-primary/[0.03] transition-all h-[180px] group"
+                        >
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                <Plus className="h-5 w-5" />
+                            </div>
+                            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Novo Fluxo de Captura</p>
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
-function FormCard({ form, index }: { form: any, index: number }) {
+function FormCard({ form, index, onEdit, onDelete, onToggleStatus }: { form: NimbusForm, index: number, onEdit: () => void, onDelete: () => void, onToggleStatus: () => void }) {
     const { toast } = useToast();
 
     const copyLink = (e: React.MouseEvent) => {
@@ -172,7 +244,8 @@ function FormCard({ form, index }: { form: any, index: number }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="group bg-card border border-border hover:border-primary/40 rounded-xl p-5 shadow-sm transition-all cursor-pointer hover:shadow-md h-[180px] flex flex-col"
+            className="group bg-card border border-border hover:border-primary/40 rounded-xl p-5 shadow-sm transition-all cursor-pointer hover:shadow-md h-[200px] flex flex-col"
+            onClick={onEdit}
         >
             <div className="flex items-start justify-between mb-4">
                 <div className="min-w-0">
@@ -189,30 +262,42 @@ function FormCard({ form, index }: { form: any, index: number }) {
                         {form.title}
                     </h4>
                 </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground -mr-2" onClick={(e) => e.stopPropagation()}>
-                            <MoreVertical className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem className="text-xs gap-2"><Eye className="h-3.5 w-3.5" /> Ver Respostas</DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2" onClick={copyLink}><Copy className="h-3.5 w-3.5" /> Copiar Link</DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2"><Settings className="h-3.5 w-3.5" /> Configurar</DropdownMenuItem>
-                        <div className="h-px bg-border my-1" />
-                        <DropdownMenuItem className="text-xs gap-2 text-destructive focus:text-destructive"><Trash2 className="h-3.5 w-3.5" /> Arquivar</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground -mr-2">
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem className="text-xs gap-2" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Editar</DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs gap-2" onClick={copyLink}><Copy className="h-3.5 w-3.5" /> Copiar Link</DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs gap-2" onClick={onToggleStatus}>
+                                {form.status === 'ativo' ? <Archive className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                                {form.status === 'ativo' ? 'Arquivar' : 'Reativar'}
+                            </DropdownMenuItem>
+                            <div className="h-px bg-border my-1" />
+                            <DropdownMenuItem className="text-xs gap-2 text-destructive focus:text-destructive" onClick={onDelete}>
+                                <Trash2 className="h-3.5 w-3.5" /> Excluir
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
             <div className="flex items-center gap-8 mb-4">
                 <div className="flex flex-col">
                     <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Respostas</span>
-                    <span className="text-xl font-semibold tabular-nums text-foreground">{form.responses}</span>
+                    <span className="text-xl font-semibold tabular-nums text-foreground">{form.response_count || 0}</span>
                 </div>
                 <div className="flex flex-col">
                     <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Última em</span>
-                    <span className="text-xs font-medium text-foreground">{form.lastResponse}</span>
+                    <span className="text-xs font-medium text-foreground">
+                        {form.last_response_at
+                            ? new Date(form.last_response_at).toLocaleDateString('pt-BR')
+                            : "Nunca"
+                        }
+                    </span>
                 </div>
             </div>
 

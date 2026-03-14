@@ -22,12 +22,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-import { getGeminiResponse } from "@/services/gemini";
-import { useDashboardData } from "@/hooks/use-dashboard-data";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { useAIContext } from "@/hooks/use-ai-context";
+import { aiService, Message } from "@/services/ai-service";
+import { AIChatMessage } from "@/components/ai/AIChatMessage";
+import { CopilotInsights } from "@/components/ai/CopilotInsights";
+import { NimbusLogoIcon } from "@/components/shared/NimbusLogoIcon";
 
-const MOCK_MESSAGES = [
+const MOCK_MESSAGES: (Message & { id: string, timestamp: string })[] = [
     {
         id: "1",
         role: "assistant",
@@ -37,69 +38,43 @@ const MOCK_MESSAGES = [
 ];
 
 const SUGGESTIONS = [
-    { label: "Analisar lucratividade dos projetos", icon: HandCoins },
-    { label: "Sugestão de precificação para Web Design", icon: Target },
-    { label: "Detectar gargalos na minha semana", icon: Zap },
-    { label: "Gerar proposta para novo lead", icon: Briefcase },
+    { label: "Analisar lucratividade dos projetos", prompt: "/diagnostico" },
+    { label: "Sugestão de precificação para Web Design", prompt: "Pode me dar uma sugestão de precificação para Web Design?" },
+    { label: "Detectar gargalos na minha semana", prompt: "/proxima" },
+    { label: "Gerar proposta para novo lead", prompt: "/radar" },
 ];
 
 const NimbusAI = () => {
     const [messages, setMessages] = useState(MOCK_MESSAGES);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
-    const context = useDashboardData();
+    const context = useAIContext();
 
-    const handleSend = async () => {
-        if (!input.trim()) return;
+    const handleSend = async (overrideInput?: string) => {
+        const text = overrideInput || input;
+        if (!text.trim() || isTyping) return;
 
         const userMsg = {
             id: Date.now().toString(),
             role: "user" as const,
-            content: input,
+            content: text,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
-        const currentMessages = [...messages, userMsg];
-        setMessages(currentMessages);
-        setInput("");
+        const currentMessages = [...messages];
+        const newMessages = [...currentMessages, userMsg];
+        setMessages(newMessages);
+        if (!overrideInput) setInput("");
         setIsTyping(true);
 
         try {
-            // Prepare context data (only safe non-circular parts)
-            const chatContext = {
-                projectsCount: context.projects?.length,
-                totalValue: context.projects?.reduce((acc, p) => acc + (Number(p.value) || 0), 0),
-                clientsCount: context.uniqueClientsCount,
-                leadsCount: context.leads?.length,
-                completionRate: context.completionRate,
-                projects: context.projects?.map(p => ({
-                    name: p.name,
-                    value: p.value,
-                    status: p.status,
-                    client: p.client_name
-                })),
-                recentLeads: context.leads?.slice(0, 5).map(l => ({
-                    name: l.name,
-                    company: l.company_name,
-                    status: l.status
-                }))
-            };
-
-            // Map history for Gemini format: { role: 'user' | 'model', parts: [{ text: string }] }
-            // Note: Excluding the very last user message because it's passed as the 'prompt' argument
-            const history = messages
-                .filter(m => m.id !== "1") // Exclude initial welcome if we handle it in system prompt
-                .map(m => ({
-                    role: m.role === "assistant" ? "model" : "user",
-                    parts: [{ text: m.content }]
-                }));
-
-            const response = await getGeminiResponse(input, chatContext, history);
+            // Use unified aiService with advanced context enrichment
+            const response = await aiService.ask(newMessages.map(({ role, content }) => ({ role, content })), context);
 
             const aiResponse = {
                 id: (Date.now() + 1).toString(),
                 role: "assistant" as const,
-                content: response,
+                content: response.content,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
             setMessages(prev => [...prev, aiResponse]);
@@ -122,11 +97,15 @@ const NimbusAI = () => {
 
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 relative z-10 shrink-0">
                 <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                        <div className="h-1.5 w-8 bg-primary rounded-full animate-pulse" />
-                        <span className="text-[10px] font-bold tracking-[0.2em] text-primary/70 uppercase">Artificial Intelligence</span>
+                    <div className="flex items-center gap-4">
+                        <NimbusLogoIcon className="w-12 h-12" reaction={isTyping ? "loading" : "static"} />
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] font-bold tracking-[0.2em] text-primary/70 uppercase">Artificial Intelligence</span>
+                            </div>
+                            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Nimbus Partner</h1>
+                        </div>
                     </div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-foreground">Nimbus Partner</h1>
                     <p className="text-muted-foreground font-normal text-sm max-w-md italic">Seu consultor estratégico 24/7 alimentado pelos dados da sua operação.</p>
                 </div>
 
@@ -140,44 +119,20 @@ const NimbusAI = () => {
             <div className="flex-1 flex flex-col min-h-0 bg-card/40 backdrop-blur-md rounded-2xl border border-border/60 relative z-10 overflow-hidden shadow-float">
                 {/* Chat Area */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                    {/* Proactive insights at the top of chat area */}
+                    <CopilotInsights context={context} onAction={(p) => handleSend(p)} />
+
                     <AnimatePresence initial={false}>
-                        {messages.map((msg) => (
-                            <motion.div
-                                key={msg.id}
-                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                className={cn(
-                                    "flex items-start gap-4 max-w-[80%]",
-                                    msg.role === "user" ? "ml-auto flex-row-reverse" : ""
-                                )}
-                            >
-                                <div className={cn(
-                                    "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 border border-border shadow-sm",
-                                    msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-card text-foreground"
-                                )}>
-                                    {msg.role === "assistant" ? <BrainCircuit className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                                </div>
-                                <div className="space-y-1">
-                                    <div className={cn(
-                                        "p-4 rounded-2xl text-sm leading-relaxed",
-                                        msg.role === "assistant"
-                                            ? "bg-card border border-border/60 text-foreground rounded-tl-none prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted prose-pre:text-muted-foreground"
-                                            : "bg-primary text-primary-foreground rounded-tr-none"
-                                    )}>
-                                        {msg.role === "assistant" ? (
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                {msg.content}
-                                            </ReactMarkdown>
-                                        ) : (
-                                            msg.content
-                                        )}
-                                    </div>
-                                    <p className={cn("text-[10px] text-muted-foreground font-medium", msg.role === "user" ? "text-right" : "")}>
-                                        {msg.timestamp}
-                                    </p>
-                                </div>
-                            </motion.div>
-                        ))}
+                        {messages
+                            .filter(msg => msg.role !== 'system')
+                            .map((msg) => (
+                                <AIChatMessage
+                                    key={msg.id}
+                                    role={msg.role as "user" | "assistant"}
+                                    content={msg.content}
+                                    isProjectContext={context.is_project_context}
+                                />
+                            ))}
                     </AnimatePresence>
                     {isTyping && (
                         <div className="flex items-center gap-4 max-w-[80%]">
@@ -199,10 +154,10 @@ const NimbusAI = () => {
                         {SUGGESTIONS.map((s, i) => (
                             <button
                                 key={i}
-                                onClick={() => setInput(s.label)}
+                                onClick={() => handleSend(s.prompt)}
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all text-[11px] font-medium text-muted-foreground hover:text-primary active:scale-95"
                             >
-                                <s.icon className="h-3 w-3" />
+                                <Zap className="h-3 w-3" />
                                 {s.label}
                             </button>
                         ))}
@@ -221,7 +176,7 @@ const NimbusAI = () => {
                         />
                         <Button
                             size="icon"
-                            onClick={handleSend}
+                            onClick={() => handleSend()}
                             disabled={!input.trim() || isTyping}
                             className="absolute right-1.5 top-1.5 h-9 w-9 bg-primary text-primary-foreground rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-all"
                         >

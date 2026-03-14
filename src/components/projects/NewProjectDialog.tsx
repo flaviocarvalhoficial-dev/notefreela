@@ -16,6 +16,7 @@ import { ptBR } from "date-fns/locale";
 import { logActivity } from "@/utils/activities";
 import { IconPicker } from "./IconPicker";
 import { ProjectCoverInput } from "./ProjectCoverInput";
+import { useServiceTypes } from "@/hooks/use-service-types";
 
 const TABS_CONFIG = [
     { id: 1, label: "Projeto & Cliente", icon: Briefcase },
@@ -41,6 +42,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const navigate = useNavigate();
+    const { serviceTypes } = useServiceTypes();
 
     const [step, setStep] = useState<number>(1);
     const [isMaximized, setIsMaximized] = useState(false);
@@ -818,12 +820,11 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                         <SelectValue placeholder="Selecione..." />
                                                     </SelectTrigger>
                                                     <SelectContent className="glass border-border">
-                                                        <SelectItem value="design">Design</SelectItem>
-                                                        <SelectItem value="dev">Desenvolvimento</SelectItem>
-                                                        <SelectItem value="social_media">Social Media</SelectItem>
-                                                        <SelectItem value="traffic">Tráfego Pago</SelectItem>
-                                                        <SelectItem value="copywriting">Copywriting</SelectItem>
-                                                        <SelectItem value="other">Outro</SelectItem>
+                                                        {serviceTypes.map((service) => (
+                                                            <SelectItem key={service.id || service.name} value={service.name}>
+                                                                {service.label}
+                                                            </SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                             </div>

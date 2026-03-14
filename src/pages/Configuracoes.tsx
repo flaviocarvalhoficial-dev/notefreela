@@ -11,7 +11,8 @@ import {
     Save,
     Camera,
     Loader2,
-    Check
+    Check,
+    Briefcase
 } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { Tables } from "@/integrations/supabase/types";
@@ -24,6 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase";
+import { ServiceTypeManager } from "@/components/settings/ServiceTypeManager";
 
 export default function Configuracoes() {
     const [isLoading, setIsLoading] = useState(false);
@@ -166,6 +168,9 @@ export default function Configuracoes() {
                             </TabsTrigger>
                             <TabsTrigger value="aparencia" className="gap-2 rounded-md font-medium text-xs">
                                 <Palette className="h-4 w-4" /> Aparência
+                            </TabsTrigger>
+                            <TabsTrigger value="servicos" className="gap-2 rounded-md font-medium text-xs">
+                                <Briefcase className="h-4 w-4" /> Serviços
                             </TabsTrigger>
                             <TabsTrigger value="plano" className="gap-2 rounded-md font-medium text-xs text-primary">
                                 <CreditCard className="h-4 w-4" /> Plano
@@ -353,6 +358,16 @@ export default function Configuracoes() {
                                         <p className="text-xs font-medium text-center  tracking-tight text-muted-foreground">Light Mode</p>
                                     </div>
                                 </div>
+                            </motion.div>
+                        </TabsContent>
+
+                        <TabsContent value="servicos">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bento-card p-6"
+                            >
+                                <ServiceTypeManager />
                             </motion.div>
                         </TabsContent>
 

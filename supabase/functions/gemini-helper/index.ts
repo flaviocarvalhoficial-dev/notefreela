@@ -26,20 +26,62 @@ serve(async (req) => {
         const genAI = new GoogleGenerativeAI(geminiKey)
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
+        // Helper to format context in a hyper-readable way for LLM
+        const formatContext = (ctx: any) => {
+            if (!ctx) return "Nenhum dado do workspace disponível no momento.";
+
+            let summary = "--- DADOS ATUAIS DO WORKSPACE ---\n";
+
+            if (ctx.global_overview) {
+                const glob = ctx.global_overview;
+                summary += `RESUMO GERAL:\n`;
+                summary += `- Projetos Ativos: ${glob.active_projects}\n`;
+                summary += `- Total de Projetos: ${glob.total_projects}\n`;
+                summary += `- Leads Totais: ${glob.total_leads}\n`;
+                summary += `- Clientes: ${glob.total_clients}\n`;
+                summary += `- Valor Total em Projetos: R$ ${glob.total_project_value.toLocaleString('pt-BR')}\n`;
+                summary += `- Ticket Médio: R$ ${glob.average_ticket.toLocaleString('pt-BR')}\n`;
+                summary += `- Tarefas Concluídas: ${glob.tasks_completed} de ${glob.tasks_total}\n`;
+                summary += `- Leads Recentes: ${glob.recent_leads?.join(', ') || 'Nenhum'}\n\n`;
+            }
+
+            if (ctx.is_project_context && ctx.project) {
+                summary += `CONTEXTO DO PROJETO ATUAL (${ctx.project.name}):\n`;
+                summary += `- Status: ${ctx.project.status}\n`;
+                summary += `- Cliente: ${ctx.project.client}\n`;
+                summary += `- Valor: R$ ${Number(ctx.project.value).toLocaleString('pt-BR')}\n`;
+                summary += `- Prazo: ${ctx.project.deadline || 'Não definido'}\n`;
+                summary += `- Descrição: ${ctx.project.description || 'Sem descrição'}\n`;
+
+                if (ctx.tasks && ctx.tasks.length > 0) {
+                    summary += `- Tarefas (${ctx.tasks.length}):\n`;
+                    ctx.tasks.forEach((t: any) => {
+                        summary += `  * [${t.column_id}] ${t.title} (Prioridade: ${t.priority}, Progresso: ${t.progress}%)\n`;
+                    });
+                }
+                summary += '\n';
+            }
+
+            summary += `ESTADO DA NAVEGAÇÃO:\n- Página Atual: ${ctx.path}\n`;
+
+            return summary;
+        };
+
+        const contextSummary = formatContext(context);
+
         // Build the system prompt with persona and context
-        let systemPrompt = `Você é o Nimbus Partner, o copiloto de operação de um freelancer de elite.
-Sua missão é ajudar com tarefas, organização estratégica e insights de negócio baseados nos dados do workspace.
-Seja direto, profissional, estratégico e sofisticado.
-Sempre responda em Português do Brasil.
-A marca se chama "Nimbus".
+        let systemPrompt = `Você é o Nimbus Partner, o copiloto de inteligência e operação do Nimbus (um sistema operacional para freelancers).
 
-Diretrizes:
-- Use 'global_overview' para métricas gerais (financeiro, total de projetos, leads).
-- Use 'project' e 'tasks' para detalhes de execução quando em contexto de projeto.
-- Se os dados estiverem faltando, peça ao usuário.
+DIRETRIZES DE PERSONA:
+1. Você tem ACESSO TOTAL aos dados do workspace fornecidos abaixo.
+2. Nunca diga que não tem acesso a informações em tempo real se os dados estiverem no contexto.
+3. Use os números abaixo para responder perguntas sobre projetos, leads, clientes e financeiro.
+4. Seja estratégico: se o usuário perguntar "como estamos?", analise o faturamento, leads e progresso de tarefas.
+5. Seja direto, sofisticado e profissional. Use Português do Brasil (PT-BR).
 
-Dados do Workspace:
-${JSON.stringify(context || {}, null, 2)}
+${contextSummary}
+
+Sua missão é atuar como o braço direito do freelancer, ajudando a tomar decisões baseadas nesses dados.
 `
 
         // Extract prompt and history from messages if provided
@@ -66,7 +108,7 @@ ${JSON.stringify(context || {}, null, 2)}
                 },
                 {
                     role: "model",
-                    parts: [{ text: "Entendido. Sou o Nimbus Partner e estou pronto para agir como seu copiloto estratégico com base nos dados fornecidos." }],
+                    parts: [{ text: "Entendido. Sou o Nimbus Partner, seu copiloto de operação. Tenho acesso aos dados do seu workspace e estou pronto para analisá-los e ajudá-lo na gestão estratégica." }],
                 },
                 ...history
             ],
