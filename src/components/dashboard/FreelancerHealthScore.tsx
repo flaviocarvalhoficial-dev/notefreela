@@ -58,14 +58,14 @@ export const FreelancerHealthScore = () => {
     const averageScore = Math.round(metrics.reduce((acc, m) => acc + m.value, 0) / metrics.length);
 
     return (
-        <div className="bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl p-4 shadow-sm overflow-hidden relative group">
-            <div className="flex items-center justify-between mb-5 relative z-10">
+        <div className="bg-card/40 backdrop-blur-sm border-none rounded-2xl p-5 shadow-sm overflow-hidden relative group">
+            <div className="flex items-center justify-between mb-6 relative z-10">
                 <div className="flex items-center gap-2">
-                    <Shield className="h-3 w-3 text-primary/60" />
-                    <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status de Saúde</h3>
+                    <Shield className="h-3 w-3 text-primary/40" />
+                    <h3 className="text-[11px] font-medium text-muted-foreground/60">Status de Operação</h3>
                 </div>
-                <Badge variant="outline" className="h-4 px-1.5 border-primary/10 bg-primary/5 text-primary/70 text-[8px] font-bold uppercase tracking-widest rounded-lg">
-                    IA Alpha
+                <Badge variant="outline" className="h-4 px-2 border-primary/10 bg-primary/5 text-primary/60 text-[8px] font-bold uppercase tracking-widest rounded-full">
+                    Nimbus AI
                 </Badge>
             </div>
 
@@ -78,8 +78,8 @@ export const FreelancerHealthScore = () => {
                             r="28"
                             fill="none"
                             stroke="currentColor"
-                            strokeWidth="4"
-                            className="text-muted/10"
+                            strokeWidth="3.5"
+                            className="text-muted/5"
                         />
                         <circle
                             cx="32"
@@ -87,30 +87,30 @@ export const FreelancerHealthScore = () => {
                             r="28"
                             fill="none"
                             stroke="currentColor"
-                            strokeWidth="4"
+                            strokeWidth="3.5"
                             strokeDasharray={176}
                             strokeDashoffset={176 - (176 * averageScore) / 100}
                             className="text-primary transition-all duration-1000 ease-in-out"
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-lg font-bold tracking-tighter text-foreground tabular-nums">{averageScore.toString().padStart(2, '0')}</span>
-                        <span className="text-[7px] font-bold uppercase tracking-tighter text-muted-foreground/60 -mt-0.5">Live</span>
+                        <span className="text-lg font-bold tracking-tight text-foreground tabular-nums">{averageScore}</span>
+                        <span className="text-[7px] font-bold uppercase tracking-widest text-muted-foreground/40 -mt-1">Score</span>
                     </div>
                 </div>
 
-                <div className="flex-1 grid grid-cols-1 gap-2.5">
+                <div className="flex-1 grid grid-cols-1 gap-3">
                     {metrics.map((m) => (
                         <ScoreMetric key={m.label} {...m} />
                     ))}
                 </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-border/40 relative z-10">
-                <p className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-tight text-center">
+            <div className="mt-5 pt-4 border-none relative z-10">
+                <p className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-widest text-center">
                     {averageScore > 70
-                        ? "Operação estável • Próximo ao teto"
-                        : "Atenção necessária • Equilibre a carga"}
+                        ? "Eficiência Máxima • Escala Saudável"
+                        : "Atenção • Carga de Trabalho em Risco"}
                 </p>
             </div>
         </div>
@@ -120,7 +120,7 @@ export const FreelancerHealthScore = () => {
 function Badge({ children, variant, className }: any) {
     return (
         <span className={cn(
-            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            "inline-flex items-center rounded-full border-none px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
             variant === "outline" ? "text-foreground" : "bg-primary text-primary-foreground",
             className
         )}>

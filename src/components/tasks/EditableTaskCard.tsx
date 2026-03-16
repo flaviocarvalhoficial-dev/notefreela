@@ -178,8 +178,8 @@ export function EditableTaskCard({
   const rootClass = variant === 'minimal'
     ? "group bg-transparent px-0 py-1.5 transition-all duration-200"
     : (isOverlay
-      ? "bg-card rounded-xl p-4 shadow-xl border border-primary/20"
-      : "bg-card rounded-xl p-3.5 transition-all duration-300 border border-border/60 hover:border-primary/30 cursor-pointer group");
+      ? "bg-card rounded-xl p-4 shadow-xl border-none"
+      : "bg-card rounded-xl p-3.5 transition-all duration-300 border-none shadow-sm cursor-pointer group");
 
   const dueInfo = formatDue(task.due);
   const priorityStyle = getPriorityStyles(task.priority);
@@ -226,7 +226,7 @@ export function EditableTaskCard({
                   <Input
                     {...form.register("title")}
                     autoFocus
-                    className="h-8 text-sm bg-transparent border-0 border-b border-primary/20 rounded-none px-0 focus-visible:ring-0"
+                    className="h-8 text-sm bg-transparent border-none rounded-none px-0 focus-visible:ring-0 shadow-none"
                     placeholder="Nome da tarefa"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -279,7 +279,7 @@ export function EditableTaskCard({
                     <div>
                       <Input
                         {...form.register("title")}
-                        className="text-sm font-medium bg-transparent border-0 border-b border-border rounded-none px-0 h-auto focus-visible:ring-0 placeholder:opacity-30 py-1"
+                        className="text-sm font-medium bg-transparent border-none rounded-none px-0 h-auto focus-visible:ring-0 placeholder:opacity-30 py-1"
                         placeholder="Nome da tarefa"
                         autoFocus
                       />
@@ -304,7 +304,7 @@ export function EditableTaskCard({
                       <div className="space-y-1">
                         <label className="text-[9px] font-medium text-muted-foreground  tracking-tight opacity-60">Prioridade</label>
                         <Select value={form.watch("priority")} onValueChange={(v) => form.setValue("priority", v as any)}>
-                          <SelectTrigger className="h-8 bg-muted/40 border-border text-[10px] font-medium focus:ring-1">
+                          <SelectTrigger className="h-8 bg-muted/40 border-none text-[10px] font-medium focus:ring-1 shadow-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -321,7 +321,7 @@ export function EditableTaskCard({
                           value={form.watch("projectId") || "unassigned"}
                           onValueChange={(v) => form.setValue("projectId", v === "unassigned" ? "" : v, { shouldDirty: true })}
                         >
-                          <SelectTrigger className="h-8 bg-muted/40 border-border text-[10px] font-bold focus:ring-1 truncate">
+                          <SelectTrigger className="h-8 bg-muted/40 border-none text-[10px] font-bold focus:ring-1 shadow-sm truncate">
                             <SelectValue placeholder="Selecione..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -340,7 +340,7 @@ export function EditableTaskCard({
                             <Button
                               variant="ghost"
                               className={cn(
-                                "h-8 w-full justify-start text-left font-medium bg-muted/40 border-border text-[10px] px-2 rounded-md focus:ring-1",
+                                "h-8 w-full justify-start text-left font-medium bg-muted/40 border-none shadow-sm text-[10px] px-2 rounded-md focus:ring-1",
                                 !form.watch("due") && "opacity-60"
                               )}
                             >
@@ -367,7 +367,7 @@ export function EditableTaskCard({
                         onValueChange={(v) => form.setValue("assignee", v, { shouldDirty: true })}
                       >
                         <SelectTrigger
-                          className="h-8 bg-muted/40 border-border px-2 rounded-md text-[10px] font-medium focus:ring-1"
+                          className="h-8 bg-muted/40 border-none shadow-sm px-2 rounded-md text-[10px] font-medium focus:ring-1"
                         >
                           <div className="flex items-center gap-2">
                             {/* Mini Avatar */}
@@ -484,7 +484,7 @@ export function EditableTaskCard({
         {!isEditing && variant === 'card' && (
           <Badge
             variant="outline"
-            className="text-[8px] font-medium px-1.5 h-4.5 shrink-0 border-none transition-colors tracking-tight"
+            className="text-[8px] font-medium px-1.5 h-4.5 shrink-0 border-none shadow-sm transition-colors tracking-tight"
             style={{
               color: priorityStyle.color,
               backgroundColor: priorityStyle.backgroundColor,
@@ -589,7 +589,7 @@ export function EditableTaskCard({
                     {dueInfo.label}
                   </span>
                 )}
-                <Badge variant="outline" className="text-[8px] h-4 px-1 font-medium opacity-40  tracking-tighter">
+                <Badge variant="outline" className="text-[8px] h-4 px-1 font-medium border-none opacity-40 shadow-sm tracking-tighter">
                   {priorityLabel[task.priority]}
                 </Badge>
               </div>

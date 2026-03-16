@@ -66,12 +66,14 @@ export default {
       borderRadius: {
         card: "var(--radius-card)",
         button: "var(--radius-button)",
-        input: "var(--radius-input)",
-        lg: "var(--radius-card)", // Map default shadcn lg to our card radius
-        md: "var(--radius-button)",
-        sm: "var(--radius-input)",
+        input: "var(--radius-tiny)",
+        lg: "10px",
+        md: "8px",
+        sm: "6px",
+        tiny: "4px",
         xl: "12px",
         "2xl": "14px",
+        full: "9999px",
       },
       keyframes: {
         "accordion-down": {
@@ -112,16 +114,21 @@ export default {
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "accordion-down": "accordion-down 0.12s ease-out",
+        "accordion-up": "accordion-up 0.12s ease-out",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
-        "fade-in": "fade-in 0.4s ease-out",
+        "fade-in": "fade-in 0.2s ease-out",
+      },
+      transitionDuration: {
+        "120": "120ms",
       },
       boxShadow: {
-        glass: "var(--shadow-glass)",
-        soft: "var(--shadow-soft)",
-        hover: "var(--shadow-hover)",
-        glow: "var(--glow-primary)",
+        glass: "0 8px 32px 0 rgba(0, 0, 0, 0.15)",
+        soft: "0 2px 10px rgba(0, 0, 0, 0.05)",
+        hover: "0 10px 40px rgba(0, 0, 0, 0.2)",
+        glow: "0 0 20px rgba(var(--primary), 0.2)",
+        card: "var(--shadow-card)",
+        float: "0 12px 30px rgba(0, 0, 0, 0.12)",
       },
     },
   },

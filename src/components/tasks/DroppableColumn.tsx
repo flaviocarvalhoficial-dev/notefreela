@@ -124,7 +124,7 @@ export function DroppableColumn({
         >
             <section className={cn(
                 "p-4 md:p-5 h-full min-h-[460px] group relative overflow-visible",
-                variant === 'card' ? "bento-card border-border" : "bg-transparent border-none p-0 md:p-0 min-h-0"
+                variant === 'card' ? "bg-card border-none shadow-sm rounded-2xl" : "bg-transparent border-none p-0 md:p-0 min-h-0"
             )}>
                 {variant === 'card' && (
                     <div
@@ -135,7 +135,7 @@ export function DroppableColumn({
 
                 <header className={cn(
                     "flex items-center justify-between gap-4 mb-4 pb-2 pt-1",
-                    variant === 'card' ? "border-b border-border/40" : "mb-3"
+                    variant === 'card' ? "" : "mb-3"
                 )}>
                     <div className="flex-1 flex items-center gap-2">
                         <div className="flex items-center gap-2 group/title min-w-0">
@@ -201,14 +201,14 @@ export function DroppableColumn({
                                 <MoreVertical className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass border-border">
+                        <DropdownMenuContent align="end" className="glass border-none shadow-float">
                             <DropdownMenuItem onClick={() => setIsEditing(true)}>
                                 Renomear Etapa
                             </DropdownMenuItem>
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger>Escolher Cor</DropdownMenuSubTrigger>
                                 <DropdownMenuPortal>
-                                    <DropdownMenuSubContent className="glass border-border p-3 min-w-[200px] shadow-2xl">
+                                    <DropdownMenuSubContent className="glass border-none p-3 min-w-[200px] shadow-2xl">
                                         <div className="text-[10px] font-medium text-muted-foreground mb-2  tracking-tight">Cores Pastel</div>
                                         <div className="grid grid-cols-4 gap-2 mb-3">
                                             {PASTEL_COLORS.map((c) => (
@@ -236,7 +236,7 @@ export function DroppableColumn({
                                                     <Settings2 className="h-3.5 w-3.5" /> Personalizar Textos
                                                 </DropdownMenuItem>
                                             </DialogTrigger>
-                                            <DialogContent className="glass border-border max-w-sm">
+                                            <DialogContent className="glass border-none shadow-float max-w-sm">
                                                 <DialogHeader>
                                                     <DialogTitle>Personalizar Etapa</DialogTitle>
                                                 </DialogHeader>
@@ -291,7 +291,7 @@ export function DroppableColumn({
                     size="sm"
                     className={cn(
                         "w-full mt-4 justify-start gap-2 h-8 text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-all opacity-0 group-hover:opacity-100",
-                        variant === 'card' ? "border-t border-border/40 pt-4 rounded-none h-auto pb-0" : "mt-2"
+                        variant === 'card' ? "pt-4 rounded-none h-auto pb-0" : "mt-2"
                     )}
                     onClick={onAddTask}
                 >

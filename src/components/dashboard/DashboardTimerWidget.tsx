@@ -103,9 +103,9 @@ export function DashboardTimerWidget() {
     return (
         <div className="bento-card p-0 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border/50 bg-card/30">
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-none bg-card/30">
                 <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="p-1.5 bg-muted/20 rounded-lg border border-border/40 shrink-0">
+                    <div className="p-1.5 bg-muted/20 rounded-lg border-none shrink-0">
                         {activeTab === "timer" ? (
                             <Clock className="h-4 w-4 text-muted-foreground/60" />
                         ) : (
@@ -143,7 +143,7 @@ export function DashboardTimerWidget() {
                         </div>
                     )}
 
-                    <div className="flex items-center bg-muted/50 p-0.5 rounded-lg border border-border/40">
+                    <div className="flex items-center bg-muted/50 p-0.5 rounded-lg border-none">
                         <button
                             onClick={() => setActiveTab("timer")}
                             className={cn(
@@ -175,7 +175,7 @@ export function DashboardTimerWidget() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="bg-muted/30 border-b border-border/50 overflow-hidden"
+                        className="bg-muted/30 border-none overflow-hidden"
                     >
                         <div className="p-5 space-y-4">
                             <div className="space-y-2">
@@ -187,7 +187,7 @@ export function DashboardTimerWidget() {
                                         setSetupTaskId("");
                                     }}
                                 >
-                                    <SelectTrigger className="h-10 bg-card border-border text-[13px] font-medium focus:ring-1 focus:ring-primary/20">
+                                    <SelectTrigger className="h-10 bg-card border-none text-[13px] font-medium focus:ring-1 focus:ring-primary/20">
                                         <SelectValue placeholder="Selecione um projeto..." />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -215,7 +215,7 @@ export function DashboardTimerWidget() {
                                             value={setupTaskId || "no-task"}
                                             onValueChange={(val) => setSetupTaskId(val === "no-task" ? "" : val)}
                                         >
-                                            <SelectTrigger className="h-10 bg-card border-border text-[13px] font-medium focus:ring-1 focus:ring-primary/20">
+                                            <SelectTrigger className="h-10 bg-card border-none text-[13px] font-medium focus:ring-1 focus:ring-primary/20">
                                                 <SelectValue placeholder="Selecione uma tarefa..." />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -246,7 +246,7 @@ export function DashboardTimerWidget() {
                                 </button>
                                 <button
                                     onClick={() => { setIsSettingUp(false); setSetupProjectId(""); setSetupTaskId(""); }}
-                                    className="h-9 px-4 border border-border rounded-lg text-[11px] font-medium text-muted-foreground hover:bg-muted/10 transition-all"
+                                    className="h-9 px-4 border-none rounded-lg text-[11px] font-medium text-muted-foreground hover:bg-muted/10 transition-all"
                                 >
                                     Agora não
                                 </button>
@@ -264,7 +264,7 @@ export function DashboardTimerWidget() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.2 }}
-                        className="px-5 py-5 bg-muted/5 border-b border-border/40 flex items-center justify-between group/active"
+                        className="px-5 py-5 bg-muted/5 border-none flex items-center justify-between group/active"
                     >
                         <div className="flex items-center gap-3.5">
                             {/* Animated Pulse with Timer Core */}
@@ -279,7 +279,7 @@ export function DashboardTimerWidget() {
                                     {timer.taskTitle ?? timer.projectName ?? "Estou focado agora"}
                                 </p>
                                 <div className="flex items-center gap-1.5">
-                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-medium uppercase border-border bg-muted/10 text-muted-foreground tracking-wider">
+                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-medium uppercase border-none bg-muted/10 text-muted-foreground tracking-wider">
                                         {timer.taskTitle ? "Tarefa" : "Projeto"}
                                     </Badge>
                                     {timer.projectName && (
@@ -307,7 +307,7 @@ export function DashboardTimerWidget() {
 
             {/* Sub-filter selectors for history list */}
             {!isSettingUp && !timer.isRunning && filterMode === "project" && (
-                <div className="overflow-hidden border-b border-border/40 bg-muted/20">
+                <div className="overflow-hidden border-none bg-muted/20">
                     <div className="px-5 py-3 flex items-center gap-2">
                         <span className="text-[10px] font-medium text-muted-foreground shrink-0 uppercase tracking-tighter">Histórico de:</span>
                         <div className="flex-1 flex items-center gap-1.5 flex-wrap">
@@ -316,10 +316,9 @@ export function DashboardTimerWidget() {
                                     key={project.id}
                                     onClick={() => setSelectedProject(selectedProject === project.id ? null : project.id)}
                                     className={cn(
-                                        "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border",
                                         selectedProject === project.id
-                                            ? "bg-muted text-foreground border-border shadow-sm"
-                                            : "bg-card text-muted-foreground border-border hover:border-primary/30"
+                                            ? "bg-muted text-foreground border-none shadow-sm"
+                                            : "bg-card text-muted-foreground border-none hover:bg-muted/20"
                                     )}
                                 >
                                     {project.name}
@@ -344,14 +343,14 @@ export function DashboardTimerWidget() {
                         >
                             <ScrollArea className="h-full w-full" type="always">
                                 {!timer.isRunning && !isSettingUp && (
-                                    <div className="px-5 py-3 border-b border-border/10 bg-muted/5 flex items-center justify-between">
+                                    <div className="px-5 py-3 border-none bg-muted/5 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
                                             <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-tight">Pronto para começar?</span>
                                         </div>
                                         <button
                                             onClick={() => setIsSettingUp(true)}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[11px] font-medium shadow-sm hover:bg-primary/90 transition-all border border-primary/20 group"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[11px] font-medium shadow-sm hover:bg-primary/90 transition-all border-none group"
                                         >
                                             <Play className="h-3 w-3 fill-white group-hover:scale-110 transition-transform" />
                                             INICIAR
@@ -372,7 +371,7 @@ export function DashboardTimerWidget() {
                                             <div
                                                 key={entry.id}
                                                 className={cn(
-                                                    "px-5 py-4 flex items-center justify-between group hover:bg-primary/5 transition-colors border-b border-border/10 last:border-0",
+                                                    "px-5 py-4 flex items-center justify-between group hover:bg-primary/5 transition-colors border-none last:border-0",
                                                     idx % 2 === 0 ? "bg-transparent" : "bg-muted/5"
                                                 )}
                                             >
@@ -442,7 +441,7 @@ export function DashboardTimerWidget() {
             {/* Footer Summary */}
             {
                 completedEntries.length > 0 && (
-                    <div className="px-5 py-4 border-t border-border/40 flex items-center justify-between bg-card group/footer">
+                    <div className="px-5 py-4 border-none flex items-center justify-between bg-card group/footer">
                         <div className="flex items-center gap-2">
                             <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 group-hover/footer:scale-125 transition-transform" />
                             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
@@ -479,10 +478,10 @@ function FilterPill({
         <button
             onClick={onClick}
             className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border",
+                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border-none",
                 active
-                    ? "bg-muted text-foreground border-border shadow-sm font-semibold"
-                    : "bg-transparent text-muted-foreground border-transparent hover:text-foreground"
+                    ? "bg-muted text-foreground shadow-sm font-semibold"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
             )}
         >
             {icon}

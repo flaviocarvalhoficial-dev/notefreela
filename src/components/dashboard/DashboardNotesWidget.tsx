@@ -139,7 +139,7 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
     return (
         <div className={cn(
             "relative h-full flex flex-col transition-all duration-300 rounded-xl",
-            editor.isFocused ? "ring-2 ring-primary/20 border-primary/20" : "",
+            editor.isFocused ? "ring-2 ring-primary/20" : "",
             className
         )}>
             <div className="flex-1 p-5 overflow-y-auto scrollbar-hide min-h-[210px] bg-transparent">

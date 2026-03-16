@@ -103,28 +103,7 @@ const Clientes = () => {
     ];
 
     return (
-        <div className="page-container">
-            <header className="flex items-center justify-between gap-4 mb-8 h-12">
-                <div>
-                    <h1 className="text-2xl font-medium tracking-tight text-foreground">Carteira de Clientes</h1>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 gap-2 text-xs font-medium rounded-lg border-border bg-secondary hover:bg-secondary/80 text-foreground transition-all px-4"
-                    >
-                        Exportar
-                    </Button>
-                    <NewClientDialog trigger={
-                        <Button size="sm" className="h-9 px-4 rounded-lg bg-primary text-primary-foreground shadow-sm gap-2">
-                            <Plus className="h-4 w-4" /> Novo Cliente
-                        </Button>
-                    } />
-                </div>
-            </header>
-
+        <div className="flex flex-col gap-6">
             {/* Consolidated Quick Stats */}
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -170,8 +149,8 @@ const Clientes = () => {
                             variant="outline"
                             size="sm"
                             className={cn(
-                                "h-9 px-3 gap-2 text-xs font-medium border-border/60",
-                                (filters.selectedYear !== "all" || filters.selectedMonth !== "all" || filters.selectedServiceType !== "all") && "bg-primary/5 text-primary border-primary/20"
+                                "h-9 px-3 gap-2 text-xs font-medium border-none",
+                                (filters.selectedYear !== "all" || filters.selectedMonth !== "all" || filters.selectedServiceType !== "all") && "bg-primary/5 text-primary"
                             )}
                             onClick={() => {
                                 const el = document.getElementById('advanced-filters-clients');
@@ -182,7 +161,7 @@ const Clientes = () => {
                             Filtros
                         </Button>
 
-                        <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40 ml-2">
+                        <div className="flex bg-muted/20 p-1 rounded-lg ml-2">
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -205,7 +184,7 @@ const Clientes = () => {
 
                 {/* Ghost Filters Bar */}
                 <div id="advanced-filters-clients" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
-                    <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+                    <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg">
                         <Select value={filters.selectedYear} onValueChange={filters.setSelectedYear}>
                             <SelectTrigger className="h-8 w-[100px] text-[10px] font-medium bg-card border-border rounded-md">
                                 <SelectValue placeholder="Ano" />
@@ -257,7 +236,7 @@ const Clientes = () => {
                         </Button>
                     </div>
                 </div>
-            </div >
+            </div>
 
             {/* Content Area */}
             {
@@ -266,7 +245,7 @@ const Clientes = () => {
                         <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
                     </div>
                 ) : clients.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-32 text-muted-foreground bg-muted/5 rounded-lg border border-dashed border-border">
+                    <div className="flex flex-col items-center justify-center py-32 text-muted-foreground bg-muted/5 rounded-lg border-none">
                         <Users className="h-16 w-16 mb-4 opacity-10" />
                         <p className="font-medium tracking-tight">Nenhum cliente disponível nos filtros atuais.</p>
                         <Button variant="link" size="sm" onClick={() => {
@@ -303,7 +282,7 @@ const Clientes = () => {
                         ) : (
                             <motion.div
                                 key="list"
-                                className="bg-card border border-border rounded-xl overflow-hidden shadow-sm"
+                                className="bg-card rounded-xl overflow-hidden shadow-sm"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
@@ -343,7 +322,7 @@ function ClientCard({ client, onDelete, onClick, index }: { client: any, onDelet
             className="group relative h-full flex flex-col"
         >
             <div
-                className="bg-card hover:bg-card border border-border hover:border-border rounded-lg p-8 transition-all h-full cursor-pointer flex flex-col shadow-sm"
+                className="bg-card hover:bg-card rounded-lg p-8 transition-all h-full cursor-pointer flex flex-col shadow-sm"
                 onClick={onClick}
             >
                 <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -351,7 +330,7 @@ function ClientCard({ client, onDelete, onClick, index }: { client: any, onDelet
                 </div>
 
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="h-12 w-12 rounded-md bg-primary/5 flex items-center justify-center text-primary font-medium text-xl border border-border transition-colors group-hover:bg-primary/10">
+                    <div className="h-12 w-12 rounded-md bg-primary/5 flex items-center justify-center text-primary font-medium text-xl border-none transition-colors group-hover:bg-primary/10">
                         {client.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 pr-6">
@@ -388,9 +367,9 @@ function ClientCard({ client, onDelete, onClick, index }: { client: any, onDelet
                     )}
                 </div>
 
-                <div className="pt-6 border-t border-border flex items-center justify-between mt-auto">
+                <div className="pt-6 border-none flex items-center justify-between mt-auto">
                     <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center border border-border group-hover:bg-primary/10 transition-colors">
+                        <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center border-none group-hover:bg-primary/10 transition-colors">
                             <Briefcase className="h-4 w-4 text-primary/70" />
                         </div>
                         <div className="flex flex-col">
@@ -415,7 +394,7 @@ function ClientTableView({ clients, onDelete, onSelect }: { clients: any[], onDe
         <TooltipProvider>
             <Table>
                 <TableHeader className="bg-muted/30">
-                    <TableRow className="hover:bg-transparent border-border/50">
+                    <TableRow className="hover:bg-transparent border-none">
                         <TableHead className="w-[40px] pl-5">
                             <Checkbox className="rounded-[4px] border-muted-foreground/30" />
                         </TableHead>
@@ -441,7 +420,7 @@ function ClientTableView({ clients, onDelete, onSelect }: { clients: any[], onDe
                         return (
                             <TableRow
                                 key={client.id}
-                                className="group cursor-pointer border-border/40 hover:bg-muted/20 transition-colors"
+                                className="group cursor-pointer border-none hover:bg-muted/20 transition-colors"
                                 onClick={() => onSelect(client)}
                             >
                                 <TableCell className="pl-5" onClick={(e) => e.stopPropagation()}>
@@ -449,7 +428,7 @@ function ClientTableView({ clients, onDelete, onSelect }: { clients: any[], onDe
                                 </TableCell>
                                 <TableCell className="py-4">
                                     <div className="flex items-center gap-3">
-                                        <Avatar className="h-9 w-9 border border-border/60 rounded-lg shadow-sm">
+                                        <Avatar className="h-9 w-9 border-none rounded-lg shadow-sm">
                                             <AvatarImage src={client.avatar_url} />
                                             <AvatarFallback className="bg-primary/5 text-primary text-xs font-semibold rounded-lg">
                                                 {client.name.charAt(0).toUpperCase()}
@@ -579,6 +558,3 @@ function ClientActions({ client, onDelete }: { client: any, onDelete: (id: strin
 }
 
 export default Clientes;
-
-
-

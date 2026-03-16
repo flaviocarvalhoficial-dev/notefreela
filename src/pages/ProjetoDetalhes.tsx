@@ -336,11 +336,11 @@ const ProjetoDetalhes = () => {
                     <div
                         onMouseDown={startResizing}
                         className={cn(
-                            "w-px hover:w-1 cursor-col-resize bg-border hover:bg-primary/40 transition-all z-20 relative flex items-center justify-center",
+                            "w-px hover:w-1 cursor-col-resize bg-transparent hover:bg-primary/40 transition-all z-20 relative flex items-center justify-center",
                             isResizing && "bg-primary/50 w-1"
                         )}
                     >
-                        <div className="w-px h-12 bg-border/80 rounded-full" />
+                        <div className="w-px h-12 bg-muted/20 rounded-full" />
                     </div>
 
                     <div

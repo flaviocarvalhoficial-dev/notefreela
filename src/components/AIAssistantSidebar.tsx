@@ -81,9 +81,9 @@ export function AIAssistantSidebar() {
     ];
 
     return (
-        <div className="flex flex-col h-full bg-sidebar-accent/30 backdrop-blur-sm rounded-l-xl border-l border-sidebar-border animate-in slide-in-from-right duration-300">
+        <div className="flex flex-col h-full bg-sidebar-accent/30 backdrop-blur-sm rounded-l-xl border-none animate-in slide-in-from-right duration-300">
             {/* Header */}
-            <div className="p-4 border-b border-sidebar-border flex items-center justify-between bg-sidebar-accent/50">
+            <div className="p-4 border-none flex items-center justify-between bg-sidebar-accent/50">
                 <div className="flex items-center gap-3">
                     <NimbusLogoIcon className="w-10 h-10" reaction={isLoading ? "loading" : "static"} />
                     <div>
@@ -107,7 +107,7 @@ export function AIAssistantSidebar() {
             {/* Chat Area */}
             <div className="flex-1 overflow-hidden flex flex-col p-4 relative">
                 {/* Context Indicator */}
-                <div className="mb-4 flex items-center justify-between px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
+                <div className="mb-4 flex items-center justify-between px-2 py-1.5 rounded-lg bg-primary/5 border-none">
                     <div className="flex items-center gap-2">
                         <div className={cn(
                             "w-2 h-2 rounded-full",
@@ -118,7 +118,7 @@ export function AIAssistantSidebar() {
                         </span>
                     </div>
                     {context.global_overview && (
-                        <span className="text-[9px] font-medium text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 italic">
+                        <span className="text-[9px] font-medium text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded border-none italic">
                             Dados atualizados
                         </span>
                     )}
@@ -163,7 +163,7 @@ export function AIAssistantSidebar() {
                                             <button
                                                 key={i}
                                                 onClick={() => handleSend(action.prompt)}
-                                                className="text-left p-2.5 rounded-lg border border-sidebar-border hover:border-primary/30 hover:bg-primary/5 transition-all group"
+                                                className="text-left p-2.5 rounded-lg border-none hover:bg-primary/5 transition-all group"
                                             >
                                                 <span className="text-[11px] text-muted-foreground group-hover:text-foreground inline-flex items-center gap-2">
                                                     <Zap className="h-3 w-3 text-primary/40 group-hover:text-primary" />
@@ -204,14 +204,14 @@ export function AIAssistantSidebar() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-sidebar-border bg-sidebar/40">
+            <div className="p-4 border-none bg-sidebar/40">
                 <div className="relative group">
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         placeholder="Pergunte qualquer coisa ou use /comandos..."
-                        className="pr-10 bg-background/50 border-sidebar-border focus-visible:ring-primary/20 h-10 text-xs rounded-xl"
+                        className="pr-10 bg-background/50 border-none focus-visible:ring-primary/20 h-10 text-xs rounded-xl"
                     />
                     <Button
                         size="icon"

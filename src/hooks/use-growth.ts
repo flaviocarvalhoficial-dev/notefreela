@@ -13,6 +13,9 @@ export type GrowthResult = {
     reviews_count: number | null;
     needs: string[];
     score: number;
+    instagram: string | null;
+    facebook: string | null;
+    linkedin: string | null;
     status: 'pending' | 'converted' | 'ignored';
 };
 
@@ -48,7 +51,7 @@ export const useGrowth = () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuário não autenticado");
 
-            // 1. Create the search record
+            // 1. Criar o registro da busca
             const { data: search, error: searchError } = await (supabase as any)
                 .from("growth_searches")
                 .insert([{ query, location, radius, user_id: user.id }])
@@ -57,49 +60,14 @@ export const useGrowth = () => {
 
             if (searchError) throw searchError;
 
-            // 2. Here we would call the Google Maps / Scraper API
-            // For now, we simulate with mock results that get inserted into the DB
-            const mockResults = [
-                {
-                    search_id: search.id,
-                    name: `${query} ${location}`,
-                    address: `Rua Principal, ${location}`,
-                    website: "www.exemplo.com.br",
-                    phone: "(11) 99999-9999",
-                    rating: 4.5,
-                    reviews_count: 120,
-                    needs: ["Sem Site Mobile", "Baixa Presença Digital"],
-                    score: 85,
-                    status: 'pending'
-                },
-                {
-                    search_id: search.id,
-                    name: `${query} Central`,
-                    address: `Av. Central, ${location}`,
-                    website: null,
-                    phone: "(11) 88888-8888",
-                    rating: 4.0,
-                    reviews_count: 50,
-                    needs: ["Sem Site", "Sem Google My Business"],
-                    score: 90,
-                    status: 'pending'
-                }
-            ];
+            // 2. Chamar a Edge Function de mineração
+            const { data, error: functionError } = await supabase.functions.invoke("lead-miner", {
+                body: { query, location, radius, searchId: search.id }
+            });
 
-            const { data: results, error: resultsError } = await (supabase as any)
-                .from("growth_results")
-                .insert(mockResults)
-                .select();
+            if (functionError) throw functionError;
 
-            if (resultsError) throw resultsError;
-
-            // Update result count
-            await (supabase as any)
-                .from("growth_searches")
-                .update({ results_count: results.length })
-                .eq("id", search.id);
-
-            return { search, results };
+            return { search, results: data.results as GrowthResult[] };
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["growth-searches"] });

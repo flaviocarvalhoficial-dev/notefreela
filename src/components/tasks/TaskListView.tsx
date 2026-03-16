@@ -80,7 +80,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
 
     if (tasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-40 gap-6 glass border-border rounded-2xl mt-4">
+            <div className="flex flex-col items-center justify-center py-40 gap-6 bg-card border-none shadow-sm rounded-2xl mt-4">
                 <div className="h-20 w-20 rounded-full bg-muted/20 flex items-center justify-center">
                     <AlertCircle className="h-10 w-10 text-muted-foreground" />
                 </div>
@@ -99,23 +99,23 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
                     <div className="flex items-center gap-3 px-2">
                         <div className="h-1 w-4 bg-primary/40 rounded-full" />
                         <h3 className="text-[10px] font-medium  tracking-tight text-muted-foreground">{getGroupHeader(groupKey)}</h3>
-                        <Badge variant="outline" className="text-[10px] bg-muted/20 border-border text-muted-foreground font-medium rounded-md">
+                        <Badge variant="outline" className="text-[10px] bg-muted/20 border-none text-muted-foreground font-medium rounded-md shadow-sm">
                             {sortedGrouped[groupKey].length}
                         </Badge>
                     </div>
 
-                    <div className="glass border-border rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-card border-none rounded-xl overflow-hidden shadow-sm">
                         <table className="w-full text-left">
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border/20">
                                 {sortedGrouped[groupKey].map(task => (
                                     <tr key={task.id} className="hover:bg-primary/[0.02] transition-colors group cursor-pointer">
                                         <td className="pl-6 py-4 w-[60%]">
                                             <div className="flex items-center gap-4">
                                                 <div className={cn(
-                                                    "h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all",
+                                                    "h-5 w-5 rounded-md border-none flex items-center justify-center transition-all",
                                                     task.column_id === 'done'
-                                                        ? "bg-emerald-500 border-emerald-500 text-white"
-                                                        : "border-border hover:border-primary/60"
+                                                        ? "bg-emerald-500 text-white shadow-sm"
+                                                        : "bg-muted/30 hover:bg-primary/10"
                                                 )}>
                                                     {task.column_id === 'done' && <CheckCircle2 className="h-3.5 w-3.5" />}
                                                 </div>
@@ -137,7 +137,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
 
                                         {options.visibleProperties.includes('status') && (
                                             <td className="px-4 py-4 w-[12%]">
-                                                <Badge variant="outline" className="text-[9px] font-medium bg-muted/20 border-border text-muted-foreground rounded-md  tracking-tight">
+                                                <Badge variant="outline" className="text-[9px] font-medium bg-muted/20 border-none text-muted-foreground rounded-md tracking-tight shadow-sm">
                                                     {task.column_id || 'no-status'}
                                                 </Badge>
                                             </td>
@@ -145,7 +145,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ tasks, projects, opt
 
                                         {options.visibleProperties.includes('assignee') && (
                                             <td className="px-4 py-4 w-[5%]">
-                                                <div className="h-6 w-6 rounded-full bg-primary/10 border border-border flex items-center justify-center text-[10px] font-medium text-primary">
+                                                <div className="h-6 w-6 rounded-full bg-primary/10 border-none shadow-sm flex items-center justify-center text-[10px] font-medium text-primary">
                                                     {task.assignee_id ? task.assignee_id.substring(0, 1).toUpperCase() : '?'}
                                                 </div>
                                             </td>

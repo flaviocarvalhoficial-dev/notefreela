@@ -1,448 +1,337 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Users,
+    Plus,
     Search,
     Filter,
-    Plus,
     MoreVertical,
-    Mail,
-    Phone,
-    Globe,
-    LayoutGrid,
-    List as ListIcon,
-    Zap,
-    Star,
+    Calendar,
+    User,
+    DollarSign,
     Clock,
+    Briefcase,
+    MessageSquare,
+    Shield,
+    Trash2,
+    Edit3,
     CheckCircle2,
     XCircle,
-    MessageSquare,
+    Copy,
+    Share2,
+    Building2,
+    Mail,
+    Phone,
     Loader2,
-    TrendingUp,
-    Trash2,
-    Sparkles,
-    Pencil,
-    Briefcase
+    LayoutGrid,
+    List as ListIcon,
+    ArrowUpRight,
+    MapPin,
+    ArrowRight,
+    Zap
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import { useLeads, Lead } from "@/hooks/use-leads";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { useAIContext } from "@/hooks/use-ai-context";
-import MessageGenerator from "@/components/growth/MessageGenerator";
 import { NewLeadDialog } from "@/components/leads/NewLeadDialog";
 import { NimbusLogoIcon } from "@/components/shared/NimbusLogoIcon";
 import { useCompanyData } from "@/hooks/use-company-data";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { LeadDetailsDialog } from "@/components/leads/LeadDetailsDialog";
+import { useLeads } from "@/hooks/use-leads";
 
-const STAGES = [
-    { id: 'novo', title: 'Novo Lead', color: 'bg-blue-500/10 text-blue-500', border: 'border-blue-500/20' },
-    { id: 'contato', title: 'Em Contato', color: 'bg-amber-500/10 text-amber-500', border: 'border-amber-500/20' },
-    { id: 'proposta', title: 'Proposta Enviada', color: 'bg-purple-500/10 text-purple-500', border: 'border-purple-500/20' },
-    { id: 'negociacao', title: 'Negociação', color: 'bg-primary/10 text-primary', border: 'border-primary/20' },
-];
+const STATUS_CONFIG: Record<string, { label: string, color: string, icon: any }> = {
+    novo: { label: "Novo Lead", color: "bg-blue-500/10 text-blue-500", icon: Clock },
+    contato: { label: "Em Contato", color: "bg-amber-500/10 text-amber-500", icon: MessageSquare },
+    negociacao: { label: "Negociação", color: "bg-purple-500/10 text-purple-500", icon: Briefcase },
+    proposta: { label: "Proposta Enviada", color: "bg-indigo-500/10 text-indigo-500", icon: ArrowRight },
+    fechado: { label: "Fechado", color: "bg-emerald-500/10 text-emerald-500", icon: CheckCircle2 },
+    perdido: { label: "Perdido", color: "bg-rose-500/10 text-rose-500", icon: XCircle }
+};
 
 const Leads = () => {
-    const { leads, isLoading, createLead, updateLead, deleteLead, convertToClient } = useLeads();
-    const aiContext = useAIContext();
-    const { companyInfo } = useCompanyData();
-    const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
-    const [activeMessageLead, setActiveMessageLead] = useState<Lead | null>(null);
+    const [selectedLead, setSelectedLead] = useState<any | null>(null);
     const [isNewLeadOpen, setIsNewLeadOpen] = useState(false);
-    const [editingLead, setEditingLead] = useState<Lead | null>(null);
+
     const { toast } = useToast();
+    const queryClient = useQueryClient();
+    const { leads, isLoading, createLead, updateLead, deleteLead } = useLeads();
 
-    const filteredLeads = leads.filter(lead =>
-    (lead.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lead.company_name?.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-
-    const handleAddLead = async (data: Partial<Lead>) => {
-        try {
-            if (data.id) {
-                await updateLead(data as { id: string } & Partial<Lead>);
-                toast({
-                    title: "Lead atualizado",
-                    description: "As informações foram salvas com sucesso.",
-                });
-            } else {
-                await createLead({
-                    name: data.name || "Novo Lead",
-                    company_name: data.company_name,
-                    email: data.email,
-                    phone: data.phone,
-                    website: data.website,
-                    notes: data.notes,
-                    potential_value: data.potential_value,
-                    status: "novo",
-                    score: data.score || 50,
-                    source: "Manual"
-                });
-                toast({
-                    title: "Lead criado",
-                    description: "O novo lead foi adicionado ao pipeline."
-                });
-            }
-            setIsNewLeadOpen(false);
-            setEditingLead(null);
-        } catch (error) {
-            toast({
-                title: `Erro ao ${data.id ? 'atualizar' : 'criar'} lead`,
-                description: `Não foi possível ${data.id ? 'atualizar' : 'adicionar'} o lead.`,
-                variant: "destructive"
-            });
-        }
-    };
-
-    const handleUpdateLead = async (id: string, updates: Partial<Lead>) => {
-        try {
-            await updateLead({ id, ...updates });
-            toast({
-                title: "Lead atualizado",
-                description: "As informações foram sincronizadas."
-            });
-        } catch (error) {
-            toast({
-                title: "Erro ao atualizar",
-                description: "Não foi possível processar a alteração.",
-                variant: "destructive"
-            });
-        }
-    };
-
-    const handleConvert = async (lead: Lead) => {
-        try {
-            await convertToClient(lead);
-            toast({
-                title: "Conversão concluída",
-                description: `${lead.name} agora é oficialmente um cliente!`
-            });
-        } catch (error) {
-            toast({
-                title: "Erro na conversão",
-                description: "Não foi possível transformar o lead em cliente.",
-                variant: "destructive"
-            });
-        }
-    };
-
-    if (isLoading) {
-        return (
-            <div className="h-full w-full flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
-            </div>
+    const filteredLeads = useMemo(() => {
+        return leads.filter(lead =>
+            lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            lead.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }
+    }, [leads, searchQuery]);
+
+    const updateStatusMutation = useMutation({
+        mutationFn: async ({ id, status }: { id: string, status: string }) => {
+            return updateLead({ id, status: status as any });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
+            toast({ title: "Status atualizado", description: "O lead foi movido para o novo status." });
+        }
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteLead,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
+            toast({ title: "Lead removido", description: "O lead foi excluído permanentemente." });
+        }
+    });
 
     return (
-        <div className="page-container relative overflow-hidden h-screen flex flex-col">
-            <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.04]"
-                style={{
-                    backgroundImage: `linear-gradient(to right, hsl(var(--muted-foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--muted-foreground)) 1px, transparent 1px)`,
-                    backgroundSize: '40px 40px'
-                }}
-            />
-
-            <header className="flex items-center justify-between gap-4 mb-8 h-12 relative z-10 shrink-0">
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Gestão de Leads</h1>
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-0.5">Pipeline Comercial</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 gap-2 text-xs font-medium rounded-md border-border bg-secondary hover:bg-secondary/80"
-                    >
-                        Exportar
-                    </Button>
-                    <Button
-                        size="sm"
-                        className="h-9 px-4 rounded-md bg-primary text-primary-foreground shadow-sm gap-2"
-                        onClick={() => setIsNewLeadOpen(true)}
-                    >
-                        <Plus className="h-4 w-4" /> Novo Lead
-                    </Button>
-                </div>
-            </header>
-
-            <NewLeadDialog
-                open={isNewLeadOpen}
-                initialData={editingLead}
-                onOpenChange={(open) => {
-                    setIsNewLeadOpen(open);
-                    if (!open) setEditingLead(null);
-                }}
-                onSubmit={handleAddLead}
-            />
-
-            <div className="flex flex-col gap-4 mb-6 relative z-10 shrink-0">
-                <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col h-full gap-6">
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                         <Input
-                            placeholder="Buscar leads por nome ou empresa..."
+                            placeholder="Buscar por nome ou empresa..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 h-10 bg-card/50 border-border/60 rounded-md"
+                            className="pl-9 h-11 bg-card/50 border-none rounded-xl"
                         />
                     </div>
-
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 px-3 gap-2 text-xs font-medium border-border/60"
-                        >
-                            <Filter className="h-4 w-4" />
-                            Filtros Avançados
-                        </Button>
-
-                        <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40 ml-2">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center bg-muted/20 p-1 rounded-xl border border-border/40">
                             <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn("h-8 w-8 rounded-md transition-all", viewMode === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
-                                onClick={() => setViewMode("kanban")}
+                                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                                size="sm"
+                                onClick={() => setViewMode("grid")}
+                                className="h-9 w-9 p-0 rounded-lg"
                             >
                                 <LayoutGrid className="h-4 w-4" />
                             </Button>
                             <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn("h-8 w-8 rounded-md transition-all", viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
+                                variant={viewMode === "list" ? "secondary" : "ghost"}
+                                size="sm"
                                 onClick={() => setViewMode("list")}
+                                className="h-9 w-9 p-0 rounded-lg"
                             >
                                 <ListIcon className="h-4 w-4" />
                             </Button>
                         </div>
+                        <Button
+                            onClick={() => setIsNewLeadOpen(true)}
+                            className="h-11 px-6 rounded-xl gap-2 font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Adicionar Lead
+                        </Button>
                     </div>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-x-auto custom-scrollbar relative z-10">
-                <div className="flex gap-6 h-full min-w-max pb-4">
-                    {STAGES.map((stage) => (
-                        <div key={stage.id} className="w-80 flex flex-col bg-muted/30 rounded-xl border border-border/50 p-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className={cn("px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border-none", stage.color)}>
-                                        {stage.title}
-                                    </Badge>
-                                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">
-                                        {filteredLeads.filter(l => l.status === stage.id).length}
-                                    </span>
-                                </div>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
-                                    <MoreVertical className="h-3.5 w-3.5" />
-                                </Button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1">
-                                {filteredLeads.filter(l => l.status === stage.id).map((lead) => (
-                                    <LeadCard
-                                        key={lead.id}
-                                        lead={lead}
-                                        onUpdate={(updates) => handleUpdateLead(lead.id, updates)}
-                                        onDelete={() => {
-                                            if (window.confirm("Deseja realmente excluir este lead?")) {
-                                                deleteLead(lead.id);
-                                            }
-                                        }}
-                                        onConvert={() => handleConvert(lead)}
-                                        onMessage={() => setActiveMessageLead(lead)}
-                                        onEdit={() => {
-                                            setEditingLead(lead);
-                                            setIsNewLeadOpen(true);
-                                        }}
-                                    />
-                                ))}
-                                {filteredLeads.filter(l => l.status === stage.id).length === 0 && (
-                                    <div className="h-24 border border-dashed border-border/40 rounded-lg flex items-center justify-center">
-                                        <span className="text-[10px] text-muted-foreground/40 italic text-center px-4">
-                                            Nenhum lead nesta etapa
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar -mx-2 px-2">
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-64">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : filteredLeads.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-64 border-none rounded-xl bg-muted/5">
+                        <User className="h-12 w-12 text-muted-foreground/20 mb-4" />
+                        <p className="text-sm text-muted-foreground italic">Nenhum lead encontrado</p>
+                    </div>
+                ) : viewMode === "grid" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-8">
+                        {filteredLeads.map((lead, i) => (
+                            <LeadCard
+                                key={lead.id}
+                                lead={lead}
+                                index={i}
+                                onUpdateStatus={(status) => updateStatusMutation.mutate({ id: lead.id, status })}
+                                onDelete={() => deleteMutation.mutate(lead.id)}
+                                onOpenDetails={() => setSelectedLead(lead)}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-card rounded-xl overflow-hidden shadow-sm mb-8">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-muted/5">
+                                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Empresa / Contato</th>
+                                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
+                                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Valor Estimado</th>
+                                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Fonte</th>
+                                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredLeads.map((lead) => {
+                                    const status = STATUS_CONFIG[lead.status] || STATUS_CONFIG.novo;
+                                    return (
+                                        <tr key={lead.id} className="hover:bg-muted/5 transition-colors group">
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col cursor-pointer" onClick={() => setSelectedLead(lead)}>
+                                                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">{lead.company_name || "Pessoa Física"}</span>
+                                                    <span className="text-[10px] text-muted-foreground">{lead.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <Badge variant="outline" className={cn("px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border-none", status.color)}>
+                                                    {status.label}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-xs font-medium text-foreground tabular-nums">
+                                                    {lead.potential_value
+                                                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lead.potential_value)
+                                                        : "—"}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-[10px] text-muted-foreground uppercase font-medium">{lead.source || "Direto"}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <LeadActions
+                                                    lead={lead}
+                                                    onUpdateStatus={(status) => updateStatusMutation.mutate({ id: lead.id, status })}
+                                                    onDelete={() => deleteMutation.mutate(lead.id)}
+                                                />
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
-            <Dialog open={!!activeMessageLead} onOpenChange={(open) => !open && setActiveMessageLead(null)}>
-                <DialogContent className="sm:max-w-md border-border/60 shadow-float">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-4 text-base font-semibold tracking-tight text-muted-foreground">
-                            <NimbusLogoIcon className="w-10 h-10" />
-                            Nimbus AI Message Generator
-                        </DialogTitle>
-                    </DialogHeader>
-                    {activeMessageLead && (
-                        <MessageGenerator
-                            context={{
-                                name: activeMessageLead.name,
-                                company: activeMessageLead.company_name || undefined,
-                                score: activeMessageLead.score,
-                                userName: companyInfo?.trading_name || aiContext.user_name,
-                                serviceType: activeMessageLead.service_type || undefined,
-                                companyType: (
-                                    companyInfo?.trading_name?.toLowerCase().includes('studio') ||
-                                    companyInfo?.trading_name?.toLowerCase().includes('agência') ||
-                                    companyInfo?.trading_name?.toLowerCase().includes('agencia') ||
-                                    companyInfo?.trading_name?.toLowerCase().includes('agency') ||
-                                    companyInfo?.trading_name?.toLowerCase().includes('serviços') ||
-                                    companyInfo?.trading_name?.toLowerCase().includes('servicos') ||
-                                    companyInfo?.trading_name?.toLowerCase().includes('soluções') ||
-                                    companyInfo?.trading_name?.toLowerCase().includes('solucoes') ||
-                                    companyInfo?.trading_name?.toLowerCase().includes('consultoria')
-                                ) ? 'collective' : 'individual'
-                            }}
-                            initialMessage={activeMessageLead.notes || ""}
-                            onMessageUpdate={(msg) => updateLead({ id: activeMessageLead.id, notes: msg })}
-                            onSend={(msg) => {
-                                window.open(`https://wa.me/${activeMessageLead.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-                                setActiveMessageLead(null);
-                            }}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
+            <NewLeadDialog
+                open={isNewLeadOpen}
+                onOpenChange={setIsNewLeadOpen}
+                onSubmit={createLead}
+            />
+
+            <LeadDetailsDialog
+                lead={selectedLead}
+                open={!!selectedLead}
+                onOpenChange={(open) => !open && setSelectedLead(null)}
+            />
         </div>
     );
 };
 
-function LeadCard({
-    lead,
-    onUpdate,
-    onDelete,
-    onConvert,
-    onMessage,
-    onEdit
-}: {
-    lead: Lead,
-    onUpdate: (updates: Partial<Lead>) => void,
-    onDelete: () => void,
-    onConvert: () => void,
-    onMessage: () => void,
-    onEdit: () => void
-}) {
+function LeadActions({ lead, onUpdateStatus, onDelete }: any) {
+    const { toast } = useToast();
+
+    const copyToClipboard = (text: string, label: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ title: "Copiado", description: `${label} copiado para a área de transferência.` });
+    };
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                    <MoreVertical className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-50">Contato</div>
+                {lead.phone && (
+                    <DropdownMenuItem className="text-xs gap-2" onClick={() => copyToClipboard(lead.phone, "Telefone")}>
+                        <Phone className="h-3.5 w-3.5" /> Copiar Telefone
+                    </DropdownMenuItem>
+                )}
+                {lead.email && (
+                    <DropdownMenuItem className="text-xs gap-2" onClick={() => copyToClipboard(lead.email, "E-mail")}>
+                        <Mail className="h-3.5 w-3.5" /> Copiar E-mail
+                    </DropdownMenuItem>
+                )}
+                <div className="h-px bg-border my-1" />
+
+                <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-50">Alterar Status</div>
+                <DropdownMenuItem className="text-xs gap-2" onClick={() => onUpdateStatus('contato')}>
+                    <MessageSquare className="h-3.5 w-3.5 text-amber-500" /> Marcar como Em Contato
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-xs gap-2" onClick={() => onUpdateStatus('negociacao')}>
+                    <Briefcase className="h-3.5 w-3.5 text-purple-500" /> Marcar como Negociação
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-xs gap-2" onClick={() => onUpdateStatus('fechado')}>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Marcar como Fechado
+                </DropdownMenuItem>
+
+                <div className="h-px bg-border my-1" />
+                <DropdownMenuItem className="text-xs gap-2 text-destructive focus:text-destructive" onClick={() => {
+                    if (window.confirm("Deseja realmente excluir este lead?")) onDelete();
+                }}>
+                    <Trash2 className="h-3.5 w-3.5" /> Excluir Lead
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
+
+function LeadCard({ lead, index, onUpdateStatus, onDelete, onOpenDetails }: any) {
+    const status = STATUS_CONFIG[lead.status] || STATUS_CONFIG.novo;
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="group bg-card border border-border hover:border-primary/40 rounded-lg p-4 shadow-sm transition-all cursor-pointer hover:shadow-md hover:-translate-y-0.5"
-            onClick={onMessage}
+            transition={{ delay: index * 0.05 }}
+            onClick={onOpenDetails}
+            className="group bg-card hover:bg-muted/5 rounded-xl p-5 shadow-sm transition-all cursor-pointer flex flex-col hover:shadow-md h-[240px]"
         >
-            <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="min-w-0">
-                    <h4 className="font-semibold text-sm text-foreground truncate">{lead.name}</h4>
-                    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                        <Star className={cn("h-3 w-3", lead.score > 70 ? "text-amber-500 fill-amber-500" : "text-muted-foreground/40")} />
-                        <span className="font-bold tabular-nums text-foreground/80">{lead.score}</span>
-                        {lead.company_name && <span className="opacity-60 truncate">• {lead.company_name}</span>}
-                    </p>
-                </div>
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <MoreVertical className="h-3.5 w-3.5" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem className="text-xs gap-2" onClick={onMessage}>
-                            <MessageSquare className="h-3.5 w-3.5" /> Abrir Chat IA
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2" onClick={onEdit}>
-                            <Pencil className="h-3.5 w-3.5" /> Editar Informações
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2" onClick={() => onUpdate({ status: 'contato' })}>
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Marcar como Contato
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2 font-semibold text-primary" onClick={onConvert}>
-                            <TrendingUp className="h-3.5 w-3.5 text-primary" /> Converter em Cliente
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2 text-destructive focus:text-destructive" onClick={onDelete}>
-                            <Trash2 className="h-3.5 w-3.5" /> Excluir Lead
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-
-            <div className="space-y-2 mb-4">
-                {lead.email && (
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground truncate">
-                        <Mail className="h-3 w-3 opacity-60" />
-                        {lead.email}
-                    </div>
-                )}
-                {lead.phone && (
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground truncate">
-                        <Phone className="h-3 w-3 opacity-60" />
-                        {lead.phone}
-                    </div>
-                )}
-                {lead.service_type && (
-                    <div className="flex items-center gap-2 text-[10px] text-primary/80 font-medium">
-                        <Briefcase className="h-3 w-3 opacity-60" />
-                        {lead.service_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </div>
-                )}
-            </div>
-
-            <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-medium bg-muted/50 text-muted-foreground border-border/60">
-                    {lead.source || "Direto"}
+            <div className="flex items-start justify-between mb-4">
+                <Badge variant="outline" className={cn("px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border-none", status.color)}>
+                    {status.label}
                 </Badge>
-                <div className="flex items-center gap-1">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-primary"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onMessage();
-                        }}
-                    >
-                        <MessageSquare className="h-3 w-3" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn(
-                            "h-6 w-6 transition-colors",
-                            lead.is_hot
-                                ? "text-primary fill-primary/10 hover:text-primary/80"
-                                : "text-muted-foreground hover:text-primary"
-                        )}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onUpdate({ is_hot: !lead.is_hot });
-                        }}
-                    >
-                        <Zap className={cn("h-3 w-3", lead.is_hot && "fill-current")} />
-                    </Button>
+                {lead.is_hot && (
+                    <div className="h-6 w-6 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
+                        <Zap className="h-3 w-3 fill-current" />
+                    </div>
+                )}
+            </div>
+
+            <div className="flex-1 space-y-2">
+                <h3 className="font-semibold text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                    {lead.company_name || lead.name}
+                </h3>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <User className="h-3 w-3" />
+                    {lead.name}
+                </div>
+                {lead.potential_value && (
+                    <div className="flex items-center gap-2 text-xs font-semibold text-emerald-500">
+                        <DollarSign className="h-3 w-3" />
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lead.potential_value)}
+                    </div>
+                )}
+            </div>
+
+            <div className="mt-auto pt-4 border-t border-border/40 flex items-center justify-between">
+                <div className="flex flex-col">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Fonte</span>
+                    <span className="text-[10px] font-semibold text-foreground uppercase truncate max-w-[120px]">
+                        {lead.source || "Direto"}
+                    </span>
+                </div>
+                <div className="h-9 w-9 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <ArrowUpRight className="h-5 w-5" />
                 </div>
             </div>
         </motion.div>

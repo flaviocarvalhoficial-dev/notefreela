@@ -156,7 +156,7 @@ const TagSuggester = ({ content, currentTags, onSelect }: { content: string, cur
                 <button
                     key={tag}
                     onClick={() => onSelect(tag)}
-                    className="text-[9px] font-semibold bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-[var(--radius-tiny)] hover:bg-primary/20 transition-colors"
+                    className="text-[9px] font-medium bg-primary/10 text-primary border border-primary/10 px-1.5 py-0.5 rounded-tiny hover:bg-primary/20 transition-all duration-120"
                 >
                     +{tag}
                 </button>
@@ -185,29 +185,29 @@ const ItemCard = ({
 }) => {
     return (
         <div className={cn(
-            "group transition-all bg-card border border-border/60 shadow-[var(--shadow-card)] relative overflow-hidden rounded-[var(--radius-card)]",
+            "group transition-all duration-150 bg-card border-none shadow-sm relative overflow-hidden rounded-xl",
             viewMode === 'grid' ? "p-4 flex flex-col justify-between gap-2 h-[200px]" : "p-2 flex items-center justify-between",
-            isOverlay ? "shadow-xl border-primary/50 scale-105 rotate-2 cursor-grabbing" : "hover:border-primary/30 cursor-grab active:cursor-grabbing"
+            isOverlay ? "shadow-float border-primary/40 scale-105 rotate-1 cursor-grabbing" : "cursor-grab active:cursor-grabbing hover:bg-muted/30"
         )}>
             {!isOverlay && (
-                <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                <div className="absolute top-1.5 right-1.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                     {onCopy && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onCopy(e, item.content); }}
-                            className="p-1 rounded-md hover:bg-muted transition-colors"
+                            className="p-1.5 rounded-md hover:bg-muted transition-colors"
                             title="Copiar"
                         >
-                            {copiedId === item.id ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3 text-muted-foreground/40 hover:text-primary" />}
+                            {copiedId === item.id ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground/30 hover:text-primary" />}
                         </button>
                     )}
                     {(onEdit || onDelete) && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <button className="p-1 rounded-md hover:bg-muted text-muted-foreground/40 hover:text-foreground">
-                                    <MoreHorizontal className="h-3 w-3" />
+                                <button className="p-1.5 rounded-md hover:bg-muted text-muted-foreground/30 hover:text-foreground">
+                                    <MoreHorizontal className="h-3.5 w-3.5" />
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="glass border-border">
+                            <DropdownMenuContent align="end" className="glass">
                                 {onEdit && (
                                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="gap-2 cursor-pointer text-xs">
                                         <Edit className="h-3.5 w-3.5" /> Editar
@@ -227,26 +227,20 @@ const ItemCard = ({
                 </div>
             )}
 
-            <div className={cn("flex min-w-0 w-full", viewMode === 'grid' ? "flex-col gap-2" : "flex-row items-center gap-4 flex-1")}>
-                <div className="flex items-center gap-2 min-w-0">
-                    <div className={cn("p-1.5 rounded-md shrink-0", getTypeColor(item.type))}>
+            <div className={cn("flex min-w-0 w-full", viewMode === 'grid' ? "flex-col gap-2.5" : "flex-row items-center gap-4 flex-1")}>
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn("p-1.5 rounded-md shrink-0", getTypeColor(item.type).replace('bg-primary/10', 'bg-primary/5').replace('bg-emerald-500/10', 'bg-emerald-500/5'))}>
                         {getTypeIcon(item.type)}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-foreground/90 tracking-tight text-xs truncate max-w-[140px] pr-2">
+                        <h3 className="font-semibold text-foreground/90 tracking-tight text-xs truncate max-w-[140px] pr-2">
                             {item.title || "Captura"}
                         </h3>
-                        {/* Meta info hidden in overlay minimal view or adjust as needed */}
-                        <div className={cn("flex", viewMode === 'grid' ? "flex-col gap-0" : "flex-row items-center gap-3")}>
+                        <div className={cn("flex", viewMode === 'grid' ? "flex-col" : "flex-row items-center gap-3")}>
                             {!isOverlay && (
-                                <p className="text-[9px] text-muted-foreground font-medium leading-none">
-                                    {format(new Date(item.created_at), "dd/MM/yy", { locale: ptBR })}
+                                <p className="text-[9px] text-muted-foreground/40 font-medium uppercase tracking-widest leading-none">
+                                    {format(new Date(item.created_at), "dd MMM yy", { locale: ptBR })}
                                 </p>
-                            )}
-                            {item.category && (
-                                <span className="text-[9px] text-muted-foreground font-normal truncate max-w-[80px]">
-                                    {item.category}
-                                </span>
                             )}
                         </div>
                     </div>
@@ -255,17 +249,17 @@ const ItemCard = ({
                 {viewMode === 'grid' && (
                     <>
                         <div className="flex-1 overflow-hidden">
-                            <div className="text-[10px] text-muted-foreground/80 leading-relaxed line-clamp-5 prose prose-invert prose-xs">
+                            <div className="text-[11px] text-muted-foreground/60 leading-relaxed line-clamp-4 font-normal">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {item.content}
                                 </ReactMarkdown>
                             </div>
                         </div>
-                        {!isOverlay && (
+                        {!isOverlay && item.tags && item.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                                {(item.tags || []).slice(0, 3).map((tag, idx) => (
-                                    <Badge key={idx} variant="outline" className="text-[8px] px-1 py-0 h-3.5 bg-background/50 border-border text-muted-foreground">
-                                        #{tag}
+                                {item.tags.slice(0, 2).map((tag, idx) => (
+                                    <Badge key={idx} variant="tonal" className="text-[8.5px] px-1.5 h-4 bg-muted/30 text-muted-foreground/50 border-none uppercase font-semibold">
+                                        {tag}
                                     </Badge>
                                 ))}
                             </div>
@@ -274,7 +268,7 @@ const ItemCard = ({
                 )}
 
                 {viewMode === 'list' && (
-                    <p className="text-[11px] text-muted-foreground line-clamp-1 flex-1 px-4 border-l border-border">
+                    <p className="text-[11px] text-muted-foreground/60 line-clamp-1 flex-1 px-4">
                         {item.content}
                     </p>
                 )}
@@ -311,8 +305,8 @@ const DroppableFolder = ({ folder, count, isActive, onClick, onRename, onDelete,
             whileTap={{ scale: 0.99 }}
             onClick={onClick}
             className={cn(
-                "cursor-pointer p-3 rounded-lg border transition-all flex flex-col gap-2 relative overflow-hidden group",
-                isActive ? "bg-primary/5 border-primary/20 shadow-sm" : "bg-card hover:bg-muted/50 border-border",
+                "cursor-pointer p-3 rounded-lg border-none transition-all flex flex-col gap-2 relative overflow-hidden group",
+                isActive ? "bg-primary/5 shadow-sm" : "bg-card hover:bg-muted/50",
                 isOver ? "ring-2 ring-primary bg-primary/10 z-10" : ""
             )}
         >
@@ -908,7 +902,7 @@ const CaixaEntrada = () => {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                                 <Input
                                     placeholder="Pesquisar em suas capturas..."
-                                    className="pl-9 h-9 bg-card/50 border-border/60"
+                                    className="pl-9 h-9 bg-card/50 border-none shadow-sm"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -919,8 +913,8 @@ const CaixaEntrada = () => {
                                     variant="outline"
                                     size="sm"
                                     className={cn(
-                                        "h-9 px-3 gap-2 text-xs font-medium border-border/60",
-                                        (selectedType !== "all" || projectFilter !== null) && "bg-primary/5 text-primary border-primary/20"
+                                        "h-9 px-3 gap-2 text-xs font-medium border-none shadow-sm",
+                                        (selectedType !== "all" || projectFilter !== null) && "bg-primary/5 text-primary"
                                     )}
                                     onClick={() => {
                                         const el = document.getElementById('advanced-filters-inbox');
@@ -931,7 +925,7 @@ const CaixaEntrada = () => {
                                     Filtros
                                 </Button>
 
-                                <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40 ml-2">
+                                <div className="flex bg-muted/20 p-1 rounded-lg border-none ml-2 shadow-sm">
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -956,10 +950,10 @@ const CaixaEntrada = () => {
                         <div id="advanced-filters-inbox" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
                             <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
                                 <Select value={selectedType} onValueChange={(v: any) => setSelectedType(v)}>
-                                    <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
+                                    <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md shadow-sm">
                                         <SelectValue placeholder="Tipo" />
                                     </SelectTrigger>
-                                    <SelectContent className="glass border-border">
+                                    <SelectContent className="glass border-none">
                                         <SelectItem value="all">Todos Tipos</SelectItem>
                                         <SelectItem value="idea">Ideias</SelectItem>
                                         <SelectItem value="prompt">Prompts</SelectItem>
@@ -973,10 +967,10 @@ const CaixaEntrada = () => {
                                 </Select>
 
                                 <Select value={projectFilter || "all"} onValueChange={(v) => setSearchParams(prev => { if (v === "all") prev.delete("project"); else prev.set("project", v); return prev; })}>
-                                    <SelectTrigger className="h-8 w-[160px] text-[10px] font-medium bg-card border-border rounded-md">
+                                    <SelectTrigger className="h-8 w-[160px] text-[10px] font-medium bg-card border-none rounded-md shadow-sm">
                                         <SelectValue placeholder="Projeto" />
                                     </SelectTrigger>
-                                    <SelectContent className="glass border-border">
+                                    <SelectContent className="glass border-none">
                                         <SelectItem value="all">Todos Projetos</SelectItem>
                                         {projects.map((p: any) => (
                                             <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -1008,7 +1002,7 @@ const CaixaEntrada = () => {
                                 exit={{ opacity: 0, height: 0 }}
                                 className="overflow-hidden"
                             >
-                                <div className="bento-card p-6 space-y-4 border-primary/30 shadow-glow-sm">
+                                <div className="bento-card p-6 space-y-4 border-none shadow-sm">
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
@@ -1026,10 +1020,10 @@ const CaixaEntrada = () => {
                                                     key={t}
                                                     onClick={() => setNewType(t as any)}
                                                     className={cn(
-                                                        "p-2 rounded-md transition-all border",
+                                                        "p-2 rounded-md transition-all border-none shadow-sm",
                                                         newType === t
-                                                            ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
-                                                            : "border-border hover:border-border text-muted-foreground"
+                                                            ? "bg-primary/10 text-primary"
+                                                            : "text-muted-foreground hover:bg-muted"
                                                     )}
                                                     title={t.charAt(0).toUpperCase() + t.slice(1)}
                                                 >
@@ -1086,7 +1080,7 @@ const CaixaEntrada = () => {
                                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/40 group-focus-within/boxsearch:text-primary/50 transition-colors" />
                                     <Input
                                         placeholder="Localizar caixa..."
-                                        className="h-7 w-28 md:w-40 pl-8 text-[10px] bg-muted/10 border-border/50 focus:border-primary/30 transition-all rounded-md"
+                                        className="h-7 w-28 md:w-40 pl-8 text-[10px] bg-muted/10 border-none transition-all rounded-md shadow-sm"
                                         value={boxSearchQuery}
                                         onChange={(e) => setBoxSearchQuery(e.target.value)}
                                     />
@@ -1101,7 +1095,7 @@ const CaixaEntrada = () => {
                                         setNewFolderName("");
                                         setIsCreatingFolder(true);
                                     }}
-                                    className="h-7 text-[10px] font-medium border-border/50 bg-background hover:bg-muted gap-2 px-3 rounded-md"
+                                    className="h-7 text-[10px] font-medium border-none bg-background hover:bg-muted gap-2 px-3 rounded-md shadow-sm"
                                 >
                                     <Plus className="h-3 w-3" /> Nova
                                 </Button>
@@ -1203,7 +1197,7 @@ const CaixaEntrada = () => {
                                     </p>
                                 </div>
                                 <Button
-                                    className="btn-gradient px-8 h-11 font-bold shadow-glow-sm"
+                                    className="btn-gradient px-8 h-11 font-medium shadow-glow-sm"
                                     onClick={() => setIsAdding(true)}
                                 >
                                     CAPTURAR AGORA
@@ -1247,7 +1241,7 @@ const CaixaEntrada = () => {
 
             {/* Edit Item Modal */}
             <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
-                <DialogContent className="border-border max-w-xl">
+                <DialogContent className="border-none shadow-float max-w-xl">
                     <DialogHeader>
                         <DialogTitle>Editar Registro</DialogTitle>
                     </DialogHeader>

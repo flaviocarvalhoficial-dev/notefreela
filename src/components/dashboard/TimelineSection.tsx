@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { RotateCcw, Users, Loader2, ChevronLeft, ChevronRight, Plus, Maximize2, Minimize2 } from "lucide-react";
+import { RotateCcw, Users, Loader2, ChevronLeft, ChevronRight, Plus, Maximize2, Minimize2, Activity } from "lucide-react";
 import { format, isSameDay, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -23,6 +23,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type ActivityType = "project" | "task" | "personal";
 
@@ -192,28 +194,30 @@ export function TimelineSection({
             const viewportWidth = viewport.clientWidth;
             const targetLeft = scrollAmount - (viewportWidth / 2) + (slotPx / 2);
 
-            // Vertical Scroll - Busca a primeira atividade relevante para HOJE
-            // Critério: Atividades que começam hoje OU que estão em andamento hoje
-            // Normalizamos hoje para garantir comparação apenas de data
+            // Vertical Scroll - Busca TODAS as atividades relevantes para HOJE
+            // para centralizar a 'massa' de trabalho verticalmente
             const todayStart = new Date(todayDate).setHours(0, 0, 0, 0);
             const todayEnd = new Date(todayDate).setHours(23, 59, 59, 999);
 
-            const firstRelevantActivity = positionedActivities.find(a => {
+            const todayActivities = positionedActivities.filter(a => {
                 const taskStart = new Date(a.startDate).getTime();
-                // Se a tarefa não tem fim, consideramos que ela ocupa o dia todo para busca
                 const taskEnd = a.endDate ? new Date(a.endDate).getTime() : new Date(a.startDate).setHours(23, 59, 59, 999);
-                // Verifica se a tarefa intersecta o dia de hoje
                 return taskStart <= todayEnd && taskEnd >= todayStart;
             });
 
-            const targetTop = firstRelevantActivity
-                ? (firstRelevantActivity.lane || 0) * LANE_HEIGHT - 120 // Espaço para ver o cabeçalho
+            const targetTop = todayActivities.length > 0
+                ? (() => {
+                    const lanes = todayActivities.map(a => a.lane || 0);
+                    const minLane = Math.min(...lanes);
+                    const maxLane = Math.max(...lanes);
+                    const medianLane = (minLane + maxLane) / 2;
+                    return (medianLane * LANE_HEIGHT) - (viewport.clientHeight / 2) + (LANE_HEIGHT / 2);
+                })()
                 : 0;
 
-            // Scroll unificado e suave
             viewport.scrollTo({
                 left: targetLeft,
-                top: targetTop,
+                top: Math.max(0, targetTop),
                 behavior: "smooth"
             });
 
@@ -300,21 +304,52 @@ export function TimelineSection({
         );
     }
 
+    if (positionedActivities.length === 0 && !isLoading) {
+        return (
+            <div className="h-full flex flex-col">
+                <header className="p-4 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-2">
+                        <Activity className="h-3.5 w-3.5 text-primary/40" />
+                        <h3 className="text-[11px] font-medium text-muted-foreground/60">Cronograma Operacional</h3>
+                    </div>
+                    <Badge variant="outline" className="text-[9px] font-medium border-primary/10 bg-primary/5 text-primary/60 px-2 rounded-lg">
+                        Live Sync
+                    </Badge>
+                </header>
+                <div className="flex-1 flex items-center justify-center p-12">
+                    <EmptyState
+                        icon={Activity}
+                        title="Cronograma Limpo"
+                        description="Nenhuma tarefa ou projeto agendado para este período. Ocupe sua mesa criando novas demandas."
+                        actionLabel="NOVA TAREFA"
+                        onAction={() => navigate('/tarefas')}
+                    />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <motion.section
-            className="bento-card bg-card/40 backdrop-blur-sm h-full flex flex-col overflow-hidden border border-border/60 shadow-sm"
+            className="bg-card/40 backdrop-blur-sm h-full flex flex-col overflow-hidden"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
         >
-            <header className="p-4 border-b border-border flex items-center justify-between shrink-0">
-                {/* ... (Existing header content) ... */}
-                <div className="flex items-center gap-4">
+            <header className="p-4 border-none flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                    <Activity className="h-3.5 w-3.5 text-primary/40" />
+                    <h3 className="text-[11px] font-medium text-muted-foreground/60">Cronograma Operacional</h3>
+                    <Badge variant="outline" className="text-[9px] font-medium border-primary/10 bg-primary/5 text-primary/60 px-2 rounded-lg ml-2">
+                        Live Sync
+                    </Badge>
+                </div>
+                <div className="flex items-center gap-2">
                     <Select value={selectedProject} onValueChange={setSelectedProject}>
                         <SelectTrigger className="h-7 w-[160px] bg-muted/30 border-none text-[10px] font-medium rounded-md focus:ring-0">
                             <SelectValue placeholder="Projeto" />
                         </SelectTrigger>
-                        <SelectContent className="bento-card border-border">
+                        <SelectContent className="bento-card border-none shadow-float">
                             <SelectItem value="all">Todos os Projetos</SelectItem>
                             {projects.map(p => (
                                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -365,11 +400,11 @@ export function TimelineSection({
                     onPointerLeave={endDrag}>
                     <div className="min-w-max relative flex flex-col bg-background/20" style={{ height: Math.max(totalHeight + 100, 600) }}>
                         {/* Header X-Axis */}
-                        <div className="sticky top-0 z-[100] bg-background-elevated/95 backdrop-blur-sm border-b border-border shadow-sm">
+                        <div className="sticky top-0 z-[100] bg-background-elevated/95 backdrop-blur-sm">
                             {/* Months Row */}
                             <div className="flex">
                                 {monthsInTrack.map((m, idx) => (
-                                    <div key={idx} className="h-7 flex items-center px-4 border-r border-border overflow-hidden" style={{ width: m.width }}>
+                                    <div key={idx} className="h-7 flex items-center px-4 overflow-hidden" style={{ width: m.width }}>
                                         <span className="text-[10px] font-normal text-muted-foreground whitespace-nowrap tracking-tight">
                                             {m.label}
                                         </span>
@@ -380,8 +415,8 @@ export function TimelineSection({
                             <div className="flex">
                                 {daysInRange.map((d, idx) => (
                                     <div key={idx} className={cn(
-                                        "shrink-0 flex items-center justify-center border-r border-border h-8",
-                                        isToday(d) && "bg-muted/40"
+                                        "shrink-0 flex items-center justify-center h-8",
+                                        isToday(d) && "bg-primary/5"
                                     )} style={{ width: slotPx }}>
                                         <span className={cn(
                                             "text-[10px] font-medium tabular-nums",
@@ -402,7 +437,6 @@ export function TimelineSection({
                                     <div
                                         key={`h-${idx}`}
                                         className={cn(
-                                            "border-b border-border/5",
                                             idx % 2 === 0 ? "bg-muted/5" : "bg-transparent"
                                         )}
                                         style={{ height: LANE_HEIGHT }}
@@ -414,8 +448,8 @@ export function TimelineSection({
                             <div className="absolute inset-y-0 left-0 right-0 flex pointer-events-none">
                                 {daysInRange.map((d, idx) => (
                                     <div key={`v-${idx}`} className={cn(
-                                        "h-full border-r border-border/5 shrink-0",
-                                        isToday(d) && "bg-muted/[0.1] border-muted-foreground/10"
+                                        "h-full shrink-0",
+                                        isToday(d) && "bg-primary/[0.03]"
                                     )} style={{ width: slotPx }} />
                                 ))}
                             </div>
@@ -455,7 +489,10 @@ export function TimelineSection({
                                                 <ContextMenu>
                                                     <ContextMenuTrigger>
                                                         <div
-                                                            className="h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex items-center px-3 border border-border relative group bg-background/5 pointer-events-auto"
+                                                            className={cn(
+                                                                "h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex items-center px-3 border-none relative group bg-background/5 pointer-events-auto",
+                                                                isToday(a.startDate) && "ring-2 ring-primary ring-offset-1 ring-offset-background shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                                                            )}
                                                         >
                                                             <div
                                                                 className="absolute inset-0 pointer-events-none rounded-md"
@@ -481,7 +518,7 @@ export function TimelineSection({
                                                 </ContextMenu>
                                             </div>
                                         </TooltipTrigger>
-                                        <TooltipContent className="bento-card border-border px-3 py-2 bg-white/95 dark:bg-zinc-900 shadow-xl backdrop-blur-md">
+                                        <TooltipContent className="bento-card border-none px-3 py-2 bg-white/95 dark:bg-zinc-900 shadow-xl backdrop-blur-md">
                                             <p className="text-xs font-bold mb-1 tracking-tight text-foreground">{a.title}</p>
                                             <div className="flex flex-col gap-1">
                                                 {a.projectName && (

@@ -60,6 +60,7 @@ import { TaskDisplaySettings, TaskDisplayOptions } from "@/components/tasks/Task
 import { TaskListView } from "@/components/tasks/TaskListView";
 import { ViewSwitcher, ViewOption } from "@/components/shared/ViewSwitcher";
 import { List, LayoutDashboard, Calendar as CalendarIcon } from "lucide-react";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 interface TarefasProps {
     hideHeader?: boolean;
@@ -434,21 +435,21 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     onClick={() => handleProjectFilterChange(p.id)}
-                                    className="group relative flex flex-col bg-card border border-border/60 hover:border-primary/30 rounded-xl transition-all duration-300 cursor-pointer overflow-hidden p-0 h-full hover:shadow-lg hover:shadow-primary/[0.02]"
+                                    className="group relative flex flex-col bg-card border-none shadow-sm rounded-xl transition-all duration-300 cursor-pointer overflow-hidden p-0 h-full hover:shadow-lg"
                                 >
                                     {/* Blueprint Texture Background (Even more subtle) */}
                                     <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:30px_30px]" />
 
                                     <div className="p-5 flex flex-col flex-1 relative z-10">
                                         <div className="flex items-start justify-between mb-4">
-                                            <div className="h-10 w-10 rounded-lg bg-muted/30 border border-border/40 flex items-center justify-center text-muted-foreground text-xl font-medium shrink-0 group-hover:scale-105 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300">
+                                            <div className="h-10 w-10 rounded-lg bg-muted/30 border-none flex items-center justify-center text-muted-foreground text-xl font-medium shrink-0 group-hover:scale-105 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300">
                                                 {p.avatar_emoji ? (
                                                     <span className="text-lg">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
                                                 ) : (
                                                     <Briefcase className="h-5 w-5" />
                                                 )}
                                             </div>
-                                            <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-wider h-5 px-2", statusColors[statusKey] || statusColors.planning)}>
+                                            <Badge variant="outline" className={cn("text-[9px] font-medium uppercase tracking-wider h-5 px-2 border-none", statusColors[statusKey] || statusColors.planning)}>
                                                 {statusLabels[statusKey] || statusKey}
                                             </Badge>
                                         </div>
@@ -461,7 +462,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                         </div>
 
                                         {/* Micro KPI Row - More Neutral */}
-                                        <div className="flex items-center gap-4 mb-5 pb-4 border-b border-border/40">
+                                        <div className="flex items-center gap-4 mb-5 pb-4">
                                             <div className="flex flex-col">
                                                 <span className="text-[9px] font-medium text-muted-foreground/50 uppercase tracking-tight leading-none mb-1">Passos</span>
                                                 <span className="text-xs font-semibold tabular-nums text-foreground/80">{counts.open}</span>
@@ -496,8 +497,8 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                     </div>
 
                                     {/* Action Hover (Micro-Transition) */}
-                                    <div className="px-5 py-2.5 bg-muted/5 border-t border-border/40 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                                        <span className="text-[9px] font-bold text-muted-foreground tracking-widest uppercase">Entrar no Cockpit</span>
+                                    <div className="px-5 py-2.5 bg-muted/5 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                        <span className="text-[9px] font-medium text-muted-foreground tracking-widest uppercase">Entrar no Cockpit</span>
                                         <Plus className="h-3 w-3 text-muted-foreground" />
                                     </div>
                                 </motion.div>
@@ -528,7 +529,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 rounded-lg bg-secondary hover:bg-primary/5 hover:text-primary transition-all border border-border shrink-0 shadow-sm"
+                            className="h-9 w-9 rounded-lg bg-secondary hover:bg-primary/5 hover:text-primary transition-all border-none shrink-0 shadow-sm"
                             onClick={() => handleProjectFilterChange("all")}
                         >
                             <ArrowLeft className="h-4 w-4" />
@@ -579,68 +580,45 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
             />
 
 
-            {/* Indicators Row - Refined with Financial Stats */}
+            {/* Indicators Row - Operational Focus */}
             <div className={cn(
                 "grid gap-3 mb-4",
-                projectId ? "grid-cols-1 md:grid-cols-3" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+                projectId ? "grid-cols-1 md:grid-cols-3" : "grid-cols-2 md:grid-cols-4"
             )}>
-                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
-                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Backlog Total</span>
+                <div className="bg-card border-none p-3 rounded-lg flex flex-col justify-between hover:bg-muted/30 transition-all group shadow-sm">
+                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-60">Backlog</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-xl font-bold tabular-nums text-foreground/80">{tasksTotal}</span>
+                        <span className="text-lg font-semibold tabular-nums text-foreground/80">{tasksTotal}</span>
                         <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground/20 group-hover:text-primary/40 transition-colors" />
                     </div>
                 </div>
-                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
-                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Sprint Ativa</span>
+                <div className="bg-card border-none p-3 rounded-lg flex flex-col justify-between hover:bg-muted/30 transition-all group shadow-sm">
+                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-60">Sprint Ativa</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-xl font-bold tabular-nums text-foreground/80">{tasksOpen}</span>
-                        <AlertCircle className="h-3.5 w-3.5 text-primary/20 group-hover:text-primary transition-colors" />
+                        <span className="text-lg font-semibold tabular-nums text-foreground/80">{tasksOpen}</span>
+                        <CheckSquare className="h-3.5 w-3.5 text-primary/20 group-hover:text-primary transition-colors" />
                     </div>
                 </div>
-                <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
-                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">Gargalos</span>
+                <div className="bg-card border-none p-3 rounded-lg flex flex-col justify-between hover:bg-muted/30 transition-all group shadow-sm">
+                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-60">Gargalos</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-xl font-bold tabular-nums text-primary/80">{tasksOverdue}</span>
+                        <span className="text-lg font-semibold tabular-nums text-primary/80">{tasksOverdue}</span>
                         <Zap className="h-3.5 w-3.5 text-primary/20 group-hover:text-primary/40 transition-colors" />
                     </div>
                 </div>
-
-                {!projectId && (
-                    <>
-                        {/* Financial Stats - Sleek Mode */}
-                        <div className="bg-primary/5 border border-primary/10 p-3 rounded-lg flex flex-col justify-between hover:bg-primary/[0.08] transition-all group relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-12 h-12 bg-primary/5 rounded-bl-full -mr-6 -mt-6 pointer-events-none" />
-                            <span className="text-[9px] font-bold text-primary/40 uppercase tracking-tighter mb-2">Valor Projeto</span>
-                            <div className="flex items-end justify-between">
-                                <span className="text-xl font-bold tabular-nums text-primary mask-value">R$ {projectValue.toLocaleString()}</span>
-                                <FolderKanban className="h-3.5 w-3.5 text-primary/30" />
-                            </div>
-                        </div>
-
-                        <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
-                            <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter mb-2">{projectBalance >= 0 ? 'Saldo Líquido' : 'Custo'}</span>
-                            <div className="flex items-end justify-between">
-                                <span className="text-xl font-bold tabular-nums text-foreground/80 mask-value">R$ {Math.abs(projectBalance).toLocaleString()}</span>
-                                <BarChart3 className={cn("h-3.5 w-3.5 transition-colors", projectBalance >= 0 ? "text-emerald-500/20 group-hover:text-emerald-500/40" : "text-primary/20 group-hover:text-primary/40")} />
-                            </div>
-                        </div>
-
-                        <div className="bg-card border border-border/60 p-3 rounded-lg flex flex-col justify-between hover:border-primary/20 transition-all group shadow-sm shadow-black/[0.02]">
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Trajetória</span>
-                                <span className="text-[10px] font-bold tabular-nums text-primary">{projectProgress}%</span>
-                            </div>
-                            <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden mb-1">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${projectProgress}%` }}
-                                    className="h-full bg-primary/60 rounded-full"
-                                />
-                            </div>
-                        </div>
-                    </>
-                )}
+                <div className="bg-card border-none p-3 rounded-lg flex flex-col justify-between hover:bg-muted/30 transition-all group shadow-sm">
+                    <div className="flex justify-between items-start mb-1">
+                        <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest opacity-60">Trajetória</span>
+                        <span className="text-[10px] font-semibold tabular-nums text-primary">{projectProgress}%</span>
+                    </div>
+                    <div className="h-1 w-full bg-muted/40 rounded-full overflow-hidden mb-1">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${projectProgress}%` }}
+                            className="h-full bg-primary/40 rounded-full"
+                        />
+                    </div>
+                </div>
             </div>
             {/* Filters Bar with Cycle Selector */}
             <div className="flex flex-col gap-2">
@@ -651,7 +629,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Buscar tarefa..."
-                            className="pl-9 h-9 bg-card/50 border-border/60"
+                            className="pl-9 h-9 bg-card/50 border-none shadow-sm"
                         />
                     </div>
 
@@ -660,7 +638,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                             variant="outline"
                             size="sm"
                             className={cn(
-                                "h-9 px-3 gap-2 text-xs font-medium border-border/60",
+                                "h-9 px-3 gap-2 text-xs font-medium border-none shadow-sm",
                                 (priorityFilter !== "all" || projectFilter !== "all" || isRecurring) && "bg-primary/5 text-primary border-primary/20"
                             )}
                             onClick={() => {
@@ -676,12 +654,12 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
 
                 {/* Ghost Filters Bar */}
                 <div id="advanced-filters-tasks" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
-                    <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+                    <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border-none shadow-sm">
                         <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
-                            <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-border rounded-md">
+                            <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-none rounded-md shadow-sm">
                                 <SelectValue placeholder="Projeto" />
                             </SelectTrigger>
-                            <SelectContent className="glass border-border">
+                            <SelectContent className="glass border-none">
                                 <SelectItem value="all">Todos Projetos</SelectItem>
                                 {projects.map((p) => (
                                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -690,10 +668,10 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                         </Select>
 
                         <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as any)}>
-                            <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
+                            <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md shadow-sm">
                                 <SelectValue placeholder="Prioridade" />
                             </SelectTrigger>
-                            <SelectContent className="glass border-border">
+                            <SelectContent className="glass border-none">
                                 <SelectItem value="all">Todas Prioridades</SelectItem>
                                 <SelectItem value="high">Alta</SelectItem>
                                 <SelectItem value="medium">Média</SelectItem>
@@ -702,13 +680,13 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                         </Select>
 
                         {isRecurring && (
-                            <div className="flex items-center gap-2 bg-card border border-border px-2 rounded-md h-8">
+                            <div className="flex items-center gap-2 bg-card border-none px-2 rounded-md h-8 shadow-sm">
                                 <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
                                 <Select value={selectedCycle} onValueChange={setSelectedCycle}>
                                     <SelectTrigger className="h-7 w-[120px] bg-transparent border-none focus:ring-0 text-[10px] font-medium p-0">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="border-border">
+                                    <SelectContent className="border-none">
                                         {availableCycles.map(cycle => (
                                             <SelectItem key={cycle} value={cycle} className="capitalize text-[10px] font-medium">{cycle}</SelectItem>
                                         ))}
@@ -739,6 +717,16 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                         <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
                         <p className="text-[10px] font-medium tracking-tight text-muted-foreground animate-pulse">Sincronizando tarefas...</p>
                     </div>
+                ) : scenarios.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center py-20">
+                        <EmptyState
+                            icon={CheckSquare}
+                            title="Nenhuma tarefa ou quadro"
+                            description="Seu cockpit de execução está pronto. Crie seu primeiro quadro Kanban ou um Checklist para começar a produzir."
+                            actionLabel="NOVO QUADRO"
+                            onAction={() => mutations.createScenario('kanban')}
+                        />
+                    </div>
                 ) : (
                     <div className="flex flex-col gap-4 pb-20">
                         {displayOptions.viewMode === 'board' ? (
@@ -748,7 +736,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                     return (
                                         <div key={scenario.id} className="space-y-4">
                                             {/* Premium Scenario Toolbar */}
-                                            <div className="group flex items-center justify-between p-2 pl-4 pr-2 bg-card border border-border rounded-lg hover:shadow-sm transition-all">
+                                            <div className="group flex items-center justify-between p-2 pl-4 pr-2 bg-card border-none rounded-lg shadow-sm hover:shadow-md transition-all">
                                                 <div className="flex items-center gap-3">
                                                     <div
                                                         className={cn(
@@ -779,7 +767,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                                                     }
                                                                     if (e.key === 'Escape') setEditingScenarioId(null);
                                                                 }}
-                                                                className="h-7 w-auto min-w-[200px] font-bold text-base px-1 py-0 bg-background/50 border-border"
+                                                                className="h-7 w-auto min-w-[200px] font-medium text-base px-1 py-0 bg-background/50 border-none shadow-sm"
                                                             />
                                                         ) : (
                                                             <h2
@@ -793,7 +781,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                                                 {scenario.title}
                                                             </h2>
                                                         )}
-                                                        <span className="text-[10px] font-medium text-muted-foreground  tracking-tight hidden sm:inline-block border-l border-border pl-2">
+                                                        <span className="text-[10px] font-medium text-muted-foreground tracking-tight hidden sm:inline-block pl-2">
                                                             {scenario.type === 'kanban' ? 'Fluxo' : 'Lista'}
                                                         </span>
                                                     </div>
@@ -828,7 +816,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                                         </Button>
                                                     </div>
 
-                                                    <div className="h-4 w-px bg-border mx-1 hidden sm:block" />
+                                                    <div className="h-4 w-px bg-border/20 mx-1 hidden sm:block" />
 
                                                     {/* Main Action Component */}
                                                     <DropdownMenu>
@@ -1043,7 +1031,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                                                                                             </div>
                                                                                                         ))}
                                                                                                         {colTasks.length === 0 && !quickAddColumn && (
-                                                                                                            <div className="glass-light rounded-2xl p-6 border border-dashed border-border text-center flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                                                                                                            <div className="glass-light rounded-2xl p-6 border-none shadow-sm text-center flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">>
                                                                                                                 <p className="text-[10px] text-muted-foreground">Vazio</p>
                                                                                                             </div>
                                                                                                         )}
@@ -1068,7 +1056,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                                                                 "w-full flex items-center gap-2 transition-all",
                                                                                 scenario.type === 'checklist'
                                                                                     ? "h-8 px-0 text-muted-foreground hover:text-primary hover:bg-transparent"
-                                                                                    : "bg-secondary/50 border border-dashed border-border rounded-md h-12 hover:bg-secondary group"
+                                                                                    : "bg-secondary/50 border-none rounded-md h-12 hover:bg-secondary group shadow-sm"
                                                                             )}
                                                                             onClick={() => {
                                                                                 mutations.createColumn({ title: "Nova Coluna", scenario_id: scenario.id });
@@ -1149,7 +1137,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                 })}
 
                                 {/* Botões Globais de Cenário - No final da lista */}
-                                <div className="flex gap-4 border-t border-border pt-8 mt-4 opacity-60 hover:opacity-100 transition-opacity justify-center">
+                                <div className="flex gap-4 pt-8 mt-4 opacity-60 hover:opacity-100 transition-opacity justify-center">>
                                     <Button
                                         variant="outline"
                                         className="border-dashed h-9"

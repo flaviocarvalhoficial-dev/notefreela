@@ -73,29 +73,29 @@ export function QuickCaptureDialog() {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-glow-subtle border border-primary/20"
+                    className="h-9 w-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-120 border border-primary/10"
                     title="Captura Rápida (Alt+C)"
                 >
                     <Zap className="h-4 w-4 fill-primary/10" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] glass border-primary/20 p-0 overflow-hidden">
-                <div className="h-1.5 w-full bg-primary shadow-glow" />
+            <DialogContent className="sm:max-w-[425px] bg-card border-border/40 p-0 overflow-hidden shadow-float">
+                <div className="h-1 w-full bg-primary" />
                 <div className="p-6 space-y-4">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-lg font-bold tracking-tight">
+                        <DialogTitle className="flex items-center gap-2 text-lg font-medium tracking-tight">
                             <Zap className="h-5 w-5 text-primary" /> Captura Rápida
                         </DialogTitle>
-                        <p className="text-xs text-muted-foreground">Não deixe a ideia escapar. Salve agora, organize depois.</p>
+                        <p className="text-[11px] text-muted-foreground/70">Não deixe a ideia escapar. Salve agora, organize depois.</p>
                     </DialogHeader>
 
                     <div className="space-y-4 py-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="quick-title" className="text-xs text-muted-foreground">O que é isso?</Label>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="quick-title" className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-widest">O que é isso?</Label>
                             <Input
                                 id="quick-title"
                                 placeholder="Título curto..."
-                                className="glass-light border-border h-9"
+                                className="bg-muted/30 border-border/40 h-10"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 autoFocus
@@ -103,36 +103,36 @@ export function QuickCaptureDialog() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Tipo de Entrada</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-widest">Tipo de Entrada</Label>
                                 <Select value={type} onValueChange={(val: any) => setType(val)}>
-                                    <SelectTrigger className="glass-light border-border h-9 text-xs">
+                                    <SelectTrigger className="bg-muted/30 border-border/40 h-10 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="glass border-border">
+                                    <SelectContent className="bg-card border-border/40">
                                         <SelectItem value="idea">
-                                            <div className="flex items-center gap-2"><Lightbulb className="h-3 w-3" /> Ideia</div>
+                                            <div className="flex items-center gap-2"><Lightbulb className="h-3.5 w-3.5" /> Ideia</div>
                                         </SelectItem>
                                         <SelectItem value="note">
-                                            <div className="flex items-center gap-2"><FileText className="h-3 w-3" /> Nota</div>
+                                            <div className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" /> Nota</div>
                                         </SelectItem>
                                         <SelectItem value="prompt">
-                                            <div className="flex items-center gap-2"><Terminal className="h-3 w-3" /> Prompt</div>
+                                            <div className="flex items-center gap-2"><Terminal className="h-3.5 w-3.5" /> Prompt</div>
                                         </SelectItem>
                                         <SelectItem value="snippet">
-                                            <div className="flex items-center gap-2"><Type className="h-3 w-3" /> Snippet</div>
+                                            <div className="flex items-center gap-2"><Type className="h-3.5 w-3.5" /> Snippet</div>
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="quick-content" className="text-xs text-muted-foreground">Conteúdo / Detalhes</Label>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="quick-content" className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-widest">Conteúdo / Detalhes</Label>
                             <Textarea
                                 id="quick-content"
                                 placeholder="Descreva sua ideia, cole um link ou anote um prompt..."
-                                className="glass-light border-border min-h-[120px] text-xs resize-none"
+                                className="bg-muted/30 border-border/40 min-h-[120px] text-xs resize-none"
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                             />
@@ -141,16 +141,16 @@ export function QuickCaptureDialog() {
 
                     <DialogFooter className="pt-2">
                         <Button
-                            className="w-full font-bold shadow-glow"
+                            className="w-full font-medium shadow-sm transition-all duration-200 rounded-lg"
                             onClick={() => createItemMutation.mutate()}
                             disabled={createItemMutation.isPending || !content}
                         >
                             {createItemMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             ) : (
-                                <Check className="h-4 w-4 mr-2" />
+                                <Zap className="h-4 w-4 mr-2" />
                             )}
-                            Salvar na Rede de Captura
+                            Capturar Informação
                         </Button>
                     </DialogFooter>
                 </div>

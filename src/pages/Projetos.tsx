@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type ProjectStatus = "active" | "planning" | "review" | "completed";
 
@@ -94,11 +95,11 @@ const Projetos = () => {
 
         <div className="flex items-center gap-3 shrink-0">
           {/* Inline Stats (Compact) */}
-          <div className="hidden xl:flex items-center gap-4 px-4 border-r border-border h-8 mr-2">
+          <div className="hidden xl:flex items-center gap-4 px-4 border-none h-8 mr-2">
             {stats.slice(0, 3).map((stat) => (
               <div key={stat.label} className="flex items-center gap-2 group cursor-default">
                 <stat.icon className="h-3.5 w-3.5 text-muted-foreground/40" />
-                <span className="text-sm font-medium tabular-nums">{stat.value}</span>
+                <span className="text-sm font-medium tabular-nums text-foreground/70">{stat.value}</span>
               </div>
             ))}
           </div>
@@ -122,7 +123,7 @@ const Projetos = () => {
               placeholder="Buscar projetos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 bg-card/50 border-border/60"
+              className="pl-9 h-9 bg-card/50 border-none"
             />
           </div>
 
@@ -131,8 +132,8 @@ const Projetos = () => {
               variant="outline"
               size="sm"
               className={cn(
-                "h-9 px-3 gap-2 text-xs font-medium border-border/60",
-                (filterBilling !== "all" || filterService !== "all" || filterClient !== "all" || selectedStatus !== "all") && "bg-primary/5 text-primary border-primary/20"
+                "h-9 px-3 gap-2 text-xs font-medium border-none",
+                (filterBilling !== "all" || filterService !== "all" || filterClient !== "all" || selectedStatus !== "all") && "bg-primary/5 text-primary"
               )}
               onClick={() => {
                 const el = document.getElementById('advanced-filters');
@@ -143,7 +144,7 @@ const Projetos = () => {
               Filtros
             </Button>
 
-            <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40 ml-2">
+            <div className="flex bg-muted/20 p-1 rounded-lg border-none ml-2">
               <Button
                 variant="ghost"
                 size="icon"
@@ -166,12 +167,12 @@ const Projetos = () => {
 
         {/* Extended Filters Bar (Ghost) */}
         <div id="advanced-filters" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
-          <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+          <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border-none">
             <Select value={selectedStatus} onValueChange={(v: any) => setSelectedStatus(v)}>
-              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
+              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="glass border-border">
+              <SelectContent className="glass border-none">
                 <SelectItem value="all">Todos Status</SelectItem>
                 {Object.entries(statusLabels).map(([val, label]) => (
                   <SelectItem key={val} value={val}>{label}</SelectItem>
@@ -180,10 +181,10 @@ const Projetos = () => {
             </Select>
 
             <Select value={filterBilling} onValueChange={(v: any) => setFilterBilling(v)}>
-              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
+              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md">
                 <SelectValue placeholder="Faturamento" />
               </SelectTrigger>
-              <SelectContent className="glass border-border">
+              <SelectContent className="glass border-none">
                 <SelectItem value="all">Faturamento</SelectItem>
                 <SelectItem value="pontual">Pontual</SelectItem>
                 <SelectItem value="recorrente">Recorrente</SelectItem>
@@ -191,10 +192,10 @@ const Projetos = () => {
             </Select>
 
             <Select value={filterService} onValueChange={setFilterService}>
-              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-border rounded-md">
+              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md">
                 <SelectValue placeholder="Serviço" />
               </SelectTrigger>
-              <SelectContent className="glass border-border">
+              <SelectContent className="glass border-none">
                 <SelectItem value="all">Serviço</SelectItem>
                 {uniqueServiceTypes.map((type: any) => (
                   <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
@@ -203,10 +204,10 @@ const Projetos = () => {
             </Select>
 
             <Select value={filterClient} onValueChange={setFilterClient}>
-              <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-border rounded-md">
+              <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-none rounded-md">
                 <SelectValue placeholder="Cliente" />
               </SelectTrigger>
-              <SelectContent className="glass border-border">
+              <SelectContent className="glass border-none">
                 <SelectItem value="all">Cliente</SelectItem>
                 {uniqueClients.map((client: any) => (
                   <SelectItem key={client} value={client}>{client}</SelectItem>
@@ -282,27 +283,13 @@ const Projetos = () => {
       )}
 
       {!isLoading && filteredProjects.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-28 flex flex-col items-center gap-6 animate-in fade-in duration-700"
-        >
-          <div className="w-24 h-24 bg-muted/30 rounded-[2rem] flex items-center justify-center mb-2 border-2 border-dashed border-border shadow-soft">
-            <Briefcase className="text-muted-foreground opacity-20 h-10 w-10" />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-2xl font-medium tracking-tight">O horizonte está limpo</h3>
-            <p className="text-muted-foreground text-sm max-w-xs mx-auto">Sua lista de diretrizes está pronta para receber o primeiro grande projeto da jornada.</p>
-          </div>
-          <NewProjectDialog
-            trigger={
-              <Button size="lg" className="btn-gradient px-8 h-12 font-bold shadow-glow-sm transition-all active:scale-95">
-                <Plus className="h-5 w-5 mr-2" />
-                INICIAR PRODUÇÃO
-              </Button>
-            }
-          />
-        </motion.div>
+        <EmptyState
+          title="O horizonte está limpo"
+          description="Sua lista de diretrizes está pronta para receber o primeiro grande projeto da jornada."
+          icon={Briefcase}
+          actionLabel="INICIAR PRODUÇÃO"
+          onAction={() => document.getElementById('new-project-trigger')?.click()}
+        />
       )}
 
       <EditProjectDialog
@@ -329,10 +316,10 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
   const coverUrl = uiConfig?.coverUrl || "";
 
   const statusColors: Record<string, string> = {
-    active: 'bg-primary/10 text-primary border border-primary/20',
-    planning: 'bg-muted text-muted-foreground border border-border',
-    review: 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
-    completed: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20',
+    active: 'primary',
+    planning: 'outline',
+    review: 'warning',
+    completed: 'success',
   };
 
   const getMetaphorContent = () => {
@@ -388,7 +375,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
   return (
     <motion.div
       whileHover={{ y: -2, boxShadow: "var(--shadow-hover)" }}
-      className="group flex flex-col bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all duration-300 relative"
+      className="group flex flex-col bg-card border-none rounded-lg overflow-hidden cursor-pointer transition-all duration-300 relative"
       onClick={onClick}
     >
       {/* Header section (Avatar + Info + Status) */}
@@ -408,11 +395,8 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className={cn(
-            "rounded-md px-2 h-5 text-[10px] font-medium border-none capitalize",
-            statusColors[project.status] || statusColors.active
-          )}>
-            {project.status || 'Active'}
+          <Badge variant={statusColors[project.status] as any || "tonal"} className="rounded-md px-2 h-5 text-[10px] font-medium border-none capitalize">
+            {statusLabels[project.status as ProjectStatus] || project.status || 'Ativo'}
           </Badge>
 
           <DropdownMenu>
@@ -421,7 +405,7 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass border-border">
+            <DropdownMenuContent align="end" className="glass border-none">
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
                 Editar
               </DropdownMenuItem>
@@ -442,11 +426,13 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
         </div>
       </div>
 
-      {/* Media/Thumbnail Area (Simulated) */}
+      {/* Media/Thumbnail Area - Blueprint Signature */}
       <div className="px-5">
-        <div className="h-44 w-full rounded-2xl bg-muted/30 border border-border/20 relative overflow-hidden group-hover:border-accent-primary/20 transition-colors">
-          <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/5 via-transparent to-accent-primary/5" />
-          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+        <div className="h-44 w-full rounded-2xl bg-muted/10 border-none relative overflow-hidden group-hover:bg-primary/5 transition-all duration-300">
+          {/* Subtle Blueprint Grid Pattern */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-50" />
 
           {/* Internal visual composition - Dynamic Metaphor or Cover Image */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -454,12 +440,14 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
               <img src={coverUrl} alt={project.name} className="w-full h-full object-cover" />
             ) : (
               <>
-                {getMetaphorContent()}
-                <div className="absolute opacity-40">
+                <div className="scale-110">
+                  {getMetaphorContent()}
+                </div>
+                <div className="absolute opacity-20 group-hover:opacity-40 transition-all duration-300">
                   <ProjectIcon className={cn(
                     "h-10 w-10 transition-colors",
                     coverColor === 'accent-primary' ? 'text-muted-foreground' :
-                      `text-${coverColor.split('-')[0]}-500 group-hover:text-${coverColor.split('-')[0]}-500`
+                      `text-${coverColor.split('-')[0]}-500`
                   )} />
                 </div>
               </>
@@ -476,11 +464,11 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
 
         <div className="flex flex-wrap gap-2">
           {project.service_type && (
-            <div className="px-3 h-5 rounded-full border border-border/40 text-[9px] font-medium text-muted-foreground/80 flex items-center">
+            <div className="px-3 h-5 rounded-full border-none bg-muted/30 text-[9px] font-medium text-muted-foreground/80 flex items-center">
               {project.service_type}
             </div>
           )}
-          <div className="px-3 h-5 rounded-full border border-border/40 text-[9px] font-medium text-muted-foreground/80 flex items-center">
+          <div className="px-3 h-5 rounded-full border-none bg-muted/30 text-[9px] font-medium text-muted-foreground/80 flex items-center">
             {project.billing_type || "Pontual"}
           </div>
         </div>
@@ -523,7 +511,7 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
   return (
     <motion.div
       whileHover={{ x: 4 }}
-      className="flex items-center justify-between p-4 bg-card border border-border rounded-lg hover:bg-muted/10 cursor-pointer group transition-all"
+      className="flex items-center justify-between p-4 bg-card border-none rounded-lg hover:bg-muted/10 cursor-pointer group transition-all"
       onClick={onClick}
     >
       <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -541,8 +529,8 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
 
       <div className="flex items-center gap-8 px-6">
         <div className="hidden lg:flex flex-col w-32">
-          <Badge variant="outline" className={cn(
-            "text-[8px] font-medium tracking-tight h-4 w-fit mb-1 border-border/60",
+          <Badge className={cn(
+            "text-[8px] font-medium tracking-tight h-4 w-fit mb-1 border-none",
             project.billing_type === 'recorrente'
               ? "bg-secondary text-foreground"
               : "bg-transparent text-muted-foreground"
@@ -557,14 +545,14 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
           </div>
         </div>
         <div className="hidden sm:flex flex-col text-right w-24">
-          <span className="text-[9px] font-medium text-muted-foreground capitalize">{project.service_type || "Outro"}</span>
-          <span className="text-[8px] text-muted-foreground  font-medium tracking-tight">Serviço</span>
+          <span className="text-[9px] font-medium text-muted-foreground/80 capitalize">{project.service_type || "Outro"}</span>
+          <span className="text-[8px] text-muted-foreground/40 font-medium tracking-tight mt-0.5">Serviço</span>
         </div>
-        <div className="hidden xl:flex flex-col text-right w-24 opacity-60">
+        <div className="hidden xl:flex flex-col text-right w-24">
           <span className="text-xs font-medium tabular-nums mask-value text-foreground/80">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
           </span>
-          <span className="text-[8px] text-muted-foreground/60 font-medium tracking-tight">
+          <span className="text-[8px] text-muted-foreground/40 font-medium tracking-tight mt-0.5">
             {project.billing_type === 'recorrente' ? 'Mensal' : 'Total'}
           </span>
         </div>
@@ -577,7 +565,7 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass border-border text-foreground">
+          <DropdownMenuContent align="end" className="glass border-none text-foreground">
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation(); // Trava a navegação
@@ -604,7 +592,7 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
         </DropdownMenu>
         <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-primary/40" />
       </div>
-    </motion.div>
+    </motion.div >
   );
 }
 

@@ -78,13 +78,13 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 gap-2 bg-muted/20 border-border hover:bg-muted/40 transition-all font-medium rounded-lg">
+                <Button variant="outline" size="sm" className="h-9 gap-2 bg-muted/20 border-none hover:bg-muted/40 transition-all font-medium rounded-lg shadow-sm">
                     <Settings2 className="h-4 w-4" />
                     Visualização
                     <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 overflow-hidden glass border-border shadow-2xl rounded-xl" align="end">
+            <PopoverContent className="w-80 p-0 overflow-hidden bg-card border-none shadow-float rounded-xl" align="end">
                 <div className="p-4 space-y-4">
                     {/* View Switcher */}
                     <ToggleGroup
@@ -182,7 +182,7 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                     </div>
                 </div>
 
-                <div className="bg-muted/30 p-4 border-t border-border space-y-4">
+                <div className="bg-muted/30 p-4 space-y-4">
                     <div>
                         <h4 className="text-[10px] font-medium  tracking-tight text-muted-foreground mb-3">Opções de Lista</h4>
                         <div className="space-y-3">
@@ -205,10 +205,10 @@ export const TaskDisplaySettings: React.FC<TaskDisplaySettingsProps> = ({ option
                                     key={prop.id}
                                     onClick={() => toggleProperty(prop.id)}
                                     className={cn(
-                                        "px-2.5 py-1 text-[10px] font-medium rounded-md border transition-all",
+                                        "px-2.5 py-1 text-[10px] font-medium rounded-md border-none transition-all shadow-sm",
                                         options.visibleProperties.includes(prop.id)
-                                            ? "bg-primary/10 border-primary/30 text-primary"
-                                            : "bg-muted/10 border-border text-muted-foreground hover:bg-muted/30"
+                                            ? "bg-primary/10 text-primary"
+                                            : "bg-muted/10 text-muted-foreground hover:bg-muted/30"
                                     )}
                                 >
                                     {prop.label}

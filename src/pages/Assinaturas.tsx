@@ -19,8 +19,10 @@ import {
     Briefcase,
     LayoutGrid,
     List as ListIcon,
-    Loader2
+    Loader2,
+    SearchX
 } from "lucide-react";
+import { EmptyState } from "@/components/shared/EmptyState";
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -479,21 +481,13 @@ export default function Assinaturas() {
             {/* Content Display */}
             <AnimatePresence mode="wait">
                 {filteredSubscriptions.length === 0 ? (
-                    <motion.div
-                        key="empty"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center py-32 flex flex-col items-center bento-card border-dashed"
-                    >
-                        <div className="w-20 h-20 bg-muted/10 rounded-3xl flex items-center justify-center mb-6 border-2 border-dashed border-border group-hover:scale-110 transition-transform">
-                            <CreditCard className="text-muted-foreground/40 h-8 w-8" />
-                        </div>
-                        <h3 className="text-lg font-semibold tracking-tight mb-2">Sem assinaturas encontradas</h3>
-                        <p className="text-sm text-muted-foreground font-normal max-w-xs mx-auto">Tente ajustar seus filtros ou adicione uma nova assinatura recorrente para começar.</p>
-                        <Button variant="ghost" className="mt-6 text-primary gap-2" onClick={() => { setSearchQuery(""); setFilterCategory("all"); }}>
-                            Limpar busca
-                        </Button>
-                    </motion.div>
+                    <EmptyState
+                        icon={SearchX}
+                        title="Sem assinaturas encontradas"
+                        description="Tente ajustar seus filtros ou adicione uma nova assinatura recorrente para começar."
+                        actionLabel="LIMPAR BUSCA"
+                        onAction={() => { setSearchQuery(""); setFilterCategory("all"); }}
+                    />
                 ) : (
                     <motion.div
                         key={viewMode}
@@ -714,19 +708,19 @@ function SubscriptionListItem({ subscription, onDelete, onEdit, onMarkAsPaid, is
 
             <div className="flex items-center gap-12 pr-6">
                 <div className="hidden lg:flex flex-col text-right w-24">
-                    <span className="text-xs font-bold tabular-nums mask-value">
+                    <span className="text-xs font-bold tabular-nums mask-value text-foreground">
                         {subscription.currency === 'USD' ? '$' : 'R$'} {subscription.price.toLocaleString('pt-BR')}
                     </span>
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">VALOR</span>
+                    <span className="text-[9px] text-muted-foreground/40 font-medium uppercase tracking-widest mt-0.5">Valor</span>
                 </div>
                 <div className="hidden sm:flex flex-col text-right w-24">
                     <span className={cn(
-                        "text-xs font-semibold",
+                        "text-xs font-semibold tabular-nums",
                         isOverdue ? "text-rose-500" : "text-foreground"
                     )}>
                         {format(parseISO(subscription.next_payment_date), "dd MMM", { locale: ptBR })}
                     </span>
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">VENCIMENTO</span>
+                    <span className="text-[9px] text-muted-foreground/40 font-medium uppercase tracking-widest mt-0.5">Vencimento</span>
                 </div>
             </div>
 

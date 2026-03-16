@@ -48,10 +48,10 @@ export const ProjectHeader = ({
     const navigate = useNavigate();
 
     const statusColors: Record<string, string> = {
-        active: "bg-primary/10 text-primary border-primary/20",
-        planning: "bg-muted text-muted-foreground border-border",
-        review: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        completed: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+        active: "bg-primary/10 text-primary",
+        planning: "bg-muted text-muted-foreground",
+        review: "bg-amber-500/10 text-amber-600",
+        completed: "bg-emerald-500/10 text-emerald-600",
     };
 
     const navOptions = [
@@ -65,7 +65,7 @@ export const ProjectHeader = ({
     const ProjectIcon = (LucideIcons as any)[project?.avatar_emoji] || Briefcase;
 
     return (
-        <header className="w-full bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-30 transition-all duration-300">
+        <header className="w-full bg-background/80 backdrop-blur-md border-none sticky top-0 z-30 transition-all duration-300">
             <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                     <Button
@@ -82,13 +82,13 @@ export const ProjectHeader = ({
                             value={project?.avatar_emoji || "Briefcase"}
                             onChange={(icon) => onIconChange?.(icon)}
                             trigger={
-                                <div className="w-8 h-8 rounded-md bg-muted/50 border border-border flex items-center justify-center text-lg shadow-sm cursor-pointer hover:bg-muted transition-all shrink-0">
+                                <div className="w-8 h-8 rounded-md bg-muted/50 border-none flex items-center justify-center text-lg shadow-sm cursor-pointer hover:bg-muted transition-all shrink-0">
                                     <ProjectIcon className="w-4 h-4 text-muted-foreground/80" />
                                 </div>
                             }
                         />
                         <h1 className="text-lg font-medium tracking-tight text-foreground truncate">{project?.name}</h1>
-                        <Badge variant="outline" className={cn("text-[9px] font-medium border-border rounded-md px-1.5 h-4 shrink-0", statusColors[project?.status] || statusColors.active)}>
+                        <Badge variant="outline" className={cn("text-[9px] font-medium border-none rounded-md px-1.5 h-4 shrink-0", statusColors[project?.status] || statusColors.active)}>
                             {project?.status === 'active' ? 'Ativo' : project?.status}
                         </Badge>
                     </div>
@@ -97,7 +97,7 @@ export const ProjectHeader = ({
                 <div className="flex items-center gap-2">
                     <TimerButton />
 
-                    <div className="hidden xl:flex items-center gap-4 px-4 border-l border-r border-border h-8 mx-2">
+                    <div className="hidden xl:flex items-center gap-4 px-4 border-none h-8 mx-2">
                         <div className="flex flex-col items-center">
                             <span className="text-[9px] font-bold text-muted-foreground leading-none">{kpis.openTasks}</span>
                             <span className="text-[8px] text-muted-foreground/60 uppercase">Tarefas</span>
@@ -114,7 +114,7 @@ export const ProjectHeader = ({
                         onClick={onToggleDock}
                         className={cn(
                             "h-9 px-3 gap-2 text-xs font-medium rounded-lg",
-                            dockOpen ? "bg-muted text-foreground border border-border/50" : "text-muted-foreground hover:text-foreground"
+                            dockOpen ? "bg-muted text-foreground border-none" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <LucideIcons.PanelRightOpen className="h-4 w-4" />
@@ -127,7 +127,7 @@ export const ProjectHeader = ({
                                 <MoreVertical className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-card border-border shadow-xl min-w-[160px]">
+                        <DropdownMenuContent align="end" className="bg-card border-none shadow-xl min-w-[160px]">
                             <DropdownMenuItem className="gap-2 text-xs font-medium" onClick={onEdit}>
                                 <Plus className="h-3.5 w-3.5" /> Editar Parâmetros
                             </DropdownMenuItem>
@@ -140,7 +140,7 @@ export const ProjectHeader = ({
             </div>
 
             {/* Integrated Navigation Tabs */}
-            <div className="w-full px-6 flex items-center h-10 border-t border-border/40">
+            <div className="w-full px-6 flex items-center h-10 border-none">
                 <div className="flex items-center h-full gap-1">
                     {navOptions.map((option) => {
                         const Icon = option.icon;

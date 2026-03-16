@@ -58,6 +58,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { FinancialReportsModal } from "@/components/dashboard/FinancialReportsModal";
+import FinancialMetric from "@/components/ui/FinancialMetric";
 import {
     Select,
     SelectContent,
@@ -483,65 +484,79 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                 </div>
             </div>
 
-            {/* KPI Row */}
+            {/* KPI Row - Refined with FinancialMetric */}
             {!projectId && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[
-                        {
-                            id: 'income',
-                            label: "Total Recebido",
-                            value: formatCurrency(financialStats.totalIncome || 0),
-                            icon: ArrowUpRight,
-                            color: "hsl(var(--primary))",
-                            bg: "bg-primary/5",
-                            badge: financialStats.totalProvisioned > 0 ? {
-                                label: "Provisionado",
-                                value: formatCurrency(financialStats.totalProvisioned)
-                            } : null
-                        },
-                        { id: 'costs', label: "Custos Totais", value: formatCurrency(financialStats.totalCosts), icon: TrendingDown, color: "hsl(var(--foreground))", bg: "bg-secondary" },
-                        { id: 'profit', label: "Lucro Líquido", value: formatCurrency(financialStats.netProfit), icon: Wallet, color: financialStats.netProfit >= 0 ? "hsl(var(--primary))" : "hsl(var(--destructive))", bg: "bg-primary/5" },
-                    ].map((kpi, i) => (
-                        <motion.div
-                            key={kpi.label}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: i * 0.1 }}
-                            whileHover={{ y: -2, boxShadow: "var(--shadow-hover)" }}
-                            onClick={() => {
-                                if (kpi.id === 'costs') {
-                                    setIsCostsModalOpen(true);
-                                } else {
-                                    setActiveStatDetail(kpi.id);
-                                    setIsDetailedStatsOpen(true);
-                                }
-                            }}
-                            className="relative p-6 rounded-lg border border-border bg-card shadow-sm group cursor-pointer overflow-hidden transition-all duration-300 flex flex-col items-start justify-center text-left h-[130px]"
-                        >
-                            <div className="flex items-center justify-between mb-4 relative z-10 w-full">
-                                <div className={cn("p-3 rounded-md border border-border transition-all duration-300 group-hover:scale-110", kpi.bg)}>
-                                    <kpi.icon className="h-5 w-5" style={{ color: kpi.color }} />
-                                </div>
-                                {kpi.badge && (
-                                    <div
-                                        className="flex flex-col items-end cursor-pointer hover:opacity-80 transition-opacity bg-primary/5 p-1.5 rounded-md border border-primary/10"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveStatDetail('provisioned');
-                                            setIsDetailedStatsOpen(true);
-                                        }}
-                                    >
-                                        <span className="text-[9px] font-medium text-muted-foreground tracking-tighter uppercase mb-0.5">{kpi.badge.label}</span>
-                                        <span className="text-[11px] font-semibold text-foreground tabular-nums">{kpi.badge.value}</span>
-                                    </div>
-                                )}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-6 rounded-lg border border-border/40 bg-card shadow-card group cursor-pointer transition-all duration-300"
+                        onClick={() => {
+                            setActiveStatDetail('income');
+                            setIsDetailedStatsOpen(true);
+                        }}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                                <ArrowUpRight className="h-5 w-5 text-primary" />
                             </div>
-                            <div className="relative z-10">
-                                <p className="text-[10px] font-medium text-muted-foreground tracking-tight mb-1">{kpi.label}</p>
-                                <h3 className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">{kpi.value}</h3>
+                            {financialStats.totalProvisioned > 0 && (
+                                <FinancialMetric
+                                    label="Provisionado"
+                                    value={financialStats.totalProvisioned}
+                                    size="sm"
+                                    className="text-right"
+                                />
+                            )}
+                        </div>
+                        <FinancialMetric
+                            label="Total Recebido"
+                            value={financialStats.totalIncome || 0}
+                            size="lg"
+                        />
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="p-6 rounded-lg border border-border/40 bg-card shadow-card group cursor-pointer transition-all duration-300"
+                        onClick={() => setIsCostsModalOpen(true)}
+                    >
+                        <div className="mb-4">
+                            <div className="p-3 w-fit rounded-lg bg-muted/40 border border-border/40">
+                                <TrendingDown className="h-5 w-5 text-muted-foreground" />
                             </div>
-                        </motion.div>
-                    ))}
+                        </div>
+                        <FinancialMetric
+                            label="Custos Totais"
+                            value={financialStats.totalCosts}
+                            size="lg"
+                        />
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="p-6 rounded-lg border border-border/40 bg-card shadow-card group cursor-pointer transition-all duration-300"
+                        onClick={() => {
+                            setActiveStatDetail('profit');
+                            setIsDetailedStatsOpen(true);
+                        }}
+                    >
+                        <div className="mb-4">
+                            <div className="p-3 w-fit rounded-lg bg-primary/5 border border-primary/10">
+                                <Wallet className="h-5 w-5 text-primary" />
+                            </div>
+                        </div>
+                        <FinancialMetric
+                            label="Lucro Líquido"
+                            value={financialStats.netProfit}
+                            trend={financialStats.netProfit >= 0 ? "up" : "down"}
+                            size="lg"
+                        />
+                    </motion.div>
                 </div>
             )}
 
@@ -584,13 +599,13 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-sm border-collapse">
                         <thead>
-                            <tr className="bg-muted/30 text-left border-b border-border h-10">
+                            <tr className="bg-muted/20 text-left border-b border-border h-12">
                                 <th className="w-10 border-r border-border/40"></th>
-                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40">Projeto / Cliente</th>
-                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">Valor Total</th>
-                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">{selectedMonth === 'all' ? 'Entrada / Pago' : 'Recebido (Mês)'}</th>
-                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase border-r border-border/40 text-right">Restante</th>
-                                <th className="p-2 px-4 font-semibold text-muted-foreground text-[10px] tracking-widest uppercase text-center">Status Pagto</th>
+                                <th className="p-2 px-4 font-medium text-muted-foreground/60 text-[11px] border-r border-border/40">Projeto / Cliente</th>
+                                <th className="p-2 px-4 font-medium text-muted-foreground/60 text-[11px] border-r border-border/40 text-right">Valor Total</th>
+                                <th className="p-2 px-4 font-medium text-muted-foreground/60 text-[11px] border-r border-border/40 text-right">{selectedMonth === 'all' ? 'Entrada / Pago' : 'Recebido (Mês)'}</th>
+                                <th className="p-2 px-4 font-medium text-muted-foreground/60 text-[11px] border-r border-border/40 text-right">Restante</th>
+                                <th className="p-2 px-4 font-medium text-muted-foreground/60 text-[11px] text-center">Status Pagto</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/40">
@@ -749,11 +764,11 @@ export default function Financeiro({ hideHeader, projectId }: FinanceiroProps) {
                                                                 {/* 3. Legacy Project Costs (Legacy Setup Parcells) */}
                                                                 {(p as any).project_costs?.filter((c: any) => c.category === "receita_parcela" && (selectedMonth === "all" || isInSelectedMonth(c.date, selectedMonth))).map((parcela: any, idx: number) => (
                                                                     <div key={`parcela-${idx}`} className="grid grid-cols-2 gap-4 text-xs py-1 border-b border-border last:border-0 bg-primary/5 hover:bg-primary/10 transition-colors rounded-sm px-1">
-                                                                        <span className="text-primary font-bold flex items-center gap-2">
+                                                                        <span className="text-primary font-medium flex items-center gap-2">
                                                                             <DollarSign className="h-3 w-3" /> {parcela.title}
                                                                             <span className="text-[9px] opacity-60 font-medium">({format(parseISO(parcela.date), "dd/MM")})</span>
                                                                         </span>
-                                                                        <span className="text-right font-bold text-primary">{formatCurrency(parcela.amount)}</span>
+                                                                        <span className="text-right font-medium text-primary">{formatCurrency(parcela.amount)}</span>
                                                                     </div>
                                                                 ))}
 

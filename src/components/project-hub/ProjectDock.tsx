@@ -132,31 +132,31 @@ export const ProjectDock = ({
                         exit={mode === 'overlay' ? { x: '100%' } : { opacity: 0 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
                         className={cn(
-                            "bg-card flex flex-col h-full transition-all duration-300 overflow-hidden",
+                            "bg-card flex flex-col h-full transition-all duration-120 overflow-hidden",
                             mode === 'overlay'
-                                ? "fixed right-0 top-0 bottom-0 w-80 sm:w-[500px] shadow-2xl z-50 border-l border-border"
+                                ? "fixed right-0 top-0 bottom-0 w-80 sm:w-[500px] shadow-card z-50 border-none"
                                 : "relative flex h-full bg-card"
                         )}
                         style={style}
                     >
                         {/* Header Section simplified without SVG */}
-                        <div className="relative h-24 bg-background border-b border-border flex flex-col justify-end px-6 pb-4 shrink-0 transition-all duration-300">
-                            <div className="relative z-10 flex flex-col gap-3">
+                        <div className="relative h-20 bg-background border-none flex flex-col justify-end px-6 pb-3 shrink-0 transition-all duration-120">
+                            <div className="relative z-10 flex flex-col gap-2.5">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold tracking-widest text-muted-foreground/60 uppercase">CONTEXTO</span>
-                                        <div className="h-1.5 w-1.5 rounded-full bg-border" />
-                                        <span className="text-[10px] font-medium text-muted-foreground uppercase">{activeTab}</span>
+                                        <span className="text-[9px] font-medium tracking-widest text-muted-foreground/40 uppercase">Contexto</span>
+                                        <div className="h-1 w-1 rounded-full bg-muted/20" />
+                                        <span className="text-[10px] font-medium text-primary uppercase">{activeTab}</span>
                                     </div>
                                     <button
                                         onClick={onClose}
-                                        className="w-7 h-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors group"
+                                        className="w-7 h-7 rounded-md hover:bg-muted/40 flex items-center justify-center text-muted-foreground transition-all duration-120 group"
                                         title="Recolher (Panel)"
                                     >
                                         <LucideIcons.PanelRightClose className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
                                     </button>
                                 </div>
-                                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
+                                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
                                     {tabs.map(tab => {
                                         const Icon = tab.icon;
                                         const isActive = activeTab === tab.id;
@@ -165,17 +165,17 @@ export const ProjectDock = ({
                                                 key={tab.id}
                                                 onClick={() => setActiveTab(tab.id as TabType)}
                                                 className={cn(
-                                                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all whitespace-nowrap",
+                                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-120 whitespace-nowrap",
                                                     isActive
-                                                        ? "bg-muted text-foreground font-semibold border border-border/50 shadow-sm"
+                                                        ? "bg-primary/10 text-primary border-none"
                                                         : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
                                                 )}
                                             >
-                                                <Icon className={cn("w-3 h-3", isActive ? "text-foreground" : "text-muted-foreground/60")} />
+                                                <Icon className={cn("w-3 h-3", isActive ? "text-primary" : "text-muted-foreground/60")} />
                                                 {tab.label}
                                                 {tab.count > 0 && (
                                                     <span className={cn(
-                                                        "ml-0.5 px-1 rounded-sm text-[8px] font-bold",
+                                                        "ml-0.5 px-1 rounded-sm text-[8px] font-semibold",
                                                         isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
                                                     )}>
                                                         {tab.count}

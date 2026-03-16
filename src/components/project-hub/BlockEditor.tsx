@@ -486,7 +486,8 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
           color: currentColor;
           width: 15px;
           height: 15px;
-          border: 2px solid hsl(var(--muted-foreground) / 0.7);
+          border: none;
+          background-color: hsl(var(--muted) / 0.5);
           border-radius: 4px;
           display: grid;
           place-content: center;
@@ -514,10 +515,10 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
         .ProseMirror blockquote { border-left: 3px solid hsl(var(--primary)); padding-left: 1rem; font-style: italic; opacity: 0.8; margin: 0.75rem 0; }
 
         /* ── Horizontal Rule ── */
-        .ProseMirror hr { border: none; border-top: 2px solid hsl(var(--border)); margin: 1.5rem 0; }
+        .ProseMirror hr { border: none; border-top: 1px solid hsl(var(--muted) / 0.2); margin: 1.5rem 0; }
 
         /* ── Code ── */
-        .ProseMirror pre { background: hsl(var(--muted) / 0.3); border: 1px solid hsl(var(--border)); border-radius: 0.5rem; padding: 0.75rem 1rem; font-family: monospace; font-size: 0.85em; margin: 0.75rem 0; overflow-x: auto; }
+        .ProseMirror pre { background: hsl(var(--muted) / 0.3); border: none; border-radius: 0.5rem; padding: 0.75rem 1rem; font-family: monospace; font-size: 0.85em; margin: 0.75rem 0; overflow-x: auto; }
         .ProseMirror code { background: hsl(var(--muted) / 0.4); padding: 0.15em 0.4em; border-radius: 0.25rem; font-size: 0.88em; font-family: monospace; }
 
         /* ── Columns (Extension) ── */
@@ -530,7 +531,7 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
           gap: 0 !important;
           align-items: stretch;
           width: 100%;
-          border: 1px solid hsl(var(--border) / 0.4);
+          border: none;
           border-radius: 1rem;
           overflow: hidden;
           background: hsl(var(--secondary) / 0.05);
@@ -606,7 +607,7 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
           width: 12px;
           height: 24px;
           background: hsl(var(--card));
-          border: 1px solid hsl(var(--border) / 0.6);
+          border: none;
           border-radius: 4px;
           display: flex;
           align-items: center;
@@ -653,7 +654,7 @@ export const BlockEditor = forwardRef<BlockEditorRef, BlockEditorProps>(
           bottom: 0;
           width: 30px;
           background: hsl(var(--primary) / 0.03);
-          border-left: 1px dashed hsl(var(--border));
+          border-left: none;
           display: flex;
           align-items: center;
           justify-content: center;

@@ -584,7 +584,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
             </DialogTrigger>
             <DialogContent
                 className={cn(
-                    "border-border p-0 overflow-hidden transition-all duration-300 flex flex-col",
+                    "border-none p-0 overflow-hidden transition-all duration-300 flex flex-col",
                     isMaximized ? "max-w-[100vw] h-[100vh] rounded-none m-0" : "max-w-4xl h-[90vh] max-h-[850px]"
                 )}
                 onClick={(e) => e.stopPropagation()}
@@ -605,8 +605,8 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                     </div>
 
                     {/* ── Sidebar Nav ─────────────────────────────── */}
-                    <div className="w-44 shrink-0 border-r border-border bg-muted/20 flex flex-col p-3 gap-1">
-                        <div className="px-2 pb-3 pt-1 border-b border-border mb-2">
+                    <div className="w-44 shrink-0 border-none bg-muted/20 flex flex-col p-3 gap-1">
+                        <div className="px-2 pb-3 pt-1 border-none mb-2">
                             <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">
                                 Novo Projeto
                             </p>
@@ -622,21 +622,21 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                 className={cn(
                                     "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-all text-left",
                                     step === tab.id
-                                        ? "bg-foreground/[0.03] text-foreground border border-border"
+                                        ? "bg-foreground/[0.03] text-foreground border-none"
                                         : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
                                 )}
                             >
                                 <tab.icon className="h-3.5 w-3.5 shrink-0" />
                                 {tab.label}
                                 {tab.id === 4 && tasks.length > 0 && (
-                                    <span className="ml-auto text-[9px] font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full border border-border">
+                                    <span className="ml-auto text-[9px] font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full border-none">
                                         {tasks.length}
                                     </span>
                                 )}
                             </button>
                         ))}
 
-                        <div className="mt-auto pt-3 border-t border-border space-y-2">
+                        <div className="mt-auto pt-3 border-none space-y-2">
                             {(isQuickMode && step === 1) || step === 4 ? (
                                 <Button
                                     className="w-full h-9 text-xs font-medium bg-primary hover:bg-primary/90"
@@ -709,7 +709,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                 </div>
 
                                 {step === 1 && (
-                                    <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/10 mb-4 transition-colors hover:border-border/60">
+                                    <div className="flex items-center justify-between p-3 rounded-lg border-none bg-muted/10 mb-4 transition-colors hover:border-border/60">
                                         <div className="space-y-0.5">
                                             <Label className="text-xs font-medium text-foreground flex items-center gap-2">
                                                 <Rocket className="h-3 w-3 text-primary" /> Modo de Projeto Rápido
@@ -735,7 +735,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                             <Input
                                                 id="project-name"
                                                 placeholder="Ex: Identidade Visual Nimbus"
-                                                className="glass-light border-border h-11 text-lg font-medium focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
+                                                className="glass-light border-none h-11 text-lg font-medium focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all"
                                                 value={newName}
                                                 onChange={(e) => setNewName(e.target.value)}
                                                 autoFocus
@@ -753,7 +753,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                 <Label className="text-xs text-muted-foreground">Capa do Projeto</Label>
                                                 <div className="flex items-center gap-2">
                                                     <Select value={coverMetaphor} onValueChange={setCoverMetaphor}>
-                                                        <SelectTrigger className="glass-light border-border h-9 text-[10px] font-bold min-w-[100px]">
+                                                        <SelectTrigger className="glass-light border-none h-9 text-[10px] font-bold min-w-[100px]">
                                                             <SelectValue placeholder="Metáfora" />
                                                         </SelectTrigger>
                                                         <SelectContent className="glass border-border">
@@ -764,7 +764,7 @@ export function NewProjectDialog({ open: externalOpen, onOpenChange: setExternal
                                                             <SelectItem value="blueprint">📐 Estrutura</SelectItem>
                                                         </SelectContent>
                                                     </Select>
-                                                    <div className="flex items-center gap-1.5 p-1 px-2 rounded-md border border-border bg-muted/20">
+                                                    <div className="flex items-center gap-1.5 p-1 px-2 rounded-md border-none bg-muted/20">
                                                         {(['accent-primary', 'slate-500', 'emerald-500', 'amber-500'] as const).map((c) => (
                                                             <button
                                                                 key={c}

@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
     FileText,
     Search,
@@ -22,6 +24,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useDocuments, Document } from "@/hooks/use-documents";
 import { NewDocumentDialog } from "@/components/documents/NewDocumentDialog";
+import { useProjectPages } from "@/hooks/use-project-pages";
+import { useNavigate } from "react-router-dom";
+import { EmptyState } from "@/components/shared/EmptyState";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -49,7 +54,11 @@ const Documentos = ({ hideHeader, projectId }: DocumentosProps) => {
     const [editingDoc, setEditingDoc] = useState<{ id: string, title: string } | null>(null);
     const [newTitle, setNewTitle] = useState("");
 
-    const { documents, projects, isLoading, upload, isUploading, delete: deleteDoc, rename } = useDocuments();
+    const { documents, projects, isLoading: docsLoading, upload, isUploading, delete: deleteDoc, rename } = useDocuments();
+    const { pages, isLoading: pagesLoading } = useProjectPages(projectId || "");
+    const navigate = useNavigate();
+
+    const isLoading = docsLoading || (projectId ? pagesLoading : false);
 
     const filtered = useMemo(() => {
         let baseDocs = documents;
@@ -57,27 +66,47 @@ const Documentos = ({ hideHeader, projectId }: DocumentosProps) => {
             baseDocs = documents.filter((doc: Document) => doc.projectId === projectId);
         }
 
-        return baseDocs.filter((doc: Document) => {
+        // Add pages to the list if in project context or globally
+        const unifiedDocs = [
+            ...baseDocs.map(doc => ({ ...doc, kind: 'file' })),
+            ...(pages || []).map((page: any) => ({
+                id: page.id,
+                title: page.title,
+                category: "Página",
+                lastModified: formatDistanceToNow(parseISO(page.updated_at || page.created_at), { addSuffix: true, locale: ptBR }),
+                size: "--",
+                type: "DOC",
+                url: `/projetos/${projectId}?page=${page.id}`,
+                projectName: projects.find((p: any) => p.id === projectId)?.name || "Geral",
+                projectId: projectId,
+                kind: 'page'
+            }))
+        ];
+
+        return unifiedDocs.filter((doc: any) => {
             const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 doc.projectName.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesCategory = activeCategory === "Todos" || doc.category === activeCategory.replace(/s$/, '');
             return matchesSearch && matchesCategory;
         });
-    }, [documents, searchQuery, activeCategory, projectId]);
+    }, [documents, pages, searchQuery, activeCategory, projectId, projects]);
 
     const categories = useMemo(() => {
         const getCount = (cat: string) => documents.filter(d => d.category === cat).length;
+        const pageCount = pages?.length || 0;
         return [
-            { name: "Todos", icon: FileText, count: documents.length },
+            { name: "Todos", icon: FileText, count: documents.length + pageCount },
             { name: "Contratos", icon: FileSignature, count: getCount("Contrato") },
             { name: "Briefings", icon: ClipboardCheck, count: getCount("Briefing") },
+            { name: "Páginas", icon: FileText, count: pageCount },
             { name: "Recibos", icon: Receipt, count: getCount("Recibo") },
-            { name: "NFe", icon: Receipt, count: getCount("NFe") },
         ];
-    }, [documents]);
+    }, [documents, pages]);
 
-    const handleView = (doc: Document) => {
-        if (doc.url) {
+    const handleView = (doc: any) => {
+        if (doc.kind === 'page') {
+            navigate(doc.url);
+        } else if (doc.url) {
             window.open(doc.url, '_blank', 'noreferrer');
         }
     };
@@ -122,7 +151,7 @@ const Documentos = ({ hideHeader, projectId }: DocumentosProps) => {
             <header className="flex items-center justify-between gap-4 mb-8 h-12">
                 <div className="flex items-center gap-4">
                     {!hideHeader && (
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        <h1 className="text-2xl font-medium tracking-tight text-foreground">
                             {projectId ? "Arquivos" : "Documentos"}
                         </h1>
                     )}
@@ -180,16 +209,16 @@ const Documentos = ({ hideHeader, projectId }: DocumentosProps) => {
                                 key={cat.name}
                                 onClick={() => setActiveCategory(cat.name)}
                                 className={cn(
-                                    "flex items-center gap-2 px-3 py-2 rounded-md border transition-all text-left",
+                                    "flex items-center gap-2 px-3 py-2 rounded-md border transition-all duration-120 text-left",
                                     activeCategory === cat.name
-                                        ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
-                                        : "bg-card border-border/60 text-muted-foreground hover:border-border hover:bg-muted/50"
+                                        ? "bg-primary/10 border-primary/20 text-primary shadow-sm"
+                                        : "bg-card border-border/40 text-muted-foreground hover:border-border/60 hover:bg-muted/50"
                                 )}
                             >
-                                <cat.icon className={cn("h-3.5 w-3.5", activeCategory === cat.name ? "text-primary" : "text-muted-foreground/60")} />
+                                <cat.icon className={cn("h-3.5 w-3.5", activeCategory === cat.name ? "text-primary" : "text-muted-foreground/40")} />
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-semibold leading-tight">{cat.name}</span>
-                                    <span className="text-[8px] opacity-60 tabular-nums">{cat.count} arq.</span>
+                                    <span className="text-[10px] font-medium leading-tight">{cat.name}</span>
+                                    <span className="text-[8px] opacity-60 tabular-nums font-medium">{cat.count} arq.</span>
                                 </div>
                             </button>
                         ))}
@@ -208,20 +237,23 @@ const Documentos = ({ hideHeader, projectId }: DocumentosProps) => {
                 ) : (
                     <div className="p-0">
                         {filtered.length === 0 ? (
-                            <div className="py-24 text-center">
-                                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <p className="text-sm text-muted-foreground font-medium">Nenhum documento encontrado.</p>
-                            </div>
+                            <EmptyState
+                                title="Nenhum documento"
+                                description="Sua biblioteca está vazia. Comece a organizar seus briefings e entregáveis agora."
+                                icon={FileText}
+                                actionLabel="Adicionar Arquivo"
+                                onAction={() => document.getElementById('upload-document-button')?.click()}
+                            />
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="text-[10px] font-medium text-muted-foreground border-b border-border  tracking-tight">
-                                            <th className="px-6 py-5">Arquivo / Projeto</th>
-                                            <th className="px-6 py-5">Categoria</th>
-                                            <th className="px-6 py-5">Modificado</th>
-                                            <th className="px-6 py-5">Tipo</th>
-                                            <th className="px-6 py-5 text-right">Ações</th>
+                                        <tr className="text-[10px] font-medium text-muted-foreground/70 border-b border-border tracking-widest uppercase bg-muted/5">
+                                            <th className="px-6 py-4">Arquivo / Projeto</th>
+                                            <th className="px-6 py-4">Categoria</th>
+                                            <th className="px-6 py-4">Modificado</th>
+                                            <th className="px-6 py-4">Tipo</th>
+                                            <th className="px-6 py-4 text-right">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border">
@@ -247,7 +279,7 @@ const Documentos = ({ hideHeader, projectId }: DocumentosProps) => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-border text-[9px] font-medium uppercase tracking-widest px-2 h-5">
+                                                    <Badge variant={doc.kind === 'page' ? 'outline' : 'tonal'} className="text-[8px] uppercase tracking-widest px-2 h-5 font-semibold">
                                                         {doc.category}
                                                     </Badge>
                                                 </td>
@@ -257,10 +289,10 @@ const Documentos = ({ hideHeader, projectId }: DocumentosProps) => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className="text-[9px] font-bold text-muted-foreground/60 bg-muted/30 px-2 py-0.5 rounded-full uppercase tracking-tighter">{doc.type}</span>
+                                                    <span className="text-[9px] font-semibold text-muted-foreground/60 bg-muted/30 px-2 py-0.5 rounded-full uppercase tracking-tighter">{doc.type}</span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"

@@ -27,7 +27,7 @@ export const PageNav = ({
     editorStatus
 }: PageNavProps) => {
     return (
-        <div className="w-full border-b border-border bg-card/20 backdrop-blur-sm px-2 sm:px-4">
+        <div className="w-full border-none bg-card/20 backdrop-blur-sm px-2 sm:px-4">
             <div className="w-full py-0">
                 {/* Single Row: Breadcrumb & Editor Actions */}
                 <div className="flex items-center justify-between py-2">
@@ -97,7 +97,7 @@ export const PageNav = ({
                                 </button>
                             </div>
 
-                            <div className="w-px h-4 bg-border/60" />
+                            <div className="w-px h-4 bg-muted/20" />
 
                             <div className="flex items-center gap-1">
                                 {editorStatus?.hasColumns ? (

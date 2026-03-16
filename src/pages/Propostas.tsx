@@ -21,8 +21,10 @@ import {
     Loader2,
     LayoutGrid,
     List as ListIcon,
-    Pencil
+    Pencil,
+    ArrowRight
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -104,41 +106,7 @@ const Propostas = () => {
     };
 
     return (
-        <div className="page-container relative overflow-hidden h-screen flex flex-col">
-            <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.04]"
-                style={{
-                    backgroundImage: `linear-gradient(to right, hsl(var(--muted-foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--muted-foreground)) 1px, transparent 1px)`,
-                    backgroundSize: '40px 40px'
-                }}
-            />
-
-            <header className="flex items-center justify-between gap-4 mb-8 h-12 relative z-10 shrink-0">
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">Propostas Comerciais</h1>
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-0.5">Vendas e Orçamentos</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 gap-2 text-xs font-medium rounded-md border-border bg-secondary hover:bg-secondary/80"
-                    >
-                        Exportar Relatório
-                    </Button>
-                    <Button
-                        size="sm"
-                        className="h-9 px-4 rounded-md bg-primary text-primary-foreground shadow-sm gap-2"
-                        onClick={() => {
-                            setEditingProposal(null);
-                            setIsDialogOpen(true);
-                        }}
-                    >
-                        <Plus className="h-4 w-4" /> Nova Proposta
-                    </Button>
-                </div>
-            </header>
-
+        <>
             <NewProposalDialog
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
@@ -159,7 +127,7 @@ const Propostas = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40">
+                        <div className="flex bg-muted/20 p-1 rounded-lg">
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -187,7 +155,7 @@ const Propostas = () => {
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : filteredProposals.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 border border-dashed border-border/40 rounded-xl bg-muted/5">
+                    <div className="flex flex-col items-center justify-center h-64 border-none rounded-xl bg-muted/5">
                         <FileText className="h-12 w-12 text-muted-foreground/20 mb-4" />
                         <p className="text-sm text-muted-foreground italic">Nenhuma proposta encontrada</p>
                         <Button
@@ -215,10 +183,10 @@ const Propostas = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm mb-8">
+                    <div className="bg-card rounded-xl overflow-hidden shadow-sm mb-8">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="border-b border-border bg-muted/5">
+                                <tr className="bg-muted/5">
                                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Proposta</th>
                                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cliente</th>
                                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Valor</th>
@@ -230,7 +198,7 @@ const Propostas = () => {
                                 {filteredProposals.map((proposal) => {
                                     const status = STATUS_CONFIG[proposal.status];
                                     return (
-                                        <tr key={proposal.id} className="border-b border-border/50 hover:bg-muted/5 transition-colors group">
+                                        <tr key={proposal.id} className="hover:bg-muted/5 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
                                                     <span className="font-semibold text-sm text-foreground">{proposal.title}</span>
@@ -265,7 +233,7 @@ const Propostas = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </>
     );
 };
 
@@ -313,7 +281,7 @@ function ProposalCard({ proposal, index, onEdit, onDelete, onUpdateStatus }: any
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="group bg-card border border-border hover:border-primary/40 rounded-xl p-5 shadow-sm transition-all cursor-pointer flex flex-col hover:shadow-md h-[210px]"
+            className="group bg-card rounded-xl p-5 shadow-sm transition-all cursor-pointer flex flex-col hover:shadow-md h-[210px]"
             onClick={onEdit}
         >
             <div className="flex items-start justify-between mb-4">
@@ -355,20 +323,32 @@ function ProposalCard({ proposal, index, onEdit, onDelete, onUpdateStatus }: any
                 )}
             </div>
 
-            <div className="pt-4 border-t border-border/50 flex items-center justify-between mt-auto">
+            <div className="pt-4 border-none flex items-center justify-between mt-auto">
                 <div className="flex flex-col">
                     <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Valor do Projeto</span>
                     <span className="text-lg font-semibold tracking-tight tabular-nums text-foreground">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proposal.value)}
                     </span>
                 </div>
-                <div className="h-9 w-9 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    <ArrowUpRight className="h-5 w-5" />
-                </div>
+                {proposal.status === 'aceita' ? (
+                    <Button
+                        size="sm"
+                        className="h-9 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white gap-2 font-semibold shadow-sm animate-in fade-in zoom-in duration-300"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = `/projetos?new=true&client=${proposal.client_id || proposal.client_name}&value=${proposal.value}`;
+                        }}
+                    >
+                        Iniciar Projeto <ArrowRight className="h-4 w-4" />
+                    </Button>
+                ) : (
+                    <div className="h-9 w-9 rounded-lg bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                        <ArrowUpRight className="h-5 w-5" />
+                    </div>
+                )}
             </div>
         </motion.div>
     );
 }
 
 export default Propostas;
-

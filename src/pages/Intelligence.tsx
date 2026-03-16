@@ -39,7 +39,7 @@ const Intelligence = () => {
     return (
         <div className="page-container relative overflow-hidden h-screen flex flex-col">
             {/* Blueprint Texture */}
-            <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.04]"
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.015] dark:opacity-[0.02]"
                 style={{
                     backgroundImage: `linear-gradient(to right, hsl(var(--muted-foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--muted-foreground)) 1px, transparent 1px)`,
                     backgroundSize: '40px 40px'

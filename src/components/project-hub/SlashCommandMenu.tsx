@@ -372,7 +372,7 @@ export const SlashCommandMenu = ({
     return (
         <div
             ref={menuRef}
-            className="fixed z-[99999] w-[260px] max-h-[320px] overflow-y-auto bg-card border border-border rounded-xl shadow-2xl shadow-black/20 p-1.5 animate-in fade-in slide-in-from-top-2 duration-150"
+            className="fixed z-[99999] w-[260px] max-h-[320px] overflow-y-auto bg-card border-none rounded-xl shadow-2xl shadow-black/20 p-1.5 animate-in fade-in slide-in-from-top-2 duration-150"
             style={{
                 top: position.top,
                 left: position.left,
@@ -408,10 +408,10 @@ export const SlashCommandMenu = ({
                             >
                                 <div
                                     className={cn(
-                                        'h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors',
+                                        'h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border-none transition-colors',
                                         currentIndex === selectedIndex
-                                            ? 'bg-primary/15 border-primary/30 text-primary'
-                                            : 'bg-muted border-border text-muted-foreground'
+                                            ? 'bg-primary/15 text-primary'
+                                            : 'bg-muted text-muted-foreground'
                                     )}
                                 >
                                     {cmd.icon}

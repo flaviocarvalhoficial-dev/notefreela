@@ -149,7 +149,7 @@ export function Header() {
     const userName = profile?.full_name || user?.email?.split("@")[0] || "Usuário";
 
     return (
-        <header className="sticky top-0 w-full h-16 border-b border-border glass-light z-[40]">
+        <header className="sticky top-0 w-full h-16 border-none bg-background/60 backdrop-blur-xl z-[40]">
             <div className="w-full h-full flex items-center justify-between px-8 md:px-12 lg:px-20 transition-all duration-300">
 
                 {/* Left Area: Welcome or Breadcrumbs */}
@@ -158,7 +158,7 @@ export function Header() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-10 gap-2.5 hover:bg-muted/20 transition-all pl-0 pr-3 rounded-xl group flex items-center">
-                                    <Avatar className="h-8 w-8 border border-border shadow-sm shrink-0">
+                                    <Avatar className="h-8 w-8 border-none shadow-sm shrink-0">
                                         <AvatarImage src={profile?.avatar_url} className="object-cover" />
                                         <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-[10px] font-semibold text-white">
                                             {userInitial}
@@ -171,7 +171,7 @@ export function Header() {
                                     </div>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="glass border-border w-56 z-[60] mt-1">
+                            <DropdownMenuContent align="start" className="glass border-none w-56 z-[60] mt-1">
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col space-y-1">
                                         <p className="text-sm font-medium leading-none">{profile?.full_name || userName}</p>
@@ -226,10 +226,10 @@ export function Header() {
                         <Input
                             placeholder="Pesquisar... (⌘K)"
                             readOnly
-                            className="w-full pl-10 h-10 glass-light border-border focus:border-primary/50 transition-all rounded-full bg-background/20 cursor-pointer pointer-events-none"
+                            className="w-full pl-10 h-10 glass-light border-none focus:ring-1 focus:ring-primary/20 transition-all rounded-full bg-background/20 cursor-pointer pointer-events-none"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1">
-                            <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 flex">
+                            <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border-none bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 flex">
                                 <span className="text-xs">⌘</span>K
                             </kbd>
                         </div>

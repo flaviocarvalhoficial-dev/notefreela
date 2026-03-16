@@ -71,11 +71,8 @@ const operacaoItems = [
 ];
 
 const comercialItems = [
-  { title: "Leads", url: "/leads", icon: Zap },
-  { title: "Propostas", url: "/propostas", icon: FileCheck },
-  { title: "Clientes", url: "/clientes", icon: Users },
+  { title: "Comercial", url: "/comercial", icon: TrendingUp },
   { title: "Formulários", url: "/formularios", icon: LayoutGrid },
-  { title: "Growth", url: "/growth", icon: Rocket },
 ];
 
 const gestaoItems = [
@@ -201,23 +198,23 @@ export function AppSidebar() {
   return (
     <Sidebar
       className={cn(
-        "transition-all duration-300 bg-sidebar/50 backdrop-blur-sm border-r border-sidebar-border shadow-none overflow-hidden",
+        "transition-all duration-300 bg-sidebar/50 backdrop-blur-sm border-none shadow-none overflow-hidden",
         open ? "w-64" : "w-16"
       )}
       collapsible="icon"
     >
-      {/* Header Area - Fixed Logo */}
-      <div className="h-14 flex items-center justify-center border-b border-sidebar-border px-4 shrink-0 transition-all duration-300">
+      {/* Header Area - Ultra Minimal Logo */}
+      <div className="h-16 flex items-center justify-center px-4 shrink-0 transition-all duration-300">
         {open ? (
           <div className="w-full flex items-center justify-between">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <img src="/nimbus-logo.webp" alt="Nimbus" className="w-5 h-5 shrink-0" />
+            <div className="flex items-center gap-3 overflow-hidden">
+              <img src="/nimbus-logo.webp" alt="Nimbus" className="w-5 h-5 shrink-0 opacity-80" />
               <span className="font-semibold text-foreground tracking-tight text-[13px] ">Nimbus</span>
             </div>
-            <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-all h-6 w-6" />
+            <SidebarTrigger className="text-muted-foreground/40 hover:text-foreground transition-all h-5 w-5" />
           </div>
         ) : (
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-all h-8 w-8 rounded-md" />
+          <SidebarTrigger className="text-muted-foreground/40 hover:text-foreground transition-all h-8 w-8 rounded-md" />
         )}
       </div>
 
@@ -296,13 +293,13 @@ export function AppSidebar() {
                           <NavLink
                             to={`/projetos/${activeProjectId}?page=${page.id}`}
                             className={cn(
-                              "flex items-center text-muted-foreground transition-colors w-full h-full",
+                              "flex items-center text-muted-foreground/60 transition-colors w-full h-full",
                               open ? "gap-2.5 px-3" : "justify-center"
                             )}
-                            activeClassName="text-foreground font-semibold"
+                            activeClassName="text-primary font-semibold bg-primary/5 shadow-none"
                           >
-                            <FileText className="h-[15px] w-[15px] shrink-0 opacity-40" />
-                            {open && <span className="text-[12px] font-normal tracking-tight truncate">{page.title}</span>}
+                            <FileText className="h-[14px] w-[14px] shrink-0 opacity-100" />
+                            {open && <span className="text-[12px] font-medium tracking-tight truncate">{page.title}</span>}
                           </NavLink>
                         </SidebarMenuButton>
 
@@ -387,8 +384,8 @@ export function AppSidebar() {
                     {/* Dashboard */}
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild tooltip={!open ? "Dashboard" : undefined} className="h-9 rounded-md transition-all">
-                        <NavLink to="/" end className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
-                          <Home className="h-[17px] w-[17px] shrink-0" />
+                        <NavLink to="/" end className={cn("flex items-center text-muted-foreground/60 transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-primary font-semibold bg-primary/5">
+                          <Home className="h-[16px] w-[16px] shrink-0" />
                           {open && <span className="text-[12.5px] font-medium tracking-tight">Dashboard</span>}
                         </NavLink>
                       </SidebarMenuButton>
@@ -504,8 +501,8 @@ export function AppSidebar() {
                     {gestaoItems.map((item) => (
                       <SidebarMenuItem key={item.url}>
                         <SidebarMenuButton asChild tooltip={!open ? item.title : undefined} className="h-9 rounded-md transition-all">
-                          <NavLink to={item.url!} className={cn("flex items-center text-muted-foreground transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-sidebar-accent/50 shadow-sm">
-                            <item.icon className="h-[17px] w-[17px] shrink-0" />
+                          <NavLink to={item.url!} className={cn("flex items-center text-muted-foreground/60 transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-primary font-semibold bg-primary/5">
+                            <item.icon className="h-[16px] w-[16px] shrink-0" />
                             {open && <span className="text-[12.5px] font-medium tracking-tight">{item.title}</span>}
                           </NavLink>
                         </SidebarMenuButton>

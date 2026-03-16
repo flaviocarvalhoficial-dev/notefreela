@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate, useNavigate } from
 import { motion, AnimatePresence } from "framer-motion";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
+import { CommercialLayout } from "@/components/layout/CommercialLayout";
 import { TimerProvider } from "@/contexts/TimerContext";
 import Index from "./pages/Index";
 import Projetos from "./pages/Projetos";
@@ -63,8 +64,6 @@ const AppLayout = () => {
       <div className={`flex w-full ${isFullHeightPage ? "h-screen overflow-hidden" : "min-h-screen"}`}>
         <AppSidebar />
 
-
-
         <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
           <Header />
           <main className={`flex-1 overflow-x-hidden ${isFullHeightPage ? "h-full overflow-hidden no-scrollbar" : "overflow-y-auto custom-scrollbar"}`}>
@@ -75,17 +74,29 @@ const AppLayout = () => {
                 <Route path="/projetos/:id" element={<ProjetoDetalhes />} />
                 <Route path="/tarefas" element={<Tarefas />} />
                 <Route path="/agenda" element={<Agenda />} />
-                <Route path="/clientes" element={<Clientes />} />
+                <Route path="/atividades" element={<Atividades />} />
                 <Route path="/caixa-entrada" element={<CaixaEntrada />} />
                 <Route path="/documentos" element={<Documentos />} />
                 <Route path="/financeiro" element={<Financeiro />} />
-                <Route path="/atividades" element={<Atividades />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/assinaturas" element={<Assinaturas />} />
                 <Route path="/empresa" element={<Empresa />} />
-                <Route path="/leads" element={<Leads />} />
-                <Route path="/growth" element={<Growth />} />
-                <Route path="/propostas" element={<Propostas />} />
+
+                {/* Unified Commercial Routes */}
+                <Route path="/comercial" element={<CommercialLayout />}>
+                  <Route index element={<Navigate to="/comercial/leads" replace />} />
+                  <Route path="leads" element={<Leads />} />
+                  <Route path="growth" element={<Growth />} />
+                  <Route path="propostas" element={<Propostas />} />
+                  <Route path="clientes" element={<Clientes />} />
+                </Route>
+
+                {/* Legacy redirects */}
+                <Route path="/leads" element={<Navigate to="/comercial/leads" replace />} />
+                <Route path="/growth" element={<Navigate to="/comercial/growth" replace />} />
+                <Route path="/propostas" element={<Navigate to="/comercial/propostas" replace />} />
+                <Route path="/clientes" element={<Navigate to="/comercial/clientes" replace />} />
+
                 <Route path="/formularios" element={<Formularios />} />
                 <Route path="/inteligencia" element={<Intelligence />} />
                 <Route path="/nimbus-ai" element={<NimbusAI />} />
@@ -106,10 +117,10 @@ const AppLayout = () => {
             <Button
               onClick={() => setShowAI(true)}
               variant="outline"
-              className="h-20 w-8 p-0 rounded-l-xl rounded-r-none border-r-0 bg-sidebar-accent/80 backdrop-blur-md hover:bg-primary/10 group flex flex-col items-center justify-center gap-2 border-primary/20"
+              className="h-20 w-8 p-0 rounded-l-xl rounded-r-none border-none bg-sidebar-accent/80 backdrop-blur-md hover:bg-primary/10 group flex flex-col items-center justify-center gap-2"
             >
               <ChevronLeft className="h-4 w-4 text-primary group-hover:-translate-x-0.5 transition-transform" />
-              <div className="w-5 h-5 rounded-full overflow-hidden bg-white/50 border border-primary/20">
+              <div className="w-5 h-5 rounded-full overflow-hidden bg-white/50 border-none">
                 <img src="/ai-partner.png" alt="AI" className="w-full h-full object-cover" />
               </div>
               <span className="[writing-mode:vertical-lr] text-[9px] font-bold uppercase tracking-tighter text-primary/60 group-hover:text-primary">IA</span>
@@ -159,9 +170,6 @@ const App = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-
-
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -207,6 +215,5 @@ const App = () => {
     </QueryClientProvider>
   );
 };
-
 
 export default App;
