@@ -1031,7 +1031,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                                                                                             </div>
                                                                                                         ))}
                                                                                                         {colTasks.length === 0 && !quickAddColumn && (
-                                                                                                            <div className="glass-light rounded-2xl p-6 border-none shadow-sm text-center flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">>
+                                                                                                            <div className="glass-light rounded-2xl p-6 border-none shadow-sm text-center flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
                                                                                                                 <p className="text-[10px] text-muted-foreground">Vazio</p>
                                                                                                             </div>
                                                                                                         )}
@@ -1137,7 +1137,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                 })}
 
                                 {/* Botões Globais de Cenário - No final da lista */}
-                                <div className="flex gap-4 pt-8 mt-4 opacity-60 hover:opacity-100 transition-opacity justify-center">>
+                                <div className="flex gap-4 pt-8 mt-4 opacity-60 hover:opacity-100 transition-opacity justify-center">
                                     <Button
                                         variant="outline"
                                         className="border-dashed h-9"

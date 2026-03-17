@@ -36,10 +36,13 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useGrowth } from "@/hooks/use-growth";
 
 const Growth = () => {
-    const [searchQuery, setSearchQuery] = useState("");
-    const [isMining, setIsMining] = useState(false);
+    const [city, setCity] = useState("");
+    const [niche, setNiche] = useState("");
+    const [radius, setRadius] = useState("5");
+    const { runSearch, isSearching } = useGrowth();
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -56,13 +59,13 @@ const Growth = () => {
     });
 
     const mineMutation = useMutation({
-        mutationFn: async (query: string) => {
-            setIsMining(true);
-            const { data, error } = await supabase.functions.invoke('lead-miner', {
-                body: { query, location: "Brasil" } // Localização padrão ou vir de um input
-            });
-            if (error) throw error;
-            return data;
+        mutationFn: async () => {
+            // 1. Limpar resultados antigos antes de começar a nova busca (requisito do usuário para não acumular)
+            await supabase.from("growth_results").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+            queryClient.setQueryData(["mining-results"], []);
+
+            // 2. Chamar o hook de busca centralizado que agora cuida de criar search_id corretamente
+            return await runSearch({ niche, city, radius });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["mining-results"] });
@@ -70,40 +73,97 @@ const Growth = () => {
         },
         onError: (error) => {
             toast({ title: "Erro na mineração", description: error.message, variant: "destructive" });
+        }
+    });
+
+    const isMiningInProgress = mineMutation.isPending || isSearching;
+
+    const clearResultsMutation = useMutation({
+        mutationFn: async () => {
+            const { error } = await supabase.from("growth_results").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+            if (error) throw error;
         },
-        onSettled: () => {
-            setIsMining(false);
+        onSuccess: () => {
+            queryClient.setQueryData(["mining-results"], []);
+            toast({ title: "Resultados limpos", description: "A tela de mineração foi resetada." });
+        },
+        onError: (error) => {
+            toast({ title: "Erro ao limpar", description: error.message, variant: "destructive" });
         }
     });
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!searchQuery.trim()) return;
-        mineMutation.mutate(searchQuery);
+        if (!city.trim() || !niche.trim()) {
+            toast({ title: "Campos obrigatórios", description: "Por favor, preencha cidade e nicho de negócio.", variant: "destructive" });
+            return;
+        }
+        mineMutation.mutate();
     };
 
     return (
         <div className="flex flex-col h-full gap-6">
             <div className="flex flex-col gap-4">
-                <form onSubmit={handleSearch} className="flex items-center gap-3">
-                    <div className="relative flex-1 max-w-2xl">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                <form onSubmit={handleSearch} className="bg-card shadow-sm rounded-2xl border-none p-1.5 flex flex-wrap md:flex-nowrap items-center gap-1 transition-all focus-within:shadow-md backdrop-blur-sm w-fit">
+                    <div className="relative w-[160px]">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
                         <Input
-                            placeholder="Ex: Restaurantes em São Paulo, Advocacia no Rio..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 h-11 bg-card/50 border-border/60 rounded-xl"
+                            placeholder="Cidade"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            className="pl-9 h-10 bg-transparent border-none focus-visible:ring-0 text-[13px] font-medium placeholder:text-muted-foreground/40"
                         />
                     </div>
+
+                    <div className="hidden md:block w-px h-6 bg-border/20" />
+
+                    <div className="relative w-[180px]">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
+                        <Input
+                            placeholder="Nicho (Ex: Pizzaria)"
+                            value={niche}
+                            onChange={(e) => setNiche(e.target.value)}
+                            className="pl-9 h-10 bg-transparent border-none focus-visible:ring-0 text-[13px] font-medium placeholder:text-muted-foreground/40"
+                        />
+                    </div>
+
+                    <div className="hidden md:block w-px h-6 bg-border/20" />
+
+                    <div className="relative w-24 shrink-0">
+                        <Layers className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
+                        <Input
+                            type="number"
+                            placeholder="KM"
+                            value={radius}
+                            onChange={(e) => setRadius(e.target.value)}
+                            className="pl-9 h-10 bg-transparent border-none focus-visible:ring-0 text-[13px] font-medium placeholder:text-muted-foreground/40"
+                        />
+                    </div>
+
                     <Button
                         type="submit"
-                        disabled={isMining || !searchQuery.trim()}
-                        className="h-11 px-6 rounded-xl gap-2 font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90"
+                        disabled={isMiningInProgress || !city.trim() || !niche.trim()}
+                        className="h-10 px-6 rounded-xl gap-2 font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        {isMining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-current" />}
-                        Minerar Leads
+                        {isMiningInProgress ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-current" />}
+                        Minerar
                     </Button>
                 </form>
+
+                {results.length > 0 && (
+                    <div className="flex justify-end">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => clearResultsMutation.mutate()}
+                            disabled={clearResultsMutation.isPending}
+                            className="text-xs text-muted-foreground hover:text-destructive gap-2 h-8 px-3"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Limpar {results.length} cards
+                        </Button>
+                    </div>
+                )}
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar -mx-2 px-2">

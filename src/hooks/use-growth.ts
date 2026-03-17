@@ -47,30 +47,39 @@ export const useGrowth = () => {
     });
 
     const runSearchMutation = useMutation({
-        mutationFn: async ({ query, location, radius }: { query: string, location: string, radius: string }) => {
+        mutationFn: async ({ niche, city, radius }: { niche: string, city: string, radius: string }) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuário não autenticado");
 
-            // 1. Criar o registro da busca
+            const query = `${niche} em ${city}`;
+
+            // 1. Criar o registro da busca (necessário para o ID estrangeiro nos resultados)
             const { data: search, error: searchError } = await (supabase as any)
                 .from("growth_searches")
-                .insert([{ query, location, radius, user_id: user.id }])
+                .insert([{ query, location: city, radius, user_id: user.id }])
                 .select()
                 .single();
 
-            if (searchError) throw searchError;
+            if (searchError) {
+                console.error("Erro ao criar registro de busca:", searchError);
+                throw searchError;
+            }
 
             // 2. Chamar a Edge Function de mineração
             const { data, error: functionError } = await supabase.functions.invoke("lead-miner", {
-                body: { query, location, radius, searchId: search.id }
+                body: { query, location: city, radius, searchId: search.id }
             });
 
-            if (functionError) throw functionError;
+            if (functionError) {
+                console.error("Erro na Edge Function:", functionError);
+                throw functionError;
+            }
 
-            return { search, results: data.results as GrowthResult[] };
+            return { search, results: data?.results as GrowthResult[] || [] };
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["growth-searches"] });
+            queryClient.invalidateQueries({ queryKey: ["mining-results"] });
         }
     });
 
