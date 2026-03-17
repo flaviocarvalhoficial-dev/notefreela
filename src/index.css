@@ -18,11 +18,11 @@
 
 @layer base {
   :root {
-    /* Nimbus Design System — Cockpit Signature (Linear-Style Refined) */
-    --background: 210 20% 98.5%;
-    /* #F9FAFB - Pure Linear Background */
+    /* Nimbus Design System — Monochromatic High-Precision Signature */
+    --background: 210 10% 97%;
+    /* Neutral Clean Gray #F7F8F9 */
     --foreground: 220 15% 10%;
-    /* Deep Charcole for higher precision */
+    /* Deep Charcoal for precision #1A1C1E */
 
     --card: 0 0% 100%;
     --card-foreground: 220 15% 10%;
@@ -31,102 +31,101 @@
     --popover-foreground: 220 15% 10%;
 
     --primary: 210 100% 50%;
-    /* Pure Nimbus Blue #1E88E5 */
+    /* Pure Nimbus Blue (Reserved for CTAs) */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 20% 96%;
-    /* #F3F4F6 */
-    --secondary-foreground: 215 15% 45%;
+    --secondary: 210 10% 92%;
+    /* Refined neutral gray */
+    --secondary-foreground: 220 15% 15%;
 
-    --muted: 210 20% 95%;
-    /* #F1F5F9 */
-    --muted-foreground: 215 15% 45%;
+    --muted: 210 10% 92%;
+    --muted-foreground: 215 12% 40%;
 
-    --accent: 210 100% 50% / 0.04;
-    --accent-foreground: 210 100% 50%;
+    --accent: 210 10% 90%;
+    /* Neutral accent instead of blue */
+    --accent-foreground: 220 15% 10%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 15% 92%;
-    /* #EAECF0 - Ultra refined border */
-    --input: 210 15% 94%;
-    --ring: 210 100% 50%;
+    --border: 210 12% 89%;
+    /* Soft neutral border */
+    --input: 210 12% 89%;
+    --ring: 220 15% 10%;
+    /* Dark ring for precision */
 
     --accent-primary: 210 100% 50%;
     --accent-hover: 210 100% 45%;
-    --accent-subtle: 210 100% 50% / 0.06;
+    --accent-subtle: 210 10% 92%;
+    /* Neutral subtle background */
 
     /* Semantic Radius - Linear Precision */
-    --radius-card: 10px;
-    --radius-button: 8px;
+    --radius-card: 12px;
+    --radius-button: 10px;
     --radius-tiny: 6px;
-    --radius: 6px;
+    --radius: 8px;
 
-    /* Micro Shadows Linear (Almost invisible) */
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03);
-    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.04);
+    /* Micro Shadows Linear (Strictly Minimal) */
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.05);
 
     /* Sidebar - Cockpit separation */
-    --sidebar-background: 210 20% 97.5%;
-    --sidebar-foreground: 215 15% 40%;
-    --sidebar-border: 210 15% 92%;
+    --sidebar-background: 210 20% 95%;
+    --sidebar-foreground: 215 15% 30%;
+    /* Darker foreground for visibility */
+    --sidebar-border: 210 15% 88%;
   }
 
   .dark {
     --background: 0 0% 7%;
     /* #121212 - Neutral Deep Background */
-    --foreground: 210 20% 98%;
+    --foreground: 210 10% 98%;
     /* #FAFAFB */
     --card: 0 0% 10%;
     /* #1a1a1a - Neutral Surface */
-    --card-foreground: 210 20% 98%;
+    --card-foreground: 210 10% 98%;
 
     --popover: 0 0% 9%;
-    --popover-foreground: 210 20% 98%;
+    --popover-foreground: 210 10% 98%;
 
     --primary: 210 100% 52%;
+    /* Strategic Nimbus Blue */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 215 15% 75%;
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 215 10% 75%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 215 10% 50%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 215 8% 55%;
 
-    --accent: 210 100% 52% / 0.15;
-    --accent-foreground: 210 100% 52%;
+    --accent: 0 0% 15%;
+    /* Neutral accent instead of blue */
+    --accent-foreground: 210 10% 98%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 10% 98%;
 
-    --border: transparent;
-    /* Virtuallly invisible - Borderless look */
-    --input: 0 0% 100% / 0.03;
-    --ring: 210 100% 52%;
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 210 10% 98%;
 
-    --sidebar-background: 0 0% 6%;
-    --sidebar-foreground: 215 10% 45%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 215 10% 65%;
     --sidebar-primary: 210 100% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 100% / 0.02;
-    --sidebar-ring: 210 100% 52%;
-
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 210 10% 98%;
+    --sidebar-border: 0 0% 14%;
     /* Glossy Specific Tokens */
     --glass-background: 0 0% 8% / 0.4;
     --glass-border: 0 0% 100% / 0.02;
     --glass-glow: 210 100% 52% / 0.08;
-
-    *::selection {
-      background-color: hsl(var(--accent));
-      color: hsl(var(--foreground));
-    }
   }
+}
 
+@layer base {
   * {
-    @apply border-transparent;
+    @apply border-border;
     box-sizing: border-box;
   }
 

@@ -5,7 +5,7 @@ import {
     Heading1, Heading2, Heading3,
     List, ListOrdered, CheckSquare,
     Quote, Minus, Code2, Type,
-    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox, Columns2, TrendingUp, Terminal, Lightbulb
+    Plus, MessageSquare, FilePlus, DollarSign, LayoutGrid, ListTodo, Wallet, Inbox, TrendingUp, Terminal, Lightbulb
 } from 'lucide-react';
 
 export interface SlashCommandItem {
@@ -122,26 +122,7 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
             editor.chain().focus().setHorizontalRule().run();
         },
     },
-    {
-        id: 'columns-2',
-        label: '2 Colunas',
-        description: 'Dividir conteúdo em 2 colunas',
-        icon: <Columns2 className="w-4 h-4" />,
-        group: 'Blocos',
-        action: (editor) => {
-            editor.chain().focus().insertColumns(2).run();
-        },
-    },
-    {
-        id: 'columns-3',
-        label: '3 Colunas',
-        description: 'Dividir conteúdo em 3 colunas',
-        icon: <LayoutGrid className="w-4 h-4" />,
-        group: 'Blocos',
-        action: (editor) => {
-            editor.chain().focus().insertColumns(3).run();
-        },
-    },
+
     // --- AÇÕES ---
     {
         id: 'task',
@@ -252,6 +233,7 @@ interface SlashCommandMenuProps {
     position: { top: number; left: number };
     filterText: string;
     commands?: SlashCommandItem[];
+    isCentered?: boolean;
 }
 
 export const SlashCommandMenu = ({
@@ -262,10 +244,13 @@ export const SlashCommandMenu = ({
     position,
     filterText,
     commands = SLASH_COMMANDS,
+    isCentered = false,
 }: SlashCommandMenuProps) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const menuRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+    // ... (rest of logic stays identical until the return)
 
     // Filter commands based on input
     const filteredCommands = commands.filter((cmd) => {
@@ -283,14 +268,7 @@ export const SlashCommandMenu = ({
         setSelectedIndex(firstEnabled >= 0 ? firstEnabled : 0);
     }, [filterText, filteredCommands]);
 
-    // Scroll active item into view
-    useEffect(() => {
-        if (itemRefs.current[selectedIndex]) {
-            itemRefs.current[selectedIndex]?.scrollIntoView({
-                block: 'nearest',
-            });
-        }
-    }, [selectedIndex]);
+
 
     // Keyboard navigation
     const handleKeyDown = useCallback(
@@ -372,8 +350,11 @@ export const SlashCommandMenu = ({
     return (
         <div
             ref={menuRef}
-            className="fixed z-[99999] w-[260px] max-h-[320px] overflow-y-auto bg-card border-none rounded-xl shadow-2xl shadow-black/20 p-1.5 animate-in fade-in slide-in-from-top-2 duration-150"
-            style={{
+            className={cn(
+                "z-[99999] w-[260px] max-h-[320px] overflow-y-auto bg-card border-none rounded-xl shadow-2xl shadow-black/20 p-1.5 animate-in fade-in slide-in-from-top-2 duration-150",
+                isCentered ? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" : "fixed"
+            )}
+            style={isCentered ? {} : {
                 top: position.top,
                 left: position.left,
             }}

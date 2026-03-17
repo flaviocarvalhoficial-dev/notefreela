@@ -309,10 +309,10 @@ export function TimelineSection({
             <div className="h-full flex flex-col">
                 <header className="p-4 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-2">
-                        <Activity className="h-3.5 w-3.5 text-primary/40" />
+                        <Activity className="h-3.5 w-3.5 text-muted-foreground/30" />
                         <h3 className="text-[11px] font-medium text-muted-foreground/60">Cronograma Operacional</h3>
                     </div>
-                    <Badge variant="outline" className="text-[9px] font-medium border-primary/10 bg-primary/5 text-primary/60 px-2 rounded-lg">
+                    <Badge variant="outline" className="text-[9px] font-medium border-border bg-muted/10 text-muted-foreground/60 px-2 rounded-lg">
                         Live Sync
                     </Badge>
                 </header>
@@ -338,9 +338,9 @@ export function TimelineSection({
         >
             <header className="p-4 border-none flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
-                    <Activity className="h-3.5 w-3.5 text-primary/40" />
+                    <Activity className="h-3.5 w-3.5 text-muted-foreground/30" />
                     <h3 className="text-[11px] font-medium text-muted-foreground/60">Cronograma Operacional</h3>
-                    <Badge variant="outline" className="text-[9px] font-medium border-primary/10 bg-primary/5 text-primary/60 px-2 rounded-lg ml-2">
+                    <Badge variant="outline" className="text-[9px] font-medium border-border bg-muted/10 text-muted-foreground/60 px-2 rounded-lg ml-2">
                         Live Sync
                     </Badge>
                 </div>
@@ -416,7 +416,7 @@ export function TimelineSection({
                                 {daysInRange.map((d, idx) => (
                                     <div key={idx} className={cn(
                                         "shrink-0 flex items-center justify-center h-8",
-                                        isToday(d) && "bg-primary/5"
+                                        isToday(d) && "bg-foreground/10"
                                     )} style={{ width: slotPx }}>
                                         <span className={cn(
                                             "text-[10px] font-medium tabular-nums",
@@ -449,7 +449,7 @@ export function TimelineSection({
                                 {daysInRange.map((d, idx) => (
                                     <div key={`v-${idx}`} className={cn(
                                         "h-full shrink-0",
-                                        isToday(d) && "bg-primary/[0.03]"
+                                        isToday(d) && "bg-foreground/[0.05]"
                                     )} style={{ width: slotPx }} />
                                 ))}
                             </div>
@@ -491,7 +491,7 @@ export function TimelineSection({
                                                         <div
                                                             className={cn(
                                                                 "h-full rounded-md transition-all hover:brightness-110 cursor-pointer flex items-center px-3 border-none relative group bg-background/5 pointer-events-auto",
-                                                                isToday(a.startDate) && "ring-2 ring-primary ring-offset-1 ring-offset-background shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                                                                isToday(a.startDate) && "ring-2 ring-foreground/40 ring-offset-1 ring-offset-background shadow-[0_0_15px_rgba(0,0,0,0.1)]"
                                                             )}
                                                         >
                                                             <div

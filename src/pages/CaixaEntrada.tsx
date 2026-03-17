@@ -292,7 +292,7 @@ const DraggableInboxItem = ({ item, viewMode, children }: { item: InboxItem, vie
 };
 
 // Componente DroppableFolder (Caixa)
-const DroppableFolder = ({ folder, count, isActive, onClick, onRename, onDelete, isSystem, isPinned, onTogglePin, children }: any) => {
+const DroppableFolder = ({ folder, count, isActive, isDimmed, onClick, onRename, onDelete, isSystem, isPinned, onTogglePin, children }: any) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `folder-${folder || 'uncategorized'}`,
         data: { folder }
@@ -301,48 +301,77 @@ const DroppableFolder = ({ folder, count, isActive, onClick, onRename, onDelete,
     return (
         <motion.div
             ref={setNodeRef}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onClick}
             className={cn(
-                "cursor-pointer p-3 rounded-lg border-none transition-all flex flex-col gap-2 relative overflow-hidden group",
-                isActive ? "bg-primary/5 shadow-sm" : "bg-card hover:bg-muted/50",
-                isOver ? "ring-2 ring-primary bg-primary/10 z-10" : ""
+                "cursor-pointer p-3.5 rounded-xl border transition-all duration-300 flex flex-col gap-3 relative overflow-hidden group",
+                isActive
+                    ? "bg-foreground/[0.03] border-foreground/20 shadow-sm"
+                    : "bg-card border-transparent hover:bg-muted/30 hover:shadow-soft",
+                isDimmed && !isActive ? "opacity-40 grayscale-[0.5] scale-[0.98]" : "opacity-100",
+                isOver ? "ring-2 ring-primary bg-primary/5 z-10 border-primary/30" : ""
             )}
         >
-            {children}
+            <div className="flex items-start justify-between">
+                <div className={cn(
+                    "h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-300 border shadow-sm",
+                    isActive
+                        ? "bg-foreground border-foreground/20 text-background"
+                        : "bg-sidebar-background border-border text-foreground/40 group-hover:text-foreground group-hover:border-foreground/20 group-hover:bg-foreground/5"
+                )}>
+                    <Briefcase className={cn("h-4 w-4", isActive ? "animate-pulse" : "")} />
+                </div>
 
-            <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn("h-6 w-6", isPinned ? "text-amber-500 opacity-100" : "text-muted-foreground")}
-                    onClick={(e) => onTogglePin(e, folder)}
-                >
-                    <Plus className={cn("h-3 w-3 transition-transform", isPinned ? "rotate-45" : "")} />
-                </Button>
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all translate-x-1 group-hover:translate-x-0" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn("h-7 w-7 rounded-md hover:bg-background shadow-none", isPinned ? "text-amber-500 opacity-100" : "text-muted-foreground/30 hover:text-foreground")}
+                        onClick={(e) => onTogglePin(e, folder)}
+                    >
+                        <Plus className={cn("h-3.5 w-3.5 transition-transform duration-300", isPinned ? "rotate-45" : "")} />
+                    </Button>
 
-                {!isSystem && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <MoreHorizontal className="h-3 w-3" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass transition-all">
-                            <DropdownMenuItem onClick={onRename} className="gap-2">
-                                <Pencil className="h-3.5 w-3.5" /> Renomear
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive">
-                                <Trash2 className="h-3.5 w-3.5" /> Excluir
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
+                    {!isSystem && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-background shadow-none text-muted-foreground/30 hover:text-foreground">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="glass border-none min-w-[140px] z-[60]">
+                                <DropdownMenuItem onClick={onRename} className="gap-2.5 py-2 cursor-pointer">
+                                    <Edit className="h-3.5 w-3.5" /> Renomear
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-border/50" />
+                                <DropdownMenuItem onClick={onDelete} className="gap-2.5 py-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/5">
+                                    <Trash2 className="h-3.5 w-3.5" /> Excluir
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
             </div>
-            {isPinned && !isActive && (
-                <div className="absolute top-0 right-0 h-0.5 w-6 bg-amber-500/50" />
+
+            <div className="flex flex-col min-w-0 pr-2">
+                <span className={cn(
+                    "text-[12.5px] font-semibold truncate tracking-tight transition-colors",
+                    isActive ? "text-foreground" : "text-foreground group-hover:text-foreground"
+                )}>
+                    {folder}
+                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">
+                        {count} {count === 1 ? 'registro' : 'registros'}
+                    </span>
+                    {isPinned && <div className="h-1 w-1 rounded-full bg-amber-500/40" />}
+                </div>
+            </div>
+
+            {/* Subtle Active Indicator */}
+            {isActive && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/20" />
             )}
         </motion.div>
     );
@@ -817,6 +846,12 @@ const CaixaEntrada = () => {
         return matchesFolder && matchesText && matchesType && matchesProject;
     });
 
+    const isAnyFolderActive = useMemo(() => {
+        const knownFolders = JSON.parse(localStorage.getItem("inbox_folders") || "[]");
+        const allCategories = Array.from(new Set([...knownFolders, ...items.map(i => i.category).filter(Boolean)]));
+        return allCategories.includes(searchQuery);
+    }, [searchQuery, items]);
+
     const handleDragStart = (event: DragStartEvent) => {
         const item = event.active.data.current as InboxItem;
         setActiveDragItem(item);
@@ -898,11 +933,11 @@ const CaixaEntrada = () => {
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between gap-4">
-                            <div className="relative flex-1 max-w-md">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                            <div className="relative flex-1 max-w-md group">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
                                 <Input
                                     placeholder="Pesquisar em suas capturas..."
-                                    className="pl-9 h-9 bg-card/50 border-none shadow-sm"
+                                    className="pl-10 h-10 bg-card border-transparent shadow-soft focus-visible:ring-primary/20 transition-all rounded-xl"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -910,11 +945,13 @@ const CaixaEntrada = () => {
 
                             <div className="flex items-center gap-2">
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
                                     className={cn(
-                                        "h-9 px-3 gap-2 text-xs font-medium border-none shadow-sm",
-                                        (selectedType !== "all" || projectFilter !== null) && "bg-primary/5 text-primary"
+                                        "h-10 px-4 gap-2 text-[12px] font-semibold transition-all rounded-xl",
+                                        (selectedType !== "all" || projectFilter !== null)
+                                            ? "bg-foreground/5 text-foreground"
+                                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                     )}
                                     onClick={() => {
                                         const el = document.getElementById('advanced-filters-inbox');
@@ -925,35 +962,35 @@ const CaixaEntrada = () => {
                                     Filtros
                                 </Button>
 
-                                <div className="flex bg-muted/20 p-1 rounded-lg border-none ml-2 shadow-sm">
+                                <div className="flex bg-muted/20 p-1 rounded-xl transition-all shadow-sm">
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className={cn("h-7 w-7 rounded-md transition-all", viewMode === 'grid' ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
+                                        className={cn("h-8 w-8 rounded-lg transition-all", viewMode === 'grid' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground")}
                                         onClick={() => setViewMode('grid')}
                                     >
-                                        <LayoutGrid className="h-3 w-3" />
+                                        <LayoutGrid className="h-3.5 w-3.5" />
                                     </Button>
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className={cn("h-7 w-7 rounded-md transition-all", viewMode === 'list' ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
+                                        className={cn("h-8 w-8 rounded-lg transition-all", viewMode === 'list' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground")}
                                         onClick={() => setViewMode('list')}
                                     >
-                                        <List className="h-3 w-3" />
+                                        <List className="h-3.5 w-3.5" />
                                     </Button>
                                 </div>
                             </div>
                         </div>
 
                         {/* Ghost Filters Bar */}
-                        <div id="advanced-filters-inbox" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border border-border/40">
+                        <div id="advanced-filters-inbox" className="hidden animate-in fade-in slide-in-from-top-1 duration-300">
+                            <div className="flex flex-wrap items-center gap-4 py-4 px-5 bg-card/50 backdrop-blur-sm rounded-2xl border border-primary/5 shadow-soft">
                                 <Select value={selectedType} onValueChange={(v: any) => setSelectedType(v)}>
-                                    <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md shadow-sm">
+                                    <SelectTrigger className="h-9 w-[160px] text-[11px] font-semibold bg-background border-none rounded-xl shadow-sm">
                                         <SelectValue placeholder="Tipo" />
                                     </SelectTrigger>
-                                    <SelectContent className="glass border-none">
+                                    <SelectContent className="glass border-none z-[70]">
                                         <SelectItem value="all">Todos Tipos</SelectItem>
                                         <SelectItem value="idea">Ideias</SelectItem>
                                         <SelectItem value="prompt">Prompts</SelectItem>
@@ -967,10 +1004,10 @@ const CaixaEntrada = () => {
                                 </Select>
 
                                 <Select value={projectFilter || "all"} onValueChange={(v) => setSearchParams(prev => { if (v === "all") prev.delete("project"); else prev.set("project", v); return prev; })}>
-                                    <SelectTrigger className="h-8 w-[160px] text-[10px] font-medium bg-card border-none rounded-md shadow-sm">
+                                    <SelectTrigger className="h-9 w-[180px] text-[11px] font-semibold bg-background border-none rounded-xl shadow-sm">
                                         <SelectValue placeholder="Projeto" />
                                     </SelectTrigger>
-                                    <SelectContent className="glass border-none">
+                                    <SelectContent className="glass border-none z-[70]">
                                         <SelectItem value="all">Todos Projetos</SelectItem>
                                         {projects.map((p: any) => (
                                             <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -981,7 +1018,7 @@ const CaixaEntrada = () => {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
+                                    className="h-9 px-4 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
                                     onClick={() => {
                                         setSearchQuery("");
                                         setSelectedType("all");
@@ -997,47 +1034,51 @@ const CaixaEntrada = () => {
                     <AnimatePresence>
                         {isAdding && (
                             <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
                                 className="overflow-hidden"
                             >
-                                <div className="bento-card p-6 space-y-4 border-none shadow-sm">
+                                <div className="bg-card rounded-2xl p-7 space-y-5 border-none shadow-hover relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-xs opacity-60">Título</Label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2.5">
+                                            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">Título da Captura</Label>
                                             <Input
-                                                placeholder="Resumo curto..."
+                                                placeholder="Sobre o que é esta captura?"
                                                 value={newTitle}
                                                 onChange={(e) => setNewTitle(e.target.value)}
-                                                className="glass-light h-9 text-sm"
+                                                className="h-10 text-[13px] bg-muted/20 border-transparent focus:bg-background transition-all rounded-xl"
                                             />
                                         </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {['idea', 'prompt', 'snippet', 'note', 'lead', 'briefing', 'link', 'demand'].map((t) => (
-                                                <button
-                                                    key={t}
-                                                    onClick={() => setNewType(t as any)}
-                                                    className={cn(
-                                                        "p-2 rounded-md transition-all border-none shadow-sm",
-                                                        newType === t
-                                                            ? "bg-primary/10 text-primary"
-                                                            : "text-muted-foreground hover:bg-muted"
-                                                    )}
-                                                    title={t.charAt(0).toUpperCase() + t.slice(1)}
-                                                >
-                                                    {getTypeIcon(t)}
-                                                </button>
-                                            ))}
+                                        <div className="space-y-2.5">
+                                            <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">Tipo</Label>
+                                            <div className="flex flex-wrap gap-1.5 p-1 bg-muted/20 rounded-xl">
+                                                {['idea', 'prompt', 'snippet', 'note', 'lead', 'briefing', 'link', 'demand'].map((t) => (
+                                                    <button
+                                                        key={t}
+                                                        onClick={() => setNewType(t as any)}
+                                                        className={cn(
+                                                            "p-2 rounded-lg transition-all border-none",
+                                                            newType === t
+                                                                ? "bg-card text-primary shadow-sm"
+                                                                : "text-muted-foreground/40 hover:text-foreground"
+                                                        )}
+                                                        title={t.charAt(0).toUpperCase() + t.slice(1)}
+                                                    >
+                                                        {getTypeIcon(t)}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs opacity-60">Conteúdo</Label>
+                                    <div className="space-y-2.5">
+                                        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">Conteúdo Detalhado</Label>
                                         <Textarea
                                             placeholder="Digite ou cole aqui sua ideia, prompt ou nota..."
-                                            className="min-h-[120px] glass-light"
+                                            className="min-h-[160px] text-[13px] bg-muted/20 border-transparent focus:bg-background transition-all rounded-xl custom-scrollbar"
                                             value={newContent}
                                             onChange={(e) => setNewContent(e.target.value)}
                                         />
@@ -1053,15 +1094,19 @@ const CaixaEntrada = () => {
                                         />
                                     </div>
 
-                                    <div className="flex justify-end gap-2 pt-2">
-                                        <Button variant="ghost" size="sm" onClick={() => setIsAdding(false)}>Cancelar</Button>
+                                    <div className="flex justify-end gap-3 pt-2">
+                                        <Button variant="ghost" className="h-10 px-6 font-semibold" onClick={() => setIsAdding(false)}>Cancelar</Button>
                                         <Button
-                                            size="sm"
-                                            className="btn-gradient"
+                                            className="h-10 px-8 font-semibold bg-primary text-white shadow-glow hover:shadow-hover transition-all rounded-xl"
                                             disabled={!newContent || createItemMutation.isPending}
                                             onClick={() => createItemMutation.mutate()}
                                         >
-                                            {createItemMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Capturar"}
+                                            {createItemMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                                                <div className="flex items-center gap-2">
+                                                    <Zap className="h-3.5 w-3.5 fill-current" />
+                                                    <span>Capturar Registro</span>
+                                                </div>
+                                            )}
                                         </Button>
                                     </div>
                                 </div>
@@ -1069,24 +1114,29 @@ const CaixaEntrada = () => {
                         )}
                     </AnimatePresence>
 
-                    {/* Seção de Caixas - Compacta */}
-                    <div className="space-y-3">
+                    {/* Seção de Caixas - Compacta e Elegante */}
+                    <div className="space-y-4">
                         <div className="flex items-center justify-between px-1">
-                            <h2 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                                <Briefcase className="h-3 w-3" /> Caixas / Projetos
-                            </h2>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <LayoutGrid className="h-3.5 w-3.5" /> Caixas & Projetos
+                                </h2>
+                                <Badge variant="secondary" className="bg-foreground/5 text-foreground text-[10px] h-5 rounded-md px-1.5 font-bold">
+                                    {items.length} itens totais
+                                </Badge>
+                            </div>
+                            <div className="flex items-center gap-3">
                                 <div className="relative group/boxsearch">
-                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/40 group-focus-within/boxsearch:text-primary/50 transition-colors" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 group-focus-within/boxsearch:text-primary transition-colors" />
                                     <Input
-                                        placeholder="Localizar caixa..."
-                                        className="h-7 w-28 md:w-40 pl-8 text-[10px] bg-muted/10 border-none transition-all rounded-md shadow-sm"
+                                        placeholder="Filtrar caixas..."
+                                        className="h-8 w-32 md:w-56 pl-9 text-[11px] bg-card border-transparent shadow-soft transition-all rounded-xl focus-visible:ring-primary/20"
                                         value={boxSearchQuery}
                                         onChange={(e) => setBoxSearchQuery(e.target.value)}
                                     />
                                 </div>
 
-                                <Separator orientation="vertical" className="h-4 bg-border/20" />
+                                <Separator orientation="vertical" className="h-4 bg-muted-foreground/10" />
 
                                 <Button
                                     variant="outline"
@@ -1095,9 +1145,9 @@ const CaixaEntrada = () => {
                                         setNewFolderName("");
                                         setIsCreatingFolder(true);
                                     }}
-                                    className="h-7 text-[10px] font-medium border-none bg-background hover:bg-muted gap-2 px-3 rounded-md shadow-sm"
+                                    className="h-8 text-[11px] font-bold bg-background border-muted-foreground/5 hover:bg-muted/50 hover:text-foreground hover:border-border gap-2 px-4 rounded-xl shadow-sm transition-all"
                                 >
-                                    <Plus className="h-3 w-3" /> Nova
+                                    <Plus className="h-3.5 w-3.5" /> Nova Caixa
                                 </Button>
                             </div>
                         </div>
@@ -1146,6 +1196,7 @@ const CaixaEntrada = () => {
                                             folder={folder}
                                             count={count}
                                             isActive={isActive}
+                                            isDimmed={isAnyFolderActive}
                                             isPinned={isPinned}
                                             onTogglePin={togglePin}
                                             onClick={() => {
@@ -1154,23 +1205,7 @@ const CaixaEntrada = () => {
                                             }}
                                             onDelete={() => setFolderToDelete(folder)}
                                             onRename={() => setFolderToRename({ oldName: folder, newName: folder })}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={cn(
-                                                    "h-7 w-7 rounded-md flex items-center justify-center transition-colors border",
-                                                    isActive ? "bg-primary border-primary text-primary-foreground" : "bg-background border-border text-primary/60"
-                                                )}>
-                                                    <Briefcase className="h-3.5 w-3.5" />
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className={cn(
-                                                        "text-[11px] font-semibold truncate pr-4 tracking-tight",
-                                                        isActive ? "text-primary" : "text-foreground/80"
-                                                    )}>{folder}</span>
-                                                    <span className="text-[9px] text-muted-foreground/60 font-medium tabular-nums">{count} {count === 1 ? 'item' : 'itens'}</span>
-                                                </div>
-                                            </div>
-                                        </DroppableFolder>
+                                        />
                                     );
                                 });
                             })()}

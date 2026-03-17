@@ -442,7 +442,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
 
                                     <div className="p-5 flex flex-col flex-1 relative z-10">
                                         <div className="flex items-start justify-between mb-4">
-                                            <div className="h-10 w-10 rounded-lg bg-muted/30 border-none flex items-center justify-center text-muted-foreground text-xl font-medium shrink-0 group-hover:scale-105 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300">
+                                            <div className="h-10 w-10 rounded-lg bg-muted/30 border-none flex items-center justify-center text-muted-foreground text-xl font-medium shrink-0 group-hover:scale-105 group-hover:bg-foreground/5 group-hover:text-foreground transition-all duration-300">
                                                 {p.avatar_emoji ? (
                                                     <span className="text-lg">{p.avatar_emoji.length <= 2 ? p.avatar_emoji : p.name.charAt(0)}</span>
                                                 ) : (
@@ -455,7 +455,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                         </div>
 
                                         <div className="mb-4 flex-1">
-                                            <h3 className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors line-clamp-1 mb-1">{p.name}</h3>
+                                            <h3 className="text-sm font-medium text-foreground/90 group-hover:text-foreground transition-colors line-clamp-1 mb-1">{p.name}</h3>
                                             <p className="text-[10px] text-muted-foreground line-clamp-1 font-normal opacity-60">
                                                 {p.client_name || "Mapeamento Direto"}
                                             </p>
@@ -490,7 +490,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                                                 <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${progress}%` }}
-                                                    className="h-full bg-foreground/10 group-hover:bg-primary/40 transition-colors duration-500"
+                                                    className="h-full bg-foreground/10 group-hover:bg-foreground/20 transition-colors duration-500"
                                                 />
                                             </div>
                                         </div>
@@ -529,7 +529,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 rounded-lg bg-secondary hover:bg-primary/5 hover:text-primary transition-all border-none shrink-0 shadow-sm"
+                            className="h-9 w-9 rounded-lg bg-secondary hover:bg-muted/10 hover:text-foreground transition-all border-none shrink-0 shadow-sm"
                             onClick={() => handleProjectFilterChange("all")}
                         >
                             <ArrowLeft className="h-4 w-4" />
@@ -589,33 +589,33 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                     <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-60">Backlog</span>
                     <div className="flex items-end justify-between">
                         <span className="text-lg font-semibold tabular-nums text-foreground/80">{tasksTotal}</span>
-                        <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground/20 group-hover:text-primary/40 transition-colors" />
+                        <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground/20 group-hover:text-foreground/40 transition-colors" />
                     </div>
                 </div>
                 <div className="bg-card border-none p-3 rounded-lg flex flex-col justify-between hover:bg-muted/30 transition-all group shadow-sm">
                     <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-60">Sprint Ativa</span>
                     <div className="flex items-end justify-between">
                         <span className="text-lg font-semibold tabular-nums text-foreground/80">{tasksOpen}</span>
-                        <CheckSquare className="h-3.5 w-3.5 text-primary/20 group-hover:text-primary transition-colors" />
+                        <CheckSquare className="h-3.5 w-3.5 text-foreground/20 group-hover:text-foreground transition-colors" />
                     </div>
                 </div>
                 <div className="bg-card border-none p-3 rounded-lg flex flex-col justify-between hover:bg-muted/30 transition-all group shadow-sm">
                     <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mb-1 opacity-60">Gargalos</span>
                     <div className="flex items-end justify-between">
-                        <span className="text-lg font-semibold tabular-nums text-primary/80">{tasksOverdue}</span>
-                        <Zap className="h-3.5 w-3.5 text-primary/20 group-hover:text-primary/40 transition-colors" />
+                        <span className="text-lg font-semibold tabular-nums text-foreground/80">{tasksOverdue}</span>
+                        <Zap className="h-3.5 w-3.5 text-foreground/20 group-hover:text-foreground/40 transition-colors" />
                     </div>
                 </div>
                 <div className="bg-card border-none p-3 rounded-lg flex flex-col justify-between hover:bg-muted/30 transition-all group shadow-sm">
                     <div className="flex justify-between items-start mb-1">
                         <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest opacity-60">Trajetória</span>
-                        <span className="text-[10px] font-semibold tabular-nums text-primary">{projectProgress}%</span>
+                        <span className="text-[10px] font-semibold tabular-nums text-foreground/70">{projectProgress}%</span>
                     </div>
                     <div className="h-1 w-full bg-muted/40 rounded-full overflow-hidden mb-1">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${projectProgress}%` }}
-                            className="h-full bg-primary/40 rounded-full"
+                            className="h-full bg-foreground/20 rounded-full"
                         />
                     </div>
                 </div>
@@ -639,7 +639,7 @@ export default function Tarefas({ hideHeader, projectId }: TarefasProps) {
                             size="sm"
                             className={cn(
                                 "h-9 px-3 gap-2 text-xs font-medium border-none shadow-sm",
-                                (priorityFilter !== "all" || projectFilter !== "all" || isRecurring) && "bg-primary/5 text-primary border-primary/20"
+                                (priorityFilter !== "all" || projectFilter !== "all" || isRecurring) && "bg-foreground/5 text-foreground"
                             )}
                             onClick={() => {
                                 const el = document.getElementById('advanced-filters-tasks');

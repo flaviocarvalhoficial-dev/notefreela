@@ -49,7 +49,7 @@ export const FreelancerHealthScore = () => {
     const focusValue = tasksStats ? Math.round(((tasksStats.total - tasksStats.completed) / Math.max(1, tasksStats.total)) * 100) : 0;
 
     const metrics = [
-        { label: "Produção", value: productivityValue, color: "bg-primary/80", icon: Activity },
+        { label: "Produção", value: productivityValue, color: "bg-foreground/20", icon: Activity },
         { label: "Financeiro", value: financialValue, color: "bg-emerald-500/80", icon: TrendingUp },
         { label: "Clientes", value: clientsValue, color: "bg-amber-500/80", icon: Users },
         { label: "Foco", value: focusValue, color: "bg-rose-500/80", icon: Zap },
@@ -61,10 +61,10 @@ export const FreelancerHealthScore = () => {
         <div className="bg-card/40 backdrop-blur-sm border-none rounded-2xl p-5 shadow-sm overflow-hidden relative group">
             <div className="flex items-center justify-between mb-6 relative z-10">
                 <div className="flex items-center gap-2">
-                    <Shield className="h-3 w-3 text-primary/40" />
+                    <Shield className="h-3 w-3 text-muted-foreground/30" />
                     <h3 className="text-[11px] font-medium text-muted-foreground/60">Status de Operação</h3>
                 </div>
-                <Badge variant="outline" className="h-4 px-2 border-primary/10 bg-primary/5 text-primary/60 text-[8px] font-bold uppercase tracking-widest rounded-full">
+                <Badge variant="outline" className="h-4 px-2 border-border bg-muted/10 text-muted-foreground/60 text-[8px] font-bold uppercase tracking-widest rounded-full">
                     Nimbus AI
                 </Badge>
             </div>
@@ -90,7 +90,7 @@ export const FreelancerHealthScore = () => {
                             strokeWidth="3.5"
                             strokeDasharray={176}
                             strokeDashoffset={176 - (176 * averageScore) / 100}
-                            className="text-primary transition-all duration-1000 ease-in-out"
+                            className="text-foreground transition-all duration-1000 ease-in-out"
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">

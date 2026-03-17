@@ -160,7 +160,7 @@ export function Header() {
                                 <Button variant="ghost" className="h-10 gap-2.5 hover:bg-muted/20 transition-all pl-0 pr-3 rounded-xl group flex items-center">
                                     <Avatar className="h-8 w-8 border-none shadow-sm shrink-0">
                                         <AvatarImage src={profile?.avatar_url} className="object-cover" />
-                                        <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-[10px] font-semibold text-white">
+                                        <AvatarFallback className="bg-gradient-to-br from-muted-foreground/20 to-muted-foreground/10 text-[10px] font-semibold text-foreground/60">
                                             {userInitial}
                                         </AvatarFallback>
                                     </Avatar>

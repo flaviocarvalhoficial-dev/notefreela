@@ -253,7 +253,7 @@ export function AppSidebar() {
                         <div className={cn(
                           "h-1.5 w-1.5 rounded-full shrink-0",
                           activeProject.status === 'completed' ? "bg-emerald-500" :
-                            activeProject.status === 'active' ? "bg-primary" :
+                            activeProject.status === 'active' ? "bg-primary/60" :
                               "bg-muted-foreground/30"
                         )} />
                         {open && (
@@ -296,7 +296,7 @@ export function AppSidebar() {
                               "flex items-center text-muted-foreground/60 transition-colors w-full h-full",
                               open ? "gap-2.5 px-3" : "justify-center"
                             )}
-                            activeClassName="text-primary font-semibold bg-primary/5 shadow-none"
+                            activeClassName="text-foreground font-semibold bg-foreground/5 shadow-none"
                           >
                             <FileText className="h-[14px] w-[14px] shrink-0 opacity-100" />
                             {open && <span className="text-[12px] font-medium tracking-tight truncate">{page.title}</span>}
@@ -328,7 +328,7 @@ export function AppSidebar() {
                             const newPage = await createPage();
                             if (newPage) navigate(`/projetos/${activeProjectId}?page=${newPage.id}`);
                           }}
-                          className="text-[10px] text-primary hover:underline font-medium"
+                          className="text-[10px] text-muted-foreground hover:text-foreground hover:underline font-medium"
                         >
                           Criar primeira página
                         </button>
@@ -382,14 +382,12 @@ export function AppSidebar() {
                     {open && <h3 className="px-3 mb-2 text-[10px] uppercase font-bold text-muted-foreground/30 tracking-widest">Operação</h3>}
 
                     {/* Dashboard */}
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild tooltip={!open ? "Dashboard" : undefined} className="h-9 rounded-md transition-all">
-                        <NavLink to="/" end className={cn("flex items-center text-muted-foreground/60 transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-primary font-semibold bg-primary/5">
-                          <Home className="h-[16px] w-[16px] shrink-0" />
-                          {open && <span className="text-[12.5px] font-medium tracking-tight">Dashboard</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip={!open ? "Dashboard" : undefined} className="h-9 rounded-md transition-all">
+                      <NavLink to="/" end className={cn("flex items-center text-muted-foreground/60 transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-foreground/5">
+                        <Home className="h-[16px] w-[16px] shrink-0" />
+                        {open && <span className="text-[12.5px] font-medium tracking-tight">Dashboard</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
 
                     {/* Projetos Collapsible */}
                     <Collapsible asChild defaultOpen={false} className="group/collapsible">
@@ -413,7 +411,7 @@ export function AppSidebar() {
                                   sidebarProjects.map((project: any) => (
                                     <SidebarMenuSubItem key={project.id}>
                                       <button onClick={() => navigate(`/projetos/${project.id}`)} className="px-4 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left truncate max-w-full flex items-center gap-2 w-full group/item">
-                                        <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", project.status === 'completed' ? "bg-emerald-500" : project.status === 'active' ? "bg-primary" : "bg-muted-foreground/30")} />
+                                        <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", project.status === 'completed' ? "bg-emerald-500/50" : project.status === 'active' ? "bg-foreground/20" : "bg-muted-foreground/30")} />
                                         <span className="truncate">{project.name}</span>
                                       </button>
                                     </SidebarMenuSubItem>
@@ -501,7 +499,7 @@ export function AppSidebar() {
                     {gestaoItems.map((item) => (
                       <SidebarMenuItem key={item.url}>
                         <SidebarMenuButton asChild tooltip={!open ? item.title : undefined} className="h-9 rounded-md transition-all">
-                          <NavLink to={item.url!} className={cn("flex items-center text-muted-foreground/60 transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-primary font-semibold bg-primary/5">
+                          <NavLink to={item.url!} className={cn("flex items-center text-muted-foreground/60 transition-colors w-full h-full", open ? "gap-2.5 px-3" : "justify-center")} activeClassName="text-foreground font-semibold bg-foreground/5">
                             <item.icon className="h-[16px] w-[16px] shrink-0" />
                             {open && <span className="text-[12.5px] font-medium tracking-tight">{item.title}</span>}
                           </NavLink>
@@ -575,7 +573,7 @@ export function AppSidebar() {
           </div>
         )}
       </SidebarFooter>
-    </Sidebar>
+    </Sidebar >
   );
 }
 

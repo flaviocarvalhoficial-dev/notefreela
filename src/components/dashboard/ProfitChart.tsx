@@ -137,7 +137,7 @@ export function ProfitChart({ projects, subscriptions = [] }: ProfitChartProps) 
                         onClick={() => setChartType("bar")}
                         className={cn(
                             "h-7 px-3 text-xs gap-2 rounded-md transition-all",
-                            chartType === "bar" ? "bg-background shadow-sm text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                            chartType === "bar" ? "bg-background shadow-sm text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <BarChart3 className="h-3.5 w-3.5" />
@@ -149,7 +149,7 @@ export function ProfitChart({ projects, subscriptions = [] }: ProfitChartProps) 
                         onClick={() => setChartType("line")}
                         className={cn(
                             "h-7 px-3 text-xs gap-2 rounded-md transition-all",
-                            chartType === "line" ? "bg-background shadow-sm text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                            chartType === "line" ? "bg-background shadow-sm text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <LineChartIcon className="h-3.5 w-3.5" />
@@ -289,9 +289,9 @@ export function ProfitChart({ projects, subscriptions = [] }: ProfitChartProps) 
                                 type="monotone"
                                 dataKey="profit"
                                 name="Lucro Líquido"
-                                stroke="hsl(var(--primary))"
+                                stroke="hsl(var(--foreground))"
                                 strokeWidth={3}
-                                dot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                                dot={{ r: 4, fill: "hsl(var(--foreground))", strokeWidth: 2, stroke: "hsl(var(--background))" }}
                             />
                         </ComposedChart>
                     )}
@@ -308,7 +308,7 @@ export function ProfitChart({ projects, subscriptions = [] }: ProfitChartProps) 
                     <span className="text-[10px] text-muted-foreground  tracking-wider font-semibold">Custos</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-[hsl(var(--primary))]"></div>
+                    <div className="h-2 w-2 rounded-full bg-[hsl(var(--foreground))]"></div>
                     <span className="text-[10px] text-muted-foreground  tracking-wider font-semibold">Lucro</span>
                 </div>
             </div>

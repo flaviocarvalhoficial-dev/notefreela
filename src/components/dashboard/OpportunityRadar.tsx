@@ -37,9 +37,9 @@ export const OpportunityRadar = () => {
             <div className="h-full flex flex-col bg-card/30 backdrop-blur-sm rounded-2xl p-8 min-h-[400px]">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-2">
-                        <Activity className="h-3.5 w-3.5 text-primary/40" />
+                        <Activity className="h-3.5 w-3.5 text-muted-foreground/30" />
                         <h3 className="text-[11px] font-medium text-muted-foreground/60">Radar de Inteligência</h3>
-                        <Badge variant="outline" className="text-[8px] h-4 font-medium px-2 rounded-full border-none bg-primary/5 text-primary/60 ml-2">
+                        <Badge variant="outline" className="text-[8px] h-4 font-medium px-2 rounded-full border-none bg-muted/10 text-muted-foreground/60 ml-2">
                             IA Ativa
                         </Badge>
                     </div>
@@ -61,9 +61,9 @@ export const OpportunityRadar = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                    <Activity className="h-3.5 w-3.5 text-primary/40" />
+                    <Activity className="h-3.5 w-3.5 text-muted-foreground/30" />
                     <h3 className="text-[11px] font-medium text-muted-foreground/60">Radar de Inteligência</h3>
-                    <Badge variant="outline" className="text-[8px] h-4 font-medium px-2 rounded-full border-none bg-primary/5 text-primary/60 ml-2">
+                    <Badge variant="outline" className="text-[8px] h-4 font-medium px-2 rounded-full border-none bg-muted/10 text-muted-foreground/60 ml-2">
                         IA Ativa
                     </Badge>
                 </div>
@@ -71,7 +71,7 @@ export const OpportunityRadar = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate('/leads')}
-                    className="h-7 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors"
+                    className="h-7 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                     Ver todos
                 </Button>
@@ -92,7 +92,7 @@ export const OpportunityRadar = () => {
                                     "px-2 h-4 text-[8px] font-medium border-none rounded-full",
                                     opp.type === 'hot-lead' ? "bg-rose-500/10 text-rose-500" :
                                         opp.type === 'upsell' ? "bg-emerald-500/10 text-emerald-500" :
-                                            "bg-primary/10 text-primary"
+                                            "bg-foreground/10 text-foreground"
                                 )}>
                                     {opp.type === 'hot-lead' ? 'Hot Lead' : 'Insight Comercial'}
                                 </Badge>
@@ -101,7 +101,7 @@ export const OpportunityRadar = () => {
                                     <span className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-tighter">Score</span>
                                 </div>
                             </div>
-                            <h4 className="text-sm font-semibold text-foreground mb-1 group-hover:text-primary transition-colors truncate">
+                            <h4 className="text-sm font-semibold text-foreground mb-1 group-hover:text-foreground transition-colors truncate">
                                 {opp.title}
                             </h4>
                             <p className="text-[11px] text-muted-foreground/60 leading-relaxed line-clamp-2 mb-4">
@@ -115,7 +115,7 @@ export const OpportunityRadar = () => {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 text-muted-foreground/40 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                                    className="h-7 w-7 text-muted-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-lg transition-all"
                                     onClick={() => navigate('/leads')}
                                 >
                                     <ArrowUpRight className="h-4 w-4" />

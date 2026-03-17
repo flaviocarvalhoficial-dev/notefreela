@@ -137,7 +137,7 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                         onClick={() => setChartType("bar")}
                         className={cn(
                             "h-7 px-3 text-[10px] gap-2 rounded-lg transition-all font-bold",
-                            chartType === "bar" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                            chartType === "bar" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <BarChart3 className="h-3 w-3" />
@@ -149,7 +149,7 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                         onClick={() => setChartType("line")}
                         className={cn(
                             "h-7 px-3 text-[10px] gap-2 rounded-lg transition-all font-bold",
-                            chartType === "line" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                            chartType === "line" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <LineChartIcon className="h-3 w-3" />
@@ -177,8 +177,8 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                                         <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.1} />
                                     </linearGradient>
                                     <linearGradient id="receivedGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#0080FF" stopOpacity={0.8} />
-                                        <stop offset="100%" stopColor="#0080FF" stopOpacity={0.3} />
+                                        <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity={0.8} />
+                                        <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity={0.3} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.4} />
@@ -249,8 +249,8 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                                         <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="colorReceived" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#0080FF" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#0080FF" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="hsl(var(--foreground))" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="hsl(var(--foreground))" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.4} />
@@ -307,7 +307,7 @@ export function FinancialChart({ projects }: FinancialChartProps) {
                                     type="natural"
                                     dataKey="received"
                                     name="Recebido"
-                                    stroke="#0080FF"
+                                    stroke="hsl(var(--foreground))"
                                     strokeWidth={3}
                                     fillOpacity={1}
                                     fill="url(#colorReceived)"

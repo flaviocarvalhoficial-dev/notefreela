@@ -269,8 +269,8 @@ export function DashboardTimerWidget() {
                         <div className="flex items-center gap-3.5">
                             {/* Animated Pulse with Timer Core */}
                             <div className="relative flex h-4 w-4">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-30"></span>
-                                <span className="relative inline-flex rounded-full h-4 w-4 bg-primary flex items-center justify-center">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-foreground/40 opacity-30"></span>
+                                <span className="relative inline-flex rounded-full h-4 w-4 bg-foreground/40 flex items-center justify-center">
                                     <Activity className="h-2 w-2 text-white" />
                                 </span>
                             </div>
@@ -371,14 +371,14 @@ export function DashboardTimerWidget() {
                                             <div
                                                 key={entry.id}
                                                 className={cn(
-                                                    "px-5 py-4 flex items-center justify-between group hover:bg-primary/5 transition-colors border-none last:border-0",
+                                                    "px-5 py-4 flex items-center justify-between group hover:bg-foreground/5 transition-colors border-none last:border-0",
                                                     idx % 2 === 0 ? "bg-transparent" : "bg-muted/5"
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3.5 min-w-0">
                                                     <div className={cn(
                                                         "p-2 rounded-xl shrink-0 transition-transform group-hover:scale-110",
-                                                        entry.task_title ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground/40"
+                                                        entry.task_title ? "bg-foreground/10 text-foreground" : "bg-muted text-muted-foreground/40"
                                                     )}>
                                                         {entry.task_title
                                                             ? <CheckSquare className="h-4 w-4" />

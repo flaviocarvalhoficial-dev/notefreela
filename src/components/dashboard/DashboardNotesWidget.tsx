@@ -23,6 +23,7 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
     });
 
     const slashStartPos = useRef<number | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const editor = useEditor({
         extensions: [
@@ -81,8 +82,8 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
                             setSlashMenu({
                                 isOpen: true,
                                 position: {
-                                    top: coords.bottom + 4,
-                                    left: coords.left,
+                                    top: 0,
+                                    left: 0,
                                 },
                                 filterText: '',
                             });
@@ -137,11 +138,14 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
     if (!editor) return null;
 
     return (
-        <div className={cn(
-            "relative h-full flex flex-col transition-all duration-300 rounded-xl",
-            editor.isFocused ? "ring-2 ring-primary/20" : "",
-            className
-        )}>
+        <div
+            ref={containerRef}
+            className={cn(
+                "relative h-full flex flex-col transition-all duration-300 rounded-xl",
+                editor.isFocused ? "ring-2 ring-primary/20" : "",
+                className
+            )}
+        >
             <div className="flex-1 p-5 overflow-y-auto scrollbar-hide min-h-[210px] bg-transparent">
                 <EditorContent
                     editor={editor}
@@ -155,6 +159,7 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
                     isOpen={slashMenu.isOpen}
                     position={slashMenu.position}
                     filterText={slashMenu.filterText}
+                    isCentered
                     commands={SLASH_COMMANDS.filter(cmd =>
                         ['Texto', 'Listas', 'Blocos'].includes(cmd.group)
                     )}

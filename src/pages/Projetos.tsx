@@ -133,7 +133,7 @@ const Projetos = () => {
               size="sm"
               className={cn(
                 "h-9 px-3 gap-2 text-xs font-medium border-none",
-                (filterBilling !== "all" || filterService !== "all" || filterClient !== "all" || selectedStatus !== "all") && "bg-primary/5 text-primary"
+                (filterBilling !== "all" || filterService !== "all" || filterClient !== "all" || selectedStatus !== "all") && "bg-foreground/5 text-foreground"
               )}
               onClick={() => {
                 const el = document.getElementById('advanced-filters');
@@ -316,22 +316,22 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
   const coverUrl = uiConfig?.coverUrl || "";
 
   const statusColors: Record<string, string> = {
-    active: 'primary',
+    active: 'secondary',
     planning: 'outline',
-    review: 'warning',
+    review: 'secondary',
     completed: 'success',
   };
 
   const getMetaphorContent = () => {
-    const colorClass = coverColor === 'accent-primary' ? 'text-accent-primary' : `text-${coverColor.split('-')[0]}-500`;
+    const colorClass = "text-foreground";
 
     switch (metaphor) {
       case 'growth':
         return (
-          <svg width="100%" height="100" viewBox="0 0 300 100" fill="none" className={cn("opacity-5 group-hover:opacity-20 transition-opacity", colorClass)}>
+          <svg width="100%" height="100" viewBox="0 0 300 100" fill="none" className={cn("opacity-[0.08] group-hover:opacity-20 transition-opacity", colorClass)}>
             <path d="M10 90C60 90 100 80 150 50C200 20 250 10 290 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
             <circle cx="150" cy="50" r="4" fill="currentColor" />
-            <circle cx="290" cy="10" r="5" fill="currentColor" className="animate-pulse" />
+            <circle cx="290" cy="10" r="5" fill="currentColor" />
           </svg>
         );
       case 'flow':
@@ -362,11 +362,11 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
         );
       default: // roadmap
         return (
-          <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-5 group-hover:opacity-20 transition-opacity", colorClass)}>
+          <svg width="100%" height="80" viewBox="0 0 300 80" fill="none" className={cn("opacity-[0.08] group-hover:opacity-20 transition-opacity", colorClass)}>
             <path d="M10 40C50 40 70 20 110 20C150 20 170 60 210 60C250 60 270 40 290 40" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" />
             <circle cx="110" cy="20" r="4" fill="currentColor" />
             <circle cx="210" cy="60" r="4" fill="currentColor" />
-            <circle cx="290" cy="40" r="5" fill="currentColor" className="animate-pulse" />
+            <circle cx="290" cy="40" r="5" fill="currentColor" />
           </svg>
         );
     }
@@ -428,11 +428,11 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
 
       {/* Media/Thumbnail Area - Blueprint Signature */}
       <div className="px-5">
-        <div className="h-44 w-full rounded-2xl bg-muted/10 border-none relative overflow-hidden group-hover:bg-primary/5 transition-all duration-300">
+        <div className="h-44 w-full rounded-2xl bg-muted/10 border-none relative overflow-hidden group-hover:bg-muted/20 transition-all duration-300">
           {/* Subtle Blueprint Grid Pattern */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 via-transparent to-foreground/5 opacity-50" />
 
           {/* Internal visual composition - Dynamic Metaphor or Cover Image */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -496,8 +496,8 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
             {/* Progress Micro-indicator */}
             <div className="flex items-center gap-2">
               <span className="text-xs font-normal text-muted-foreground">{project.progress}%</span>
-              <div className="w-12 h-1 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-muted-foreground/30 rounded-full" style={{ width: `${project.progress}%` }} />
+              <div className="w-12 h-1 bg-muted/20 rounded-full overflow-hidden">
+                <div className="h-full bg-foreground/30 rounded-full" style={{ width: `${project.progress}%` }} />
               </div>
             </div>
           </div>
