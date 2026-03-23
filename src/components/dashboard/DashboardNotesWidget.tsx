@@ -1,4 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react';
+import { Mark, mergeAttributes } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
@@ -10,6 +11,21 @@ import { SlashCommandMenu, type SlashCommandItem, SLASH_COMMANDS } from '../proj
 interface DashboardNotesWidgetProps {
     className?: string;
 }
+
+const NoteTimestamp = Mark.create({
+    name: 'noteTimestamp',
+    inclusive: false, // Prevent the mark from leaking into subsequent typing
+    renderHTML({ HTMLAttributes }) {
+        return ['span', mergeAttributes(HTMLAttributes, { class: 'note-timestamp' }), 0];
+    },
+    parseHTML() {
+        return [
+            {
+                tag: 'span.note-timestamp',
+            },
+        ];
+    },
+});
 
 export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
     const [slashMenu, setSlashMenu] = useState<{
@@ -37,6 +53,7 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
             TaskItem.configure({
                 nested: true,
             }),
+            NoteTimestamp,
         ],
         content: localStorage.getItem('dashboard_quick_notes') || '',
         onUpdate: ({ editor: ed }) => {
@@ -82,17 +99,21 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
                         const now = new Date();
                         const d = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
                         const t = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                        const ts = ` [${d} ${t}]`;
+                        const timestampHtml = `<span class="note-timestamp">[${d} ${t}]</span>`;
 
-                        // Insert at the end of the current block
-                        // We do this BEFORE the line break occurs
+                        // 1. Move selection to the absolute end of the current block
                         const endOfBlock = selection.$from.end();
-                        const timestampHtml = `<span class="note-timestamp" style="font-size: 10px; color: #9ca3af; margin-left: 6px; font-weight: 400;">[${d} ${t}]</span>`;
-                        const tr = view.state.tr.insertText(' ', endOfBlock); // Add a space first
-                        view.dispatch(tr);
 
-                        // Use insertContent to handle the HTML span
-                        editor.commands.insertContentAt(view.state.selection.from, timestampHtml);
+                        // 2. Insert space + timestamp and move cursor AFTER it
+                        editor.chain()
+                            .setTextSelection(endOfBlock)
+                            .insertContent(' ')
+                            .insertContent(timestampHtml)
+                            .focus()
+                            .run();
+
+                        // 3. Let Tiptap handle the actual Enter key at the new position
+                        return false;
                     }
                 }
 
