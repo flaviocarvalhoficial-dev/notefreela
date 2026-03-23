@@ -78,49 +78,53 @@
   }
 
   .dark {
-    --background: 0 0% 7%;
-    /* #121212 - Neutral Deep Background */
-    --foreground: 210 10% 98%;
-    /* #FAFAFB */
-    --card: 0 0% 10%;
-    /* #1a1a1a - Neutral Surface */
-    --card-foreground: 210 10% 98%;
+    /* Nimbus Dark Mode — Deep Immersive Palette */
+    --background: 0 0% 9%;
+    /* #181818 Graphite Base */
+    --foreground: 0 0% 98%;
+    /* Bright Content #FAFAFB */
 
-    --popover: 0 0% 9%;
-    --popover-foreground: 210 10% 98%;
+    --card: 0 0% 14%;
+    /* Graphite Cards #222222 — High Definition Contrast */
+    --card-foreground: 0 0% 98%;
 
-    --primary: 210 100% 52%;
-    /* Strategic Nimbus Blue */
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 210 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 215 10% 75%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 0 0% 11%;
-    --muted-foreground: 215 8% 55%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 85%;
+    /* High contrast secondary labels */
 
-    --accent: 0 0% 15%;
-    /* Neutral accent instead of blue */
+    --accent: 220 15% 18%;
     --accent-foreground: 210 10% 98%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 10% 98%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 210 10% 98%;
+    --border: 0 0% 18%;
+    /* Subtle boundaries */
+    --input: 0 0% 18%;
+    --ring: 210 100% 55%;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 215 10% 65%;
-    --sidebar-primary: 210 100% 52%;
+    --sidebar-background: 0 0% 9%;
+    /* #181818 Sidebar Base */
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 210 100% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-accent-foreground: 210 10% 98%;
-    --sidebar-border: 0 0% 14%;
-    /* Glossy Specific Tokens */
-    --glass-background: 0 0% 8% / 0.4;
-    --glass-border: 0 0% 100% / 0.02;
-    --glass-glow: 210 100% 52% / 0.08;
+    --sidebar-accent: 0 0% 13%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 11%;
+
+    /* Glossy Specific Tokens Refinement */
+    --glass-background: 220 15% 8% / 0.6;
+    --glass-border: 220 15% 100% / 0.04;
+    --glass-glow: 210 100% 55% / 0.12;
   }
 }
 
@@ -170,11 +174,11 @@
   }
 
   .caption {
-    @apply text-xs font-normal text-muted-foreground;
+    @apply text-[13px] font-normal text-muted-foreground;
   }
 
   .label-text {
-    @apply text-[12px] font-medium text-foreground tracking-tight;
+    @apply text-[14px] font-medium text-foreground tracking-tight;
   }
 
   /* Buttons - Cockpit Signature */
@@ -302,6 +306,26 @@
 
   .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.4) !important;
+  }
+
+  .custom-scrollbar-minimal::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar-minimal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar-minimal::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--primary) / 0.15) !important;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.2s;
+  }
+
+  .custom-scrollbar-minimal:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--primary) / 0.4) !important;
   }
 }
 

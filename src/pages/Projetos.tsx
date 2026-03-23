@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { NewProjectDialog } from "@/components/projects/NewProjectDialog";
 import { EditProjectDialog } from "@/components/projects/EditProjectDialog";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
@@ -99,7 +100,7 @@ const Projetos = () => {
             {stats.slice(0, 3).map((stat) => (
               <div key={stat.label} className="flex items-center gap-2 group cursor-default">
                 <stat.icon className="h-3.5 w-3.5 text-muted-foreground/40" />
-                <span className="text-sm font-medium tabular-nums text-foreground/70">{stat.value}</span>
+                <span className="text-[13px] font-medium tabular-nums text-foreground/70">{stat.value}</span>
               </div>
             ))}
           </div>
@@ -169,7 +170,7 @@ const Projetos = () => {
         <div id="advanced-filters" className="hidden animate-in fade-in slide-in-from-top-1 duration-200">
           <div className="flex flex-wrap items-center gap-4 py-3 px-4 bg-muted/20 rounded-lg border-none">
             <Select value={selectedStatus} onValueChange={(v: any) => setSelectedStatus(v)}>
-              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md">
+              <SelectTrigger className="h-8 w-[140px] text-[12px] font-medium bg-card border-none rounded-md">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent className="glass border-none">
@@ -181,7 +182,7 @@ const Projetos = () => {
             </Select>
 
             <Select value={filterBilling} onValueChange={(v: any) => setFilterBilling(v)}>
-              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md">
+              <SelectTrigger className="h-8 w-[140px] text-[12px] font-medium bg-card border-none rounded-md">
                 <SelectValue placeholder="Faturamento" />
               </SelectTrigger>
               <SelectContent className="glass border-none">
@@ -192,7 +193,7 @@ const Projetos = () => {
             </Select>
 
             <Select value={filterService} onValueChange={setFilterService}>
-              <SelectTrigger className="h-8 w-[140px] text-[10px] font-medium bg-card border-none rounded-md">
+              <SelectTrigger className="h-8 w-[140px] text-[12px] font-medium bg-card border-none rounded-md">
                 <SelectValue placeholder="Serviço" />
               </SelectTrigger>
               <SelectContent className="glass border-none">
@@ -204,7 +205,7 @@ const Projetos = () => {
             </Select>
 
             <Select value={filterClient} onValueChange={setFilterClient}>
-              <SelectTrigger className="h-8 w-[180px] text-[10px] font-medium bg-card border-none rounded-md">
+              <SelectTrigger className="h-8 w-[180px] text-[12px] font-medium bg-card border-none rounded-md">
                 <SelectValue placeholder="Cliente" />
               </SelectTrigger>
               <SelectContent className="glass border-none">
@@ -218,7 +219,7 @@ const Projetos = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-3 text-[10px] font-medium text-muted-foreground hover:text-foreground"
+              className="h-8 px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground"
               onClick={() => {
                 setFilterBilling("all");
                 setFilterService("all");
@@ -385,17 +386,17 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
             <ProjectIcon className="h-7 w-7" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-foreground leading-tight truncate max-w-[120px]">
+            <span className="text-[13px] font-medium text-foreground leading-tight truncate max-w-[120px]">
               {project.client_name || "Autoral"}
             </span>
-            <span className="text-xs text-muted-foreground font-normal">
+            <span className="text-[11px] text-muted-foreground font-normal">
               {project.created_at ? format(new Date(project.created_at), "dd MMM, yyyy") : "Novo projeto"}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant={statusColors[project.status] as any || "tonal"} className="rounded-md px-2 h-5 text-[10px] font-medium border-none capitalize">
+          <Badge variant={statusColors[project.status] as any || "tonal"} className="rounded-md px-2 h-5 text-[11px] font-medium border-none capitalize">
             {statusLabels[project.status as ProjectStatus] || project.status || 'Ativo'}
           </Badge>
 
@@ -457,48 +458,43 @@ function ProjectCard({ project, onDelete, onEdit, onClick }: { project: any, onD
       </div>
 
       {/* Content area */}
-      <div className="p-6 space-y-4">
-        <h3 className="text-base font-medium text-foreground/90 leading-snug tracking-tight group-hover:text-foreground transition-colors line-clamp-2">
+      <div className="p-6 pt-2 space-y-4">
+        <h3 className="text-[15px] font-semibold text-foreground/90 leading-snug tracking-tight group-hover:text-primary transition-colors line-clamp-1">
           {project.name}
         </h3>
 
-        <div className="flex flex-wrap gap-2">
-          {project.service_type && (
-            <div className="px-3 h-5 rounded-full border-none bg-muted/30 text-[9px] font-medium text-muted-foreground/80 flex items-center">
-              {project.service_type}
-            </div>
-          )}
-          <div className="px-3 h-5 rounded-full border-none bg-muted/30 text-[9px] font-medium text-muted-foreground/80 flex items-center">
-            {project.billing_type || "Pontual"}
-          </div>
-        </div>
-
-        {/* Details list */}
-        <div className="space-y-3 pt-2">
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <LucideIcons.Layers className="h-4 w-4 opacity-70" />
-            <span className="text-sm font-normal">{project.billing_type === 'recorrente' ? 'Assinatura Mês' : 'Projeto Único'}</span>
-          </div>
-
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <LucideIcons.DollarSign className="h-4 w-4 opacity-70" />
-            <span className="text-sm font-medium text-foreground tabular-nums mask-value">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none mb-1">Investimento</span>
+            <span className="text-[15px] font-bold text-foreground tabular-nums mask-value">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
             </span>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-muted-foreground">
-              <LucideIcons.Calendar className="h-4 w-4 opacity-70" />
-              <span className="text-sm font-normal">Prazo {project.deadline ? format(new Date(project.deadline), "dd MMM, yyyy") : "--/--/--"}</span>
+          <div className="text-right">
+            <div className="flex items-center gap-2 justify-end mb-1">
+              <span className="text-[11px] font-bold text-foreground/70">{project.progress}%</span>
             </div>
+            <div className="w-16 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${project.progress}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="h-full bg-primary rounded-full shadow-[0_0_12px_-2px_hsl(var(--primary)/0.4)]"
+              />
+            </div>
+          </div>
+        </div>
 
-            {/* Progress Micro-indicator */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-normal text-muted-foreground">{project.progress}%</span>
-              <div className="w-12 h-1 bg-muted/20 rounded-full overflow-hidden">
-                <div className="h-full bg-foreground/30 rounded-full" style={{ width: `${project.progress}%` }} />
-              </div>
+        <div className="pt-2 flex items-center justify-between border-t border-border/10">
+          <div className="flex items-center gap-2 text-muted-foreground/60">
+            <LucideIcons.Calendar className="h-3 w-3" />
+            <span className="text-[11px] font-medium">{project.deadline ? format(new Date(project.deadline), "dd MMM", { locale: ptBR }) : "--/--"}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="px-2 py-0.5 rounded-md bg-muted/20 text-[9px] font-bold uppercase tracking-tight text-muted-foreground/70">
+              {project.service_type || "Geral"}
             </div>
           </div>
         </div>
@@ -522,22 +518,22 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
           })()}
         </div>
         <div className="min-w-0 flex-1 pr-6">
-          <h3 className="font-medium text-sm truncate text-foreground/90 group-hover:text-foreground transition-colors underline-offset-4 hover:underline">{project.name}</h3>
-          <p className="text-[10px] text-muted-foreground font-normal truncate">{project.client_name || "Sem cliente"}</p>
+          <h3 className="font-medium text-[15px] truncate text-foreground/90 group-hover:text-foreground transition-colors underline-offset-4 hover:underline">{project.name}</h3>
+          <p className="text-[12px] text-muted-foreground font-normal truncate">{project.client_name || "Sem cliente"}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-8 px-6">
         <div className="hidden lg:flex flex-col w-32">
           <Badge className={cn(
-            "text-[8px] font-medium tracking-tight h-4 w-fit mb-1 border-none",
+            "text-[11px] font-medium tracking-tight h-4 w-fit mb-1 border-none",
             project.billing_type === 'recorrente'
               ? "bg-secondary text-foreground"
               : "bg-transparent text-muted-foreground"
           )}>
             {project.billing_type || 'pontual'}
           </Badge>
-          <div className="flex items-center gap-1.5 text-[9px] font-medium text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
             <div className={cn("h-1 w-1 rounded-full",
               project.contract_status === 'active' ? 'bg-emerald-500' :
                 project.contract_status === 'pending' ? 'bg-amber-500' : 'bg-slate-400')} />
@@ -545,14 +541,14 @@ function ProjectListItem({ project, onDelete, onEdit, onClick }: { project: any,
           </div>
         </div>
         <div className="hidden sm:flex flex-col text-right w-24">
-          <span className="text-[9px] font-medium text-muted-foreground/80 capitalize">{project.service_type || "Outro"}</span>
-          <span className="text-[8px] text-muted-foreground/40 font-medium tracking-tight mt-0.5">Serviço</span>
+          <span className="text-[11px] font-medium text-muted-foreground/80 capitalize">{project.service_type || "Outro"}</span>
+          <span className="text-[10px] text-muted-foreground/40 font-medium tracking-tight mt-0.5">Serviço</span>
         </div>
         <div className="hidden xl:flex flex-col text-right w-24">
-          <span className="text-xs font-medium tabular-nums mask-value text-foreground/80">
+          <span className="text-[13px] font-medium tabular-nums mask-value text-foreground/80">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(project.value || 0)}
           </span>
-          <span className="text-[8px] text-muted-foreground/40 font-medium tracking-tight mt-0.5">
+          <span className="text-[10px] text-muted-foreground/40 font-medium tracking-tight mt-0.5">
             {project.billing_type === 'recorrente' ? 'Mensal' : 'Total'}
           </span>
         </div>

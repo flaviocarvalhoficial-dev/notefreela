@@ -31,7 +31,9 @@ import {
     Hash,
     Zap,
     ArrowRight,
-    Filter
+    Filter,
+    Rocket,
+    Sparkles
 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -292,7 +294,8 @@ const DraggableInboxItem = ({ item, viewMode, children }: { item: InboxItem, vie
 };
 
 // Componente DroppableFolder (Caixa)
-const DroppableFolder = ({ folder, count, isActive, isDimmed, onClick, onRename, onDelete, isSystem, isPinned, onTogglePin, children }: any) => {
+// Componente DroppableFolder (Caixa - Minimalist Folder Shape)
+const DroppableFolder = ({ folder, count, isActive, isDimmed, onClick, onRename, onDelete, isSystem, isPinned, onTogglePin }: any) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `folder-${folder || 'uncategorized'}`,
         data: { folder }
@@ -305,74 +308,90 @@ const DroppableFolder = ({ folder, count, isActive, isDimmed, onClick, onRename,
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
             className={cn(
-                "cursor-pointer p-3.5 rounded-xl border transition-all duration-300 flex flex-col gap-3 relative overflow-hidden group",
-                isActive
-                    ? "bg-foreground/[0.03] border-foreground/20 shadow-sm"
-                    : "bg-card border-transparent hover:bg-muted/30 hover:shadow-soft",
-                isDimmed && !isActive ? "opacity-40 grayscale-[0.5] scale-[0.98]" : "opacity-100",
-                isOver ? "ring-2 ring-primary bg-primary/5 z-10 border-primary/30" : ""
+                "relative group cursor-pointer transition-all duration-500 flex flex-col",
+                isDimmed && !isActive ? "opacity-40 grayscale-[0.8]" : "opacity-100",
+                isOver && "scale-105 z-10"
             )}
         >
-            <div className="flex items-start justify-between">
-                <div className={cn(
-                    "h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-300 border shadow-sm",
-                    isActive
-                        ? "bg-foreground border-foreground/20 text-background"
-                        : "bg-sidebar-background border-border text-foreground/40 group-hover:text-foreground group-hover:border-foreground/20 group-hover:bg-foreground/5"
-                )}>
-                    <Briefcase className={cn("h-4 w-4", isActive ? "animate-pulse" : "")} />
+            {/* Folder Tab - Physically present on top */}
+            <div className={cn(
+                "h-6 w-[45%] rounded-t-[14px] transition-all duration-500 relative -mb-[1px]",
+                "bg-sidebar border-t border-l border-r border-border group-hover:bg-sidebar-accent",
+                isActive && "bg-sidebar-accent border-primary/20"
+            )} style={{
+                clipPath: 'polygon(0 0, 80% 0, 100% 100%, 0% 100%)',
+            }} />
+
+            {/* Folder Body */}
+            <div className={cn(
+                "relative w-full aspect-[4/3] rounded-[24px] rounded-tl-[12px] transition-all duration-500 border shadow-sm flex flex-col justify-between p-4",
+                "bg-sidebar border-border group-hover:bg-sidebar-accent/80",
+                isActive && "bg-sidebar-accent/40 border-primary/20",
+                isOver && "border-primary ring-2 ring-primary/20"
+            )}>
+                {/* Top Actions (Pinned/More) */}
+                <div className="flex items-start justify-between relative z-10">
+                    <div className={cn(
+                        "h-8 w-8 rounded-[10px] flex items-center justify-center transition-all duration-300",
+                        isActive ? "bg-primary/20 text-primary shadow-none" : "bg-sidebar-accent text-muted-foreground/40 group-hover:text-foreground"
+                    )}>
+                        <LayoutGrid className="h-4 w-4" />
+                    </div>
+
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn("h-7 w-7 rounded-md", isPinned ? "text-primary fill-primary/10" : "text-muted-foreground/40 hover:text-foreground")}
+                            onClick={(e) => onTogglePin(e, folder)}
+                        >
+                            <Plus className={cn("h-3.5 w-3.5 transition-transform", isPinned && "rotate-45")} />
+                        </Button>
+                        {!isSystem && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md text-muted-foreground/40 hover:text-foreground">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="glass border-none z-[60]">
+                                    <DropdownMenuItem onClick={onRename} className="gap-2.5 py-2 cursor-pointer text-xs">
+                                        <Edit className="h-3.5 w-3.5" /> Renomear
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-border/50" />
+                                    <DropdownMenuItem onClick={onDelete} className="gap-2.5 py-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/5 text-xs">
+                                        <Trash2 className="h-3.5 w-3.5" /> Excluir
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all translate-x-1 group-hover:translate-x-0" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn("h-7 w-7 rounded-md hover:bg-background shadow-none", isPinned ? "text-amber-500 opacity-100" : "text-muted-foreground/30 hover:text-foreground")}
-                        onClick={(e) => onTogglePin(e, folder)}
-                    >
-                        <Plus className={cn("h-3.5 w-3.5 transition-transform duration-300", isPinned ? "rotate-45" : "")} />
-                    </Button>
-
-                    {!isSystem && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-background shadow-none text-muted-foreground/30 hover:text-foreground">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="glass border-none min-w-[140px] z-[60]">
-                                <DropdownMenuItem onClick={onRename} className="gap-2.5 py-2 cursor-pointer">
-                                    <Edit className="h-3.5 w-3.5" /> Renomear
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-border/50" />
-                                <DropdownMenuItem onClick={onDelete} className="gap-2.5 py-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/5">
-                                    <Trash2 className="h-3.5 w-3.5" /> Excluir
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
-                </div>
-            </div>
-
-            <div className="flex flex-col min-w-0 pr-2">
-                <span className={cn(
-                    "text-[12.5px] font-semibold truncate tracking-tight transition-colors",
-                    isActive ? "text-foreground" : "text-foreground group-hover:text-foreground"
-                )}>
-                    {folder}
-                </span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">
-                        {count} {count === 1 ? 'registro' : 'registros'}
+                {/* Info Area */}
+                <div className="flex flex-col gap-0.5 relative z-10">
+                    <span className={cn(
+                        "text-[12.5px] font-bold tracking-tight transition-colors truncate",
+                        isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    )}>
+                        {folder}
                     </span>
-                    {isPinned && <div className="h-1 w-1 rounded-full bg-amber-500/40" />}
+                    <div className="flex items-center gap-2">
+                        <span className={cn(
+                            "text-[10px] font-bold uppercase tracking-widest tabular-nums",
+                            isActive ? "text-primary/70" : "text-muted-foreground/30"
+                        )}>
+                            {count} {count === 1 ? 'Item' : 'Items'}
+                        </span>
+                        {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shadow-glow" />}
+                    </div>
                 </div>
-            </div>
 
-            {/* Subtle Active Indicator */}
-            {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/20" />
-            )}
+                {/* Decorative Accent (Non-transparent) */}
+                {isActive && (
+                    <div className="absolute top-0 right-0 w-8 h-8 bg-primary/5 rounded-bl-3xl pointer-events-none" />
+                )}
+            </div>
         </motion.div>
     );
 };
@@ -537,6 +556,51 @@ const CaixaEntrada = () => {
             toast({
                 title: "Convertido com sucesso!",
                 description: `"${data.itemName}" agora é um cliente na sua carteira.`,
+            });
+            setViewingItem(null);
+        },
+        onError: (error: any) => {
+            toast({
+                title: "Erro na conversão",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    });
+
+    const convertToProjectMutation = useMutation<any, Error, InboxItem>({
+        mutationFn: async (item) => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Usuário não autenticado");
+
+            const { error: projectErr } = await (supabase as any)
+                .from("projects")
+                .insert({
+                    user_id: user.id,
+                    name: item.title || "Novo Projeto (da Caixa)",
+                    description: item.content,
+                    status: 'active',
+                    created_at: new Date().toISOString()
+                });
+
+            if (projectErr) throw projectErr;
+
+            const { error: delErr } = await (supabase as any)
+                .from("inbox")
+                .delete()
+                .eq("id", item.id);
+
+            if (delErr) throw delErr;
+
+            return { itemName: item.title };
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["inbox"] });
+            queryClient.invalidateQueries({ queryKey: ["inbox-sidebar"] });
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+            toast({
+                title: "Projeto Criado!",
+                description: `"${data.itemName}" foi convertido em um novo projeto.`,
             });
             setViewingItem(null);
         },
@@ -911,23 +975,25 @@ const CaixaEntrada = () => {
                     <div>
                         <h1 className="text-2xl font-medium tracking-tight text-foreground">Caixa de Entrada</h1>
                     </div>
-                    <Button
-                        size="sm"
-                        onClick={() => {
-                            const knownFolders = JSON.parse(localStorage.getItem("inbox_folders") || "[]");
-                            const allCategories = Array.from(new Set([...knownFolders, ...items.map(i => i.category).filter(Boolean)]));
-                            const isFolderMode = allCategories.includes(searchQuery);
+                    {isAnyFolderActive && (
+                        <Button
+                            size="sm"
+                            onClick={() => {
+                                const knownFolders = JSON.parse(localStorage.getItem("inbox_folders") || "[]");
+                                const allCategories = Array.from(new Set([...knownFolders, ...items.map(i => i.category).filter(Boolean)]));
+                                const isFolderMode = allCategories.includes(searchQuery);
 
-                            if (isFolderMode) {
-                                setNewCategory(searchQuery);
-                            } else {
-                                setNewCategory("");
-                            }
-                            setIsAdding(true);
-                        }} className="h-9 px-4 rounded-md bg-primary text-primary-foreground shadow-sm gap-2"
-                    >
-                        <Plus className="h-4 w-4" /> Novo Registro
-                    </Button>
+                                if (isFolderMode) {
+                                    setNewCategory(searchQuery);
+                                } else {
+                                    setNewCategory("");
+                                }
+                                setIsAdding(true);
+                            }} className="h-9 px-4 rounded-md bg-primary text-primary-foreground shadow-sm gap-2 animate-in fade-in slide-in-from-right-4 duration-300"
+                        >
+                            <Plus className="h-4 w-4" /> Novo Registro
+                        </Button>
+                    )}
                 </header>
 
                 <div className="flex flex-col gap-8">
@@ -1114,29 +1180,34 @@ const CaixaEntrada = () => {
                         )}
                     </AnimatePresence>
 
-                    {/* Seção de Caixas - Compacta e Elegante */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between px-1">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <LayoutGrid className="h-3.5 w-3.5" /> Caixas & Projetos
-                                </h2>
-                                <Badge variant="secondary" className="bg-foreground/5 text-foreground text-[10px] h-5 rounded-md px-1.5 font-bold">
-                                    {items.length} itens totais
-                                </Badge>
+                    {/* Seção de Caixas - Organização Inteligente em Estilo Pasta */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between px-2">
+                            <div className="flex items-center gap-4">
+                                <div className="flex flex-col">
+                                    <h2 className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.3em] flex items-center gap-2 mb-1">
+                                        Explorador de Arquivos
+                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xl font-bold tracking-tight text-foreground">Minhas Caixas</span>
+                                        <Badge variant="outline" className="text-[10px] h-5 rounded-md px-1.5 font-bold border-primary/20 text-primary bg-primary/5">
+                                            {items.length} Capturas
+                                        </Badge>
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="relative group/boxsearch">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 group-focus-within/boxsearch:text-primary transition-colors" />
+                                <div className="relative group/boxsearch hidden md:block">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/20 group-focus-within/boxsearch:text-primary transition-colors" />
                                     <Input
                                         placeholder="Filtrar caixas..."
-                                        className="h-8 w-32 md:w-56 pl-9 text-[11px] bg-card border-transparent shadow-soft transition-all rounded-xl focus-visible:ring-primary/20"
+                                        className="h-9 w-48 pl-9 text-[11px] bg-sidebar/40 border-transparent focus:bg-sidebar/60 transition-all rounded-xl focus-visible:ring-primary/20"
                                         value={boxSearchQuery}
                                         onChange={(e) => setBoxSearchQuery(e.target.value)}
                                     />
                                 </div>
 
-                                <Separator orientation="vertical" className="h-4 bg-muted-foreground/10" />
+                                <Separator orientation="vertical" className="h-6 bg-muted-foreground/5 hidden md:block" />
 
                                 <Button
                                     variant="outline"
@@ -1145,14 +1216,15 @@ const CaixaEntrada = () => {
                                         setNewFolderName("");
                                         setIsCreatingFolder(true);
                                     }}
-                                    className="h-8 text-[11px] font-bold bg-background border-muted-foreground/5 hover:bg-muted/50 hover:text-foreground hover:border-border gap-2 px-4 rounded-xl shadow-sm transition-all"
+                                    className="h-9 text-[11px] font-bold bg-primary/5 border-primary/10 text-primary hover:bg-primary/10 transition-all rounded-xl shadow-sm px-5"
                                 >
-                                    <Plus className="h-3.5 w-3.5" /> Nova Caixa
+                                    <Plus className="h-3.5 w-3.5 mr-1" /> Nova Caixa
                                 </Button>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 transition-all">
+                        {/* Immersive Folder View - Transformation when Active */}
+                        <div className="transition-all duration-700 ease-in-out">
                             {(() => {
                                 // Combine local folders and DB categories
                                 const dbCategories = items.map(i => i.category).filter(Boolean);
@@ -1164,7 +1236,48 @@ const CaixaEntrada = () => {
                                     f.toLowerCase().includes(boxSearchQuery.toLowerCase())
                                 );
 
-                                // Sort: Pinned first, then alphabetical
+                                // Logic for Active View vs Grid View
+                                if (isAnyFolderActive) {
+                                    const activeFolder = searchQuery;
+                                    const count = items.filter(i => i.category === activeFolder).length;
+
+                                    return (
+                                        <motion.div
+                                            initial={{ opacity: 0, scaleY: 0.9, originY: 0 }}
+                                            animate={{ opacity: 1, scaleY: 1 }}
+                                            className="flex flex-col gap-0 w-full mb-8"
+                                        >
+                                            <div className="flex items-center justify-between mb-4">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setSearchQuery("")}
+                                                    className="gap-2 text-muted-foreground hover:text-foreground group pl-0"
+                                                >
+                                                    <ArrowRight className="h-3.5 w-3.5 rotate-180 transition-transform group-hover:-translate-x-1" />
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Sair da Pasta</span>
+                                                </Button>
+                                                <Badge variant="outline" className="text-[10px] font-bold px-2 py-0 h-6 border-primary/20 text-primary/60 bg-primary/5">
+                                                    {count} Capturas
+                                                </Badge>
+                                            </div>
+
+                                            {/* Transformed Horizontal Folder Header */}
+                                            <div className="relative w-full">
+                                                {/* Wide Tab */}
+                                                <div className="h-8 w-64 bg-sidebar border-t border-l border-r border-border rounded-t-[14px] flex items-center px-5 -mb-[1px] relative z-20 shadow-sm"
+                                                    style={{ clipPath: 'polygon(0 0, 88% 0, 100% 100%, 0% 100%)' }}>
+                                                    <LayoutGrid className="h-4 w-4 text-primary mr-3" />
+                                                    <span className="text-[12px] font-bold truncate pr-6">{activeFolder}</span>
+                                                </div>
+                                                {/* Wide Body (20px Bar) */}
+                                                <div className="w-full h-5 bg-sidebar border border-border rounded-r-[16px] rounded-bl-[16px] relative z-10 shadow-sm" />
+                                            </div>
+                                        </motion.div>
+                                    );
+                                }
+
+                                // Default Grid View
                                 const sortedFolders = filteredBoxes.sort((a, b) => {
                                     const aPinned = pinnedBoxes.includes(a);
                                     const bPinned = pinnedBoxes.includes(b);
@@ -1173,95 +1286,99 @@ const CaixaEntrada = () => {
                                     return a.localeCompare(b);
                                 });
 
-                                if (sortedFolders.length === 0) {
+                                if (sortedFolders.length === 0 && !boxSearchQuery) {
                                     return (
-                                        <div className="col-span-full py-8 text-center border border-dashed border-border/50 rounded-xl bg-muted/5 flex flex-col items-center justify-center gap-2">
-                                            <Search className="h-5 w-5 text-muted-foreground/30" />
-                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
-                                                {boxSearchQuery ? `Nenhuma caixa p/ "${boxSearchQuery}"` : "Crie sua primeira caixa"}
-                                            </p>
+                                        <div className="col-span-full py-12 flex flex-col items-center justify-center border border-dashed border-border/20 rounded-[24px] bg-sidebar/10">
+                                            <Inbox className="h-8 w-8 text-muted-foreground/10 mb-3" />
+                                            <p className="text-[12px] text-muted-foreground/40 font-medium">Você ainda não criou pastas de organização.</p>
                                         </div>
                                     );
                                 }
 
-                                return sortedFolders.map(folder => {
-                                    if (!folder) return null;
-                                    const count = items.filter(i => i.category === folder).length;
-                                    const isActive = searchQuery === folder;
-                                    const isPinned = pinnedBoxes.includes(folder);
+                                return (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4 transition-all pb-2">
+                                        {sortedFolders.map(folder => {
+                                            if (!folder) return null;
+                                            const count = items.filter(i => i.category === folder).length;
+                                            const isActive = searchQuery === folder;
+                                            const isPinned = pinnedBoxes.includes(folder);
 
-                                    return (
-                                        <DroppableFolder
-                                            key={folder}
-                                            folder={folder}
-                                            count={count}
-                                            isActive={isActive}
-                                            isDimmed={isAnyFolderActive}
-                                            isPinned={isPinned}
-                                            onTogglePin={togglePin}
-                                            onClick={() => {
-                                                if (searchQuery === folder) setSearchQuery("");
-                                                else setSearchQuery(folder);
-                                            }}
-                                            onDelete={() => setFolderToDelete(folder)}
-                                            onRename={() => setFolderToRename({ oldName: folder, newName: folder })}
-                                        />
-                                    );
-                                });
+                                            return (
+                                                <DroppableFolder
+                                                    key={folder}
+                                                    folder={folder}
+                                                    count={count}
+                                                    isActive={isActive}
+                                                    isDimmed={false}
+                                                    isPinned={isPinned}
+                                                    onTogglePin={togglePin}
+                                                    onClick={() => {
+                                                        if (isActive) setSearchQuery("");
+                                                        else setSearchQuery(folder);
+                                                    }}
+                                                    onDelete={() => setFolderToDelete(folder)}
+                                                    onRename={() => setFolderToRename({ oldName: folder, newName: folder })}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                );
                             })()}
                         </div>
                     </div>
 
-                    {/* Items Grid/List */}
-                    <div className="space-y-6">
-                        {isLoading ? (
-                            <div className="flex items-center justify-center py-20">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
-                            </div>
-                        ) : filteredItems.length === 0 ? (
-                            <div className="text-center py-24 px-6 border-2 border-dashed border-border rounded-2xl bg-muted/5 flex flex-col items-center gap-4 animate-in fade-in duration-700">
-                                <div className="p-4 rounded-full bg-primary/5">
-                                    <Inbox className="h-10 w-10 text-primary opacity-20" />
+                    {/* Items Grid/List - Only shown when a context is selected */}
+                    {(isAnyFolderActive || searchQuery || selectedType !== "all" || projectFilter) && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            {isLoading ? (
+                                <div className="flex items-center justify-center py-20">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
                                 </div>
-                                <div className="space-y-2">
-                                    <h3 className="text-xl font-medium tracking-tight text-foreground">
-                                        {(searchQuery && searchQuery !== 'uncategorized') || (JSON.parse(localStorage.getItem("inbox_folders") || "[]").includes(searchQuery)) ? `Caixa "${searchQuery}" vazia` : "Caixa de entrada vazia"}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                                        {searchQuery ? "Arraste itens para esta caixa ou crie uma nova captura rápida." : "Sua caixa de entrada está limpa. Que tal capturar uma nova ideia agora?"}
-                                    </p>
+                            ) : filteredItems.length === 0 ? (
+                                <div className="text-center py-24 px-6 border-2 border-dashed border-border rounded-2xl bg-muted/5 flex flex-col items-center gap-4 animate-in fade-in duration-700">
+                                    <div className="p-4 rounded-full bg-primary/5">
+                                        <Inbox className="h-10 w-10 text-primary opacity-20" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-xl font-medium tracking-tight text-foreground">
+                                            {(searchQuery && searchQuery !== 'uncategorized') || (JSON.parse(localStorage.getItem("inbox_folders") || "[]").includes(searchQuery)) ? `Caixa "${searchQuery}" vazia` : "Caixa de entrada vazia"}
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                                            {searchQuery ? "Arraste itens para esta caixa ou crie uma nova captura rápida." : "Sua caixa de entrada está limpa. Que tal capturar uma nova ideia agora?"}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        className="btn-gradient px-8 h-11 font-medium shadow-glow-sm"
+                                        onClick={() => setIsAdding(true)}
+                                    >
+                                        CAPTURAR AGORA
+                                    </Button>
                                 </div>
-                                <Button
-                                    className="btn-gradient px-8 h-11 font-medium shadow-glow-sm"
-                                    onClick={() => setIsAdding(true)}
-                                >
-                                    CAPTURAR AGORA
-                                </Button>
-                            </div>
-                        ) : (
-                            <div className={cn(
-                                "gap-3 auto-rows-fr",
-                                viewMode === 'grid'
-                                    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4"
-                                    : "flex flex-col"
-                            )}>
-                                {filteredItems.map((item) => (
-                                    <DraggableInboxItem key={item.id} item={item} viewMode={viewMode}>
-                                        <div onClick={() => setViewingItem(item)} className="h-full">
-                                            <ItemCard
-                                                item={item}
-                                                viewMode={viewMode}
-                                                copiedId={copiedId}
-                                                onCopy={handleCopy}
-                                                onEdit={setEditingItem}
-                                                onDelete={(id) => deleteItemMutation.mutate(id)}
-                                            />
-                                        </div>
-                                    </DraggableInboxItem>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                            ) : (
+                                <div className={cn(
+                                    "gap-3 auto-rows-fr",
+                                    viewMode === 'grid'
+                                        ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4"
+                                        : "flex flex-col"
+                                )}>
+                                    {filteredItems.map((item) => (
+                                        <DraggableInboxItem key={item.id} item={item} viewMode={viewMode}>
+                                            <div onClick={() => setViewingItem(item)} className="h-full">
+                                                <ItemCard
+                                                    item={item}
+                                                    viewMode={viewMode}
+                                                    copiedId={copiedId}
+                                                    onCopy={handleCopy}
+                                                    onEdit={setEditingItem}
+                                                    onDelete={(id) => deleteItemMutation.mutate(id)}
+                                                />
+                                            </div>
+                                        </DraggableInboxItem>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -1276,118 +1393,129 @@ const CaixaEntrada = () => {
 
             {/* Edit Item Modal */}
             <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
-                <DialogContent className="border-none shadow-float max-w-xl">
-                    <DialogHeader>
-                        <DialogTitle>Editar Registro</DialogTitle>
+                <DialogContent className="border-border max-w-2xl w-[95vw] bg-card shadow-float z-[70] p-0 overflow-hidden rounded-[24px] max-h-[90vh] flex flex-col">
+                    <DialogHeader className="p-8 pb-4 shrink-0 border-b border-border/5">
+                        <DialogTitle className="text-xl font-bold tracking-tight">Editar Registro</DialogTitle>
+                        <DialogDescription className="text-xs font-medium text-muted-foreground/60 uppercase tracking-widest mt-1">
+                            Ajuste as informações da sua captura rápida.
+                        </DialogDescription>
                     </DialogHeader>
+
                     {editingItem && (
-                        <div className="space-y-4 pt-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs opacity-60">Título</Label>
-                                    <Input
-                                        value={editingItem.title}
-                                        onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                                        className="glass-light"
-                                    />
+                        <div className="flex-1 overflow-y-auto custom-scrollbar-minimal p-8 pt-4 pb-12">
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">Título</Label>
+                                        <Input
+                                            value={editingItem.title}
+                                            onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                                            className="h-11 rounded-xl bg-sidebar/40 border-border/40 focus:border-primary/30 focus:ring-primary/5 transition-all"
+                                            placeholder="Título do registro..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2 flex flex-col">
+                                        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">Tipo de Registro</Label>
+                                        <div className="flex flex-wrap gap-2 p-1 bg-sidebar/30 rounded-xl border border-border/40 w-fit">
+                                            {['idea', 'prompt', 'snippet', 'note', 'lead', 'briefing', 'link', 'demand'].map((t) => (
+                                                <button
+                                                    key={t}
+                                                    type="button"
+                                                    onClick={() => setEditingItem({ ...editingItem, type: t as any })}
+                                                    className={cn(
+                                                        "h-10 w-10 flex items-center justify-center rounded-lg transition-all border shrink-0",
+                                                        editingItem.type === t
+                                                            ? "border-primary bg-primary text-primary-foreground shadow-glow-sm scale-105"
+                                                            : "border-transparent text-muted-foreground/50 hover:bg-muted/10"
+                                                    )}
+                                                    title={t.charAt(0).toUpperCase() + t.slice(1)}
+                                                >
+                                                    {getTypeIcon(t)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">Categoria</Label>
+                                        <Input
+                                            value={editingItem.category || ""}
+                                            onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                                            className="h-11 rounded-xl bg-sidebar/40 border-border/40"
+                                            placeholder="Ex: Trabalho, Estudo..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">Tags</Label>
+                                        <Input
+                                            value={editingItem.tags.join(", ")}
+                                            onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map(t => t.trim()) })}
+                                            className="h-11 rounded-xl bg-sidebar/40 border-border/40"
+                                            placeholder="Separe por vírgula..."
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
-                                    <Label className="text-xs opacity-60">Tipo</Label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {['idea', 'prompt', 'snippet', 'note', 'lead', 'briefing', 'link', 'demand'].map((t) => (
-                                            <button
-                                                key={t}
-                                                type="button"
-                                                onClick={() => setEditingItem({ ...editingItem, type: t as any })}
-                                                className={cn(
-                                                    "p-2 rounded-md transition-all border",
-                                                    editingItem.type === t
-                                                        ? "border-primary bg-primary/10 text-primary shadow-glow-sm"
-                                                        : "border-border hover:border-border text-muted-foreground"
-                                                )}
-                                                title={t.charAt(0).toUpperCase() + t.slice(1)}
-                                            >
-                                                {getTypeIcon(t)}
-                                            </button>
-                                        ))}
+                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">Vincular a um Projeto</Label>
+                                    <Select
+                                        value={editingItem.project_id || "none"}
+                                        onValueChange={(val: string) => setEditingItem({ ...editingItem, project_id: val === "none" ? null : val })}
+                                    >
+                                        <SelectTrigger className="h-11 rounded-xl bg-sidebar/40 border-border/40">
+                                            <SelectValue placeholder="Selecione um projeto..." />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-card border-border rounded-xl">
+                                            <SelectItem value="none">Nenhum projeto específico</SelectItem>
+                                            {projects.map((p: any) => (
+                                                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">Conteúdo Detalhado</Label>
+                                    <Textarea
+                                        className="min-h-[180px] rounded-2xl bg-sidebar/40 border-border/40 p-5 text-[14px] leading-relaxed transition-all focus:bg-sidebar/60"
+                                        value={editingItem.content}
+                                        onChange={(e) => setEditingItem({ ...editingItem, content: e.target.value })}
+                                        placeholder="Descreva sua ideia ou capture aqui..."
+                                    />
+                                    <div className="mt-3">
+                                        <TagSuggester
+                                            content={editingItem.content}
+                                            currentTags={editingItem.tags || []}
+                                            onSelect={(tag) => {
+                                                const current = [...(editingItem.tags || [])];
+                                                if (!current.includes(tag)) {
+                                                    setEditingItem({ ...editingItem, tags: [...current, tag] });
+                                                }
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs opacity-60">Categoria</Label>
-                                    <Input
-                                        value={editingItem.category || ""}
-                                        onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                                        className="glass-light"
-                                        placeholder="ex: Trabalho, Estudo..."
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs opacity-60">Tags (Separadas por vírgula)</Label>
-                                    <Input
-                                        value={editingItem.tags.join(", ")}
-                                        onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map(t => t.trim()) })}
-                                        className="glass-light"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs opacity-60">Vincular Projeto</Label>
-                                <Select
-                                    value={editingItem.project_id || "none"}
-                                    onValueChange={(val: string) => setEditingItem({ ...editingItem, project_id: val === "none" ? null : val })}
-                                >
-                                    <SelectTrigger className="glass-light h-9 text-sm">
-                                        <SelectValue placeholder="Selecione um projeto..." />
-                                    </SelectTrigger>
-                                    <SelectContent className="glass">
-                                        <SelectItem value="none">Nenhum projeto específico</SelectItem>
-                                        {projects.map((p: any) => (
-                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs opacity-60">Conteúdo</Label>
-                                <Textarea
-                                    className="min-h-[150px] glass-light"
-                                    value={editingItem.content}
-                                    onChange={(e) => setEditingItem({ ...editingItem, content: e.target.value })}
-                                />
-                                <TagSuggester
-                                    content={editingItem.content}
-                                    currentTags={editingItem.tags || []}
-                                    onSelect={(tag) => {
-                                        const current = [...(editingItem.tags || [])];
-                                        if (!current.includes(tag)) {
-                                            setEditingItem({ ...editingItem, tags: [...current, tag] });
-                                        }
-                                    }}
-                                />
-                            </div>
-
-                            <DialogFooter className="pt-4">
-                                <Button variant="ghost" onClick={() => setEditingItem(null)}>Cancelar</Button>
-                                <Button
-                                    className="btn-gradient"
-                                    onClick={() => updateItemMutation.mutate(editingItem)}
-                                    disabled={updateItemMutation.isPending}
-                                >
-                                    {updateItemMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
-                                </Button>
-                            </DialogFooter>
                         </div>
                     )}
+
+                    <div className="p-6 bg-sidebar/50 border-t border-border flex items-center justify-end gap-3 shrink-0">
+                        <Button variant="ghost" onClick={() => setEditingItem(null)} className="h-11 rounded-xl font-bold text-[11px] uppercase tracking-wider">Cancelar</Button>
+                        <Button
+                            className="h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[11px] uppercase tracking-wider px-8 shadow-glow-sm"
+                            onClick={() => updateItemMutation.mutate(editingItem!)}
+                            disabled={updateItemMutation.isPending}
+                        >
+                            {updateItemMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Alterações"}
+                        </Button>
+                    </div>
                 </DialogContent>
             </Dialog>
 
             {/* Create Folder Modal */}
-            <Dialog open={isCreatingFolder} onOpenChange={setIsCreatingFolder}>
+            < Dialog open={isCreatingFolder} onOpenChange={setIsCreatingFolder} >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Nova Caixa</DialogTitle>
@@ -1407,10 +1535,10 @@ const CaixaEntrada = () => {
                         <Button onClick={handleCreateFolder}>Criar Caixa</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Rename Folder Modal */}
-            <Dialog open={!!folderToRename} onOpenChange={() => setFolderToRename(null)}>
+            < Dialog open={!!folderToRename} onOpenChange={() => setFolderToRename(null)}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Renomear Caixa</DialogTitle>
@@ -1429,10 +1557,10 @@ const CaixaEntrada = () => {
                         <Button onClick={handleRenameFolder}>Renomear</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Delete Folder Warning */}
-            <Dialog open={!!folderToDelete} onOpenChange={() => setFolderToDelete(null)}>
+            < Dialog open={!!folderToDelete} onOpenChange={() => setFolderToDelete(null)}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Excluir Caixa</DialogTitle>
@@ -1450,105 +1578,114 @@ const CaixaEntrada = () => {
                         <Button variant="ghost" onClick={() => setFolderToDelete(null)}>Cancelar</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* View Item Details Modal */}
-            <Dialog open={!!viewingItem} onOpenChange={(open) => !open && setViewingItem(null)}>
-                <DialogContent className="border-border max-w-2xl bg-sidebar/95 backdrop-blur-xl">
-                    <DialogHeader>
-                        <div className="flex items-center gap-3 mb-2">
-                            {viewingItem && (
-                                <div className={cn("p-2 rounded-lg", getTypeColor(viewingItem.type))}>
-                                    {getTypeIcon(viewingItem.type)}
-                                </div>
-                            )}
-                            <div>
-                                <DialogTitle className="text-xl flex items-center gap-2 font-medium tracking-tight">
-                                    {viewingItem?.title || "Detalhes do Registro"}
-                                    {viewingItem?.category && (
-                                        <Badge variant="secondary" className="text-[9px] font-medium bg-primary/10 text-primary border-none rounded-md">
-                                            {viewingItem.category}
-                                        </Badge>
-                                    )}
-                                </DialogTitle>
-                            </div>
-                        </div>
-                    </DialogHeader>
-
+            < Dialog open={!!viewingItem} onOpenChange={(open) => !open && setViewingItem(null)}>
+                <DialogContent className="border-border max-w-2xl w-[95vw] bg-card shadow-float z-[70] p-0 overflow-hidden rounded-[24px] max-h-[90vh] flex flex-col">
                     {viewingItem && (
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground border-b border-border pb-4">
-                                <span>{format(new Date(viewingItem.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}</span>
-                                {viewingItem.projects?.name && (
-                                    <>
-                                        <Separator orientation="vertical" className="h-3" />
-                                        <div className="flex items-center gap-1 text-primary/80">
-                                            <Briefcase className="h-3 w-3" />
-                                            <span>{viewingItem.projects.name}</span>
+                        <div className="flex flex-col h-full">
+                            {/* Modal Header Wrap - Fixed */}
+                            <div className="p-8 pb-4 shrink-0 border-b border-border/5">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn("p-2 rounded-xl", getTypeColor(viewingItem.type))}>
+                                            {getTypeIcon(viewingItem.type)}
                                         </div>
-                                    </>
+                                        <div>
+                                            <h3 className="text-[17px] font-bold tracking-tight text-foreground flex items-center gap-2">
+                                                {viewingItem.title || "Detalhes do Registro"}
+                                                {viewingItem.category && (
+                                                    <Badge variant="outline" className="text-[10px] font-bold h-5 border-primary/30 text-primary bg-primary/10 uppercase tracking-wider px-2">
+                                                        {viewingItem.category}
+                                                    </Badge>
+                                                )}
+                                            </h3>
+                                            <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">
+                                                {format(new Date(viewingItem.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {viewingItem.projects?.name && (
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-primary/80 uppercase tracking-widest mt-2 px-1">
+                                        <Briefcase className="h-3 w-3" />
+                                        <span>Projeto: {viewingItem.projects.name}</span>
+                                    </div>
                                 )}
                             </div>
 
-                            <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                                {viewingItem.content}
+                            {/* Scrollable Content Area */}
+                            <div className="px-8 pt-6 pb-20 flex-1 overflow-y-auto custom-scrollbar-minimal">
+                                <div className="text-[14px] leading-relaxed text-foreground whitespace-pre-wrap font-medium bg-sidebar/50 p-6 rounded-2xl border border-border min-h-[140px]">
+                                    {viewingItem.content}
+                                </div>
+
+                                {viewingItem.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-4 px-1">
+                                        {viewingItem.tags.map((tag, idx) => (
+                                            <Badge key={idx} variant="secondary" className="text-[10px] font-bold bg-foreground/10 text-foreground/80 rounded-lg py-1 px-3 border-none hover:bg-foreground/20 transition-colors">
+                                                #{tag}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
-                            {viewingItem.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 pt-2">
-                                    {viewingItem.tags.map((tag, idx) => (
-                                        <Badge key={idx} variant="outline" className="text-xs text-muted-foreground">
-                                            #{tag}
-                                        </Badge>
-                                    ))}
+                            {/* Modal Actions Footer - Fixed */}
+                            <div className="p-6 bg-sidebar/50 border-t border-border flex flex-wrap items-center justify-between gap-3 mt-auto shrink-0">
+                                <div className="flex flex-wrap gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-10 rounded-xl font-bold text-[11px] bg-background border-border/60 hover:border-border shadow-sm px-4"
+                                        onClick={() => {
+                                            setConversionItem(viewingItem);
+                                            setViewingItem(null);
+                                        }}
+                                    >
+                                        <ArrowRight className="h-3.5 w-3.5 mr-2 text-muted-foreground/60" /> Transformar
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-10 rounded-xl font-bold text-[11px] bg-primary/5 text-primary border-primary/20 hover:bg-primary/20 transition-all px-4"
+                                        onClick={() => {
+                                            if (confirm("Deseja converter esta captura em um novo cliente?")) {
+                                                convertToClientMutation.mutate(viewingItem);
+                                            }
+                                        }}
+                                        disabled={convertToClientMutation.isPending}
+                                    >
+                                        {convertToClientMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Users className="h-3.5 w-3.5 mr-2" />}
+                                        Gerar Cliente
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-10 rounded-xl font-bold text-[11px] bg-background border-border/60 hover:border-border shadow-sm px-4"
+                                        onClick={(e) => handleCopy(e, viewingItem.content)}
+                                    >
+                                        <Copy className="h-3.5 w-3.5 mr-2 text-muted-foreground/60" /> Copiar
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-10 rounded-xl font-bold text-[11px] bg-background border-border/60 hover:border-border shadow-sm px-4"
+                                        onClick={() => {
+                                            setEditingItem(viewingItem);
+                                            setViewingItem(null);
+                                        }}
+                                    >
+                                        <Edit className="h-3.5 w-3.5 mr-2 text-muted-foreground/60" /> Editar
+                                    </Button>
                                 </div>
-                            )}
 
-                            <div className="flex justify-end gap-2 pt-4 border-t border-border">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        setConversionItem(viewingItem);
-                                        setViewingItem(null);
-                                    }}
-                                >
-                                    <ArrowRight className="h-3.5 w-3.5 mr-2" /> Transformar em Tarefa
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
-                                    onClick={() => {
-                                        if (confirm("Deseja converter esta captura em um novo cliente?")) {
-                                            convertToClientMutation.mutate(viewingItem);
-                                        }
-                                    }}
-                                    disabled={convertToClientMutation.isPending}
-                                >
-                                    {convertToClientMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Users className="h-3.5 w-3.5 mr-2" />}
-                                    Gerar Cliente
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => handleCopy(e, viewingItem.content)}
-                                >
-                                    <Copy className="h-3.5 w-3.5 mr-2" /> Copiar Conteúdo
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        setEditingItem(viewingItem);
-                                        setViewingItem(null);
-                                    }}
-                                >
-                                    <Edit className="h-3.5 w-3.5 mr-2" /> Editar
-                                </Button>
                                 <Button
                                     variant="destructive"
                                     size="sm"
+                                    className="h-10 rounded-xl font-bold text-[11px] px-6 shadow-sm border border-destructive/10"
                                     onClick={() => {
                                         if (confirm("Tem certeza que deseja excluir?")) {
                                             deleteItemMutation.mutate(viewingItem.id);
@@ -1562,48 +1699,101 @@ const CaixaEntrada = () => {
                         </div>
                     )}
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Conversion Dialog */}
             <Dialog open={!!conversionItem} onOpenChange={(open) => !open && setConversionItem(null)}>
-                <DialogContent className="border-border bg-sidebar/95 backdrop-blur-xl">
-                    <DialogHeader>
-                        <DialogTitle>Transformar em Tarefa</DialogTitle>
-                        <DialogDescription>
-                            Escolha o projeto para onde esta captura será movida como uma nova tarefa.
+                <DialogContent className="border-border max-w-md w-[95vw] bg-card shadow-float z-[70] p-0 overflow-hidden rounded-[24px] max-h-[90vh] flex flex-col">
+                    <DialogHeader className="p-8 pb-4 shrink-0 border-b border-border/5">
+                        <div className="flex items-center gap-2 text-primary mb-1">
+                            <Sparkles className="h-4 w-4 animate-pulse" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Nimbus Partner Suggestion</span>
+                        </div>
+                        <DialogTitle className="text-xl font-bold tracking-tight">Transformar em Ação</DialogTitle>
+                        <DialogDescription className="text-xs font-medium text-muted-foreground/60">
+                            Analisei esta captura e recomendo uma destas ações estratégicas.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-4">
-                        <div className="space-y-2">
-                            <Label>Escolha o Projeto</Label>
-                            <Select value={conversionProjectId} onValueChange={setConversionProjectId}>
-                                <SelectTrigger className="glass-light border-border">
-                                    <SelectValue placeholder="Selecione um projeto..." />
-                                </SelectTrigger>
-                                <SelectContent className="glass border-border">
-                                    {projects.map((p: any) => (
-                                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+
+                    <div className="flex-1 overflow-y-auto custom-scrollbar-minimal p-8 pt-6 pb-12">
+                        <div className="space-y-8">
+                            {/* Smart Recommendations Area */}
+                            <div className="grid grid-cols-1 gap-4">
+                                <button
+                                    onClick={() => convertToProjectMutation.mutate(conversionItem!)}
+                                    className="flex items-center gap-4 p-4 rounded-2xl border border-border/40 bg-sidebar/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-left group"
+                                    disabled={convertToProjectMutation.isPending}
+                                >
+                                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                                        <Rocket className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="text-[13px] font-bold">Criar Novo Projeto</h4>
+                                        <p className="text-[10px] text-muted-foreground/60">Ideal para ideias complexas ou novos Jobs</p>
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                </button>
+
+                                <button
+                                    onClick={() => convertToClientMutation.mutate(conversionItem!)}
+                                    className="flex items-center gap-4 p-4 rounded-2xl border border-border/40 bg-sidebar/30 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all text-left group"
+                                    disabled={convertToClientMutation.isPending}
+                                >
+                                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                                        <Users className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="text-[13px] font-bold">Gerar Novo Cliente</h4>
+                                        <p className="text-[10px] text-muted-foreground/60">Identificado como lead ou oportunidade comercial</p>
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-muted-foreground/20 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
+                                </button>
+                            </div>
+
+                            <div className="relative py-2">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-border/40" />
+                                </div>
+                                <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
+                                    <span className="bg-card px-4 text-muted-foreground/30">Ou use como Tarefa</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60 ml-1">Vincular a Projeto Existente</Label>
+                                    <Select value={conversionProjectId} onValueChange={setConversionProjectId}>
+                                        <SelectTrigger className="h-11 rounded-xl bg-sidebar/40 border-border/40">
+                                            <SelectValue placeholder="Selecione um projeto..." />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-card border-border rounded-xl">
+                                            {projects.map((p: any) => (
+                                                <SelectItem key={p.id} value={p.id} className="rounded-lg">{p.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <Button
+                                    className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[11px] uppercase tracking-wider shadow-glow-sm transition-all active:scale-[0.98]"
+                                    disabled={!conversionProjectId || convertToTaskMutation.isPending}
+                                    onClick={() => convertToTaskMutation.mutate({
+                                        item: conversionItem!,
+                                        projectId: conversionProjectId
+                                    })}
+                                >
+                                    {convertToTaskMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Tarefa no Projeto Selecionado"}
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setConversionItem(null)}>Cancelar</Button>
-                        <Button
-                            className="btn-gradient"
-                            disabled={!conversionProjectId || convertToTaskMutation.isPending}
-                            onClick={() => convertToTaskMutation.mutate({
-                                item: conversionItem!,
-                                projectId: conversionProjectId
-                            })}
-                        >
-                            {convertToTaskMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Tarefa e Remover da Caixa"}
-                        </Button>
-                    </DialogFooter>
+
+                    <div className="p-6 bg-sidebar/50 border-t border-border flex items-center justify-end shrink-0">
+                        <Button variant="ghost" onClick={() => setConversionItem(null)} className="h-10 rounded-xl font-bold text-[11px] uppercase tracking-wider px-6">Fechar</Button>
+                    </div>
                 </DialogContent>
             </Dialog>
-        </DndContext>
+        </DndContext >
     );
 };
 

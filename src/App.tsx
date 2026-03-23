@@ -39,6 +39,8 @@ import { AIAssistantSidebar } from "@/components/AIAssistantSidebar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { GlobalCommandPalette } from "@/components/shared/GlobalCommandPalette";
+import { cn } from "@/lib/utils";
 
 const queryClient = new QueryClient();
 
@@ -48,27 +50,42 @@ const AppLayout = () => {
   const isDashboard = pathname === "/";
   const isFullHeightPage = isDashboard || pathname.startsWith("/projetos/");
   const [showAI, setShowAI] = useState(false);
+  const [isDeepWork, setIsDeepWork] = useState(false);
 
   // Global Keyboard Shortcuts (Linear Style)
   useNavigationShortcuts(() => navigate("/caixa-entrada"));
 
-  // Listen for AI toggle event
+  // Listen for global events
   useEffect(() => {
     const handleToggleAI = () => setShowAI(prev => !prev);
+    const handleDeepWork = (e: any) => setIsDeepWork(e.detail.active);
+
     window.addEventListener("toggle-ai-assistant", handleToggleAI);
-    return () => window.removeEventListener("toggle-ai-assistant", handleToggleAI);
+    window.addEventListener("toggle-deep-work", handleDeepWork);
+
+    return () => {
+      window.removeEventListener("toggle-ai-assistant", handleToggleAI);
+      window.removeEventListener("toggle-deep-work", handleDeepWork);
+    };
   }, []);
 
   return (
     <TimerProvider>
-      <div className={`flex w-full ${isFullHeightPage ? "h-screen overflow-hidden" : "min-h-screen"}`}>
-        <AppSidebar />
+      <div className={cn("flex w-full transition-all duration-700", isFullHeightPage ? "h-screen overflow-hidden" : "min-h-screen")}>
+        <div className={cn("transition-all duration-700", isDeepWork ? "w-0 opacity-0 -translate-x-10 pointer-events-none" : "w-auto")}>
+          <AppSidebar />
+        </div>
 
         <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
           <Header />
-          <main className={`flex-1 overflow-x-hidden ${isFullHeightPage ? "h-full overflow-hidden no-scrollbar" : "overflow-y-auto custom-scrollbar"}`}>
-            <div className="w-full h-full">
+          <main className={cn(
+            "flex-1 overflow-x-hidden transition-all duration-700",
+            isFullHeightPage ? "h-full overflow-hidden no-scrollbar" : "overflow-y-auto custom-scrollbar",
+            isDeepWork && "bg-background/80 grayscale-[0.2]"
+          )}>
+            <div className={cn("w-full h-full transition-transform duration-700", isDeepWork && "scale-[0.98] origin-top")}>
               <Routes>
+                {/* Routes remain the same */}
                 <Route path="/" element={<Index />} />
                 <Route path="/projetos" element={<Projetos />} />
                 <Route path="/projetos/:id" element={<ProjetoDetalhes />} />
@@ -91,7 +108,6 @@ const AppLayout = () => {
                   <Route path="clientes" element={<Clientes />} />
                 </Route>
 
-                {/* Legacy redirects */}
                 <Route path="/leads" element={<Navigate to="/comercial/leads" replace />} />
                 <Route path="/growth" element={<Navigate to="/comercial/growth" replace />} />
                 <Route path="/propostas" element={<Navigate to="/comercial/propostas" replace />} />
@@ -100,7 +116,6 @@ const AppLayout = () => {
                 <Route path="/formularios" element={<Formularios />} />
                 <Route path="/inteligencia" element={<Intelligence />} />
                 <Route path="/nimbus-ai" element={<NimbusAI />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
@@ -108,7 +123,7 @@ const AppLayout = () => {
         </div>
 
         {/* Floating AI Toggle (Right Side) */}
-        {!showAI && (
+        {!showAI && !isDeepWork && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -129,7 +144,7 @@ const AppLayout = () => {
         )}
 
         <AnimatePresence>
-          {showAI && (
+          {showAI && !isDeepWork && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: 320, opacity: 1 }}
@@ -204,6 +219,7 @@ const App = () => {
                     }
                   />
                 </Routes>
+                <GlobalCommandPalette />
                 <Toaster />
                 <Sonner />
                 <ReloadPrompt />

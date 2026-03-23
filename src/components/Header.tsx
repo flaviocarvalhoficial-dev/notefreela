@@ -148,12 +148,23 @@ export function Header() {
     const userInitial = profile?.full_name?.[0] || user?.email?.[0] || "U";
     const userName = profile?.full_name || user?.email?.split("@")[0] || "Usuário";
 
+    const [isDeepWork, setIsDeepWork] = useState(false);
+
+    const toggleDeepWork = () => {
+        const newValue = !isDeepWork;
+        setIsDeepWork(newValue);
+        window.dispatchEvent(new CustomEvent("toggle-deep-work", { detail: { active: newValue } }));
+    };
+
     return (
-        <header className="sticky top-0 w-full h-16 border-none bg-background/60 backdrop-blur-xl z-[40]">
+        <header className={cn(
+            "sticky top-0 w-full h-16 border-none bg-background/60 backdrop-blur-xl z-[40] transition-all duration-500",
+            isDeepWork ? "h-12 bg-background/20 opacity-40 hover:opacity-100" : "h-16"
+        )}>
             <div className="w-full h-full flex items-center justify-between px-8 md:px-12 lg:px-20 transition-all duration-300">
 
                 {/* Left Area: Welcome or Breadcrumbs */}
-                <div className="flex items-center gap-4">
+                <div className={cn("flex items-center gap-4 transition-all duration-500", isDeepWork && "opacity-0 pointer-events-none -translate-x-4")}>
                     {isDashboard ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -217,7 +228,7 @@ export function Header() {
                     )}
                 </div>
 
-                <div className="flex-1 flex justify-center px-4 max-w-lg">
+                <div className={cn("flex-1 flex justify-center px-4 max-w-lg transition-all duration-500", isDeepWork && "opacity-20 scale-95 origin-center")}>
                     <div
                         className="relative group w-full cursor-pointer"
                         onClick={() => setSearchOpen(true)}
@@ -240,44 +251,62 @@ export function Header() {
 
                 {/* Right Area: Timer + Mode Toggle, Notifications */}
                 <div className="flex items-center gap-2">
-                    <QuickCaptureDialog />
-                    <HeaderTimerBadge />
+                    <div className={cn("flex items-center gap-2 transition-all duration-500", isDeepWork && "opacity-30")}>
+                        <QuickCaptureDialog />
+                        <HeaderTimerBadge />
+                    </div>
+
                     <div className="flex items-center gap-1">
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 rounded-full hover:bg-muted/40 transition-all"
-                            onClick={toggleHideValues}
-                            title={hideValues ? "Mostrar valores" : "Esconder valores"}
-                        >
-                            {hideValues ? (
-                                <EyeClosed className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                                <Eye className="h-4 w-4 text-muted-foreground" />
+                            className={cn(
+                                "h-9 w-9 rounded-full transition-all duration-500",
+                                isDeepWork ? "bg-primary text-primary-foreground shadow-glow-sm scale-110" : "hover:bg-muted/40"
                             )}
+                            onClick={toggleDeepWork}
+                            title={isDeepWork ? "Sair do Modo Foco" : "Ativar Modo Foco (Deep Work)"}
+                        >
+                            <Zap className={cn("h-4 w-4", isDeepWork ? "fill-current" : "text-muted-foreground")} />
                         </Button>
 
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 rounded-full hover:bg-muted/40 transition-all"
-                            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        >
-                            {mounted ? (
-                                theme === "dark" ? (
-                                    <Sun className="h-4 w-4 text-yellow-500 fill-yellow-500/10" />
+                        <div className={cn("flex items-center gap-1 transition-all duration-500", isDeepWork && "opacity-0 pointer-events-none translate-x-4")}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-full hover:bg-muted/40 transition-all"
+                                onClick={toggleHideValues}
+                                title={hideValues ? "Mostrar valores" : "Esconder valores"}
+                            >
+                                {hideValues ? (
+                                    <EyeClosed className="h-4 w-4 text-muted-foreground" />
                                 ) : (
-                                    <Moon className="h-4 w-4 text-slate-500 fill-slate-500/10" />
-                                )
-                            ) : (
-                                <div className="h-4 w-4" />
-                            )}
-                        </Button>
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                )}
+                            </Button>
 
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full relative hover:bg-muted/40 transition-all">
-                            <Bell className="h-4 w-4 text-muted-foreground" />
-                            <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-primary shadow-glow animate-pulse" />
-                        </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-full hover:bg-muted/40 transition-all"
+                                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                            >
+                                {mounted ? (
+                                    theme === "dark" ? (
+                                        <Sun className="h-4 w-4 text-yellow-500 fill-yellow-500/10" />
+                                    ) : (
+                                        <Moon className="h-4 w-4 text-slate-500 fill-slate-500/10" />
+                                    )
+                                ) : (
+                                    <div className="h-4 w-4" />
+                                )}
+                            </Button>
+
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full relative hover:bg-muted/40 transition-all">
+                                <Bell className="h-4 w-4 text-muted-foreground" />
+                                <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-primary shadow-glow animate-pulse" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

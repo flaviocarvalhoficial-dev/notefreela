@@ -8,47 +8,86 @@ interface CopilotInsightsProps {
 }
 
 export const CopilotInsights = ({ context, onAction }: CopilotInsightsProps) => {
-    if (!context?.global_overview) return null;
-
-    const g = context.global_overview;
     const insights = [];
 
-    // Logistic for Proactive Insights
-    if (g.total_leads === 0) {
-        insights.push({
-            type: "risk",
-            title: "Pipeline de Leads Vazio",
-            description: "Você não tem novos leads. Sem novas oportunidades, seu faturamento pode cair nos próximos meses.",
-            action: "/radar",
-            actionLabel: "Ver Radar de Leads",
-            icon: AlertCircle,
-            color: "text-amber-500",
-            bg: "bg-amber-500/5"
-        });
-    } else if (g.hot_leads_count > 0) {
-        insights.push({
-            type: "opportunity",
-            title: `${g.hot_leads_count} Lead(s) Quente(s) aguardando`,
-            description: "Há oportunidades de alto potencial prontas para fechamento. Vamos converter?",
-            action: "/radar",
-            actionLabel: "Atuar nos Leads",
-            icon: Zap,
-            color: "text-primary",
-            bg: "bg-primary/5"
-        });
+    // 1. PROJECT SPECIFIC INSIGHTS
+    if (context.is_project_context && context.project) {
+        const p = context.project;
+
+        // Deadline Alert
+        if (p.deadline) {
+            const daysLeft = Math.ceil((new Date(p.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            if (daysLeft >= 0 && daysLeft <= 3 && p.status !== 'completed') {
+                insights.push({
+                    type: "risk",
+                    title: "Prazo Crítico Detectado",
+                    description: `A entrega de "${p.name}" é em ${daysLeft === 0 ? 'hoje' : daysLeft + ' dias'}. Você tem tarefas pendentes que precisam de foco.`,
+                    action: "Quais as tarefas prioritárias para este projeto agora?",
+                    actionLabel: "Priorizar Agora",
+                    icon: AlertCircle,
+                    color: "text-rose-500",
+                    bg: "bg-rose-500/5"
+                });
+            }
+        }
+
+        // Completion Rate Alert
+        const projectTasks = context.tasks || [];
+        const completedCount = projectTasks.filter((t: any) => t.column_id === 'done').length;
+        if (projectTasks.length > 0 && (completedCount / projectTasks.length) < 0.3 && p.status === 'active') {
+            insights.push({
+                type: "performance",
+                title: "Produção Lenta",
+                description: `Apenas ${Math.round((completedCount / projectTasks.length) * 100)}% das tarefas deste projeto foram concluídas. Recomendo acelerar a execução.`,
+                action: "Como posso acelerar este projeto?",
+                actionLabel: "Pedir Sugestão",
+                icon: Zap,
+                color: "text-amber-500",
+                bg: "bg-amber-500/5"
+            });
+        }
     }
 
-    if (g.tasks_total > 0 && (g.tasks_completed / g.tasks_total) < 0.2) {
-        insights.push({
-            type: "performance",
-            title: "Baixa Taxa de Conclusão",
-            description: "Apenas uma pequena parcela das tarefas foi concluída. Há riscos de atrasos nos projetos atuais.",
-            action: "/proxima",
-            actionLabel: "Priorizar Tarefas",
-            icon: TrendingUp,
-            color: "text-emerald-500",
-            bg: "bg-emerald-500/5"
-        });
+    // 2. GLOBAL OVERVIEW INSIGHTS (Fallbacks if no project context or fewer project insights)
+    if (insights.length < 2 && context?.global_overview) {
+        const g = context.global_overview;
+
+        if (g.total_leads === 0) {
+            insights.push({
+                type: "risk",
+                title: "Pipeline de Leads Vazio",
+                description: "Você não tem novos leads. Sem novas oportunidades, seu faturamento pode cair nos próximos meses.",
+                action: "/radar",
+                actionLabel: "Ver Radar de Leads",
+                icon: AlertCircle,
+                color: "text-amber-500",
+                bg: "bg-amber-500/5"
+            });
+        } else if (g.hot_leads_count > 0 && !context.is_project_context) {
+            insights.push({
+                type: "opportunity",
+                title: `${g.hot_leads_count} Lead(s) Quente(s)`,
+                description: "Há oportunidades de alto potencial prontas para fechamento. Vamos converter?",
+                action: "/radar",
+                actionLabel: "Atuar nos Leads",
+                icon: Zap,
+                color: "text-primary",
+                bg: "bg-primary/5"
+            });
+        }
+
+        if (g.tasks_total > 0 && (g.tasks_completed / g.tasks_total) < 0.2) {
+            insights.push({
+                type: "performance",
+                title: "Baixa Taxa de Conclusão",
+                description: "Apenas uma pequena parcela das tarefas globais foi concluída. Há riscos de atrasos.",
+                action: "/proxima",
+                actionLabel: "Priorizar Tarefas",
+                icon: TrendingUp,
+                color: "text-emerald-500",
+                bg: "bg-emerald-500/5"
+            });
+        }
     }
 
     if (insights.length === 0) {
