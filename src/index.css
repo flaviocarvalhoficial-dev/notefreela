@@ -19,8 +19,8 @@
 @layer base {
   :root {
     /* Nimbus Design System — Monochromatic High-Precision Signature */
-    --background: 210 10% 97%;
-    /* Neutral Clean Gray #F7F8F9 */
+    --background: 210 12% 95%;
+    /* Neutral Clean Gray for better separation with cards */
     --foreground: 220 15% 10%;
     /* Deep Charcoal for precision #1A1C1E */
 
@@ -34,29 +34,30 @@
     /* Pure Nimbus Blue (Reserved for CTAs) */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 10% 92%;
-    /* Refined neutral gray */
+    --secondary: 210 10% 90%;
+    /* Refined neutral gray - slightly darker for better contrast */
     --secondary-foreground: 220 15% 15%;
 
-    --muted: 210 10% 92%;
-    --muted-foreground: 215 12% 40%;
+    --muted: 210 10% 90%;
+    --muted-foreground: 215 14% 35%;
+    /* Darkened for better readability and contrast */
 
-    --accent: 210 10% 90%;
+    --accent: 210 10% 88%;
     /* Neutral accent instead of blue */
     --accent-foreground: 220 15% 10%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 12% 89%;
-    /* Soft neutral border */
-    --input: 210 12% 89%;
+    --border: 210 10% 86%;
+    /* More visible neutral border */
+    --input: 210 10% 86%;
     --ring: 220 15% 10%;
     /* Dark ring for precision */
 
     --accent-primary: 210 100% 50%;
     --accent-hover: 210 100% 45%;
-    --accent-subtle: 210 10% 92%;
+    --accent-subtle: 210 10% 90%;
     /* Neutral subtle background */
 
     /* Semantic Radius - Linear Precision */
@@ -65,15 +66,15 @@
     --radius-tiny: 6px;
     --radius: 8px;
 
-    /* Micro Shadows Linear (Strictly Minimal) */
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.05);
+    /* Micro Shadows Linear (Strictly Minimal but Visible) */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
 
     /* Sidebar - Cockpit separation */
-    --sidebar-background: 210 20% 95%;
-    --sidebar-foreground: 215 15% 30%;
+    --sidebar-background: 210 15% 93%;
+    --sidebar-foreground: 215 15% 25%;
     /* Darker foreground for visibility */
-    --sidebar-border: 210 15% 88%;
+    --sidebar-border: 210 10% 85%;
   }
 
   .dark {

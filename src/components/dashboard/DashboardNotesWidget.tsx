@@ -220,7 +220,7 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
             <style>{`
                 .note-timestamp {
                     font-size: 10px !important;
-                    color: hsl(var(--muted-foreground) / 0.4) !important;
+                    color: hsl(var(--muted-foreground) / 0.6) !important;
                     font-weight: 400 !important;
                     user-select: none;
                     pointer-events: none;
