@@ -70,13 +70,38 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
             }
         },
         editorProps: {
-            handleKeyDown: (_view, event) => {
+            handleKeyDown: (view, event) => {
+                // Auto-timestamp on Enter (APPEND AFTER TEXT)
+                if (event.key === 'Enter' && !event.shiftKey && !slashMenu.isOpen) {
+                    const { selection } = view.state;
+                    const node = selection.$from.parent;
+                    const text = node.textContent.trim();
+
+                    // If the current line has text and DOES NOT already have a timestamp suffix
+                    if (text.length > 0 && !/\[\d{2}\/\d{2} \d{2}:\d{2}\]$/.test(text)) {
+                        const now = new Date();
+                        const d = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                        const t = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        const ts = ` [${d} ${t}]`;
+
+                        // Insert at the end of the current block
+                        // We do this BEFORE the line break occurs
+                        const endOfBlock = selection.$from.end();
+                        const timestampHtml = `<span class="note-timestamp" style="font-size: 10px; color: #9ca3af; margin-left: 6px; font-weight: 400;">[${d} ${t}]</span>`;
+                        const tr = view.state.tr.insertText(' ', endOfBlock); // Add a space first
+                        view.dispatch(tr);
+
+                        // Use insertContent to handle the HTML span
+                        editor.commands.insertContentAt(view.state.selection.from, timestampHtml);
+                    }
+                }
+
                 // Detect '/' key to open slash menu
                 if (event.key === '/' && !slashMenu.isOpen) {
                     // Use a small delay so the '/' character is inserted first
                     setTimeout(() => {
-                        if (!_view.dom) return;
-                        const coords = _view.coordsAtPos(_view.state.selection.from);
+                        if (!view.dom) return;
+                        const coords = view.coordsAtPos(view.state.selection.from);
 
                         if (coords) {
                             setSlashMenu({
@@ -87,7 +112,7 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
                                 },
                                 filterText: '',
                             });
-                            slashStartPos.current = _view.state.selection.from;
+                            slashStartPos.current = view.state.selection.from;
                         }
                     }, 10);
                     return false;
@@ -95,7 +120,7 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
 
                 // While slash menu is open, handle backspace to close if we go past '/'
                 if (slashMenu.isOpen && event.key === 'Backspace') {
-                    const currentPos = _view.state.selection.from;
+                    const currentPos = view.state.selection.from;
                     if (slashStartPos.current !== null && currentPos <= slashStartPos.current) {
                         setSlashMenu({ isOpen: false, position: { top: 0, left: 0 }, filterText: '' });
                         slashStartPos.current = null;
@@ -172,6 +197,13 @@ export function DashboardNotesWidget({ className }: DashboardNotesWidgetProps) {
             )}
 
             <style>{`
+                .note-timestamp {
+                    font-size: 10px !important;
+                    color: hsl(var(--muted-foreground) / 0.4) !important;
+                    font-weight: 400 !important;
+                    user-select: none;
+                    pointer-events: none;
+                }
                 .ProseMirror p.is-editor-empty:first-child::before {
                     content: attr(data-placeholder);
                     float: left;
